@@ -1,0 +1,58 @@
+---
+title: Header
+description: Add titles and section headers to your Supersubset dashboard.
+sidebar:
+  order: 4
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
+import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+
+# Header
+
+Headers display title text to label sections of your dashboard. Use them to create visual hierarchy and help users navigate content.
+
+<ExpandAll />
+
+## Default Appearance
+
+A header with default settings shows large bold text.
+
+<ScreenshotComparison
+  label="Default header"
+  designerSrc={overview_designer}
+  designerAlt="Default header in designer mode"
+  viewerSrc={overview_viewer}
+  viewerAlt="Default header in viewer mode"
+/>
+
+## Configuration Options
+
+### Text (`text`)
+
+The heading text to display.
+
+<ScreenshotComparison
+  label="Header text configuration"
+/>
+
+### Header Size (`headerSize`)
+
+Controls the visual prominence: `large`, `medium`, or `small`.
+
+<ScreenshotComparison
+  label="Header size comparison"
+/>
+
+## Tips
+
+- Use a **large header** at the top of each page for the page title
+- Use **medium/small headers** to separate sections within a page
+- For rich text with formatting, use a [Markdown](/widgets/markdown/) widget instead
+
+## Related Features
+
+- [Markdown](/widgets/markdown/) — rich text with formatting
+- [Divider](/layout/divider/) — visual separation between sections

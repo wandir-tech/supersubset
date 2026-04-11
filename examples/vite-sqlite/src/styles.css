@@ -1,0 +1,157 @@
+:root {
+  color-scheme: light;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(84, 177, 183, 0.25), transparent 22%),
+    linear-gradient(180deg, #f3fbfb 0%, #ebf5f5 100%);
+  color: #103238;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 32px 40px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  align-items: flex-start;
+  padding: 28px 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(222, 243, 244, 0.88));
+  border: 1px solid rgba(13, 92, 99, 0.12);
+  box-shadow: 0 24px 64px rgba(10, 66, 71, 0.08);
+}
+
+.hero h1 {
+  margin: 12px 0 10px;
+  font-size: 48px;
+  line-height: 1.05;
+}
+
+.hero p,
+.info-card p,
+.query-panel p {
+  margin: 0;
+  color: #56757a;
+  line-height: 1.6;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #4e7d80;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+}
+
+.mode-toggle button {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #33565c;
+}
+
+.mode-toggle button.active {
+  background: #0d5c63;
+  color: #fff;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.info-card,
+.query-panel,
+.error-panel,
+.loading-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(13, 92, 99, 0.12);
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+
+.info-card h2,
+.query-panel h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+.canvas-area {
+  min-width: 0;
+}
+
+.designer-shell,
+.viewer-shell {
+  min-height: 720px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(13, 92, 99, 0.12);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.code-panel {
+  border-top: 1px solid rgba(13, 92, 99, 0.12);
+}
+
+.query-panel pre {
+  margin: 12px 0 0;
+  max-height: 720px;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 14px;
+  background: #0b2226;
+  color: #d3f6f5;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1100px) {
+  .workspace,
+  .info-grid,
+  .hero {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .query-panel {
+    order: -1;
+  }
+}

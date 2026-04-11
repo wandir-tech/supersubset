@@ -1,0 +1,115 @@
+---
+title: Alerts
+description: Configure the Alerts widget for operational notifications in Supersubset.
+sidebar:
+  order: 4
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import alerts_viewer from '../../../assets/screenshots/widgets/alerts-default-viewer.png';
+import alerts_designer from '../../../assets/screenshots/widgets/alerts-default-designer.png';
+
+# Alerts
+
+The Alerts widget displays a list of operational alerts or notifications, color-coded by severity. Use it for monitoring dashboards, operations centers, or any scenario where users need to see a prioritized list of events.
+
+<ExpandAll />
+
+## Default Appearance
+
+An alerts widget with default settings shows a list of alert cards with severity badges and timestamps.
+
+<ScreenshotComparison
+  label="Default alerts widget"
+  designerSrc={alerts_designer}
+  designerAlt="Default alerts widget in designer mode"
+  viewerSrc={alerts_viewer}
+  viewerAlt="Default alerts widget in viewer mode"
+/>
+
+## Configuration Options
+
+### Title Field (`titleField`)
+
+The field used for each alert's headline.
+
+<ScreenshotComparison
+  label="Title field binding"
+/>
+
+### Message Field (`messageField`)
+
+The field used for each alert's description text.
+
+<ScreenshotComparison
+  label="Message field binding"
+/>
+
+### Severity Field (`severityField`)
+
+The field that determines the color coding: `critical` (red), `warning` (amber), `info` (blue).
+
+<ScreenshotComparison
+  label="Severity color coding"
+/>
+
+### Timestamp Field (`timestampField`)
+
+The datetime field shown as the alert's time.
+
+<ScreenshotComparison
+  label="Timestamp display"
+/>
+
+### Layout (`layout`)
+
+Choose between `wrap` (cards flow horizontally and wrap) and `list` (vertical stack).
+
+<ScreenshotComparison
+  label="Layout: wrap vs list"
+/>
+
+### Max Items (`maxItems`)
+
+Limit the number of alerts displayed. Useful for showing only the most recent or critical items.
+
+<ScreenshotComparison
+  label="Max items limit"
+/>
+
+### Show Timestamp (`showTimestamp`)
+
+Toggle timestamp visibility.
+
+<ScreenshotComparison
+  label="Timestamp visibility"
+/>
+
+### Default Severity (`defaultSeverity`)
+
+The severity used when the data doesn't include a severity field.
+
+<ScreenshotComparison
+  label="Default severity setting"
+/>
+
+### Empty State (`emptyState`)
+
+What to show when there are no alerts: `placeholder` (friendly message) or `hidden` (widget disappears).
+
+<ScreenshotComparison
+  label="Empty state behavior"
+/>
+
+## Tips
+
+- Place at the **top of a dashboard** for visual priority
+- Use **maxItems** to keep the widget compact — 3–5 items is usually enough
+- Use **wrap layout** for a horizontal banner style; **list layout** for a vertical sidebar style
+- Pair with [Filters](/filters/select-filter/) to let users filter by severity
+
+## Related Features
+
+- [KPI Card](/widgets/kpi-card/) — summary count of alerts
+- [Table](/widgets/table/) — full alert history

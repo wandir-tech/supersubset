@@ -1,0 +1,40 @@
+---
+title: Divider
+description: Add visual separators between dashboard sections in Supersubset.
+sidebar:
+  order: 5
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
+import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+
+# Divider
+
+Dividers add horizontal lines to visually separate sections of your dashboard. They help create clear boundaries between groups of widgets.
+
+<ExpandAll />
+
+## Default Appearance
+
+A divider with default settings shows a thin horizontal line spanning the full width.
+
+<ScreenshotComparison
+  label="Default divider"
+  designerSrc={overview_designer}
+  designerAlt="Default divider in designer mode"
+  viewerSrc={overview_viewer}
+  viewerAlt="Default divider in viewer mode"
+/>
+
+## Tips
+
+- Use between major sections (e.g., between KPI row and chart row)
+- Keep dividers minimal — too many dividers make a dashboard feel cluttered
+- Combine with [Headers](/layout/header/) for clear section labeling
+
+## Related Features
+
+- [Header](/layout/header/) — section title text
+- [Grid](/layout/grid/) — layout structure

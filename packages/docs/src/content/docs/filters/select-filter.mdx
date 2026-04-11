@@ -1,0 +1,73 @@
+---
+title: Select Filter
+description: Configure dropdown select filters for your Supersubset dashboard.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import select_filter_viewer from '../../../assets/screenshots/filters/select-filter-default-viewer.png';
+
+# Select Filter
+
+Select filters present a dropdown list of values from a data field, letting dashboard viewers narrow down data across all (or specific) widgets. The most common filter type for categorical data.
+
+<ExpandAll />
+
+## Default Appearance
+
+A select filter with default settings shows a dropdown with all unique values from the bound field.
+
+<ScreenshotComparison
+  label="Default select filter"
+  viewerSrc={select_filter_viewer}
+  viewerAlt="Default select filter in viewer mode"
+/>
+
+## Configuration Options
+
+### Field Reference (`fieldRef`)
+
+The data field whose unique values populate the dropdown options.
+
+<ScreenshotComparison
+  label="Field reference binding"
+/>
+
+### Dataset Reference (`datasetRef`)
+
+The dataset containing the field. This determines which data source provides the filter values.
+
+<ScreenshotComparison
+  label="Dataset reference"
+/>
+
+### Operator (`operator`)
+
+The comparison operator: `equals` (exact match), `contains`, `in` (multiple values).
+
+<ScreenshotComparison
+  label="Filter operator options"
+/>
+
+### Scope
+
+Controls which widgets are affected by this filter. See [Filter Scope](/filters/filter-scope/) for details.
+
+<ScreenshotComparison
+  label="Filter scope configuration"
+/>
+
+## Tips
+
+- Place filters in a **filter bar** at the top of the dashboard
+- Use select filters for fields with **a limited set of values** (regions, categories, statuses)
+- For date ranges, use a [Date Filter](/filters/date-filter/) instead
+- Filters update all widgets in their scope in real time
+
+## Related Features
+
+- [Date Filter](/filters/date-filter/) — date range selection
+- [Filter Scope](/filters/filter-scope/) — control which widgets a filter affects
+- [Cross-Filtering](/filters/cross-filtering/) — click-based filtering

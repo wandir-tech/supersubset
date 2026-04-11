@@ -1,0 +1,63 @@
+---
+title: Date Filter
+description: Configure date range filters for time-series data in Supersubset.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import filter_bar_viewer from '../../../assets/screenshots/filters/filter-bar-default-viewer.png';
+
+# Date Filter
+
+Date filters let dashboard viewers select a date range, filtering time-series data across all widgets in scope. Essential for any dashboard with temporal data.
+
+<ExpandAll />
+
+## Default Appearance
+
+A date filter with default settings shows a date range picker.
+
+<ScreenshotComparison
+  label="Default date filter"
+  viewerSrc={filter_bar_viewer}
+  viewerAlt="Default date filter in viewer mode"
+/>
+
+## Configuration Options
+
+### Field Reference (`fieldRef`)
+
+The date/datetime field to filter on.
+
+<ScreenshotComparison
+  label="Date field reference"
+/>
+
+### Operator (`operator`)
+
+The comparison operator for dates: `between` (range), `before`, `after`, `equals`.
+
+<ScreenshotComparison
+  label="Date operator options"
+/>
+
+### Scope
+
+Controls which widgets are affected. See [Filter Scope](/filters/filter-scope/).
+
+<ScreenshotComparison
+  label="Date filter scope"
+/>
+
+## Tips
+
+- Use with [Line Charts](/chart-types/line-chart/) and [Area Charts](/chart-types/area-chart/) for time-series drill-down
+- The `between` operator creates a date range picker — the most common use case
+- Pair with [Select Filters](/filters/select-filter/) for multi-dimensional filtering
+
+## Related Features
+
+- [Select Filter](/filters/select-filter/) — categorical filtering
+- [Filter Scope](/filters/filter-scope/) — control filter reach

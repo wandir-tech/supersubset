@@ -1,0 +1,72 @@
+---
+title: Multi-Page Dashboards
+description: Organize your Supersubset dashboard across multiple pages.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import multi_page_viewer from '../../../assets/screenshots/pages/multi-page-page1-viewer.png';
+
+# Multi-Page Dashboards
+
+Supersubset dashboards can contain multiple pages, each with its own layout and widgets. Pages appear as tabs or a navigation menu, letting you organize large dashboards into logical sections.
+
+<ExpandAll />
+
+## Default Appearance
+
+A new dashboard starts with a single page. The page management controls in the designer toolbar let you add more pages.
+
+<ScreenshotComparison
+  label="Single page dashboard"
+  viewerSrc={multi_page_viewer}
+  viewerAlt="Single page dashboard in viewer mode"
+/>
+
+## Managing Pages
+
+### Adding a Page
+
+Click the "Add Page" button in the toolbar. A new empty page is created with a default title.
+
+<ScreenshotComparison
+  label="Adding a new page"
+/>
+
+### Renaming a Page
+
+Double-click the page tab or use the page settings to change its title.
+
+<ScreenshotComparison
+  label="Renaming a page"
+/>
+
+### Reordering Pages
+
+Drag page tabs to reorder them in the navigation.
+
+<ScreenshotComparison
+  label="Reordering pages"
+/>
+
+### Deleting a Page
+
+Remove a page from the page management controls. If you delete the active page, the dashboard switches to the nearest remaining page.
+
+<ScreenshotComparison
+  label="Deleting a page"
+/>
+
+## Tips
+
+- Use pages for **distinct analytical perspectives** (Overview, Detail, Comparison)
+- The Sales Dashboard example uses two pages: "Overview" and "Chart Gallery"
+- Keep page count manageable — **3–5 pages** covers most dashboards
+- Use [Click Actions](/interactions/click-actions/) to link from one page to another
+
+## Related Features
+
+- [Page Navigation](/pages/navigation/) — how users navigate between pages
+- [Tabs](/layout/tabs/) — in-page content switching (lighter than full pages)

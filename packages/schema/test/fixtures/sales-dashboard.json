@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "0.2.0",
+  "id": "dashboard-001",
+  "title": "Sales Overview",
+  "description": "Monthly sales metrics dashboard",
+  "pages": [
+    {
+      "id": "page-main",
+      "title": "Overview",
+      "rootNodeId": "root-1",
+      "layout": {
+        "root-1": {
+          "id": "root-1",
+          "type": "root",
+          "children": ["grid-1"],
+          "meta": {}
+        },
+        "grid-1": {
+          "id": "grid-1",
+          "type": "grid",
+          "children": ["row-kpi", "row-charts", "widget-table"],
+          "parentId": "root-1",
+          "meta": { "columns": 12, "gap": "16px" }
+        },
+        "row-kpi": {
+          "id": "row-kpi",
+          "type": "row",
+          "children": ["widget-kpi-revenue", "widget-kpi-orders", "widget-kpi-aov"],
+          "parentId": "grid-1",
+          "meta": { "background": "transparent" }
+        },
+        "widget-kpi-revenue": {
+          "id": "widget-kpi-revenue",
+          "type": "widget",
+          "children": [],
+          "parentId": "row-kpi",
+          "meta": { "widgetRef": "kpi-revenue", "width": 4, "height": 20 }
+        },
+        "widget-kpi-orders": {
+          "id": "widget-kpi-orders",
+          "type": "widget",
+          "children": [],
+          "parentId": "row-kpi",
+          "meta": { "widgetRef": "kpi-orders", "width": 4, "height": 20 }
+        },
+        "widget-kpi-aov": {
+          "id": "widget-kpi-aov",
+          "type": "widget",
+          "children": [],
+          "parentId": "row-kpi",
+          "meta": { "widgetRef": "kpi-aov", "width": 4, "height": 20 }
+        },
+        "row-charts": {
+          "id": "row-charts",
+          "type": "row",
+          "children": ["col-line", "col-pie"],
+          "parentId": "grid-1",
+          "meta": {}
+        },
+        "col-line": {
+          "id": "col-line",
+          "type": "column",
+          "children": ["widget-line"],
+          "parentId": "row-charts",
+          "meta": { "width": 8 }
+        },
+        "widget-line": {
+          "id": "widget-line",
+          "type": "widget",
+          "children": [],
+          "parentId": "col-line",
+          "meta": { "widgetRef": "chart-revenue-trend", "width": 8, "height": 50 }
+        },
+        "col-pie": {
+          "id": "col-pie",
+          "type": "column",
+          "children": ["widget-pie"],
+          "parentId": "row-charts",
+          "meta": { "width": 4 }
+        },
+        "widget-pie": {
+          "id": "widget-pie",
+          "type": "widget",
+          "children": [],
+          "parentId": "col-pie",
+          "meta": { "widgetRef": "chart-category-split", "width": 4, "height": 50 }
+        },
+        "widget-table": {
+          "id": "widget-table",
+          "type": "widget",
+          "children": [],
+          "parentId": "grid-1",
+          "meta": { "widgetRef": "table-orders", "width": 12, "height": 60 }
+        }
+      },
+      "widgets": [
+        {
+          "id": "kpi-revenue",
+          "type": "kpi-card",
+          "title": "Total Revenue",
+          "config": { "prefix": "$", "decimals": 0 },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "value", "fieldRef": "revenue", "aggregation": "sum", "format": "$,.0f" }
+            ]
+          }
+        },
+        {
+          "id": "kpi-orders",
+          "type": "kpi-card",
+          "title": "Total Orders",
+          "config": { "decimals": 0 },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "value", "fieldRef": "order_id", "aggregation": "count" }
+            ]
+          }
+        },
+        {
+          "id": "kpi-aov",
+          "type": "kpi-card",
+          "title": "Avg Order Value",
+          "config": { "prefix": "$", "decimals": 2 },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "value", "fieldRef": "revenue", "aggregation": "avg", "format": "$,.2f" }
+            ]
+          }
+        },
+        {
+          "id": "chart-revenue-trend",
+          "type": "line-chart",
+          "title": "Revenue Trend",
+          "config": { "smooth": true, "showArea": false },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "x-axis", "fieldRef": "order_date" },
+              { "role": "y-axis", "fieldRef": "revenue", "aggregation": "sum" }
+            ]
+          }
+        },
+        {
+          "id": "chart-category-split",
+          "type": "pie-chart",
+          "title": "Revenue by Category",
+          "config": { "showLabels": true },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "label", "fieldRef": "category" },
+              { "role": "value", "fieldRef": "revenue", "aggregation": "sum" }
+            ]
+          }
+        },
+        {
+          "id": "table-orders",
+          "type": "table",
+          "title": "Recent Orders",
+          "config": { "pageSize": 20, "sortable": true },
+          "dataBinding": {
+            "datasetRef": "orders",
+            "fields": [
+              { "role": "column", "fieldRef": "order_id" },
+              { "role": "column", "fieldRef": "order_date" },
+              { "role": "column", "fieldRef": "category" },
+              { "role": "column", "fieldRef": "revenue", "format": "$,.2f" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "filter-date",
+      "title": "Date Range",
+      "type": "date-range",
+      "fieldRef": "order_date",
+      "datasetRef": "orders",
+      "operator": "between",
+      "scope": { "type": "global" }
+    },
+    {
+      "id": "filter-category",
+      "title": "Category",
+      "type": "select",
+      "fieldRef": "category",
+      "datasetRef": "orders",
+      "operator": "in",
+      "scope": { "type": "global" }
+    }
+  ],
+  "interactions": [
+    {
+      "id": "interaction-pie-filter",
+      "trigger": { "type": "click", "sourceWidgetId": "chart-category-split" },
+      "action": { "type": "filter", "fieldRef": "category" }
+    }
+  ],
+  "theme": {
+    "type": "inline",
+    "colors": {
+      "primary": "#1890ff",
+      "chartPalette": ["#1890ff", "#13c2c2", "#52c41a", "#faad14", "#f5222d"]
+    }
+  },
+  "dataModel": {
+    "type": "inline",
+    "datasets": [
+      {
+        "id": "orders",
+        "label": "Orders",
+        "fields": [
+          { "id": "order_id", "label": "Order ID", "dataType": "string", "role": "key" },
+          { "id": "order_date", "label": "Order Date", "dataType": "datetime", "role": "time" },
+          { "id": "category", "label": "Category", "dataType": "string", "role": "dimension" },
+          { "id": "revenue", "label": "Revenue", "dataType": "number", "role": "measure", "defaultAggregation": "sum", "format": "$,.2f" }
+        ]
+      }
+    ]
+  },
+  "defaults": {
+    "activePage": "page-main",
+    "timeRange": { "relative": "last-30-days", "grain": "day" }
+  }
+}

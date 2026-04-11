@@ -1,0 +1,45 @@
+---
+title: Page Navigation
+description: How users navigate between dashboard pages in Supersubset.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import pages_scenario_viewer from '../../../assets/screenshots/pages/pages-scenario-page1-viewer.png';
+
+# Page Navigation
+
+When a dashboard has multiple pages, users see navigation controls (tabs or a nav bar) that let them switch between pages. Navigation preserves filter state so users don't lose context when switching.
+
+<ExpandAll />
+
+## Navigation in the Viewer
+
+The viewer presents page navigation as tab headers at the top of the dashboard.
+
+<ScreenshotComparison
+  label="Page navigation in viewer"
+  viewerSrc={pages_scenario_viewer}
+  viewerAlt="Page navigation in viewer in viewer mode"
+/>
+
+## Navigation in the Designer
+
+The designer shows page tabs in the toolbar area. Click a tab to switch to that page for editing.
+
+<ScreenshotComparison
+  label="Page navigation in designer"
+/>
+
+## Tips
+
+- **Filter state persists** across page navigation — users don't need to reapply filters
+- Use clear, descriptive page titles so users know what to expect on each page
+- Configure [Click Actions](/interactions/click-actions/) to programmatically navigate users to specific pages
+
+## Related Features
+
+- [Multi-Page Dashboards](/pages/multi-page/) — creating and managing pages
+- [Click Actions](/interactions/click-actions/) — programmatic navigation

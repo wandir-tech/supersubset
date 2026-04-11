@@ -1,0 +1,56 @@
+---
+title: Click Actions
+description: Configure click-based interactions between widgets in Supersubset.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import interaction_editor_designer from '../../../assets/screenshots/interactions/interaction-editor-default-designer.png';
+
+# Click Actions
+
+Click actions define what happens when a user clicks an element within a chart or widget. You can use click actions to filter other widgets, navigate to another page, or trigger custom behaviors.
+
+<ExpandAll />
+
+## Default Behavior
+
+Without any click actions configured, clicking a chart element does nothing (or shows a tooltip).
+
+<ScreenshotComparison
+  label="No click action configured"
+  designerSrc={interaction_editor_designer}
+  designerAlt="No click action configured in designer mode"
+/>
+
+## Configuration Options
+
+### Filter Action
+
+Clicking a chart element filters other widgets by the clicked value. This is [Cross-Filtering](/filters/cross-filtering/) functionality.
+
+<ScreenshotComparison
+  label="Filter click action"
+/>
+
+### Navigate Action
+
+Clicking a chart element navigates to another dashboard page, optionally passing context.
+
+<ScreenshotComparison
+  label="Navigate click action"
+/>
+
+## Tips
+
+- Use the [Interaction Editor](/interactions/drill-down/) to configure click actions visually
+- Only configure click actions on charts where clicking a specific element is intuitive (bar charts, pie charts, table rows)
+- Provide visual feedback so users know elements are clickable
+
+## Related Features
+
+- [Cross-Filtering](/filters/cross-filtering/) — the most common click action
+- [Drill-Down](/interactions/drill-down/) — progressive detail exploration
+- [Page Navigation](/pages/navigation/) — navigating between pages

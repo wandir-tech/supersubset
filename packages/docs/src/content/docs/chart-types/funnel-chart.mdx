@@ -1,0 +1,74 @@
+---
+title: Funnel Chart
+description: Configure funnel charts for conversion and stage analysis in Supersubset.
+sidebar:
+  order: 7
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import funnel_chart_viewer from '../../../assets/screenshots/chart-types/funnel-chart-default-viewer.png';
+import funnel_chart_designer from '../../../assets/screenshots/chart-types/funnel-chart-default-designer.png';
+
+# Funnel Chart
+
+Funnel charts visualize sequential stages in a process, where each stage is proportionally narrower than the previous. Commonly used for conversion funnels (e.g., leads → opportunities → deals).
+
+<ExpandAll />
+
+## Default Appearance
+
+A funnel chart with default settings shows descending trapezoidal segments.
+
+<ScreenshotComparison
+  label="Default funnel chart"
+  designerSrc={funnel_chart_designer}
+  designerAlt="Default funnel chart in designer mode"
+  viewerSrc={funnel_chart_viewer}
+  viewerAlt="Default funnel chart in viewer mode"
+/>
+
+## Configuration Options
+
+### Value Field (`valueField`)
+
+The numeric field determining each stage's width.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Label Field (`labelField`)
+
+The field used to label each funnel stage.
+
+<ScreenshotComparison
+  label="Label field binding"
+/>
+
+### Sort Order (`sort`)
+
+Control whether stages are sorted by value (`descending`, `ascending`) or displayed in data order (`none`).
+
+<ScreenshotComparison
+  label="Sort order options"
+/>
+
+### Gap (`gap`)
+
+Spacing between funnel segments. Increase for a cleaner separated look.
+
+<ScreenshotComparison
+  label="Gap between segments"
+/>
+
+## Tips
+
+- Use **descending sort** for classic conversion funnels
+- Add **gap** spacing to emphasize individual stages
+- Best with **3–7 stages** for clear visualization
+
+## Related Features
+
+- [Pie Chart](/chart-types/pie-chart/) — part-to-whole without sequence
+- [Bar Chart](/chart-types/bar-chart/) — categorical comparison

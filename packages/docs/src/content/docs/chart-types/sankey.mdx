@@ -1,0 +1,66 @@
+---
+title: Sankey Diagram
+description: Configure Sankey diagrams for flow visualization in Supersubset.
+sidebar:
+  order: 10
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import sankey_viewer from '../../../assets/screenshots/chart-types/sankey-default-viewer.png';
+import sankey_designer from '../../../assets/screenshots/chart-types/sankey-default-designer.png';
+
+# Sankey Diagram
+
+Sankey diagrams visualize flows between nodes, where the width of each link is proportional to the flow quantity. Ideal for showing how values move between stages, categories, or systems.
+
+<ExpandAll />
+
+## Default Appearance
+
+A Sankey diagram with default settings shows nodes as vertical bars connected by flowing links.
+
+<ScreenshotComparison
+  label="Default Sankey diagram"
+  designerSrc={sankey_designer}
+  designerAlt="Default Sankey diagram in designer mode"
+  viewerSrc={sankey_viewer}
+  viewerAlt="Default Sankey diagram in viewer mode"
+/>
+
+## Configuration Options
+
+### Source Field (`sourceField`)
+
+The field identifying where each flow originates.
+
+<ScreenshotComparison
+  label="Source field binding"
+/>
+
+### Target Field (`targetField`)
+
+The field identifying where each flow terminates.
+
+<ScreenshotComparison
+  label="Target field binding"
+/>
+
+### Value Field (`valueField`)
+
+The numeric field determining the width of each flow link.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+## Tips
+
+- Works best for **multi-stage flows**: marketing channel → lead source → deal stage
+- Keep the number of nodes manageable — group small flows into "Other"
+- Data must not contain circular references (A → B → A)
+
+## Related Features
+
+- [Funnel Chart](/chart-types/funnel-chart/) — simpler sequential flow
+- [Treemap](/chart-types/treemap/) — hierarchical composition

@@ -1,0 +1,50 @@
+---
+title: Grid
+description: Configure the grid layout system for organizing widgets in Supersubset.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
+import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+
+# Grid
+
+The grid is the foundational layout container for every dashboard page. It uses a 12-column system where widgets and rows are placed within the grid. All other layout components (rows, columns, widgets) live inside a grid.
+
+<ExpandAll />
+
+## Default Appearance
+
+A grid with default settings provides a 12-column responsive container.
+
+<ScreenshotComparison
+  label="Default grid layout"
+  designerSrc={overview_designer}
+  designerAlt="Default grid layout in designer mode"
+  viewerSrc={overview_viewer}
+  viewerAlt="Default grid layout in viewer mode"
+/>
+
+## Configuration Options
+
+### Columns (`columns`)
+
+The number of columns in the grid (default: 12). Most dashboards use 12 columns for maximum flexibility.
+
+<ScreenshotComparison
+  label="Grid column configuration"
+/>
+
+## Tips
+
+- Use the **12-column grid** to create layouts like: 4+4+4 (three equal), 8+4 (main + sidebar), 6+6 (half-half)
+- Widgets specify their width in grid columns (e.g., `width: 6` fills half the grid)
+- Rows within a grid group widgets on the same horizontal line
+
+## Related Features
+
+- [Rows & Columns](/layout/rows-columns/) — horizontal grouping within the grid
+- [Tabs](/layout/tabs/) — tabbed content within the grid

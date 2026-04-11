@@ -1,0 +1,58 @@
+---
+title: Box Plot
+description: Configure box plots for statistical distribution analysis in Supersubset.
+sidebar:
+  order: 13
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import box_plot_viewer from '../../../assets/screenshots/chart-types/box-plot-default-viewer.png';
+import box_plot_designer from '../../../assets/screenshots/chart-types/box-plot-default-designer.png';
+
+# Box Plot
+
+Box plots (box-and-whisker diagrams) show the statistical distribution of values: median, quartiles, and outliers. Useful for comparing distributions across categories or groups.
+
+<ExpandAll />
+
+## Default Appearance
+
+A box plot with default settings shows boxes spanning the interquartile range with whiskers extending to the min/max values.
+
+<ScreenshotComparison
+  label="Default box plot"
+  designerSrc={box_plot_designer}
+  designerAlt="Default box plot in designer mode"
+  viewerSrc={box_plot_viewer}
+  viewerAlt="Default box plot in viewer mode"
+/>
+
+## Configuration Options
+
+### Group Field (`groupField`)
+
+The categorical field used to create separate boxes for each group.
+
+<ScreenshotComparison
+  label="Group field binding"
+/>
+
+### Value Field (`valueField`)
+
+The numeric field whose distribution is visualized.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+## Tips
+
+- Best for **comparing distributions** across 3–10 groups
+- Look for differences in median, spread, and outliers between groups
+- For single distributions, consider simple summary statistics in a [KPI Card](/widgets/kpi-card/)
+
+## Related Features
+
+- [Bar Chart](/chart-types/bar-chart/) — averages instead of distributions
+- [Scatter Chart](/chart-types/scatter-chart/) — individual data points

@@ -1,0 +1,36 @@
+---
+/**
+ * FeatureScreenshot — renders a single captioned screenshot with lightbox behavior.
+ *
+ * Props:
+ *   src     — Image source (use Astro image import)
+ *   alt     — Alt text for accessibility
+ *   caption — Caption displayed below the image
+ */
+interface Props {
+  src?: ImageMetadata;
+  alt?: string;
+  caption?: string;
+}
+
+const { src, alt = '', caption } = Astro.props;
+---
+
+<figure class="feature-screenshot">
+  {src ? (
+    <img
+      src={src.src}
+      alt={alt}
+      width={src.width}
+      height={src.height}
+      loading="lazy"
+      decoding="async"
+      data-lightbox
+    />
+  ) : (
+    <div class="screenshot-placeholder">
+      📸 Screenshot pending capture.
+    </div>
+  )}
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

@@ -1,0 +1,93 @@
+---
+/**
+ * ScreenshotComparison — renders a before/after screenshot pair in a <details> element.
+ * Shows designer and viewer screenshots side by side.
+ *
+ * Props:
+ *   label       — Display name for the comparison (shown in the summary)
+ *   designerSrc — Source URL/path for the designer screenshot (optional)
+ *   designerAlt — Alt text for the designer screenshot
+ *   viewerSrc   — Source URL/path for the viewer screenshot (optional)
+ *   viewerAlt   — Alt text for the viewer screenshot
+ */
+interface Props {
+  label: string;
+  designerSrc?: ImageMetadata;
+  designerAlt?: string;
+  viewerSrc?: ImageMetadata;
+  viewerAlt?: string;
+}
+
+const { label, designerSrc, designerAlt = '', viewerSrc, viewerAlt = '' } = Astro.props;
+const hasDesigner = !!designerSrc;
+const hasViewer = !!viewerSrc;
+const hasAny = hasDesigner || hasViewer;
+---
+
+<details class="screenshot-comparison">
+  <summary>
+    <span class="icon">▶</span>
+    {label}
+  </summary>
+  {hasAny ? (
+    <div class="screenshot-grid">
+      {hasDesigner && (
+        <div class="screenshot-pane">
+          <span class="screenshot-label">Designer</span>
+          <img
+            src={designerSrc!.src}
+            alt={designerAlt}
+            width={designerSrc!.width}
+            height={designerSrc!.height}
+            loading="lazy"
+            decoding="async"
+            data-lightbox
+          />
+        </div>
+      )}
+      {hasViewer && (
+        <div class="screenshot-pane">
+          <span class="screenshot-label">Viewer</span>
+          <img
+            src={viewerSrc!.src}
+            alt={viewerAlt}
+            width={viewerSrc!.width}
+            height={viewerSrc!.height}
+            loading="lazy"
+            decoding="async"
+            data-lightbox
+          />
+        </div>
+      )}
+    </div>
+  ) : (
+    <div class="screenshot-grid">
+      <div class="screenshot-placeholder">
+        📸 Screenshots will be captured during documentation.
+      </div>
+    </div>
+  )}
+</details>
+
+<script>
+  // Lightbox: click any [data-lightbox] image to view full-size
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG' && target.hasAttribute('data-lightbox')) {
+      const overlay = document.createElement('div');
+      overlay.className = 'lightbox-overlay';
+      const img = document.createElement('img');
+      img.src = (target as HTMLImageElement).src;
+      img.alt = (target as HTMLImageElement).alt;
+      overlay.appendChild(img);
+      overlay.addEventListener('click', () => overlay.remove());
+      document.addEventListener('keydown', function handler(ev) {
+        if (ev.key === 'Escape') {
+          overlay.remove();
+          document.removeEventListener('keydown', handler);
+        }
+      });
+      document.body.appendChild(overlay);
+    }
+  });
+</script>

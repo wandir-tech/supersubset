@@ -1,0 +1,45 @@
+---
+title: Import
+description: Import a dashboard definition into Supersubset from JSON.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import designer_designer from '../../../assets/screenshots/import-export/designer-default-designer.png';
+
+# Import
+
+Load a previously exported dashboard definition from a JSON file. This restores the complete dashboard including all pages, widgets, filters, and interactions.
+
+<ExpandAll />
+
+## Importing a Dashboard
+
+Open the **Import/Export panel** from the designer toolbar and click "Import". Select a JSON file or paste the JSON content.
+
+<ScreenshotComparison
+  label="Import panel and file selection"
+  designerSrc={designer_designer}
+  designerAlt="Import panel and file selection in designer mode"
+/>
+
+## After Import
+
+The designer loads the imported dashboard with all its pages and widgets. You can immediately edit or preview it.
+
+<ScreenshotComparison
+  label="Dashboard loaded after import"
+/>
+
+## Tips
+
+- Imported dashboards **replace the current dashboard** — export first if you want to keep your work
+- The import validates the JSON against the canonical schema — invalid files will show an error
+- Use import to **restore from backup**, share between team members, or migrate between environments
+
+## Related Features
+
+- [JSON Export](/import-export/json-export/) — export a dashboard
+- [Code View](/import-export/code-view/) — view and edit the raw schema

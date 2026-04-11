@@ -1,0 +1,60 @@
+---
+title: Combo Chart
+description: Configure combo charts mixing multiple visualization types in Supersubset.
+sidebar:
+  order: 14
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import combo_chart_viewer from '../../../assets/screenshots/chart-types/combo-chart-default-viewer.png';
+import combo_chart_designer from '../../../assets/screenshots/chart-types/combo-chart-default-designer.png';
+
+# Combo Chart
+
+Combo charts combine multiple chart types (line, bar, area) in a single visualization, optionally with dual Y-axes. Use them when you need to compare measures with different scales or show different data perspectives together.
+
+<ExpandAll />
+
+## Default Appearance
+
+A combo chart with default settings shows a mix of bar and line series.
+
+<ScreenshotComparison
+  label="Default combo chart"
+  designerSrc={combo_chart_designer}
+  designerAlt="Default combo chart in designer mode"
+  viewerSrc={combo_chart_viewer}
+  viewerAlt="Default combo chart in viewer mode"
+/>
+
+## Configuration Options
+
+### Series Array (`series`)
+
+Define multiple series, each with its own chart type (line, bar, or area), data field, and axis assignment.
+
+<ScreenshotComparison
+  label="Series configuration"
+/>
+
+### Dual Axis (`dualAxis`)
+
+When enabled, a second Y-axis appears on the right side of the chart. Assign series to either the left or right axis based on their scale.
+
+<ScreenshotComparison
+  label="Dual axis with different scales"
+/>
+
+## Tips
+
+- Use **dual axes** when measures have very different scales (e.g., revenue in millions vs. count in hundreds)
+- Keep it simple — **2–3 series maximum** for readability
+- Label each axis clearly so viewers understand which series maps to which scale
+- The combo chart is the most flexible but also the easiest to over-complicate
+
+## Related Features
+
+- [Line Chart](/chart-types/line-chart/) — single-type line visualization
+- [Bar Chart](/chart-types/bar-chart/) — single-type bar visualization
+- [Area Chart](/chart-types/area-chart/) — single-type area visualization

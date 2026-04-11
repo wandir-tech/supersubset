@@ -1,0 +1,59 @@
+---
+title: Rows & Columns
+description: Organize widgets horizontally and vertically with rows and columns in Supersubset.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
+import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+
+# Rows & Columns
+
+Rows group widgets on the same horizontal line. Within a row, each widget's `width` (in grid columns) determines how much horizontal space it takes. Columns can be used for vertical stacking within a row.
+
+<ExpandAll />
+
+## Default Appearance
+
+A row with widgets placed side by side, each occupying their configured width.
+
+<ScreenshotComparison
+  label="Default row layout"
+  designerSrc={overview_designer}
+  designerAlt="Default row layout in designer mode"
+  viewerSrc={overview_viewer}
+  viewerAlt="Default row layout in viewer mode"
+/>
+
+## Configuration Options
+
+### Widget Width
+
+Each widget within a row specifies its width in grid columns (1–12). Widgets that exceed the row's column count wrap to the next line.
+
+<ScreenshotComparison
+  label="Widget width configuration"
+/>
+
+### Widget Height
+
+Each widget specifies its height in pixels. Charts typically use 300–400px; KPI cards use 100–150px.
+
+<ScreenshotComparison
+  label="Widget height configuration"
+/>
+
+## Tips
+
+- Use **4+4+4** for three equal-width KPI cards
+- Use **8+4** for a main chart with a sidebar widget
+- Use **12** for full-width tables or headers
+- Rows automatically handle responsive wrapping on smaller screens
+
+## Related Features
+
+- [Grid](/layout/grid/) — the parent container for rows
+- [Tabs](/layout/tabs/) — alternative grouping as tabbed sections

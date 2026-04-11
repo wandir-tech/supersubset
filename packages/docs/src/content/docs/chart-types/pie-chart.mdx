@@ -1,0 +1,84 @@
+---
+title: Pie Chart
+description: Configure pie and donut charts for part-to-whole visualizations in Supersubset.
+sidebar:
+  order: 4
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import pie_chart_viewer from '../../../assets/screenshots/chart-types/pie-chart-default-viewer.png';
+import pie_chart_designer from '../../../assets/screenshots/chart-types/pie-chart-default-designer.png';
+
+# Pie Chart
+
+Pie charts show how a whole is divided into parts, with each slice proportional to its value. Use pie charts when you have a small number of categories (ideally 2–7) and want to emphasize relative proportions.
+
+<ExpandAll />
+
+## Default Appearance
+
+A pie chart with default settings shows a standard circle divided into colored slices with labels.
+
+<ScreenshotComparison
+  label="Default pie chart"
+  designerSrc={pie_chart_designer}
+  designerAlt="Default pie chart in designer mode"
+  viewerSrc={pie_chart_viewer}
+  viewerAlt="Default pie chart in viewer mode"
+/>
+
+## Configuration Options
+
+### Value Field (`valueField`)
+
+The numeric field that determines slice size.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Category Field (`categoryField`)
+
+The field that labels each slice.
+
+<ScreenshotComparison
+  label="Category field binding"
+/>
+
+### Donut Mode (`donut`)
+
+When enabled, the center of the pie is hollow, creating a donut shape. This is often preferred for a cleaner, more modern look and can display a summary value in the center.
+
+<ScreenshotComparison
+  label="Donut mode"
+/>
+
+### Rose Type (`roseType`)
+
+When enabled, slice radii vary by value — larger values have longer slices extending further from the center. This creates a "nightingale rose" effect that can make differences between values more visible.
+
+<ScreenshotComparison
+  label="Rose type (nightingale)"
+/>
+
+### Show Labels (`showLabels`)
+
+Toggle the visibility of slice labels. Disable when using a legend or when slices are obvious from color coding.
+
+<ScreenshotComparison
+  label="Label visibility"
+/>
+
+## Tips
+
+- Limit to **7 or fewer slices** for readability — group small values into "Other"
+- Use **donut mode** for a modern aesthetic and to place a total or title in the center
+- **Rose type** is useful when values are similar and you want to amplify differences
+- For many categories, consider a [Bar Chart](/chart-types/bar-chart/) instead
+
+## Related Features
+
+- [Bar Chart](/chart-types/bar-chart/) — better for many categories
+- [Treemap](/chart-types/treemap/) — hierarchical part-to-whole
+- [Funnel Chart](/chart-types/funnel-chart/) — sequential stages

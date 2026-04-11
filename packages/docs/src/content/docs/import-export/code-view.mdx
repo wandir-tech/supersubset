@@ -1,0 +1,46 @@
+---
+title: Code View
+description: Inspect and edit the canonical dashboard schema in the Supersubset designer.
+sidebar:
+  order: 3
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import code_view_designer from '../../../assets/screenshots/import-export/code-view-default-designer.png';
+
+# Code View
+
+The Code View panel shows the live canonical JSON schema for your dashboard. It updates in real time as you make changes in the visual designer, giving you a transparent view of what Supersubset generates.
+
+<ExpandAll />
+
+## Opening Code View
+
+Click the **Code View** button in the designer toolbar to open the panel.
+
+<ScreenshotComparison
+  label="Code View panel open"
+  designerSrc={code_view_designer}
+  designerAlt="Code View panel open in designer mode"
+/>
+
+## Live Updates
+
+As you edit widgets, change settings, add filters, or modify layouts, the JSON in Code View updates instantly.
+
+<ScreenshotComparison
+  label="Code View reflecting changes"
+/>
+
+## Tips
+
+- Use Code View to **debug** — if a widget isn't rendering correctly, check its config in the schema
+- Code View is **read-only** in the designer — use [Import](/import-export/import/) to load modified JSON
+- The schema follows a documented format — see the developer docs for full schema reference
+- Useful for **training and learning** — see exactly how visual changes map to schema properties
+
+## Related Features
+
+- [JSON Export](/import-export/json-export/) — download the schema
+- [Import](/import-export/import/) — load modified schema

@@ -1,0 +1,40 @@
+/**
+ * Playwright screenshot capture harness for Supersubset documentation.
+ *
+ * This config is purpose-built for documentation screenshots:
+ * - Uses only Chromium (consistent screenshots across all docs)
+ * - Higher resolution viewport for crisp documentation images
+ * - Connects to the dev-app (same as e2e tests)
+ * - Outputs to packages/docs/src/assets/screenshots/
+ */
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './capture',
+  fullyParallel: false, // sequential for consistent state between screenshots
+  retries: 0,
+  workers: 1,
+  reporter: 'list',
+  timeout: 30_000,
+  use: {
+    baseURL: 'http://localhost:3000',
+    screenshot: 'off', // we capture manually
+    trace: 'off',
+    video: 'off',
+    viewport: { width: 1440, height: 900 },
+    ...devices['Desktop Chrome'],
+  },
+  projects: [
+    {
+      name: 'screenshots',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+  ],
+  // Reuse running dev-app or start one
+  webServer: {
+    command: 'pnpm --filter @supersubset/dev-app dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
+    timeout: 120_000,
+  },
+});

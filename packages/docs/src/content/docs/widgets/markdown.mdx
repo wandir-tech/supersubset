@@ -1,0 +1,51 @@
+---
+title: Markdown
+description: Add rich text content to your Supersubset dashboard with the Markdown widget.
+sidebar:
+  order: 3
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import markdown_viewer from '../../../assets/screenshots/widgets/markdown-default-viewer.png';
+import markdown_designer from '../../../assets/screenshots/widgets/markdown-default-designer.png';
+
+# Markdown
+
+The Markdown widget lets you add formatted text, instructions, descriptions, or documentation directly into your dashboard. Supports standard Markdown syntax including headings, lists, links, bold, italic, and code blocks.
+
+<ExpandAll />
+
+## Default Appearance
+
+A Markdown widget with default settings shows placeholder text that you can edit.
+
+<ScreenshotComparison
+  label="Default Markdown widget"
+  designerSrc={markdown_designer}
+  designerAlt="Default Markdown widget in designer mode"
+  viewerSrc={markdown_viewer}
+  viewerAlt="Default Markdown widget in viewer mode"
+/>
+
+## Configuration Options
+
+### Content (`content`)
+
+The Markdown text to render. Supports full Markdown syntax.
+
+<ScreenshotComparison
+  label="Markdown content editing"
+/>
+
+## Tips
+
+- Use Markdown widgets to **explain dashboard context** — add descriptions, methodology notes, or data freshness timestamps
+- Place at the top of a dashboard page to set context before the charts
+- Use headings (`##`) to create visual sections within the widget
+- Links in Markdown can point to external resources or other dashboard pages
+
+## Related Features
+
+- [Header](/layout/header/) — simpler heading without rich text
+- [Alerts](/widgets/alerts/) — operational notifications

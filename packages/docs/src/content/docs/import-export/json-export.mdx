@@ -1,0 +1,52 @@
+---
+title: JSON Export
+description: Export your Supersubset dashboard definition as JSON.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import import_export_designer from '../../../assets/screenshots/import-export/import-export-default-designer.png';
+
+# JSON Export
+
+Supersubset dashboards are defined by a canonical JSON schema. You can export any dashboard as a JSON file to share with others, back up your work, or version-control your dashboards.
+
+<ExpandAll />
+
+## Exporting a Dashboard
+
+Open the **Import/Export panel** from the designer toolbar and click "Export JSON".
+
+<ScreenshotComparison
+  label="Export panel and JSON output"
+  designerSrc={import_export_designer}
+  designerAlt="Export panel and JSON output in designer mode"
+/>
+
+## The Dashboard Schema
+
+The exported JSON contains the complete dashboard definition including:
+
+- Pages and their layouts
+- Widget configurations and field bindings
+- Filters and their scopes
+- Interactions and navigation rules
+- Theme settings
+
+<ScreenshotComparison
+  label="JSON schema structure"
+/>
+
+## Tips
+
+- Use export/import for **sharing dashboards** between environments
+- The JSON schema is the **canonical source of truth** — it fully describes the dashboard
+- Store exported JSON in version control for change tracking
+- See [Code View](/import-export/code-view/) to inspect the schema without downloading
+
+## Related Features
+
+- [Import](/import-export/import/) — load a dashboard from JSON
+- [Code View](/import-export/code-view/) — inspect the schema in the designer

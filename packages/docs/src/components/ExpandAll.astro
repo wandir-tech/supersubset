@@ -1,0 +1,31 @@
+---
+/**
+ * ExpandAll — renders a toggle button that opens/closes all <details> elements on the page.
+ * Place once near the top of a doc page, after the intro text.
+ */
+---
+
+<div class="expand-all-container">
+  <button class="expand-all-btn" data-expanded="false" id="expand-all-btn">
+    <span class="icon">▶</span>
+    <span class="label">Expand All Screenshots</span>
+  </button>
+</div>
+
+<script>
+  const btn = document.getElementById('expand-all-btn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const isExpanded = btn.getAttribute('data-expanded') === 'true';
+      const details = document.querySelectorAll('details.screenshot-comparison');
+      details.forEach((d) => {
+        (d as HTMLDetailsElement).open = !isExpanded;
+      });
+      btn.setAttribute('data-expanded', String(!isExpanded));
+      const label = btn.querySelector('.label');
+      if (label) {
+        label.textContent = isExpanded ? 'Expand All Screenshots' : 'Collapse All Screenshots';
+      }
+    });
+  }
+</script>

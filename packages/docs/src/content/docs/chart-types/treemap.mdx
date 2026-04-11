@@ -1,0 +1,66 @@
+---
+title: Treemap
+description: Configure treemaps for hierarchical data visualization in Supersubset.
+sidebar:
+  order: 11
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import treemap_viewer from '../../../assets/screenshots/chart-types/treemap-default-viewer.png';
+import treemap_designer from '../../../assets/screenshots/chart-types/treemap-default-designer.png';
+
+# Treemap
+
+Treemaps display hierarchical data as nested rectangles, where each rectangle's area is proportional to its value. Useful for showing composition and quickly identifying the largest categories.
+
+<ExpandAll />
+
+## Default Appearance
+
+A treemap with default settings shows colored rectangles proportional to their values.
+
+<ScreenshotComparison
+  label="Default treemap"
+  designerSrc={treemap_designer}
+  designerAlt="Default treemap in designer mode"
+  viewerSrc={treemap_viewer}
+  viewerAlt="Default treemap in viewer mode"
+/>
+
+## Configuration Options
+
+### Value Field (`valueField`)
+
+The numeric field determining rectangle size.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Category Field (`categoryField`)
+
+The field used to label and group rectangles.
+
+<ScreenshotComparison
+  label="Category field binding"
+/>
+
+### Levels (`levels`)
+
+Configure visual properties (colors, borders) for each level of hierarchy.
+
+<ScreenshotComparison
+  label="Hierarchy level configuration"
+/>
+
+## Tips
+
+- Best for **showing relative size** across many categories at once
+- Works well with **2–3 levels** of hierarchy
+- For part-to-whole with few categories, a [Pie Chart](/chart-types/pie-chart/) may be clearer
+
+## Related Features
+
+- [Pie Chart](/chart-types/pie-chart/) — simpler part-to-whole
+- [Sankey Diagram](/chart-types/sankey/) — flow between categories

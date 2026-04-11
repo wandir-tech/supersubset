@@ -1,0 +1,36 @@
+{
+  "name": "supersubset",
+  "private": true,
+  "description": "Embeddable open-source analytics builder/runtime for React applications",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:examples": "pnpm --filter @supersubset/example-nextjs-ecommerce build && pnpm --filter @supersubset/example-vite-sqlite build",
+    "test": "pnpm -r test",
+    "test:watch": "pnpm -r test:watch",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "dev": "pnpm --filter @supersubset/dev-app dev",
+    "dev:nextjs-example": "pnpm --filter @supersubset/example-nextjs-ecommerce dev",
+    "dev:vite-sqlite-example": "pnpm --filter @supersubset/example-vite-sqlite dev",
+    "test:e2e": "playwright test",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "docs:dev": "pnpm --filter @supersubset/docs dev",
+    "docs:build": "pnpm --filter @supersubset/docs build",
+    "docs:preview": "pnpm --filter @supersubset/docs preview",
+    "docs:screenshots": "npx playwright test --config packages/docs/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@nx/js": "^22.6.4",
+    "@playwright/test": "^1.45.0",
+    "@storybook/addon-essentials": "^8.6.0",
+    "@storybook/blocks": "^8.6.0",
+    "@storybook/react": "^8.6.0",
+    "@storybook/react-vite": "^8.6.0",
+    "nx": "^22.6.4",
+    "storybook": "^8.6.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "license": "MIT"
+}

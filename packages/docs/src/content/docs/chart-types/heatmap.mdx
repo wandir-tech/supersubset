@@ -1,0 +1,75 @@
+---
+title: Heatmap
+description: Configure heatmaps for density visualization across two dimensions in Supersubset.
+sidebar:
+  order: 9
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import heatmap_viewer from '../../../assets/screenshots/chart-types/heatmap-default-viewer.png';
+import heatmap_designer from '../../../assets/screenshots/chart-types/heatmap-default-designer.png';
+
+# Heatmap
+
+Heatmaps display data as colored cells in a grid, where color intensity represents the value at each intersection. Useful for spotting patterns, clusters, and outliers across two categorical or time dimensions.
+
+<ExpandAll />
+
+## Default Appearance
+
+A heatmap with default settings shows a color-coded grid with an auto-scaled color range.
+
+<ScreenshotComparison
+  label="Default heatmap"
+  designerSrc={heatmap_designer}
+  designerAlt="Default heatmap in designer mode"
+  viewerSrc={heatmap_viewer}
+  viewerAlt="Default heatmap in viewer mode"
+/>
+
+## Configuration Options
+
+### X Field (`xField`)
+
+The field for the horizontal axis (columns).
+
+<ScreenshotComparison
+  label="X field binding"
+/>
+
+### Y Field (`yField`)
+
+The field for the vertical axis (rows).
+
+<ScreenshotComparison
+  label="Y field binding"
+/>
+
+### Value Field (`valueField`)
+
+The numeric field that determines cell color intensity.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Color Range (`colorRange`)
+
+The color gradient used to map values. Configure the start and end colors for the gradient.
+
+<ScreenshotComparison
+  label="Color range customization"
+/>
+
+## Tips
+
+- Works best with **grid-like data** — daytime × weekday, category × region, etc.
+- Choose a **sequential color range** for single-metric data (light to dark)
+- Use a **diverging color range** when data has a meaningful midpoint (e.g., profit/loss)
+- For sparse data, consider a [Scatter Chart](/chart-types/scatter-chart/) instead
+
+## Related Features
+
+- [Scatter Chart](/chart-types/scatter-chart/) — point-based density
+- [Treemap](/chart-types/treemap/) — hierarchical density

@@ -1,0 +1,16 @@
+---
+description: "Use when modifying TypeScript files in packages/schema/. Covers canonical schema types, Zod validation, JSON Schema generation, serializers, and migrations. Enforces schema design principles: human-readable, deterministic, versioned, backward-compatible."
+applyTo: "packages/schema/**"
+---
+
+# Schema Package Rules
+
+- All types must be defined in `src/types/` as TypeScript interfaces
+- Every type must have a corresponding Zod schema in `src/validation/`
+- `schemaVersion` is required on `DashboardDefinition`
+- All node types must have stable `id` fields (UUID or developer-assigned)
+- JSON and YAML are encoding-agnostic — never add format-specific semantics
+- Validate all external inputs using Zod schemas before processing
+- Write round-trip serialization tests for every type
+- Export both TypeScript types and Zod schemas from package entry point
+- Never break backward compatibility without a migration function

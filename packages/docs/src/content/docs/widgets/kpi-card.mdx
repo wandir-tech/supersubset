@@ -1,0 +1,83 @@
+---
+title: KPI Card
+description: Configure KPI cards for single-metric display in your Supersubset dashboard.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import kpi_card_viewer from '../../../assets/screenshots/widgets/kpi-card-default-viewer.png';
+import kpi_card_designer from '../../../assets/screenshots/widgets/kpi-card-default-designer.png';
+
+# KPI Card
+
+KPI cards display a single metric prominently, optionally with a comparison to a previous value showing trend direction. They're the most common widget for executive dashboards and summary rows.
+
+<ExpandAll />
+
+## Default Appearance
+
+A KPI card with default settings shows a large number with a title.
+
+<ScreenshotComparison
+  label="Default KPI card"
+  designerSrc={kpi_card_designer}
+  designerAlt="Default KPI card in designer mode"
+  viewerSrc={kpi_card_viewer}
+  viewerAlt="Default KPI card in viewer mode"
+/>
+
+## Configuration Options
+
+### Value Field (`valueField`)
+
+The numeric field to display as the primary value.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Comparison Field (`comparisonField`)
+
+An optional field used to calculate and display the change from a previous period. Shows as an up/down arrow with percentage change.
+
+<ScreenshotComparison
+  label="Comparison field showing trend"
+/>
+
+### Format (`format`)
+
+Controls number formatting: `compact` (1.2K, 3.4M), `currency` ($1,234.56), or default (1234).
+
+<ScreenshotComparison
+  label="Format options comparison"
+/>
+
+### Prefix (`prefix`)
+
+A text prefix added before the value (e.g., `$`, `€`).
+
+<ScreenshotComparison
+  label="Currency prefix"
+/>
+
+### Suffix (`suffix`)
+
+A text suffix added after the value (e.g., `%`, `units`).
+
+<ScreenshotComparison
+  label="Unit suffix"
+/>
+
+## Tips
+
+- Group **3–4 KPI cards** in a row at the top of your dashboard for an executive summary
+- Use **comparison field** to show month-over-month or year-over-year trends
+- Use **compact format** for large numbers to avoid visual clutter
+- For target-based metrics, consider a [Gauge](/chart-types/gauge/) instead
+
+## Related Features
+
+- [Gauge](/chart-types/gauge/) — metric with a visual range
+- [Table](/widgets/table/) — detailed data behind the KPI

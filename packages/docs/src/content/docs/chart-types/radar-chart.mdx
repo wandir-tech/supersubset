@@ -1,0 +1,74 @@
+---
+title: Radar Chart
+description: Configure radar charts for multi-dimensional comparisons in Supersubset.
+sidebar:
+  order: 6
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import radar_chart_viewer from '../../../assets/screenshots/chart-types/radar-chart-default-viewer.png';
+import radar_chart_designer from '../../../assets/screenshots/chart-types/radar-chart-default-designer.png';
+
+# Radar Chart
+
+Radar charts (also called spider or web charts) display multiple dimensions radiating from a center point. Each axis represents a measure, and values are connected to form a polygon. Useful for comparing profiles or scores across multiple criteria.
+
+<ExpandAll />
+
+## Default Appearance
+
+A radar chart with default settings shows a polygon connecting values on each axis.
+
+<ScreenshotComparison
+  label="Default radar chart"
+  designerSrc={radar_chart_designer}
+  designerAlt="Default radar chart in designer mode"
+  viewerSrc={radar_chart_viewer}
+  viewerAlt="Default radar chart in viewer mode"
+/>
+
+## Configuration Options
+
+### Dimensions (`dimensions`)
+
+The list of measure fields, each mapped to a radar axis.
+
+<ScreenshotComparison
+  label="Dimension field bindings"
+/>
+
+### Series Field (`seriesField`)
+
+The categorical field used to create multiple overlapping polygons for comparison.
+
+<ScreenshotComparison
+  label="Multiple series comparison"
+/>
+
+### Shape (`shape`)
+
+Choose between `polygon` (straight edges) and `circle` (smooth) for the axis grid lines.
+
+<ScreenshotComparison
+  label="Shape: polygon vs circle"
+/>
+
+### Filled (`filled`)
+
+When enabled, the area inside the polygon is filled with a semi-transparent color.
+
+<ScreenshotComparison
+  label="Filled radar areas"
+/>
+
+## Tips
+
+- Limit to **5–8 dimensions** for readability
+- Use **filled** mode when comparing two or three entities to see area overlap
+- Ensure all dimensions use comparable scales — otherwise normalize your data
+
+## Related Features
+
+- [Bar Chart](/chart-types/bar-chart/) — simpler categorical comparison
+- [Scatter Chart](/chart-types/scatter-chart/) — two-dimensional comparison

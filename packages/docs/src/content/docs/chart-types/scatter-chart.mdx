@@ -1,0 +1,83 @@
+---
+title: Scatter Chart
+description: Configure scatter charts for correlation analysis in your Supersubset dashboard.
+sidebar:
+  order: 5
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import scatter_chart_viewer from '../../../assets/screenshots/chart-types/scatter-chart-default-viewer.png';
+import scatter_chart_designer from '../../../assets/screenshots/chart-types/scatter-chart-default-designer.png';
+
+# Scatter Chart
+
+Scatter charts plot individual data points on a two-dimensional grid, ideal for exploring correlations between variables. Optionally encode additional dimensions through point size and color.
+
+<ExpandAll />
+
+## Default Appearance
+
+A scatter chart with default settings shows data points on an X/Y grid.
+
+<ScreenshotComparison
+  label="Default scatter chart"
+  designerSrc={scatter_chart_designer}
+  designerAlt="Default scatter chart in designer mode"
+  viewerSrc={scatter_chart_viewer}
+  viewerAlt="Default scatter chart in viewer mode"
+/>
+
+## Configuration Options
+
+### X Field (`xField`)
+
+The numeric field for the horizontal axis.
+
+<ScreenshotComparison
+  label="X field binding"
+/>
+
+### Y Field (`yField`)
+
+The numeric field for the vertical axis.
+
+<ScreenshotComparison
+  label="Y field binding"
+/>
+
+### Size Field (`sizeField`)
+
+An optional numeric field that controls point size, creating a bubble chart effect.
+
+<ScreenshotComparison
+  label="Size field (bubble effect)"
+/>
+
+### Color Field (`colorField`)
+
+An optional categorical field that colors points by group.
+
+<ScreenshotComparison
+  label="Color field grouping"
+/>
+
+### Symbol Size (`symbolSize`)
+
+Controls the base size of data points. Increase for sparse data; decrease for dense datasets.
+
+<ScreenshotComparison
+  label="Symbol size adjustment"
+/>
+
+## Tips
+
+- Use **size field** to add a third dimension (e.g., revenue by cost and volume)
+- Use **color field** to reveal clusters or groups in your data
+- For dense datasets, reduce **symbol size** and enable transparency
+- Combine with [Cross-Filtering](/filters/cross-filtering/) to click a point and filter related widgets
+
+## Related Features
+
+- [Heatmap](/chart-types/heatmap/) — density visualization for very dense data
+- [Combo Chart](/chart-types/combo-chart/) — overlay scatter with trend lines

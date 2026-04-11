@@ -1,0 +1,50 @@
+---
+title: Drill-Down
+description: Configure drill-down interactions for progressive data exploration in Supersubset.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import interaction_editor_designer from '../../../assets/screenshots/interactions/interaction-editor-default-designer.png';
+
+# Drill-Down
+
+Drill-down interactions let users click a chart element to explore more detailed data. For example, clicking a region in a bar chart could show city-level data within that region.
+
+<ExpandAll />
+
+## Default Behavior
+
+Without drill-down configured, charts show data at their configured aggregation level.
+
+<ScreenshotComparison
+  label="Chart without drill-down"
+  designerSrc={interaction_editor_designer}
+  designerAlt="Chart without drill-down in designer mode"
+/>
+
+## Configuration
+
+Drill-down is configured through the Interaction Editor panel in the designer. Define:
+
+1. **Source widget** — which chart supports drilling
+2. **Trigger** — the click action
+3. **Target behavior** — filter, navigate to a detail page, or update the chart's grouping
+
+<ScreenshotComparison
+  label="Drill-down configuration"
+/>
+
+## Tips
+
+- Drill-down works best with **hierarchical data** (country → region → city)
+- Provide a **breadcrumb or back button** so users can navigate back up
+- Combine with [Page Navigation](/pages/navigation/) for deep drill-down flows across pages
+
+## Related Features
+
+- [Click Actions](/interactions/click-actions/) — general click behaviors
+- [Cross-Filtering](/filters/cross-filtering/) — filter-based click actions
+- [Multi-Page Dashboards](/pages/multi-page/) — navigate to detail pages

@@ -1,0 +1,53 @@
+---
+title: Chart Types Overview
+description: An overview of all 14 chart types available in Supersubset.
+sidebar:
+  order: 0
+---
+
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import galleryViewer from '../../../assets/screenshots/chart-types/gallery-default-viewer.png';
+
+# Chart Types
+
+Supersubset includes 14 chart types powered by Apache ECharts. Each chart type is optimized for different kinds of data and use cases.
+
+<FeatureScreenshot
+  src={galleryViewer}
+  alt="Chart Gallery page showing all available chart types"
+  caption="The Chart Gallery page demonstrates all 14 chart types with fixture data."
+/>
+
+## Standard Charts
+
+| Chart | Best For | Data Shape |
+|-------|----------|------------|
+| [Line Chart](/chart-types/line-chart/) | Trends over time | Time series with 1+ measures |
+| [Bar Chart](/chart-types/bar-chart/) | Comparing categories | Categorical with 1+ measures |
+| [Area Chart](/chart-types/area-chart/) | Volume trends over time | Time series with stacking |
+| [Pie Chart](/chart-types/pie-chart/) | Part-to-whole composition | Single measure by category |
+| [Scatter Chart](/chart-types/scatter-chart/) | Correlation between variables | Two numeric dimensions |
+
+## Advanced Charts
+
+| Chart | Best For | Data Shape |
+|-------|----------|------------|
+| [Radar Chart](/chart-types/radar-chart/) | Multi-dimensional comparison | Multiple measures per entity |
+| [Funnel Chart](/chart-types/funnel-chart/) | Conversion stages | Ordered categorical values |
+| [Gauge](/chart-types/gauge/) | Single metric against target | Single value with min/max |
+| [Heatmap](/chart-types/heatmap/) | Density across two dimensions | Grid of values |
+| [Sankey Diagram](/chart-types/sankey/) | Flow between categories | Source → target with values |
+| [Treemap](/chart-types/treemap/) | Hierarchical composition | Nested categories with values |
+| [Waterfall Chart](/chart-types/waterfall/) | Running totals and deltas | Sequential additive values |
+| [Box Plot](/chart-types/box-plot/) | Statistical distribution | Grouped numeric values |
+| [Combo Chart](/chart-types/combo-chart/) | Mixed visualizations | Multiple series with different types |
+
+## Common Configuration
+
+All chart types share these base configuration options:
+
+- **Title** — Display name shown above the chart
+- **Dataset** — The data source to query
+- **Field bindings** — Map your data fields to chart dimensions (X-axis, Y-axis, etc.)
+
+Individual chart types add their own specific options, documented on each chart's page.

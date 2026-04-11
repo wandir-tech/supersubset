@@ -1,0 +1,84 @@
+---
+title: Line Chart
+description: Configure line charts to visualize trends over time in your Supersubset dashboard.
+sidebar:
+  order: 1
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import line_chart_viewer from '../../../assets/screenshots/chart-types/line-chart-default-viewer.png';
+import line_chart_designer from '../../../assets/screenshots/chart-types/line-chart-default-designer.png';
+
+# Line Chart
+
+Line charts display data points connected by straight or curved lines, ideal for showing trends over time. In the Sales Dashboard, the Revenue Trend chart uses a line chart to show monthly revenue and cost.
+
+<ExpandAll />
+
+## Default Appearance
+
+A line chart with default settings shows straight lines connecting data points, with a legend and axis labels.
+
+<ScreenshotComparison
+  label="Default line chart"
+  designerSrc={line_chart_designer}
+  designerAlt="Default line chart in designer mode"
+  viewerSrc={line_chart_viewer}
+  viewerAlt="Default line chart in viewer mode"
+/>
+
+## Configuration Options
+
+### X-Axis Field (`xField`)
+
+The field used for the horizontal axis — typically a time or category field.
+
+<ScreenshotComparison
+  label="X-axis field binding"
+/>
+
+### Y-Axis Fields (`yFields`)
+
+One or more measure fields plotted as separate lines. Add multiple fields to compare trends.
+
+<ScreenshotComparison
+  label="Multiple Y-axis fields"
+/>
+
+### Smooth Lines (`smooth`)
+
+When enabled, lines are drawn as smooth curves instead of straight segments. This produces a more polished look but can obscure precise data point positions.
+
+<ScreenshotComparison
+  label="Smooth lines enabled"
+/>
+
+### Area Fill (`area`)
+
+When enabled, the area below each line is filled with a semi-transparent color. Useful for emphasizing volume or magnitude.
+
+<ScreenshotComparison
+  label="Area fill enabled"
+/>
+
+### Show Points (`showPoints`)
+
+Toggle the visibility of data point markers on the line. Hiding points gives a cleaner look; showing them makes individual values easier to read.
+
+<ScreenshotComparison
+  label="Data points visibility"
+/>
+
+## Tips
+
+- Use **smooth lines** for presentation dashboards where visual polish matters more than precision
+- Enable **area fill** when you want to emphasize the magnitude of a trend
+- Add a **second Y-axis field** to compare two related measures (e.g., revenue vs. cost)
+- Combine with a [Date Filter](/filters/date-filter/) to let users zoom into specific time ranges
+
+## Related Features
+
+- [Area Chart](/chart-types/area-chart/) — dedicated area visualization with stacking
+- [Combo Chart](/chart-types/combo-chart/) — mix line and bar series
+- [Date Filter](/filters/date-filter/) — filter time-series data

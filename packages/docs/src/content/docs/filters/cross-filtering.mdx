@@ -1,0 +1,65 @@
+---
+title: Cross-Filtering
+description: Enable click-to-filter interactions between widgets in Supersubset.
+sidebar:
+  order: 4
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import cross_filter_viewer from '../../../assets/screenshots/filters/cross-filter-default-viewer.png';
+
+# Cross-Filtering
+
+Cross-filtering lets dashboard viewers click a chart element (a bar, pie slice, or data point) to filter all other widgets on the page. This creates an interactive exploration experience without explicit filter controls.
+
+<ExpandAll />
+
+## Default Appearance
+
+When cross-filtering is configured, clicking a chart element highlights it and filters related widgets.
+
+<ScreenshotComparison
+  label="Cross-filtering in action"
+  viewerSrc={cross_filter_viewer}
+  viewerAlt="Cross-filtering in action in viewer mode"
+/>
+
+## Configuration Options
+
+### Trigger Type (`trigger.type`)
+
+The user action that activates the filter: `click` is the most common.
+
+<ScreenshotComparison
+  label="Trigger type configuration"
+/>
+
+### Source Widget (`trigger.sourceWidgetId`)
+
+The widget whose elements can be clicked to trigger filtering.
+
+<ScreenshotComparison
+  label="Source widget selection"
+/>
+
+### Filter Field (`action.fieldRef`)
+
+The field that gets filtered when the user clicks a chart element.
+
+<ScreenshotComparison
+  label="Filter field binding"
+/>
+
+## Tips
+
+- Cross-filtering is most intuitive on [Bar Charts](/chart-types/bar-chart/) and [Pie Charts](/chart-types/pie-chart/)
+- Users expect to click a bar/slice and see the rest of the dashboard update
+- Combine with explicit [Select Filters](/filters/select-filter/) for a "Reset All" capability
+- Keep the interaction intuitive — filter on the same field that labels the clicked element
+
+## Related Features
+
+- [Click Actions](/interactions/click-actions/) — other click-based interactions
+- [Select Filter](/filters/select-filter/) — explicit dropdown filtering
+- [Filter Scope](/filters/filter-scope/) — control filter reach

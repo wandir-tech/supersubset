@@ -1,0 +1,48 @@
+---
+title: Filter Scope
+description: Control which widgets a filter affects in your Supersubset dashboard.
+sidebar:
+  order: 3
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import filter_builder_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
+
+# Filter Scope
+
+Filter scope determines which widgets are affected when a viewer changes a filter value. By default, filters are **global** — they affect all widgets. You can narrow the scope to target specific widgets or pages.
+
+<ExpandAll />
+
+## Scope Types
+
+### Global Scope
+
+The default. A global filter affects every widget on every page of the dashboard.
+
+<ScreenshotComparison
+  label="Global filter scope"
+  designerSrc={filter_builder_designer}
+  designerAlt="Global filter scope in designer mode"
+/>
+
+### Widget-Specific Scope
+
+Limit a filter to affect only specific widgets. Useful when different sections of a dashboard use different datasets.
+
+<ScreenshotComparison
+  label="Widget-specific scope"
+/>
+
+## Tips
+
+- Start with **global scope** — it works for most dashboards
+- Use **widget-specific scope** when you have widgets from different datasets on the same page
+- Cross-filtering (click-based filtering) has its own scope rules — see [Cross-Filtering](/filters/cross-filtering/)
+
+## Related Features
+
+- [Select Filter](/filters/select-filter/) — dropdown filtering
+- [Date Filter](/filters/date-filter/) — date range filtering
+- [Cross-Filtering](/filters/cross-filtering/) — click-based filtering

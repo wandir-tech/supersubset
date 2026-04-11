@@ -1,0 +1,58 @@
+---
+title: Waterfall Chart
+description: Configure waterfall charts for running total visualization in Supersubset.
+sidebar:
+  order: 12
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import waterfall_viewer from '../../../assets/screenshots/chart-types/waterfall-default-viewer.png';
+import waterfall_designer from '../../../assets/screenshots/chart-types/waterfall-default-designer.png';
+
+# Waterfall Chart
+
+Waterfall charts show how an initial value is affected by a series of positive and negative changes, with a running total. They're often used for financial analysis — showing how revenue breaks down into profit through cost components.
+
+<ExpandAll />
+
+## Default Appearance
+
+A waterfall chart with default settings shows floating bars indicating increases (green) and decreases (red) from a baseline.
+
+<ScreenshotComparison
+  label="Default waterfall chart"
+  designerSrc={waterfall_designer}
+  designerAlt="Default waterfall chart in designer mode"
+  viewerSrc={waterfall_viewer}
+  viewerAlt="Default waterfall chart in viewer mode"
+/>
+
+## Configuration Options
+
+### Category Field (`categoryField`)
+
+The field labeling each step in the waterfall.
+
+<ScreenshotComparison
+  label="Category field binding"
+/>
+
+### Value Field (`valueField`)
+
+The numeric field representing the change (positive or negative) at each step.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+## Tips
+
+- Ideal for **P&L analysis**, budget breakdowns, or step-by-step cost accounting
+- Positive values extend upward; negative values extend downward
+- The final bar typically shows the net total
+
+## Related Features
+
+- [Bar Chart](/chart-types/bar-chart/) — standard categorical comparison
+- [KPI Card](/widgets/kpi-card/) — highlight the final total value

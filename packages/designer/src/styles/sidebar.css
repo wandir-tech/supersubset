@@ -1,0 +1,18 @@
+/* Supersubset sidebar drawer item overrides */
+
+/* Remove inner left padding — our override provides its own layout */
+[class*="DrawerItem-draggable"] {
+  padding-left: 0 !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  min-height: 42px !important;
+}
+
+/* Icon color transition on hover */
+.ss-drawer-icon {
+  transition: color 100ms ease-in;
+}
+
+[class*="DrawerItem"]:hover .ss-drawer-icon {
+  color: var(--puck-color-azure-04, #3b82f6);
+}

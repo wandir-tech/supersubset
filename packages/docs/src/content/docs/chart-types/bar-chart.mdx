@@ -1,0 +1,85 @@
+---
+title: Bar Chart
+description: Configure bar charts for categorical comparisons in your Supersubset dashboard.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import bar_chart_viewer from '../../../assets/screenshots/chart-types/bar-chart-default-viewer.png';
+import bar_chart_designer from '../../../assets/screenshots/chart-types/bar-chart-default-designer.png';
+
+# Bar Chart
+
+Bar charts use rectangular bars to compare values across categories. In the Sales Dashboard, the "Sales by Region" chart uses a horizontal bar chart.
+
+<ExpandAll />
+
+## Default Appearance
+
+A bar chart with default settings shows vertical bars with a category axis and value axis.
+
+<ScreenshotComparison
+  label="Default bar chart"
+  designerSrc={bar_chart_designer}
+  designerAlt="Default bar chart in designer mode"
+  viewerSrc={bar_chart_viewer}
+  viewerAlt="Default bar chart in viewer mode"
+/>
+
+## Configuration Options
+
+### X-Axis Field (`xField`)
+
+The categorical field used to group bars.
+
+<ScreenshotComparison
+  label="X-axis field binding"
+/>
+
+### Y-Axis Fields (`yFields`)
+
+One or more measure fields. Multiple fields create grouped bars side by side.
+
+<ScreenshotComparison
+  label="Multiple Y-axis fields"
+/>
+
+### Horizontal Layout (`horizontal`)
+
+When enabled, bars are drawn horizontally. This is useful for long category labels or when you want to rank items.
+
+<ScreenshotComparison
+  label="Horizontal bars"
+/>
+
+### Stacked Bars (`stacked`)
+
+When enabled with multiple Y fields, bars are stacked on top of each other instead of shown side by side. Useful for part-to-whole comparisons within categories.
+
+<ScreenshotComparison
+  label="Stacked bars"
+/>
+
+### Bar Width (`barWidth`)
+
+Controls the width of individual bars. Narrower bars leave more space between groups; wider bars are more prominent.
+
+<ScreenshotComparison
+  label="Bar width adjustment"
+/>
+
+## Tips
+
+- Use **horizontal** layout when category labels are long (e.g., product names, region names)
+- Use **stacked** bars to show how sub-categories contribute to a total
+- Combine with a [Select Filter](/filters/select-filter/) to let users drill into specific categories
+- For time-series data, consider a [Line Chart](/chart-types/line-chart/) instead
+
+## Related Features
+
+- [Line Chart](/chart-types/line-chart/) — trend visualization
+- [Combo Chart](/chart-types/combo-chart/) — mix bar and line series
+- [Waterfall Chart](/chart-types/waterfall/) — sequential bar deltas
+- [Cross-Filtering](/filters/cross-filtering/) — click a bar to filter other widgets

@@ -1,0 +1,100 @@
+---
+title: Your First Dashboard
+description: A step-by-step walkthrough of creating your first Supersubset dashboard.
+sidebar:
+  order: 2
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
+import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+
+# Your First Dashboard
+
+This guide walks you through building a simple sales dashboard from scratch. By the end, you'll have a dashboard with KPI cards, a line chart, a bar chart, and a data table — all connected to filters.
+
+<ExpandAll />
+
+## Step 1: Open the Designer
+
+When you open Supersubset, you'll see the designer interface with an empty canvas.
+
+<ScreenshotComparison
+  label="Empty designer canvas"
+  designerSrc={overview_designer}
+  designerAlt="Empty designer canvas in designer mode"
+  viewerSrc={overview_viewer}
+  viewerAlt="Empty designer canvas in viewer mode"
+/>
+
+## Step 2: Add KPI Cards
+
+Drag three **KPI Card** widgets from the widget palette onto the canvas. Configure each one:
+
+- **Total Revenue** — Value field: `revenue`, Format: `compact`, Prefix: `$`
+- **Orders** — Value field: `orders`, Format: `compact`
+- **Avg Order Value** — Value field: `aov`, Format: `currency`
+
+<ScreenshotComparison
+  label="KPI cards configured"
+/>
+
+## Step 3: Add a Line Chart
+
+Drag a **Line Chart** onto the canvas below the KPI cards. Configure it:
+
+- X-axis: `month`
+- Y-axis: `revenue`, `cost`
+- Smooth lines: enabled
+
+<ScreenshotComparison
+  label="Line chart with revenue trend"
+/>
+
+## Step 4: Add a Bar Chart
+
+Drag a **Bar Chart** next to the line chart. Configure it:
+
+- X-axis: `region`
+- Y-axis: `revenue`
+- Horizontal: enabled
+
+<ScreenshotComparison
+  label="Horizontal bar chart by region"
+/>
+
+## Step 5: Add a Data Table
+
+Drag a **Table** widget below the charts. It will automatically display all available fields from your dataset.
+
+<ScreenshotComparison
+  label="Data table with orders"
+/>
+
+## Step 6: Add Filters
+
+Open the **Filter Builder** from the toolbar. Add:
+
+- A **Select** filter for Region
+- A **Select** filter for Category
+- A **Date** filter for Order Date
+
+<ScreenshotComparison
+  label="Dashboard filters configured"
+/>
+
+## Step 7: Preview Your Dashboard
+
+Switch to **Viewer** mode to see your finished dashboard. Try selecting different regions and categories to see the charts update in real time.
+
+<ScreenshotComparison
+  label="Completed dashboard in viewer mode"
+/>
+
+## Next Steps
+
+- [Explore all chart types →](/chart-types/overview/)
+- [Learn about filters →](/filters/select-filter/)
+- [Set up cross-filtering →](/filters/cross-filtering/)

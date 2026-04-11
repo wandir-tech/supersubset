@@ -1,0 +1,74 @@
+---
+title: Gauge
+description: Configure gauge charts for single-metric visualization in Supersubset.
+sidebar:
+  order: 8
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import gauge_viewer from '../../../assets/screenshots/chart-types/gauge-default-viewer.png';
+import gauge_designer from '../../../assets/screenshots/chart-types/gauge-default-designer.png';
+
+# Gauge
+
+Gauges display a single numeric value against a defined range, similar to a speedometer. Ideal for KPIs that need to show progress toward a target or threshold.
+
+<ExpandAll />
+
+## Default Appearance
+
+A gauge with default settings shows a half-circle dial with a needle pointing to the current value.
+
+<ScreenshotComparison
+  label="Default gauge"
+  designerSrc={gauge_designer}
+  designerAlt="Default gauge in designer mode"
+  viewerSrc={gauge_viewer}
+  viewerAlt="Default gauge in viewer mode"
+/>
+
+## Configuration Options
+
+### Value Field (`valueField`)
+
+The numeric field to display on the gauge.
+
+<ScreenshotComparison
+  label="Value field binding"
+/>
+
+### Minimum (`min`)
+
+The minimum value of the gauge range.
+
+<ScreenshotComparison
+  label="Minimum range setting"
+/>
+
+### Maximum (`max`)
+
+The maximum value of the gauge range.
+
+<ScreenshotComparison
+  label="Maximum range setting"
+/>
+
+### Split Number (`splitNumber`)
+
+Number of segments dividing the gauge arc. More splits give finer graduation marks.
+
+<ScreenshotComparison
+  label="Split number adjustment"
+/>
+
+## Tips
+
+- Set **min** and **max** to match your business context (e.g., 0–100 for percentages)
+- Use multiple gauges side by side for a KPI dashboard row
+- For simpler metric display, consider a [KPI Card](/widgets/kpi-card/) instead
+
+## Related Features
+
+- [KPI Card](/widgets/kpi-card/) — simpler single-value display
+- [Funnel Chart](/chart-types/funnel-chart/) — stage-based metrics

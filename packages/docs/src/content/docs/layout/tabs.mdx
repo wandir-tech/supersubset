@@ -1,0 +1,48 @@
+---
+title: Tabs
+description: Organize dashboard content into tabbed sections in Supersubset.
+sidebar:
+  order: 3
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import multi_page_viewer from '../../../assets/screenshots/pages/multi-page-page1-viewer.png';
+
+# Tabs
+
+Tabs let you organize content into switchable sections within a single dashboard page. Users click tab headers to switch between different views without navigating to a separate page.
+
+<ExpandAll />
+
+## Default Appearance
+
+A tabs component shows a row of tab headers with the active tab's content displayed below.
+
+<ScreenshotComparison
+  label="Default tabs layout"
+  viewerSrc={multi_page_viewer}
+  viewerAlt="Default tabs layout in viewer mode"
+/>
+
+## Configuration Options
+
+### Tab Management
+
+Add, rename, reorder, and delete tabs. Each tab contains its own set of widgets and layout components.
+
+<ScreenshotComparison
+  label="Tab management in designer"
+/>
+
+## Tips
+
+- Use tabs to **group related content** without creating separate pages
+- Keep tab labels short (1–3 words)
+- For major content sections, consider [Multi-Page Dashboards](/pages/multi-page/) instead
+- Tabs work well for: different time periods, data segments, or metric categories
+
+## Related Features
+
+- [Multi-Page Dashboards](/pages/multi-page/) — full-page navigation
+- [Grid](/layout/grid/) — layout within each tab

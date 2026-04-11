@@ -1,0 +1,82 @@
+---
+title: Area Chart
+description: Configure area charts for volume trends in your Supersubset dashboard.
+sidebar:
+  order: 3
+---
+
+import ExpandAll from '../../../components/ExpandAll.astro';
+import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import area_chart_viewer from '../../../assets/screenshots/chart-types/area-chart-default-viewer.png';
+import area_chart_designer from '../../../assets/screenshots/chart-types/area-chart-default-designer.png';
+
+# Area Chart
+
+Area charts are line charts with the region below the line filled in, emphasizing the magnitude of trends over time. They work especially well for showing volume, cumulative totals, or comparing the relative size of multiple series.
+
+<ExpandAll />
+
+## Default Appearance
+
+An area chart with default settings shows filled regions under each line with semi-transparent colors.
+
+<ScreenshotComparison
+  label="Default area chart"
+  designerSrc={area_chart_designer}
+  designerAlt="Default area chart in designer mode"
+  viewerSrc={area_chart_viewer}
+  viewerAlt="Default area chart in viewer mode"
+/>
+
+## Configuration Options
+
+### X-Axis Field (`xField`)
+
+The time or category field for the horizontal axis.
+
+<ScreenshotComparison
+  label="X-axis field binding"
+/>
+
+### Y-Axis Fields (`yFields`)
+
+One or more measure fields. Each field produces a filled area series.
+
+<ScreenshotComparison
+  label="Multiple Y-axis fields"
+/>
+
+### Smooth Curves (`smooth`)
+
+When enabled, area boundaries are drawn as smooth curves.
+
+<ScreenshotComparison
+  label="Smooth area curves"
+/>
+
+### Opacity (`opacity`)
+
+Controls the transparency of the fill. Lower values let overlapping areas show through; higher values produce more vivid fills.
+
+<ScreenshotComparison
+  label="Fill opacity adjustment"
+/>
+
+### Stacked Areas (`stacked`)
+
+When enabled, areas are stacked so each series starts where the previous one ends. This shows cumulative totals and the contribution of each series.
+
+<ScreenshotComparison
+  label="Stacked areas"
+/>
+
+## Tips
+
+- Use **stacked areas** to show how components add up to a total over time
+- Lower **opacity** when you have overlapping series to keep all areas visible
+- For precise comparisons, a [Line Chart](/chart-types/line-chart/) may be clearer
+
+## Related Features
+
+- [Line Chart](/chart-types/line-chart/) — line without fill
+- [Combo Chart](/chart-types/combo-chart/) — mix area with other series types
