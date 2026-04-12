@@ -30,6 +30,7 @@ Supersubset aims to be an embeddable [Apache Superset](https://superset.apache.o
 | `@supersubset/adapter-sql` | PostgreSQL/MySQL/SQLite introspection adapter |
 | `@supersubset/adapter-json` | JSON/fixture metadata adapter |
 | `@supersubset/adapter-dbt` | dbt manifest adapter |
+| `@supersubset/docs` | End-user docs site (Astro Starlight) with screenshots |
 
 ## Quick Start
 
@@ -40,11 +41,14 @@ Supersubset aims to be an embeddable [Apache Superset](https://superset.apache.o
 
 ### Build
 
+> **Important**: You must build the workspace packages before running any examples.
+> The examples import from `dist/` which doesn't exist until you build.
+
 ```bash
 git clone https://github.com/wandir-tech/supersubset.git
 cd supersubset
 pnpm install
-pnpm build
+pnpm build        # ← required before running examples
 ```
 
 ### Run the Examples
@@ -139,7 +143,8 @@ packages/
 ├── adapter-sql/       # SQL introspection adapter
 ├── adapter-json/      # JSON/fixture adapter
 ├── adapter-dbt/       # dbt manifest adapter
-└── dev-app/           # Development playground
+├── dev-app/           # Development playground
+└── docs/              # End-user docs site (Astro Starlight)
 examples/
 ├── nextjs-ecommerce/  # Next.js runtime host demo
 └── vite-sqlite/       # Vite + SQLite full demo
@@ -152,11 +157,33 @@ docs/
 
 ## Documentation
 
+### End-User Docs (Dashboard Authors)
+
+The interactive docs site lives in `packages/docs/` and covers every feature with screenshots from both the designer and viewer perspectives.
+
+```bash
+# Run locally
+pnpm docs:dev
+# Open http://localhost:4321
+
+# Build for production
+pnpm docs:build
+pnpm docs:preview
+
+# Re-capture all screenshots (requires dev-app running on :3000)
+pnpm docs:screenshots
+```
+
+The site includes 38 pages across 8 categories: Getting Started, Chart Types (14), Widgets, Layout, Filters, Interactions, Pages, and Import/Export.
+
+### Developer Docs
+
 - [Getting Started](docs/getting-started.md) — fastest path to a running dashboard
 - [API Reference](docs/api/README.md) — package-level surface docs
 - [Chart Cookbook](docs/guides/chart-cookbook.md) — config recipes for all 18 widget types
 - [Custom Adapter Guide](docs/guides/custom-adapter.md) — write your own metadata adapter
 - [Schema Import Tutorial](docs/guides/schema-import.md) — import from Prisma/SQL/dbt
+- [Architecture Decision Records](docs/adr/) — design rationale and tradeoffs
 
 ## Acknowledgments
 

@@ -4,7 +4,7 @@ dist/
 *.tsbuildinfo
 test-results/
 playwright-report/
-screenshots/
+/screenshots/
 .DS_Store
 .nx/
 .tmp/

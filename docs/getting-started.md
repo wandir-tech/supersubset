@@ -6,6 +6,8 @@ Today, the packages are workspace-local and the best supported entry point is to
 
 Need package-level surface details after the quick start? See [API Reference](./api/README.md).
 
+For end-user documentation aimed at dashboard authors (with screenshots of every feature), run `pnpm docs:dev` and open http://localhost:4321. See [packages/docs/README.md](../packages/docs/README.md) for details.
+
 ## Prerequisites
 
 - Node.js 20+
@@ -18,10 +20,10 @@ From the repository root:
 
 ```bash
 pnpm install
-pnpm build
+pnpm build        # ← required before running examples
 ```
 
-That builds the workspace packages into `dist/`, which is what the host examples consume.
+That builds the workspace packages into `dist/`, which is what the host examples consume. **If you skip `pnpm build`, the examples will fail** with "Failed to resolve entry for package" errors because the `dist/` directories won't exist.
 
 ## Run The Examples
 
