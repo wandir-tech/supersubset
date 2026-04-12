@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import alerts_viewer from '../../../assets/screenshots/widgets/alerts-default-viewer.png';
 import alerts_designer from '../../../assets/screenshots/widgets/alerts-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import alerts_props_designer from '../../../assets/screenshots/widgets/alerts-props-designer.png';
+import alerts_props_scrolled_designer from '../../../assets/screenshots/widgets/alerts-props-scrolled-designer.png';
 
 # Alerts
 
@@ -34,72 +37,90 @@ An alerts widget with default settings shows a list of alert cards with severity
 
 The field used for each alert's headline.
 
-<ScreenshotComparison
-  label="Title field binding"
+<FeatureScreenshot
+  src={alerts_props_designer}
+  alt="Title field binding"
+  caption="Configure title field binding in the property panel"
 />
 
 ### Message Field (`messageField`)
 
 The field used for each alert's description text.
 
-<ScreenshotComparison
-  label="Message field binding"
+<FeatureScreenshot
+  src={alerts_props_designer}
+  alt="Message field binding"
+  caption="Configure message field binding in the property panel"
 />
 
 ### Severity Field (`severityField`)
 
 The field that determines the color coding: `critical` (red), `warning` (amber), `info` (blue).
 
-<ScreenshotComparison
-  label="Severity color coding"
+<FeatureScreenshot
+  src={alerts_props_designer}
+  alt="Severity color coding"
+  caption="Configure severity color coding in the property panel"
 />
 
 ### Timestamp Field (`timestampField`)
 
 The datetime field shown as the alert's time.
 
-<ScreenshotComparison
-  label="Timestamp display"
+<FeatureScreenshot
+  src={alerts_props_designer}
+  alt="Timestamp display"
+  caption="Configure timestamp display in the property panel"
 />
 
 ### Layout (`layout`)
 
 Choose between `wrap` (cards flow horizontally and wrap) and `list` (vertical stack).
 
-<ScreenshotComparison
-  label="Layout: wrap vs list"
+<FeatureScreenshot
+  src={alerts_props_scrolled_designer}
+  alt="Layout: wrap vs list"
+  caption="Configure layout: wrap vs list in the property panel"
 />
 
 ### Max Items (`maxItems`)
 
 Limit the number of alerts displayed. Useful for showing only the most recent or critical items.
 
-<ScreenshotComparison
-  label="Max items limit"
+<FeatureScreenshot
+  src={alerts_props_scrolled_designer}
+  alt="Max items limit"
+  caption="Configure max items limit in the property panel"
 />
 
 ### Show Timestamp (`showTimestamp`)
 
 Toggle timestamp visibility.
 
-<ScreenshotComparison
-  label="Timestamp visibility"
+<FeatureScreenshot
+  src={alerts_props_scrolled_designer}
+  alt="Timestamp visibility"
+  caption="Configure timestamp visibility in the property panel"
 />
 
 ### Default Severity (`defaultSeverity`)
 
 The severity used when the data doesn't include a severity field.
 
-<ScreenshotComparison
-  label="Default severity setting"
+<FeatureScreenshot
+  src={alerts_props_scrolled_designer}
+  alt="Default severity setting"
+  caption="Configure default severity setting in the property panel"
 />
 
 ### Empty State (`emptyState`)
 
 What to show when there are no alerts: `placeholder` (friendly message) or `hidden` (widget disappears).
 
-<ScreenshotComparison
-  label="Empty state behavior"
+<FeatureScreenshot
+  src={alerts_props_scrolled_designer}
+  alt="Empty state behavior"
+  caption="Configure empty state behavior in the property panel"
 />
 
 ## Tips

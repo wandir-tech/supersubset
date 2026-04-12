@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import code_view_designer from '../../../assets/screenshots/import-export/code-view-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import code_view_default_designer from '../../../assets/screenshots/import-export/code-view-default-designer.png';
 
 # Code View
 
@@ -29,8 +31,10 @@ Click the **Code View** button in the designer toolbar to open the panel.
 
 As you edit widgets, change settings, add filters, or modify layouts, the JSON in Code View updates instantly.
 
-<ScreenshotComparison
-  label="Code View reflecting changes"
+<FeatureScreenshot
+  src={code_view_default_designer}
+  alt="Code View reflecting changes"
+  caption="Code View reflecting changes"
 />
 
 ## Tips

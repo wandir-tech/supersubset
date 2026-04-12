@@ -10,6 +10,11 @@ import ScreenshotComparison from '../../../components/ScreenshotComparison.astro
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
 import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+import first_dashboard_component_palette_designer from '../../../assets/screenshots/getting-started/first-dashboard-component-palette-designer.png';
+import first_dashboard_designer_overview_designer from '../../../assets/screenshots/getting-started/first-dashboard-designer-overview-designer.png';
+import first_dashboard_layers_designer from '../../../assets/screenshots/getting-started/first-dashboard-layers-designer.png';
+import first_dashboard_toolbar_designer from '../../../assets/screenshots/getting-started/first-dashboard-toolbar-designer.png';
+import first_dashboard_viewer_overview_viewer from '../../../assets/screenshots/getting-started/first-dashboard-viewer-overview-viewer.png';
 
 # Your First Dashboard
 
@@ -37,8 +42,10 @@ Drag three **KPI Card** widgets from the widget palette onto the canvas. Configu
 - **Orders** — Value field: `orders`, Format: `compact`
 - **Avg Order Value** — Value field: `aov`, Format: `currency`
 
-<ScreenshotComparison
-  label="KPI cards configured"
+<FeatureScreenshot
+  src={first_dashboard_component_palette_designer}
+  alt="KPI cards configured"
+  caption="KPI cards configured"
 />
 
 ## Step 3: Add a Line Chart
@@ -49,8 +56,10 @@ Drag a **Line Chart** onto the canvas below the KPI cards. Configure it:
 - Y-axis: `revenue`, `cost`
 - Smooth lines: enabled
 
-<ScreenshotComparison
-  label="Line chart with revenue trend"
+<FeatureScreenshot
+  src={first_dashboard_layers_designer}
+  alt="Line chart with revenue trend"
+  caption="Line chart with revenue trend"
 />
 
 ## Step 4: Add a Bar Chart
@@ -61,16 +70,20 @@ Drag a **Bar Chart** next to the line chart. Configure it:
 - Y-axis: `revenue`
 - Horizontal: enabled
 
-<ScreenshotComparison
-  label="Horizontal bar chart by region"
+<FeatureScreenshot
+  src={first_dashboard_toolbar_designer}
+  alt="Horizontal bar chart by region"
+  caption="Horizontal bar chart by region"
 />
 
 ## Step 5: Add a Data Table
 
 Drag a **Table** widget below the charts. It will automatically display all available fields from your dataset.
 
-<ScreenshotComparison
-  label="Data table with orders"
+<FeatureScreenshot
+  src={first_dashboard_viewer_overview_viewer}
+  alt="Data table with orders"
+  caption="Data table with orders"
 />
 
 ## Step 6: Add Filters
@@ -81,16 +94,20 @@ Open the **Filter Builder** from the toolbar. Add:
 - A **Select** filter for Category
 - A **Date** filter for Order Date
 
-<ScreenshotComparison
-  label="Dashboard filters configured"
+<FeatureScreenshot
+  src={first_dashboard_designer_overview_designer}
+  alt="Dashboard filters configured"
+  caption="Dashboard filters configured"
 />
 
 ## Step 7: Preview Your Dashboard
 
 Switch to **Viewer** mode to see your finished dashboard. Try selecting different regions and categories to see the charts update in real time.
 
-<ScreenshotComparison
-  label="Completed dashboard in viewer mode"
+<FeatureScreenshot
+  src={first_dashboard_component_palette_designer}
+  alt="Completed dashboard in viewer mode"
+  caption="Completed dashboard in viewer mode"
 />
 
 ## Next Steps

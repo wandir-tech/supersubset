@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import bar_chart_viewer from '../../../assets/screenshots/chart-types/bar-chart-default-viewer.png';
 import bar_chart_designer from '../../../assets/screenshots/chart-types/bar-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import bar_chart_props_designer from '../../../assets/screenshots/chart-types/bar-chart-props-designer.png';
+import bar_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/bar-chart-props-scrolled-designer.png';
 
 # Bar Chart
 
@@ -34,40 +37,50 @@ A bar chart with default settings shows vertical bars with a category axis and v
 
 The categorical field used to group bars.
 
-<ScreenshotComparison
-  label="X-axis field binding"
+<FeatureScreenshot
+  src={bar_chart_props_designer}
+  alt="X-axis field binding"
+  caption="Configure x-axis field binding in the property panel"
 />
 
 ### Y-Axis Fields (`yFields`)
 
 One or more measure fields. Multiple fields create grouped bars side by side.
 
-<ScreenshotComparison
-  label="Multiple Y-axis fields"
+<FeatureScreenshot
+  src={bar_chart_props_designer}
+  alt="Multiple Y-axis fields"
+  caption="Configure multiple y-axis fields in the property panel"
 />
 
 ### Horizontal Layout (`horizontal`)
 
 When enabled, bars are drawn horizontally. This is useful for long category labels or when you want to rank items.
 
-<ScreenshotComparison
-  label="Horizontal bars"
+<FeatureScreenshot
+  src={bar_chart_props_scrolled_designer}
+  alt="Horizontal bars"
+  caption="Configure horizontal bars in the property panel"
 />
 
 ### Stacked Bars (`stacked`)
 
 When enabled with multiple Y fields, bars are stacked on top of each other instead of shown side by side. Useful for part-to-whole comparisons within categories.
 
-<ScreenshotComparison
-  label="Stacked bars"
+<FeatureScreenshot
+  src={bar_chart_props_scrolled_designer}
+  alt="Stacked bars"
+  caption="Configure stacked bars in the property panel"
 />
 
 ### Bar Width (`barWidth`)
 
 Controls the width of individual bars. Narrower bars leave more space between groups; wider bars are more prominent.
 
-<ScreenshotComparison
-  label="Bar width adjustment"
+<FeatureScreenshot
+  src={bar_chart_props_scrolled_designer}
+  alt="Bar width adjustment"
+  caption="Configure bar width adjustment in the property panel"
 />
 
 ## Tips

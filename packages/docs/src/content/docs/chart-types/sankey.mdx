@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import sankey_viewer from '../../../assets/screenshots/chart-types/sankey-default-viewer.png';
 import sankey_designer from '../../../assets/screenshots/chart-types/sankey-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import sankey_props_designer from '../../../assets/screenshots/chart-types/sankey-props-designer.png';
+import sankey_props_scrolled_designer from '../../../assets/screenshots/chart-types/sankey-props-scrolled-designer.png';
 
 # Sankey Diagram
 
@@ -34,24 +37,30 @@ A Sankey diagram with default settings shows nodes as vertical bars connected by
 
 The field identifying where each flow originates.
 
-<ScreenshotComparison
-  label="Source field binding"
+<FeatureScreenshot
+  src={sankey_props_designer}
+  alt="Source field binding"
+  caption="Configure source field binding in the property panel"
 />
 
 ### Target Field (`targetField`)
 
 The field identifying where each flow terminates.
 
-<ScreenshotComparison
-  label="Target field binding"
+<FeatureScreenshot
+  src={sankey_props_scrolled_designer}
+  alt="Target field binding"
+  caption="Configure target field binding in the property panel"
 />
 
 ### Value Field (`valueField`)
 
 The numeric field determining the width of each flow link.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={sankey_props_scrolled_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ## Tips

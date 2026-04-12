@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import waterfall_viewer from '../../../assets/screenshots/chart-types/waterfall-default-viewer.png';
 import waterfall_designer from '../../../assets/screenshots/chart-types/waterfall-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import waterfall_props_designer from '../../../assets/screenshots/chart-types/waterfall-props-designer.png';
+import waterfall_props_scrolled_designer from '../../../assets/screenshots/chart-types/waterfall-props-scrolled-designer.png';
 
 # Waterfall Chart
 
@@ -34,16 +37,20 @@ A waterfall chart with default settings shows floating bars indicating increases
 
 The field labeling each step in the waterfall.
 
-<ScreenshotComparison
-  label="Category field binding"
+<FeatureScreenshot
+  src={waterfall_props_designer}
+  alt="Category field binding"
+  caption="Configure category field binding in the property panel"
 />
 
 ### Value Field (`valueField`)
 
 The numeric field representing the change (positive or negative) at each step.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={waterfall_props_scrolled_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ## Tips

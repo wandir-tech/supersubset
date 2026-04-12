@@ -9,6 +9,8 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
 import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import header_props_designer from '../../../assets/screenshots/layout/header-props-designer.png';
 
 # Header
 
@@ -34,16 +36,20 @@ A header with default settings shows large bold text.
 
 The heading text to display.
 
-<ScreenshotComparison
-  label="Header text configuration"
+<FeatureScreenshot
+  src={header_props_designer}
+  alt="Header text configuration"
+  caption="Configure header text configuration in the property panel"
 />
 
 ### Header Size (`headerSize`)
 
 Controls the visual prominence: `large`, `medium`, or `small`.
 
-<ScreenshotComparison
-  label="Header size comparison"
+<FeatureScreenshot
+  src={header_props_designer}
+  alt="Header size comparison"
+  caption="Configure header size comparison in the property panel"
 />
 
 ## Tips

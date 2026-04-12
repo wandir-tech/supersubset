@@ -9,6 +9,8 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
 import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import rows_columns_overview_viewer from '../../../assets/screenshots/layout/rows-columns-overview-viewer.png';
 
 # Rows & Columns
 
@@ -34,16 +36,20 @@ A row with widgets placed side by side, each occupying their configured width.
 
 Each widget within a row specifies its width in grid columns (1–12). Widgets that exceed the row's column count wrap to the next line.
 
-<ScreenshotComparison
-  label="Widget width configuration"
+<FeatureScreenshot
+  src={rows_columns_overview_viewer}
+  alt="Widget width configuration"
+  caption="Widget width configuration"
 />
 
 ### Widget Height
 
 Each widget specifies its height in pixels. Charts typically use 300–400px; KPI cards use 100–150px.
 
-<ScreenshotComparison
-  label="Widget height configuration"
+<FeatureScreenshot
+  src={rows_columns_overview_viewer}
+  alt="Widget height configuration"
+  caption="Widget height configuration"
 />
 
 ## Tips

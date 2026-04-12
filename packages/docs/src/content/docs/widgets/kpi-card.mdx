@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import kpi_card_viewer from '../../../assets/screenshots/widgets/kpi-card-default-viewer.png';
 import kpi_card_designer from '../../../assets/screenshots/widgets/kpi-card-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import kpi_card_props_designer from '../../../assets/screenshots/widgets/kpi-card-props-designer.png';
+import kpi_card_props_scrolled_designer from '../../../assets/screenshots/widgets/kpi-card-props-scrolled-designer.png';
 
 # KPI Card
 
@@ -34,40 +37,50 @@ A KPI card with default settings shows a large number with a title.
 
 The numeric field to display as the primary value.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={kpi_card_props_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Comparison Field (`comparisonField`)
 
 An optional field used to calculate and display the change from a previous period. Shows as an up/down arrow with percentage change.
 
-<ScreenshotComparison
-  label="Comparison field showing trend"
+<FeatureScreenshot
+  src={kpi_card_props_designer}
+  alt="Comparison field showing trend"
+  caption="Configure comparison field showing trend in the property panel"
 />
 
 ### Format (`format`)
 
 Controls number formatting: `compact` (1.2K, 3.4M), `currency` ($1,234.56), or default (1234).
 
-<ScreenshotComparison
-  label="Format options comparison"
+<FeatureScreenshot
+  src={kpi_card_props_scrolled_designer}
+  alt="Format options comparison"
+  caption="Configure format options comparison in the property panel"
 />
 
 ### Prefix (`prefix`)
 
 A text prefix added before the value (e.g., `$`, `€`).
 
-<ScreenshotComparison
-  label="Currency prefix"
+<FeatureScreenshot
+  src={kpi_card_props_scrolled_designer}
+  alt="Currency prefix"
+  caption="Configure currency prefix in the property panel"
 />
 
 ### Suffix (`suffix`)
 
 A text suffix added after the value (e.g., `%`, `units`).
 
-<ScreenshotComparison
-  label="Unit suffix"
+<FeatureScreenshot
+  src={kpi_card_props_scrolled_designer}
+  alt="Unit suffix"
+  caption="Configure unit suffix in the property panel"
 />
 
 ## Tips

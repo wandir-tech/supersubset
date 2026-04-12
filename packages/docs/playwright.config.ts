@@ -15,7 +15,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   reporter: 'list',
-  timeout: 30_000,
+  timeout: 60_000,
   use: {
     baseURL: 'http://localhost:3000',
     screenshot: 'off', // we capture manually

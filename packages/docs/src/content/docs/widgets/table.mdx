@@ -9,6 +9,8 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import table_viewer from '../../../assets/screenshots/widgets/table-default-viewer.png';
 import table_designer from '../../../assets/screenshots/widgets/table-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import table_props_scrolled_designer from '../../../assets/screenshots/widgets/table-props-scrolled-designer.png';
 
 # Table
 
@@ -34,8 +36,10 @@ A table with default settings shows all available fields with automatic column w
 
 The number of rows displayed per page. Smaller pages load faster; larger pages show more data at once.
 
-<ScreenshotComparison
-  label="Page size adjustment"
+<FeatureScreenshot
+  src={table_props_scrolled_designer}
+  alt="Page size adjustment"
+  caption="Configure page size adjustment in the property panel"
 />
 
 ## Tips

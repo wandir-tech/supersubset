@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import designer_designer from '../../../assets/screenshots/import-export/designer-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import designer_default_designer from '../../../assets/screenshots/import-export/designer-default-designer.png';
 
 # Import
 
@@ -29,8 +31,10 @@ Open the **Import/Export panel** from the designer toolbar and click "Import". S
 
 The designer loads the imported dashboard with all its pages and widgets. You can immediately edit or preview it.
 
-<ScreenshotComparison
-  label="Dashboard loaded after import"
+<FeatureScreenshot
+  src={designer_default_designer}
+  alt="Dashboard loaded after import"
+  caption="Dashboard loaded after import"
 />
 
 ## Tips

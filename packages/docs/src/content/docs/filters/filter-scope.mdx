@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import filter_builder_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import filter_bar_default_viewer from '../../../assets/screenshots/filters/filter-bar-default-viewer.png';
 
 # Filter Scope
 
@@ -31,8 +33,10 @@ The default. A global filter affects every widget on every page of the dashboard
 
 Limit a filter to affect only specific widgets. Useful when different sections of a dashboard use different datasets.
 
-<ScreenshotComparison
-  label="Widget-specific scope"
+<FeatureScreenshot
+  src={filter_bar_default_viewer}
+  alt="Widget-specific scope"
+  caption="Widget-specific scope"
 />
 
 ## Tips

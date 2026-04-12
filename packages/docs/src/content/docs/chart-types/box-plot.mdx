@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import box_plot_viewer from '../../../assets/screenshots/chart-types/box-plot-default-viewer.png';
 import box_plot_designer from '../../../assets/screenshots/chart-types/box-plot-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import box_plot_props_designer from '../../../assets/screenshots/chart-types/box-plot-props-designer.png';
+import box_plot_props_scrolled_designer from '../../../assets/screenshots/chart-types/box-plot-props-scrolled-designer.png';
 
 # Box Plot
 
@@ -34,16 +37,20 @@ A box plot with default settings shows boxes spanning the interquartile range wi
 
 The categorical field used to create separate boxes for each group.
 
-<ScreenshotComparison
-  label="Group field binding"
+<FeatureScreenshot
+  src={box_plot_props_designer}
+  alt="Group field binding"
+  caption="Configure group field binding in the property panel"
 />
 
 ### Value Field (`valueField`)
 
 The numeric field whose distribution is visualized.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={box_plot_props_scrolled_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ## Tips

@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import scatter_chart_viewer from '../../../assets/screenshots/chart-types/scatter-chart-default-viewer.png';
 import scatter_chart_designer from '../../../assets/screenshots/chart-types/scatter-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import scatter_chart_props_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-designer.png';
+import scatter_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-scrolled-designer.png';
 
 # Scatter Chart
 
@@ -34,40 +37,50 @@ A scatter chart with default settings shows data points on an X/Y grid.
 
 The numeric field for the horizontal axis.
 
-<ScreenshotComparison
-  label="X field binding"
+<FeatureScreenshot
+  src={scatter_chart_props_designer}
+  alt="X field binding"
+  caption="Configure x field binding in the property panel"
 />
 
 ### Y Field (`yField`)
 
 The numeric field for the vertical axis.
 
-<ScreenshotComparison
-  label="Y field binding"
+<FeatureScreenshot
+  src={scatter_chart_props_designer}
+  alt="Y field binding"
+  caption="Configure y field binding in the property panel"
 />
 
 ### Size Field (`sizeField`)
 
 An optional numeric field that controls point size, creating a bubble chart effect.
 
-<ScreenshotComparison
-  label="Size field (bubble effect)"
+<FeatureScreenshot
+  src={scatter_chart_props_scrolled_designer}
+  alt="Size field (bubble effect)"
+  caption="Configure size field (bubble effect) in the property panel"
 />
 
 ### Color Field (`colorField`)
 
 An optional categorical field that colors points by group.
 
-<ScreenshotComparison
-  label="Color field grouping"
+<FeatureScreenshot
+  src={scatter_chart_props_scrolled_designer}
+  alt="Color field grouping"
+  caption="Configure color field grouping in the property panel"
 />
 
 ### Symbol Size (`symbolSize`)
 
 Controls the base size of data points. Increase for sparse data; decrease for dense datasets.
 
-<ScreenshotComparison
-  label="Symbol size adjustment"
+<FeatureScreenshot
+  src={scatter_chart_props_scrolled_designer}
+  alt="Symbol size adjustment"
+  caption="Configure symbol size adjustment in the property panel"
 />
 
 ## Tips

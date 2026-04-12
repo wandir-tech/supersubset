@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import import_export_designer from '../../../assets/screenshots/import-export/import-export-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import import_export_toolbar_default_designer from '../../../assets/screenshots/import-export/import-export-toolbar-default-designer.png';
 
 # JSON Export
 
@@ -35,8 +37,10 @@ The exported JSON contains the complete dashboard definition including:
 - Interactions and navigation rules
 - Theme settings
 
-<ScreenshotComparison
-  label="JSON schema structure"
+<FeatureScreenshot
+  src={import_export_toolbar_default_designer}
+  alt="JSON schema structure"
+  caption="JSON schema structure"
 />
 
 ## Tips

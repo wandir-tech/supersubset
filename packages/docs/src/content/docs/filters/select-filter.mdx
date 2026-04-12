@@ -8,6 +8,9 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import select_filter_viewer from '../../../assets/screenshots/filters/select-filter-default-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import filter_builder_default_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
+import select_filter_active_viewer from '../../../assets/screenshots/filters/select-filter-active-viewer.png';
 
 # Select Filter
 
@@ -31,32 +34,40 @@ A select filter with default settings shows a dropdown with all unique values fr
 
 The data field whose unique values populate the dropdown options.
 
-<ScreenshotComparison
-  label="Field reference binding"
+<FeatureScreenshot
+  src={filter_builder_default_designer}
+  alt="Field reference binding"
+  caption="Field reference binding"
 />
 
 ### Dataset Reference (`datasetRef`)
 
 The dataset containing the field. This determines which data source provides the filter values.
 
-<ScreenshotComparison
-  label="Dataset reference"
+<FeatureScreenshot
+  src={filter_builder_default_designer}
+  alt="Dataset reference"
+  caption="Dataset reference"
 />
 
 ### Operator (`operator`)
 
 The comparison operator: `equals` (exact match), `contains`, `in` (multiple values).
 
-<ScreenshotComparison
-  label="Filter operator options"
+<FeatureScreenshot
+  src={select_filter_active_viewer}
+  alt="Filter operator options"
+  caption="Filter operator options"
 />
 
 ### Scope
 
 Controls which widgets are affected by this filter. See [Filter Scope](/filters/filter-scope/) for details.
 
-<ScreenshotComparison
-  label="Filter scope configuration"
+<FeatureScreenshot
+  src={select_filter_active_viewer}
+  alt="Filter scope configuration"
+  caption="Filter scope configuration"
 />
 
 ## Tips

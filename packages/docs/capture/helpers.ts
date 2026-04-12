@@ -209,3 +209,88 @@ export function assertNoConsoleErrors(errors: string[]): void {
     // Warn but don't fail — some errors may be expected in dev mode
   }
 }
+
+/**
+ * Select a widget in the designer by clicking inside the Puck canvas iframe.
+ * Uses the Layers panel to verify selection.
+ *
+ * @param page - Playwright page
+ * @param widgetLabel - The label shown in the Layers panel (e.g., "Line Chart", "Bar Chart", "KPI Card")
+ * @param clickY - Relative Y position (0–1) within the iframe to click
+ */
+export async function selectWidgetViaCanvas(
+  page: Page,
+  widgetLabel: string,
+  clickY: number,
+): Promise<void> {
+  // Switch to Layers tab so we can see which widget is selected
+  const layersBtn = page.getByText('Layers').first();
+  if (await layersBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await layersBtn.click();
+    await page.waitForTimeout(300);
+  }
+
+  // Click inside the iframe at the specified Y position
+  const iframe = page.locator('iframe');
+  if (await iframe.isVisible({ timeout: 3000 })) {
+    const box = await iframe.boundingBox();
+    if (box) {
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height * clickY);
+      await page.waitForTimeout(800);
+    }
+  }
+}
+
+/**
+ * Select a widget in the designer by clicking its layer entry in the Layers panel.
+ * For duplicate labels (e.g., multiple KPI Cards), clicks the first match.
+ */
+export async function selectWidgetViaLayers(
+  page: Page,
+  widgetLabel: string,
+): Promise<boolean> {
+  // Switch to Layers tab
+  const layersBtn = page.getByText('Layers').first();
+  if (await layersBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await layersBtn.click();
+    await page.waitForTimeout(500);
+  }
+
+  // Click the layer button with matching text
+  // Use exact text on the name span to avoid partial matches
+  const layerBtn = page.locator(`[class*="Layer-name"]`).filter({ hasText: new RegExp(`^${widgetLabel}$`) });
+  const count = await layerBtn.count();
+  if (count > 0) {
+    await layerBtn.first().click();
+    await page.waitForTimeout(800);
+    return true;
+  }
+  
+  // Fallback: try the clickable button with has-text
+  const clickable = page.locator('[class*="Layer-clickable"]').filter({ hasText: widgetLabel });
+  if (await clickable.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+    await clickable.first().click();
+    await page.waitForTimeout(800);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Capture a screenshot of the right sidebar (property panel) in the designer.
+ * Uses viewport clipping since the Puck sidebar doesn't have stable selectors.
+ */
+export async function capturePropertyPanel(
+  page: Page,
+  category: string,
+  slug: string,
+  variant: string,
+): Promise<string> {
+  const filePath = screenshotPath(category, slug, variant, 'designer');
+  await page.screenshot({
+    path: filePath,
+    clip: { x: 1100, y: 130, width: 340, height: 770 },
+    animations: 'disabled',
+  });
+  return filePath;
+}

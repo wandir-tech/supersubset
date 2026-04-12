@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import funnel_chart_viewer from '../../../assets/screenshots/chart-types/funnel-chart-default-viewer.png';
 import funnel_chart_designer from '../../../assets/screenshots/chart-types/funnel-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import funnel_chart_props_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-designer.png';
+import funnel_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-scrolled-designer.png';
 
 # Funnel Chart
 
@@ -34,32 +37,40 @@ A funnel chart with default settings shows descending trapezoidal segments.
 
 The numeric field determining each stage's width.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={funnel_chart_props_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Label Field (`labelField`)
 
 The field used to label each funnel stage.
 
-<ScreenshotComparison
-  label="Label field binding"
+<FeatureScreenshot
+  src={funnel_chart_props_designer}
+  alt="Label field binding"
+  caption="Configure label field binding in the property panel"
 />
 
 ### Sort Order (`sort`)
 
 Control whether stages are sorted by value (`descending`, `ascending`) or displayed in data order (`none`).
 
-<ScreenshotComparison
-  label="Sort order options"
+<FeatureScreenshot
+  src={funnel_chart_props_scrolled_designer}
+  alt="Sort order options"
+  caption="Configure sort order options in the property panel"
 />
 
 ### Gap (`gap`)
 
 Spacing between funnel segments. Increase for a cleaner separated look.
 
-<ScreenshotComparison
-  label="Gap between segments"
+<FeatureScreenshot
+  src={funnel_chart_props_scrolled_designer}
+  alt="Gap between segments"
+  caption="Configure gap between segments in the property panel"
 />
 
 ## Tips

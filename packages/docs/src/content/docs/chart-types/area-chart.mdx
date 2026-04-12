@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import area_chart_viewer from '../../../assets/screenshots/chart-types/area-chart-default-viewer.png';
 import area_chart_designer from '../../../assets/screenshots/chart-types/area-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import area_chart_props_designer from '../../../assets/screenshots/chart-types/area-chart-props-designer.png';
+import area_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/area-chart-props-scrolled-designer.png';
 
 # Area Chart
 
@@ -34,40 +37,50 @@ An area chart with default settings shows filled regions under each line with se
 
 The time or category field for the horizontal axis.
 
-<ScreenshotComparison
-  label="X-axis field binding"
+<FeatureScreenshot
+  src={area_chart_props_designer}
+  alt="X-axis field binding"
+  caption="Configure x-axis field binding in the property panel"
 />
 
 ### Y-Axis Fields (`yFields`)
 
 One or more measure fields. Each field produces a filled area series.
 
-<ScreenshotComparison
-  label="Multiple Y-axis fields"
+<FeatureScreenshot
+  src={area_chart_props_designer}
+  alt="Multiple Y-axis fields"
+  caption="Configure multiple y-axis fields in the property panel"
 />
 
 ### Smooth Curves (`smooth`)
 
 When enabled, area boundaries are drawn as smooth curves.
 
-<ScreenshotComparison
-  label="Smooth area curves"
+<FeatureScreenshot
+  src={area_chart_props_scrolled_designer}
+  alt="Smooth area curves"
+  caption="Configure smooth area curves in the property panel"
 />
 
 ### Opacity (`opacity`)
 
 Controls the transparency of the fill. Lower values let overlapping areas show through; higher values produce more vivid fills.
 
-<ScreenshotComparison
-  label="Fill opacity adjustment"
+<FeatureScreenshot
+  src={area_chart_props_scrolled_designer}
+  alt="Fill opacity adjustment"
+  caption="Configure fill opacity adjustment in the property panel"
 />
 
 ### Stacked Areas (`stacked`)
 
 When enabled, areas are stacked so each series starts where the previous one ends. This shows cumulative totals and the contribution of each series.
 
-<ScreenshotComparison
-  label="Stacked areas"
+<FeatureScreenshot
+  src={area_chart_props_scrolled_designer}
+  alt="Stacked areas"
+  caption="Configure stacked areas in the property panel"
 />
 
 ## Tips

@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import pie_chart_viewer from '../../../assets/screenshots/chart-types/pie-chart-default-viewer.png';
 import pie_chart_designer from '../../../assets/screenshots/chart-types/pie-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import pie_chart_props_designer from '../../../assets/screenshots/chart-types/pie-chart-props-designer.png';
+import pie_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/pie-chart-props-scrolled-designer.png';
 
 # Pie Chart
 
@@ -34,40 +37,50 @@ A pie chart with default settings shows a standard circle divided into colored s
 
 The numeric field that determines slice size.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={pie_chart_props_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Category Field (`categoryField`)
 
 The field that labels each slice.
 
-<ScreenshotComparison
-  label="Category field binding"
+<FeatureScreenshot
+  src={pie_chart_props_designer}
+  alt="Category field binding"
+  caption="Configure category field binding in the property panel"
 />
 
 ### Donut Mode (`donut`)
 
 When enabled, the center of the pie is hollow, creating a donut shape. This is often preferred for a cleaner, more modern look and can display a summary value in the center.
 
-<ScreenshotComparison
-  label="Donut mode"
+<FeatureScreenshot
+  src={pie_chart_props_scrolled_designer}
+  alt="Donut mode"
+  caption="Configure donut mode in the property panel"
 />
 
 ### Rose Type (`roseType`)
 
 When enabled, slice radii vary by value — larger values have longer slices extending further from the center. This creates a "nightingale rose" effect that can make differences between values more visible.
 
-<ScreenshotComparison
-  label="Rose type (nightingale)"
+<FeatureScreenshot
+  src={pie_chart_props_scrolled_designer}
+  alt="Rose type (nightingale)"
+  caption="Configure rose type (nightingale) in the property panel"
 />
 
 ### Show Labels (`showLabels`)
 
 Toggle the visibility of slice labels. Disable when using a legend or when slices are obvious from color coding.
 
-<ScreenshotComparison
-  label="Label visibility"
+<FeatureScreenshot
+  src={pie_chart_props_scrolled_designer}
+  alt="Label visibility"
+  caption="Configure label visibility in the property panel"
 />
 
 ## Tips

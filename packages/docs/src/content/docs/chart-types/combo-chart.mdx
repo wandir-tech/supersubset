@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import combo_chart_viewer from '../../../assets/screenshots/chart-types/combo-chart-default-viewer.png';
 import combo_chart_designer from '../../../assets/screenshots/chart-types/combo-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import combo_chart_props_designer from '../../../assets/screenshots/chart-types/combo-chart-props-designer.png';
+import combo_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/combo-chart-props-scrolled-designer.png';
 
 # Combo Chart
 
@@ -34,16 +37,20 @@ A combo chart with default settings shows a mix of bar and line series.
 
 Define multiple series, each with its own chart type (line, bar, or area), data field, and axis assignment.
 
-<ScreenshotComparison
-  label="Series configuration"
+<FeatureScreenshot
+  src={combo_chart_props_designer}
+  alt="Series configuration"
+  caption="Configure series configuration in the property panel"
 />
 
 ### Dual Axis (`dualAxis`)
 
 When enabled, a second Y-axis appears on the right side of the chart. Assign series to either the left or right axis based on their scale.
 
-<ScreenshotComparison
-  label="Dual axis with different scales"
+<FeatureScreenshot
+  src={combo_chart_props_scrolled_designer}
+  alt="Dual axis with different scales"
+  caption="Configure dual axis with different scales in the property panel"
 />
 
 ## Tips

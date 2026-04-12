@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import treemap_viewer from '../../../assets/screenshots/chart-types/treemap-default-viewer.png';
 import treemap_designer from '../../../assets/screenshots/chart-types/treemap-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import treemap_props_designer from '../../../assets/screenshots/chart-types/treemap-props-designer.png';
+import treemap_props_scrolled_designer from '../../../assets/screenshots/chart-types/treemap-props-scrolled-designer.png';
 
 # Treemap
 
@@ -34,24 +37,30 @@ A treemap with default settings shows colored rectangles proportional to their v
 
 The numeric field determining rectangle size.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={treemap_props_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Category Field (`categoryField`)
 
 The field used to label and group rectangles.
 
-<ScreenshotComparison
-  label="Category field binding"
+<FeatureScreenshot
+  src={treemap_props_scrolled_designer}
+  alt="Category field binding"
+  caption="Configure category field binding in the property panel"
 />
 
 ### Levels (`levels`)
 
 Configure visual properties (colors, borders) for each level of hierarchy.
 
-<ScreenshotComparison
-  label="Hierarchy level configuration"
+<FeatureScreenshot
+  src={treemap_props_scrolled_designer}
+  alt="Hierarchy level configuration"
+  caption="Configure hierarchy level configuration in the property panel"
 />
 
 ## Tips

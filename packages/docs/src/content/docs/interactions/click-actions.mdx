@@ -8,6 +8,9 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import interaction_editor_designer from '../../../assets/screenshots/interactions/interaction-editor-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import click_actions_panel_designer from '../../../assets/screenshots/interactions/click-actions-panel-designer.png';
+import interaction_editor_default_designer from '../../../assets/screenshots/interactions/interaction-editor-default-designer.png';
 
 # Click Actions
 
@@ -31,16 +34,20 @@ Without any click actions configured, clicking a chart element does nothing (or 
 
 Clicking a chart element filters other widgets by the clicked value. This is [Cross-Filtering](/filters/cross-filtering/) functionality.
 
-<ScreenshotComparison
-  label="Filter click action"
+<FeatureScreenshot
+  src={click_actions_panel_designer}
+  alt="Filter click action"
+  caption="Filter click action"
 />
 
 ### Navigate Action
 
 Clicking a chart element navigates to another dashboard page, optionally passing context.
 
-<ScreenshotComparison
-  label="Navigate click action"
+<FeatureScreenshot
+  src={interaction_editor_default_designer}
+  alt="Navigate click action"
+  caption="Navigate click action"
 />
 
 ## Tips

@@ -9,6 +9,8 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
 import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import grid_overview_designer from '../../../assets/screenshots/layout/grid-overview-designer.png';
 
 # Grid
 
@@ -34,8 +36,10 @@ A grid with default settings provides a 12-column responsive container.
 
 The number of columns in the grid (default: 12). Most dashboards use 12 columns for maximum flexibility.
 
-<ScreenshotComparison
-  label="Grid column configuration"
+<FeatureScreenshot
+  src={grid_overview_designer}
+  alt="Grid column configuration"
+  caption="Grid column configuration"
 />
 
 ## Tips

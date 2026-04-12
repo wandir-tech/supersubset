@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import pages_scenario_viewer from '../../../assets/screenshots/pages/pages-scenario-page1-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import pages_scenario_page1_viewer from '../../../assets/screenshots/pages/pages-scenario-page1-viewer.png';
 
 # Page Navigation
 
@@ -29,8 +31,10 @@ The viewer presents page navigation as tab headers at the top of the dashboard.
 
 The designer shows page tabs in the toolbar area. Click a tab to switch to that page for editing.
 
-<ScreenshotComparison
-  label="Page navigation in designer"
+<FeatureScreenshot
+  src={pages_scenario_page1_viewer}
+  alt="Page navigation in designer"
+  caption="Page navigation in designer"
 />
 
 ## Tips

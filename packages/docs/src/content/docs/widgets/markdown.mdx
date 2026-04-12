@@ -9,6 +9,8 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import markdown_viewer from '../../../assets/screenshots/widgets/markdown-default-viewer.png';
 import markdown_designer from '../../../assets/screenshots/widgets/markdown-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import markdown_props_scrolled_designer from '../../../assets/screenshots/widgets/markdown-props-scrolled-designer.png';
 
 # Markdown
 
@@ -34,8 +36,10 @@ A Markdown widget with default settings shows placeholder text that you can edit
 
 The Markdown text to render. Supports full Markdown syntax.
 
-<ScreenshotComparison
-  label="Markdown content editing"
+<FeatureScreenshot
+  src={markdown_props_scrolled_designer}
+  alt="Markdown content editing"
+  caption="Configure markdown content editing in the property panel"
 />
 
 ## Tips

@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import line_chart_viewer from '../../../assets/screenshots/chart-types/line-chart-default-viewer.png';
 import line_chart_designer from '../../../assets/screenshots/chart-types/line-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import line_chart_props_designer from '../../../assets/screenshots/chart-types/line-chart-props-designer.png';
+import line_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/line-chart-props-scrolled-designer.png';
 
 # Line Chart
 
@@ -34,40 +37,50 @@ A line chart with default settings shows straight lines connecting data points, 
 
 The field used for the horizontal axis — typically a time or category field.
 
-<ScreenshotComparison
-  label="X-axis field binding"
+<FeatureScreenshot
+  src={line_chart_props_designer}
+  alt="X-axis field binding"
+  caption="Configure x-axis field binding in the property panel"
 />
 
 ### Y-Axis Fields (`yFields`)
 
 One or more measure fields plotted as separate lines. Add multiple fields to compare trends.
 
-<ScreenshotComparison
-  label="Multiple Y-axis fields"
+<FeatureScreenshot
+  src={line_chart_props_designer}
+  alt="Multiple Y-axis fields"
+  caption="Configure multiple y-axis fields in the property panel"
 />
 
 ### Smooth Lines (`smooth`)
 
 When enabled, lines are drawn as smooth curves instead of straight segments. This produces a more polished look but can obscure precise data point positions.
 
-<ScreenshotComparison
-  label="Smooth lines enabled"
+<FeatureScreenshot
+  src={line_chart_props_scrolled_designer}
+  alt="Smooth lines enabled"
+  caption="Configure smooth lines enabled in the property panel"
 />
 
 ### Area Fill (`area`)
 
 When enabled, the area below each line is filled with a semi-transparent color. Useful for emphasizing volume or magnitude.
 
-<ScreenshotComparison
-  label="Area fill enabled"
+<FeatureScreenshot
+  src={line_chart_props_scrolled_designer}
+  alt="Area fill enabled"
+  caption="Configure area fill enabled in the property panel"
 />
 
 ### Show Points (`showPoints`)
 
 Toggle the visibility of data point markers on the line. Hiding points gives a cleaner look; showing them makes individual values easier to read.
 
-<ScreenshotComparison
-  label="Data points visibility"
+<FeatureScreenshot
+  src={line_chart_props_scrolled_designer}
+  alt="Data points visibility"
+  caption="Configure data points visibility in the property panel"
 />
 
 ## Tips

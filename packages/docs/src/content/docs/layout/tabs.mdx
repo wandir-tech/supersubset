@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import multi_page_viewer from '../../../assets/screenshots/pages/multi-page-page1-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import tabs_viewer_tabs_viewer from '../../../assets/screenshots/layout/tabs-viewer-tabs-viewer.png';
 
 # Tabs
 
@@ -31,8 +33,10 @@ A tabs component shows a row of tab headers with the active tab's content displa
 
 Add, rename, reorder, and delete tabs. Each tab contains its own set of widgets and layout components.
 
-<ScreenshotComparison
-  label="Tab management in designer"
+<FeatureScreenshot
+  src={tabs_viewer_tabs_viewer}
+  alt="Tab management in designer"
+  caption="Tab management in designer"
 />
 
 ## Tips

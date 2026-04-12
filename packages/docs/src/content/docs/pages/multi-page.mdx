@@ -8,6 +8,9 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import multi_page_viewer from '../../../assets/screenshots/pages/multi-page-page1-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import multi_page_page1_viewer from '../../../assets/screenshots/pages/multi-page-page1-viewer.png';
+import page_management_default_designer from '../../../assets/screenshots/pages/page-management-default-designer.png';
 
 # Multi-Page Dashboards
 
@@ -31,32 +34,40 @@ A new dashboard starts with a single page. The page management controls in the d
 
 Click the "Add Page" button in the toolbar. A new empty page is created with a default title.
 
-<ScreenshotComparison
-  label="Adding a new page"
+<FeatureScreenshot
+  src={page_management_default_designer}
+  alt="Adding a new page"
+  caption="Adding a new page"
 />
 
 ### Renaming a Page
 
 Double-click the page tab or use the page settings to change its title.
 
-<ScreenshotComparison
-  label="Renaming a page"
+<FeatureScreenshot
+  src={page_management_default_designer}
+  alt="Renaming a page"
+  caption="Renaming a page"
 />
 
 ### Reordering Pages
 
 Drag page tabs to reorder them in the navigation.
 
-<ScreenshotComparison
-  label="Reordering pages"
+<FeatureScreenshot
+  src={multi_page_page1_viewer}
+  alt="Reordering pages"
+  caption="Reordering pages"
 />
 
 ### Deleting a Page
 
 Remove a page from the page management controls. If you delete the active page, the dashboard switches to the nearest remaining page.
 
-<ScreenshotComparison
-  label="Deleting a page"
+<FeatureScreenshot
+  src={multi_page_page1_viewer}
+  alt="Deleting a page"
+  caption="Deleting a page"
 />
 
 ## Tips

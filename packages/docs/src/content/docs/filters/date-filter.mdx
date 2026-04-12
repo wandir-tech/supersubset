@@ -8,6 +8,9 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import filter_bar_viewer from '../../../assets/screenshots/filters/filter-bar-default-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import filter_bar_active_viewer from '../../../assets/screenshots/filters/filter-bar-active-viewer.png';
+import filter_builder_default_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
 
 # Date Filter
 
@@ -31,24 +34,30 @@ A date filter with default settings shows a date range picker.
 
 The date/datetime field to filter on.
 
-<ScreenshotComparison
-  label="Date field reference"
+<FeatureScreenshot
+  src={filter_builder_default_designer}
+  alt="Date field reference"
+  caption="Date field reference"
 />
 
 ### Operator (`operator`)
 
 The comparison operator for dates: `between` (range), `before`, `after`, `equals`.
 
-<ScreenshotComparison
-  label="Date operator options"
+<FeatureScreenshot
+  src={filter_bar_active_viewer}
+  alt="Date operator options"
+  caption="Date operator options"
 />
 
 ### Scope
 
 Controls which widgets are affected. See [Filter Scope](/filters/filter-scope/).
 
-<ScreenshotComparison
-  label="Date filter scope"
+<FeatureScreenshot
+  src={filter_bar_active_viewer}
+  alt="Date filter scope"
+  caption="Date filter scope"
 />
 
 ## Tips

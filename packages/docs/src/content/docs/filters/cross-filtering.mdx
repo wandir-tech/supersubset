@@ -8,6 +8,9 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import cross_filter_viewer from '../../../assets/screenshots/filters/cross-filter-default-viewer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import cross_filter_default_viewer from '../../../assets/screenshots/filters/cross-filter-default-viewer.png';
+import filter_bar_active_viewer from '../../../assets/screenshots/filters/filter-bar-active-viewer.png';
 
 # Cross-Filtering
 
@@ -31,24 +34,30 @@ When cross-filtering is configured, clicking a chart element highlights it and f
 
 The user action that activates the filter: `click` is the most common.
 
-<ScreenshotComparison
-  label="Trigger type configuration"
+<FeatureScreenshot
+  src={cross_filter_default_viewer}
+  alt="Trigger type configuration"
+  caption="Trigger type configuration"
 />
 
 ### Source Widget (`trigger.sourceWidgetId`)
 
 The widget whose elements can be clicked to trigger filtering.
 
-<ScreenshotComparison
-  label="Source widget selection"
+<FeatureScreenshot
+  src={filter_bar_active_viewer}
+  alt="Source widget selection"
+  caption="Source widget selection"
 />
 
 ### Filter Field (`action.fieldRef`)
 
 The field that gets filtered when the user clicks a chart element.
 
-<ScreenshotComparison
-  label="Filter field binding"
+<FeatureScreenshot
+  src={filter_bar_active_viewer}
+  alt="Filter field binding"
+  caption="Filter field binding"
 />
 
 ## Tips

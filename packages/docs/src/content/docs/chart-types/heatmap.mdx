@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import heatmap_viewer from '../../../assets/screenshots/chart-types/heatmap-default-viewer.png';
 import heatmap_designer from '../../../assets/screenshots/chart-types/heatmap-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import heatmap_props_designer from '../../../assets/screenshots/chart-types/heatmap-props-designer.png';
+import heatmap_props_scrolled_designer from '../../../assets/screenshots/chart-types/heatmap-props-scrolled-designer.png';
 
 # Heatmap
 
@@ -34,32 +37,40 @@ A heatmap with default settings shows a color-coded grid with an auto-scaled col
 
 The field for the horizontal axis (columns).
 
-<ScreenshotComparison
-  label="X field binding"
+<FeatureScreenshot
+  src={heatmap_props_designer}
+  alt="X field binding"
+  caption="Configure x field binding in the property panel"
 />
 
 ### Y Field (`yField`)
 
 The field for the vertical axis (rows).
 
-<ScreenshotComparison
-  label="Y field binding"
+<FeatureScreenshot
+  src={heatmap_props_designer}
+  alt="Y field binding"
+  caption="Configure y field binding in the property panel"
 />
 
 ### Value Field (`valueField`)
 
 The numeric field that determines cell color intensity.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={heatmap_props_scrolled_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Color Range (`colorRange`)
 
 The color gradient used to map values. Configure the start and end colors for the gradient.
 
-<ScreenshotComparison
-  label="Color range customization"
+<FeatureScreenshot
+  src={heatmap_props_scrolled_designer}
+  alt="Color range customization"
+  caption="Configure color range customization in the property panel"
 />
 
 ## Tips

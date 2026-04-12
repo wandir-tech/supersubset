@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import radar_chart_viewer from '../../../assets/screenshots/chart-types/radar-chart-default-viewer.png';
 import radar_chart_designer from '../../../assets/screenshots/chart-types/radar-chart-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import radar_chart_props_designer from '../../../assets/screenshots/chart-types/radar-chart-props-designer.png';
+import radar_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/radar-chart-props-scrolled-designer.png';
 
 # Radar Chart
 
@@ -34,32 +37,40 @@ A radar chart with default settings shows a polygon connecting values on each ax
 
 The list of measure fields, each mapped to a radar axis.
 
-<ScreenshotComparison
-  label="Dimension field bindings"
+<FeatureScreenshot
+  src={radar_chart_props_designer}
+  alt="Dimension field bindings"
+  caption="Configure dimension field bindings in the property panel"
 />
 
 ### Series Field (`seriesField`)
 
 The categorical field used to create multiple overlapping polygons for comparison.
 
-<ScreenshotComparison
-  label="Multiple series comparison"
+<FeatureScreenshot
+  src={radar_chart_props_designer}
+  alt="Multiple series comparison"
+  caption="Configure multiple series comparison in the property panel"
 />
 
 ### Shape (`shape`)
 
 Choose between `polygon` (straight edges) and `circle` (smooth) for the axis grid lines.
 
-<ScreenshotComparison
-  label="Shape: polygon vs circle"
+<FeatureScreenshot
+  src={radar_chart_props_scrolled_designer}
+  alt="Shape: polygon vs circle"
+  caption="Configure shape: polygon vs circle in the property panel"
 />
 
 ### Filled (`filled`)
 
 When enabled, the area inside the polygon is filled with a semi-transparent color.
 
-<ScreenshotComparison
-  label="Filled radar areas"
+<FeatureScreenshot
+  src={radar_chart_props_scrolled_designer}
+  alt="Filled radar areas"
+  caption="Configure filled radar areas in the property panel"
 />
 
 ## Tips

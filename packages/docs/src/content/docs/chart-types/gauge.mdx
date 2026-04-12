@@ -9,6 +9,9 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import gauge_viewer from '../../../assets/screenshots/chart-types/gauge-default-viewer.png';
 import gauge_designer from '../../../assets/screenshots/chart-types/gauge-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import gauge_props_designer from '../../../assets/screenshots/chart-types/gauge-props-designer.png';
+import gauge_props_scrolled_designer from '../../../assets/screenshots/chart-types/gauge-props-scrolled-designer.png';
 
 # Gauge
 
@@ -34,32 +37,40 @@ A gauge with default settings shows a half-circle dial with a needle pointing to
 
 The numeric field to display on the gauge.
 
-<ScreenshotComparison
-  label="Value field binding"
+<FeatureScreenshot
+  src={gauge_props_designer}
+  alt="Value field binding"
+  caption="Configure value field binding in the property panel"
 />
 
 ### Minimum (`min`)
 
 The minimum value of the gauge range.
 
-<ScreenshotComparison
-  label="Minimum range setting"
+<FeatureScreenshot
+  src={gauge_props_designer}
+  alt="Minimum range setting"
+  caption="Configure minimum range setting in the property panel"
 />
 
 ### Maximum (`max`)
 
 The maximum value of the gauge range.
 
-<ScreenshotComparison
-  label="Maximum range setting"
+<FeatureScreenshot
+  src={gauge_props_scrolled_designer}
+  alt="Maximum range setting"
+  caption="Configure maximum range setting in the property panel"
 />
 
 ### Split Number (`splitNumber`)
 
 Number of segments dividing the gauge arc. More splits give finer graduation marks.
 
-<ScreenshotComparison
-  label="Split number adjustment"
+<FeatureScreenshot
+  src={gauge_props_scrolled_designer}
+  alt="Split number adjustment"
+  caption="Configure split number adjustment in the property panel"
 />
 
 ## Tips

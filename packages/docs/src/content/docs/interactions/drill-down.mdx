@@ -8,6 +8,8 @@ sidebar:
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import interaction_editor_designer from '../../../assets/screenshots/interactions/interaction-editor-default-designer.png';
+import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
+import click_actions_panel_designer from '../../../assets/screenshots/interactions/click-actions-panel-designer.png';
 
 # Drill-Down
 
@@ -33,8 +35,10 @@ Drill-down is configured through the Interaction Editor panel in the designer. D
 2. **Trigger** — the click action
 3. **Target behavior** — filter, navigate to a detail page, or update the chart's grouping
 
-<ScreenshotComparison
-  label="Drill-down configuration"
+<FeatureScreenshot
+  src={click_actions_panel_designer}
+  alt="Drill-down configuration"
+  caption="Drill-down configuration"
 />
 
 ## Tips
