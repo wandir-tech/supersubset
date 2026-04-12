@@ -4,7 +4,8 @@
  * This is the product contract. The designer emits it; the runtime consumes it;
  * the host app persists it. JSON and YAML are interchangeable encodings.
  *
- * Layout model: flat normalized map (Superset-inspired).
+ * Layout model: flat normalized map inspired by Apache Superset's dashboard
+ * layout architecture, adapted by Supersubset contributors.
  * Each layout component is keyed by ID; children are ID arrays.
  * This enables efficient drag-and-drop editing (move = update two parents).
  */

@@ -4,7 +4,8 @@
  * Row — a 12-column CSS Grid container (drop Columns into it).
  * Column — a grid-spanning child with its own content slot.
  *
- * Inspired by Apache Superset's ROW → COLUMN → CHART layout model.
+ * Inspired by Apache Superset's ROW → COLUMN → CHART layout model,
+ * adapted by Supersubset contributors. See NOTICE for attribution.
  */
 import type { ComponentConfig } from '@puckeditor/core';
 import React from 'react';

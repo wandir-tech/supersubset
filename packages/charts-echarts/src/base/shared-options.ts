@@ -1,6 +1,9 @@
 /**
  * Shared chart option builders — reusable ECharts option fragments consumed by all widgets.
  *
+ * The default color palette ('supersetColors') is adapted from Apache Superset's
+ * categorical color scheme. See NOTICE for attribution.
+ *
  * Each builder reads from the generic `config: Record<string, unknown>` passed via WidgetProps.
  * Widgets call these builders and spread/merge the result into their ECharts option objects.
  *
