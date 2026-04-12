@@ -6,6 +6,7 @@ export default defineConfig({
     starlight({
       title: 'Supersubset Docs',
       description: 'End-user documentation for Supersubset dashboard authors',
+      favicon: '/favicon.svg',
       logo: {
         dark: './src/assets/logo-dark.svg',
         light: './src/assets/logo-light.svg',

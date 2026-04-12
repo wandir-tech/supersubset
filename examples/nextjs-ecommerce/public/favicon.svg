@@ -1,10 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Supersubset">
-  <defs>
-    <linearGradient id="warm" x1="8" x2="56" y1="8" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffedd5"/>
-      <stop offset="1" stop-color="#dbeafe"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="18" fill="url(#warm)"/>
-  <path d="M42 18H24c-3.314 0-6 2.686-6 6 0 2.544 1.584 4.718 3.82 5.592A6.998 6.998 0 0 0 30 46h10c3.314 0 6-2.686 6-6 0-2.532-1.571-4.698-3.789-5.58A7 7 0 0 0 34 18h8Zm-18 4h10a3 3 0 1 1 0 6H24a3 3 0 1 1 0-6Zm6 12h10a3 3 0 1 1 0 6H30a3 3 0 1 1 0-6Z" fill="#1f2937"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Supersubset">
+  <circle cx="32" cy="32" r="22" stroke="#1f2937" stroke-width="7.5" fill="none"/>
+  <circle cx="32" cy="32" r="22" stroke="#20A7C9" stroke-width="7.5" fill="none"
+          stroke-dasharray="38.4 99.83" stroke-dashoffset="19.2"/>
 </svg>

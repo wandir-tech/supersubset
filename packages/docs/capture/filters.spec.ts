@@ -56,7 +56,18 @@ test.describe('Filter screenshots', () => {
   test('viewer - select filter default', async ({ page }) => {
     await switchToViewer(page);
     await waitForChartsReady(page);
-    await captureFullPage(page, 'filters', 'select-filter', 'default', 'viewer');
+    // Scroll to make the filter bar visible at the top
+    const filterBar = page.locator('.ss-filter-bar');
+    if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await filterBar.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+    }
+    // Crop the filter bar and the first widget row below it
+    await page.screenshot({
+      path: 'src/assets/screenshots/filters/select-filter-default-viewer.png',
+      clip: { x: 0, y: 0, width: 1440, height: 900 },
+      animations: 'disabled',
+    });
   });
 
   // ── Filter bar after "Clear filters" ──────────────
@@ -98,7 +109,12 @@ test.describe('Filter screenshots', () => {
   test('viewer - cross-filter overview', async ({ page }) => {
     await switchToViewer(page);
     await waitForChartsReady(page);
-    // Just capture the overview — cross-filtering is shown via filter state
+    // Apply a filter to show cross-filtering in action
+    const regionFilter = page.locator('select[name="filter-region"]');
+    if (await regionFilter.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await regionFilter.selectOption('South');
+      await waitForChartsReady(page);
+    }
     await captureFullPage(page, 'filters', 'cross-filter', 'default', 'viewer');
   });
 });

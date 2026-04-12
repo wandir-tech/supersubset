@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Main circle (white for dark backgrounds) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Supersubset">
+  <!-- Main circle (white) -->
   <circle cx="32" cy="32" r="22" stroke="#ffffff" stroke-width="7.5" fill="none"/>
-  <!-- Cyan accent segment: 100° arc centered on the right -->
+  <!-- Cyan accent segment: 100° arc centered on the right (3 o'clock) -->
   <circle cx="32" cy="32" r="22" stroke="#20A7C9" stroke-width="7.5" fill="none"
           stroke-dasharray="38.4 99.83" stroke-dashoffset="19.2"/>
 </svg>

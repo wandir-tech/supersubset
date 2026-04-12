@@ -7,9 +7,11 @@ import { test } from '@playwright/test';
 import {
   switchToViewer,
   switchToDesigner,
+  navigateToPage,
   waitForChartsReady,
   captureFullPage,
   captureWidget,
+  selectWidgetViaLayers,
   setupConsoleErrorCapture,
   assertNoConsoleErrors,
 } from './helpers';
@@ -71,34 +73,59 @@ test.describe('Overview page screenshots', () => {
     await captureWidget(page, 'w-table', 'widgets', 'table', 'default', 'viewer');
   });
 
-  // Individual overview widgets (designer)
+  test('viewer - markdown widget', async ({ page }) => {
+    await switchToViewer(page);
+    await navigateToPage(page, 'Chart Gallery');
+    await waitForChartsReady(page);
+    await captureWidget(page, 'w-markdown', 'widgets', 'markdown', 'default', 'viewer');
+  });
+
+  // Individual overview widgets (designer) — select via Layers for unique prop panels
   test('designer - line chart widget', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-line', 'chart-types', 'line-chart', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Line Chart');
+    await captureFullPage(page, 'chart-types', 'line-chart', 'default', 'designer');
   });
 
   test('designer - bar chart widget', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-bar', 'chart-types', 'bar-chart', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Bar Chart');
+    await captureFullPage(page, 'chart-types', 'bar-chart', 'default', 'designer');
   });
 
   test('designer - alerts widget', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-alerts', 'widgets', 'alerts', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Alerts');
+    await captureFullPage(page, 'widgets', 'alerts', 'default', 'designer');
   });
 
   test('designer - kpi-card widget', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-kpi-revenue', 'widgets', 'kpi-card', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'KPI Card');
+    await captureFullPage(page, 'widgets', 'kpi-card', 'default', 'designer');
   });
 
   test('designer - table widget', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-table', 'widgets', 'table', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Table');
+    await captureFullPage(page, 'widgets', 'table', 'default', 'designer');
+  });
+
+  test('designer - markdown widget', async ({ page }) => {
+    await switchToDesigner(page);
+    await waitForChartsReady(page);
+    // markdown is on the gallery page
+    const galleryTab = page.locator('[data-testid="designer-page-tab-page-gallery"]');
+    if (await galleryTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await galleryTab.click();
+      await waitForChartsReady(page);
+    }
+    await selectWidgetViaLayers(page, 'Markdown');
+    await captureFullPage(page, 'widgets', 'markdown', 'default', 'designer');
   });
 });

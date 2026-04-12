@@ -9,6 +9,7 @@ import {
   waitForChartsReady,
   captureWidget,
   captureFullPage,
+  selectWidgetViaLayers,
   setupConsoleErrorCapture,
   assertNoConsoleErrors,
 } from './helpers';
@@ -55,7 +56,8 @@ test.describe('Widget screenshots', () => {
   test('designer - table', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-table', 'widgets', 'table', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Table');
+    await captureFullPage(page, 'widgets', 'table', 'default', 'designer');
   });
 
   // ── Alerts ────────────────────────────────────────
@@ -68,7 +70,8 @@ test.describe('Widget screenshots', () => {
   test('designer - alerts', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    await captureWidget(page, 'w-alerts', 'widgets', 'alerts', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Alerts');
+    await captureFullPage(page, 'widgets', 'alerts', 'default', 'designer');
   });
 
   // ── Markdown (on Chart Gallery page) ──────────────
@@ -87,6 +90,7 @@ test.describe('Widget screenshots', () => {
       await galleryTab.click();
       await waitForChartsReady(page);
     }
-    await captureWidget(page, 'w-markdown', 'widgets', 'markdown', 'default', 'designer');
+    await selectWidgetViaLayers(page, 'Markdown');
+    await captureFullPage(page, 'widgets', 'markdown', 'default', 'designer');
   });
 });

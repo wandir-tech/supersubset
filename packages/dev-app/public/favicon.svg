@@ -1,7 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Main circle (dark for light backgrounds) -->
   <circle cx="32" cy="32" r="22" stroke="#1f2937" stroke-width="7.5" fill="none"/>
-  <!-- Cyan accent segment: 100° arc centered on the right -->
   <circle cx="32" cy="32" r="22" stroke="#20A7C9" stroke-width="7.5" fill="none"
           stroke-dasharray="38.4 99.83" stroke-dashoffset="19.2"/>
 </svg>

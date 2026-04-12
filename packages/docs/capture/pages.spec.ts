@@ -29,6 +29,9 @@ test.describe('Pages & Navigation screenshots', () => {
   test('viewer - overview page', async ({ page }) => {
     await switchToViewer(page);
     await waitForChartsReady(page);
+    // Scroll down to show unique content (KPIs + charts), not just the header
+    await page.evaluate(() => window.scrollBy(0, 400));
+    await page.waitForTimeout(500);
     await captureFullPage(page, 'pages', 'multi-page', 'page1', 'viewer');
   });
 
@@ -44,6 +47,12 @@ test.describe('Pages & Navigation screenshots', () => {
   test('designer - page tabs', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
+    // Click the Chart Gallery page tab so the designer shows the gallery page
+    const galleryTab = page.locator('[data-testid="designer-page-tab-page-gallery"]');
+    if (await galleryTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await galleryTab.click();
+      await waitForChartsReady(page);
+    }
     await captureFullPage(page, 'pages', 'page-management', 'default', 'designer');
   });
 

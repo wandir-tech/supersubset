@@ -1,6 +1,9 @@
-# Supersubset
+<p align="center">
+  <img src="logo.svg" alt="Supersubset" width="80" height="80" />
+</p>
+<h1 align="center">Supersubset</h1>
 
-**An embeddable, open-source analytics builder and runtime for React applications.**
+<p align="center"><strong>An embeddable, open-source analytics builder and runtime for React applications.</strong></p>
 
 Supersubset aims to be an embeddable [Apache Superset](https://superset.apache.org/) — giving React host apps a drag-and-drop dashboard designer and a lightweight rendering engine without requiring a full BI server.
 

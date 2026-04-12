@@ -12,24 +12,25 @@ import {
   waitForChartsReady,
   captureFullPage,
   captureWidget,
+  selectWidgetViaLayers,
   setupConsoleErrorCapture,
   assertNoConsoleErrors,
 } from './helpers';
 
-/** Chart Gallery widgets map: node-id → doc slug */
+/** Chart Gallery widgets map: node-id → doc slug → designer layer label */
 const galleryCharts = [
-  { nodeId: 'w-pie', slug: 'pie-chart' },
-  { nodeId: 'w-scatter', slug: 'scatter-chart' },
-  { nodeId: 'w-area', slug: 'area-chart' },
-  { nodeId: 'w-combo', slug: 'combo-chart' },
-  { nodeId: 'w-gauge', slug: 'gauge' },
-  { nodeId: 'w-funnel', slug: 'funnel-chart' },
-  { nodeId: 'w-radar', slug: 'radar-chart' },
-  { nodeId: 'w-treemap', slug: 'treemap' },
-  { nodeId: 'w-heatmap', slug: 'heatmap' },
-  { nodeId: 'w-waterfall', slug: 'waterfall' },
-  { nodeId: 'w-sankey', slug: 'sankey' },
-  { nodeId: 'w-boxplot', slug: 'box-plot' },
+  { nodeId: 'w-pie', slug: 'pie-chart', label: 'Pie Chart' },
+  { nodeId: 'w-scatter', slug: 'scatter-chart', label: 'Scatter Chart' },
+  { nodeId: 'w-area', slug: 'area-chart', label: 'Area Chart' },
+  { nodeId: 'w-combo', slug: 'combo-chart', label: 'Combo Chart' },
+  { nodeId: 'w-gauge', slug: 'gauge', label: 'Gauge' },
+  { nodeId: 'w-funnel', slug: 'funnel-chart', label: 'Funnel Chart' },
+  { nodeId: 'w-radar', slug: 'radar-chart', label: 'Radar Chart' },
+  { nodeId: 'w-treemap', slug: 'treemap', label: 'Treemap' },
+  { nodeId: 'w-heatmap', slug: 'heatmap', label: 'Heatmap' },
+  { nodeId: 'w-waterfall', slug: 'waterfall', label: 'Waterfall Chart' },
+  { nodeId: 'w-sankey', slug: 'sankey', label: 'Sankey Diagram' },
+  { nodeId: 'w-boxplot', slug: 'box-plot', label: 'Box Plot' },
 ];
 
 test.describe('Chart Gallery screenshots', () => {
@@ -75,7 +76,7 @@ test.describe('Chart Gallery screenshots', () => {
     });
   }
 
-  // Individual chart captures (designer — gallery page)
+  // Individual chart captures (designer — select via Layers panel for unique prop panels)
   for (const chart of galleryCharts) {
     test(`designer - ${chart.slug}`, async ({ page }) => {
       await switchToDesigner(page);
@@ -85,7 +86,8 @@ test.describe('Chart Gallery screenshots', () => {
         await galleryTab.click();
         await waitForChartsReady(page);
       }
-      await captureWidget(page, chart.nodeId, 'chart-types', chart.slug, 'default', 'designer');
+      await selectWidgetViaLayers(page, chart.label);
+      await captureFullPage(page, 'chart-types', chart.slug, 'default', 'designer');
     });
   }
 });
