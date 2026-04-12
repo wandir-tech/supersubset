@@ -62,6 +62,7 @@ See `.github/agents/` for specialized agent definitions:
 
 | Agent | Domain |
 |-------|--------|
+| `orchestrator` | Task decomposition, subagent delegation, verification, master plan |
 | `architecture` | Schema, packages, ADRs |
 | `designer` | Puck editor, drag/drop UX, property panels |
 | `runtime` | Renderer, layout, widget registry, filters |
@@ -69,6 +70,8 @@ See `.github/agents/` for specialized agent definitions:
 | `metadata` | Adapters, Prisma/SQL/JSON, normalized model |
 | `testing` | Browser automation, Chrome MCP, regression |
 | `research` | Code archaeology, reuse analysis, landscape |
+
+The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It decomposes complex requests, delegates to specialized agents, parallelizes independent work, and verifies results. Use it for any task that spans multiple packages or domains. See `.github/skills/orchestration/SKILL.md` for the delegation methodology.
 
 ## Context Reset Recovery
 

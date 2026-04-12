@@ -11,7 +11,10 @@ import funnel_chart_viewer from '../../../assets/screenshots/chart-types/funnel-
 import funnel_chart_designer from '../../../assets/screenshots/chart-types/funnel-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import funnel_chart_props_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-designer.png';
-import funnel_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-scrolled-designer.png';
+import funnel_chart_ascending_viewer from '../../../assets/screenshots/chart-types/funnel-chart-ascending-viewer.png';
+import funnel_chart_ascending_designer from '../../../assets/screenshots/chart-types/funnel-chart-ascending-designer.png';
+import funnel_chart_align_left_viewer from '../../../assets/screenshots/chart-types/funnel-chart-align-left-viewer.png';
+import funnel_chart_align_left_designer from '../../../assets/screenshots/chart-types/funnel-chart-align-left-designer.png';
 
 # Funnel Chart
 
@@ -57,20 +60,24 @@ The field used to label each funnel stage.
 
 Control whether stages are sorted by value (`descending`, `ascending`) or displayed in data order (`none`).
 
-<FeatureScreenshot
-  src={funnel_chart_props_scrolled_designer}
-  alt="Sort order options"
-  caption="Configure sort order options in the property panel"
+<ScreenshotComparison
+  label="Ascending sort order"
+  designerSrc={funnel_chart_ascending_designer}
+  designerAlt="Sort order property configured in designer"
+  viewerSrc={funnel_chart_ascending_viewer}
+  viewerAlt="Funnel chart with ascending sort"
 />
 
 ### Gap (`gap`)
 
 Spacing between funnel segments. Increase for a cleaner separated look.
 
-<FeatureScreenshot
-  src={funnel_chart_props_scrolled_designer}
-  alt="Gap between segments"
-  caption="Configure gap between segments in the property panel"
+<ScreenshotComparison
+  label="Left-aligned funnel"
+  designerSrc={funnel_chart_align_left_designer}
+  designerAlt="Gap property configured in designer"
+  viewerSrc={funnel_chart_align_left_viewer}
+  viewerAlt="Funnel chart with left alignment"
 />
 
 ## Tips

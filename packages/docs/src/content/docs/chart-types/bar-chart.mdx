@@ -11,7 +11,12 @@ import bar_chart_viewer from '../../../assets/screenshots/chart-types/bar-chart-
 import bar_chart_designer from '../../../assets/screenshots/chart-types/bar-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import bar_chart_props_designer from '../../../assets/screenshots/chart-types/bar-chart-props-designer.png';
-import bar_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/bar-chart-props-scrolled-designer.png';
+import bar_chart_horizontal_viewer from '../../../assets/screenshots/chart-types/bar-chart-horizontal-viewer.png';
+import bar_chart_horizontal_designer from '../../../assets/screenshots/chart-types/bar-chart-horizontal-designer.png';
+import bar_chart_stacked_viewer from '../../../assets/screenshots/chart-types/bar-chart-stacked-viewer.png';
+import bar_chart_stacked_designer from '../../../assets/screenshots/chart-types/bar-chart-stacked-designer.png';
+import bar_chart_slim_bars_viewer from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-viewer.png';
+import bar_chart_slim_bars_designer from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-designer.png';
 
 # Bar Chart
 
@@ -57,30 +62,36 @@ One or more measure fields. Multiple fields create grouped bars side by side.
 
 When enabled, bars are drawn horizontally. This is useful for long category labels or when you want to rank items.
 
-<FeatureScreenshot
-  src={bar_chart_props_scrolled_designer}
-  alt="Horizontal bars"
-  caption="Configure horizontal bars in the property panel"
+<ScreenshotComparison
+  label="Horizontal bars enabled"
+  designerSrc={bar_chart_horizontal_designer}
+  designerAlt="Horizontal layout property toggled in designer"
+  viewerSrc={bar_chart_horizontal_viewer}
+  viewerAlt="Bar chart with horizontal layout"
 />
 
 ### Stacked Bars (`stacked`)
 
 When enabled with multiple Y fields, bars are stacked on top of each other instead of shown side by side. Useful for part-to-whole comparisons within categories.
 
-<FeatureScreenshot
-  src={bar_chart_props_scrolled_designer}
-  alt="Stacked bars"
-  caption="Configure stacked bars in the property panel"
+<ScreenshotComparison
+  label="Stacked bars enabled"
+  designerSrc={bar_chart_stacked_designer}
+  designerAlt="Stacked bars property toggled in designer"
+  viewerSrc={bar_chart_stacked_viewer}
+  viewerAlt="Bar chart with stacked bars"
 />
 
 ### Bar Width (`barWidth`)
 
 Controls the width of individual bars. Narrower bars leave more space between groups; wider bars are more prominent.
 
-<FeatureScreenshot
-  src={bar_chart_props_scrolled_designer}
-  alt="Bar width adjustment"
-  caption="Configure bar width adjustment in the property panel"
+<ScreenshotComparison
+  label="Slim bar width"
+  designerSrc={bar_chart_slim_bars_designer}
+  designerAlt="Bar width property adjusted in designer"
+  viewerSrc={bar_chart_slim_bars_viewer}
+  viewerAlt="Bar chart with slim bars"
 />
 
 ## Tips

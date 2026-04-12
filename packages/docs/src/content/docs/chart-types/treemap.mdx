@@ -12,6 +12,8 @@ import treemap_designer from '../../../assets/screenshots/chart-types/treemap-de
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import treemap_props_designer from '../../../assets/screenshots/chart-types/treemap-props-designer.png';
 import treemap_props_scrolled_designer from '../../../assets/screenshots/chart-types/treemap-props-scrolled-designer.png';
+import treemap_parent_labels_viewer from '../../../assets/screenshots/chart-types/treemap-parent-labels-viewer.png';
+import treemap_parent_labels_designer from '../../../assets/screenshots/chart-types/treemap-parent-labels-designer.png';
 
 # Treemap
 
@@ -57,10 +59,12 @@ The field used to label and group rectangles.
 
 Configure visual properties (colors, borders) for each level of hierarchy.
 
-<FeatureScreenshot
-  src={treemap_props_scrolled_designer}
-  alt="Hierarchy level configuration"
-  caption="Configure hierarchy level configuration in the property panel"
+<ScreenshotComparison
+  label="Parent labels visible"
+  designerSrc={treemap_parent_labels_designer}
+  designerAlt="Hierarchy level property configured in designer"
+  viewerSrc={treemap_parent_labels_viewer}
+  viewerAlt="Treemap with parent labels"
 />
 
 ## Tips

@@ -143,7 +143,8 @@ export async function captureElement(
 
 /**
  * Try to capture a specific widget by its layout node ID (data-ss-node attribute).
- * Falls back to full page if the widget isn't found.
+ * Accepts additional fallback node IDs to try (useful after designer edits which
+ * regenerate layout node IDs). Falls back to full page if none match.
  */
 export async function captureWidget(
   page: Page,
@@ -152,16 +153,46 @@ export async function captureWidget(
   slug: string,
   variant: string,
   view: 'designer' | 'viewer',
+  ...fallbackNodeIds: string[]
 ): Promise<string> {
-  const widget = page.locator(`[data-ss-node="${nodeId}"]`);
-  if (await widget.isVisible({ timeout: 3000 }).catch(() => false)) {
-    // Scroll into view first
-    await widget.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
-    return captureElement(widget, category, slug, variant, view);
+  const candidates = [nodeId, ...fallbackNodeIds];
+  for (const id of candidates) {
+    const widget = page.locator(`[data-ss-node="${id}"]`);
+    if (await widget.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await widget.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(300);
+      return captureElement(widget, category, slug, variant, view);
+    }
   }
-  // Fall back to full page capture
+  // Last resort: full page capture
   return captureFullPage(page, category, slug, variant, view);
+}
+
+/**
+ * Capture a widget from the Puck canvas iframe by its Puck component ID.
+ * Use this after toggling a property in the designer — the iframe renders charts
+ * with demo data intact (unlike the viewer which loses data after re-serialization).
+ *
+ * @param puckComponentId - The `data-puck-component` value (matches the widget id in the dashboard definition)
+ */
+export async function captureWidgetFromCanvas(
+  page: Page,
+  puckComponentId: string,
+  category: string,
+  slug: string,
+  variant: string,
+): Promise<string> {
+  const filePath = screenshotPath(category, slug, variant, 'viewer');
+  const iframe = page.frameLocator('iframe').first();
+  const widget = iframe.locator(`[data-puck-component="${puckComponentId}"]`);
+  if (await widget.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await widget.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800); // Wait for ECharts animations
+    await widget.screenshot({ path: filePath, animations: 'disabled' });
+    return filePath;
+  }
+  // Fallback: full page capture
+  return captureFullPage(page, category, slug, variant, 'designer');
 }
 
 /**
@@ -293,4 +324,140 @@ export async function capturePropertyPanel(
     animations: 'disabled',
   });
   return filePath;
+}
+
+// ─── Property Panel Interaction Helpers ──────────────────────
+
+/**
+ * Toggle a radio-style property in the Puck property panel.
+ * Puck radio structure:
+ *   div._PuckFields-field_ > label._Input_ >
+ *     div._Input-label_ (contains icon + field name text)
+ *     div._Input-radioGroupItems_ > label._Input-radio_ > div._Input-radioInner_ (option text)
+ *
+ * @param page - Playwright page
+ * @param fieldLabel - The label text of the field (e.g., "Smooth", "Stacked")
+ * @param targetValue - The radio option label to click (e.g., "Yes", "No", "Horizontal")
+ */
+export async function toggleRadioProperty(
+  page: Page,
+  fieldLabel: string,
+  targetValue: string,
+): Promise<boolean> {
+  // Use page.evaluate for reliable DOM traversal
+  const clicked = await page.evaluate(({ fieldLabel, targetValue }) => {
+    // Find the label div whose text content includes our field name
+    const labelDivs = document.querySelectorAll('[class*="Input-label"]');
+    for (const labelDiv of labelDivs) {
+      // Check direct text content (excluding child element text)
+      const textContent = Array.from(labelDiv.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent?.trim())
+        .join('');
+      if (textContent !== fieldLabel) continue;
+
+      // Found the label — now find the radio group in its parent
+      const inputContainer = labelDiv.closest('[class*="Input_"]');
+      if (!inputContainer) continue;
+
+      // Find radio option with matching text
+      const radioInners = inputContainer.querySelectorAll('[class*="Input-radioInner"]');
+      for (const inner of radioInners) {
+        if (inner.textContent?.trim() === targetValue) {
+          // Click the parent label element
+          const radioLabel = inner.closest('[class*="Input-radio"]') as HTMLElement;
+          if (radioLabel) {
+            radioLabel.click();
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }, { fieldLabel, targetValue });
+
+  if (clicked) {
+    await page.waitForTimeout(1200); // Wait for chart to re-render
+  }
+  return clicked;
+}
+
+/**
+ * Change a select property in the Puck property panel.
+ *
+ * @param page - Playwright page
+ * @param fieldLabel - The label text of the field (e.g., "Variant", "Sort")
+ * @param targetValue - The option value to select
+ */
+export async function changeSelectProperty(
+  page: Page,
+  fieldLabel: string,
+  targetValue: string,
+): Promise<boolean> {
+  // Use page.evaluate to reliably find the select and set its value with proper React event dispatch
+  const changed = await page.evaluate(({ fieldLabel, targetValue }) => {
+    const labelDivs = document.querySelectorAll('[class*="Input-label"]');
+    for (const labelDiv of labelDivs) {
+      const textContent = Array.from(labelDiv.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent?.trim())
+        .join('');
+      if (textContent !== fieldLabel) continue;
+
+      // Walk up to the field container (PuckFields-field)
+      const fieldContainer = labelDiv.closest('[class*="PuckFields-field"]')
+        ?? labelDiv.closest('[class*="Input_"]');
+      if (!fieldContainer) continue;
+
+      const select = fieldContainer.querySelector('select') as HTMLSelectElement | null;
+      if (!select) continue;
+
+      // Set value and dispatch events to trigger React state update
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        HTMLSelectElement.prototype, 'value',
+      )?.set;
+      nativeInputValueSetter?.call(select, targetValue);
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      return true;
+    }
+    return false;
+  }, { fieldLabel, targetValue });
+
+  if (changed) {
+    await page.waitForTimeout(1200); // Wait for chart to re-render
+  }
+  return changed;
+}
+
+/**
+ * Scroll a property into view within the Puck property panel sidebar.
+ */
+export async function scrollPropertyIntoView(
+  page: Page,
+  fieldLabel: string,
+): Promise<void> {
+  const fieldContainer = page.locator('[class*="PuckFields-field"]').filter({
+    has: page.locator('[class*="Input-label"]', { hasText: new RegExp(`^${fieldLabel}$`) }),
+  });
+
+  if (await fieldContainer.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+    await fieldContainer.first().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+  } else {
+    // Try scrolling the right sidebar to find it
+    const sidebar = page.locator('[class*="rightSideBar"]');
+    if (await sidebar.isVisible().catch(() => false)) {
+      for (let i = 0; i < 15; i++) {
+        await sidebar.evaluate((el) => {
+          const scrollable = el.querySelector('[class*="PuckFields"]') || el;
+          scrollable.scrollBy(0, 200);
+        });
+        await page.waitForTimeout(200);
+        if (await fieldContainer.first().isVisible({ timeout: 500 }).catch(() => false)) {
+          await fieldContainer.first().scrollIntoViewIfNeeded();
+          break;
+        }
+      }
+    }
+  }
 }

@@ -7,10 +7,10 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
-import overview_viewer from '../../../assets/screenshots/getting-started/overview-default-viewer.png';
-import overview_designer from '../../../assets/screenshots/getting-started/overview-default-designer.png';
+import kpi_row_viewer from '../../../assets/screenshots/layout/rows-columns-kpi-row-viewer.png';
+import grid_full_designer from '../../../assets/screenshots/layout/grid-full-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
-import rows_columns_overview_viewer from '../../../assets/screenshots/layout/rows-columns-overview-viewer.png';
+import chart_row_viewer from '../../../assets/screenshots/layout/rows-columns-chart-row-viewer.png';
 
 # Rows & Columns
 
@@ -24,10 +24,10 @@ A row with widgets placed side by side, each occupying their configured width.
 
 <ScreenshotComparison
   label="Default row layout"
-  designerSrc={overview_designer}
-  designerAlt="Default row layout in designer mode"
-  viewerSrc={overview_viewer}
-  viewerAlt="Default row layout in viewer mode"
+  designerSrc={grid_full_designer}
+  designerAlt="Row layout in designer showing widget arrangement"
+  viewerSrc={kpi_row_viewer}
+  viewerAlt="KPI row with 4+4+4 column layout in viewer"
 />
 
 ## Configuration Options
@@ -37,9 +37,9 @@ A row with widgets placed side by side, each occupying their configured width.
 Each widget within a row specifies its width in grid columns (1–12). Widgets that exceed the row's column count wrap to the next line.
 
 <FeatureScreenshot
-  src={rows_columns_overview_viewer}
-  alt="Widget width configuration"
-  caption="Widget width configuration"
+  src={kpi_row_viewer}
+  alt="Three KPI cards in a 4+4+4 row layout"
+  caption="KPI row: three equal-width widgets (4+4+4 = 12 columns)"
 />
 
 ### Widget Height
@@ -47,9 +47,9 @@ Each widget within a row specifies its width in grid columns (1–12). Widgets t
 Each widget specifies its height in pixels. Charts typically use 300–400px; KPI cards use 100–150px.
 
 <FeatureScreenshot
-  src={rows_columns_overview_viewer}
-  alt="Widget height configuration"
-  caption="Widget height configuration"
+  src={chart_row_viewer}
+  alt="Line chart (8 cols) and bar chart (4 cols) in a row"
+  caption="Chart row: main chart + sidebar (8+4 = 12 columns)"
 />
 
 ## Tips

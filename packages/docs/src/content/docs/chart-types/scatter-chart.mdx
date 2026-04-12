@@ -12,6 +12,8 @@ import scatter_chart_designer from '../../../assets/screenshots/chart-types/scat
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import scatter_chart_props_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-designer.png';
 import scatter_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-scrolled-designer.png';
+import scatter_chart_low_opacity_viewer from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-viewer.png';
+import scatter_chart_low_opacity_designer from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-designer.png';
 
 # Scatter Chart
 
@@ -77,10 +79,12 @@ An optional categorical field that colors points by group.
 
 Controls the base size of data points. Increase for sparse data; decrease for dense datasets.
 
-<FeatureScreenshot
-  src={scatter_chart_props_scrolled_designer}
-  alt="Symbol size adjustment"
-  caption="Configure symbol size adjustment in the property panel"
+<ScreenshotComparison
+  label="Low opacity points"
+  designerSrc={scatter_chart_low_opacity_designer}
+  designerAlt="Symbol size property adjusted in designer"
+  viewerSrc={scatter_chart_low_opacity_viewer}
+  viewerAlt="Scatter chart with low opacity points"
 />
 
 ## Tips

@@ -12,6 +12,10 @@ import alerts_designer from '../../../assets/screenshots/widgets/alerts-default-
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import alerts_props_designer from '../../../assets/screenshots/widgets/alerts-props-designer.png';
 import alerts_props_scrolled_designer from '../../../assets/screenshots/widgets/alerts-props-scrolled-designer.png';
+import alerts_inline_layout_viewer from '../../../assets/screenshots/widgets/alerts-inline-layout-viewer.png';
+import alerts_inline_layout_designer from '../../../assets/screenshots/widgets/alerts-inline-layout-designer.png';
+import alerts_no_timestamp_viewer from '../../../assets/screenshots/widgets/alerts-no-timestamp-viewer.png';
+import alerts_no_timestamp_designer from '../../../assets/screenshots/widgets/alerts-no-timestamp-designer.png';
 
 # Alerts
 
@@ -77,10 +81,12 @@ The datetime field shown as the alert's time.
 
 Choose between `wrap` (cards flow horizontally and wrap) and `list` (vertical stack).
 
-<FeatureScreenshot
-  src={alerts_props_scrolled_designer}
-  alt="Layout: wrap vs list"
-  caption="Configure layout: wrap vs list in the property panel"
+<ScreenshotComparison
+  label="Inline layout enabled"
+  designerSrc={alerts_inline_layout_designer}
+  designerAlt="Layout property toggled in designer"
+  viewerSrc={alerts_inline_layout_viewer}
+  viewerAlt="Alerts widget with inline layout"
 />
 
 ### Max Items (`maxItems`)
@@ -97,10 +103,12 @@ Limit the number of alerts displayed. Useful for showing only the most recent or
 
 Toggle timestamp visibility.
 
-<FeatureScreenshot
-  src={alerts_props_scrolled_designer}
-  alt="Timestamp visibility"
-  caption="Configure timestamp visibility in the property panel"
+<ScreenshotComparison
+  label="Timestamp hidden"
+  designerSrc={alerts_no_timestamp_designer}
+  designerAlt="Show timestamp property toggled in designer"
+  viewerSrc={alerts_no_timestamp_viewer}
+  viewerAlt="Alerts widget with timestamp hidden"
 />
 
 ### Default Severity (`defaultSeverity`)

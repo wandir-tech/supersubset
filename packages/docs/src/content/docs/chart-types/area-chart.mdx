@@ -12,6 +12,10 @@ import area_chart_designer from '../../../assets/screenshots/chart-types/area-ch
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import area_chart_props_designer from '../../../assets/screenshots/chart-types/area-chart-props-designer.png';
 import area_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/area-chart-props-scrolled-designer.png';
+import area_chart_stacked_viewer from '../../../assets/screenshots/chart-types/area-chart-stacked-viewer.png';
+import area_chart_stacked_designer from '../../../assets/screenshots/chart-types/area-chart-stacked-designer.png';
+import area_chart_full_opacity_viewer from '../../../assets/screenshots/chart-types/area-chart-full-opacity-viewer.png';
+import area_chart_full_opacity_designer from '../../../assets/screenshots/chart-types/area-chart-full-opacity-designer.png';
 
 # Area Chart
 
@@ -67,20 +71,24 @@ When enabled, area boundaries are drawn as smooth curves.
 
 Controls the transparency of the fill. Lower values let overlapping areas show through; higher values produce more vivid fills.
 
-<FeatureScreenshot
-  src={area_chart_props_scrolled_designer}
-  alt="Fill opacity adjustment"
-  caption="Configure fill opacity adjustment in the property panel"
+<ScreenshotComparison
+  label="Full opacity fill"
+  designerSrc={area_chart_full_opacity_designer}
+  designerAlt="Opacity property adjusted in designer"
+  viewerSrc={area_chart_full_opacity_viewer}
+  viewerAlt="Area chart with full opacity"
 />
 
 ### Stacked Areas (`stacked`)
 
 When enabled, areas are stacked so each series starts where the previous one ends. This shows cumulative totals and the contribution of each series.
 
-<FeatureScreenshot
-  src={area_chart_props_scrolled_designer}
-  alt="Stacked areas"
-  caption="Configure stacked areas in the property panel"
+<ScreenshotComparison
+  label="Stacked areas enabled"
+  designerSrc={area_chart_stacked_designer}
+  designerAlt="Stacked areas property toggled in designer"
+  viewerSrc={area_chart_stacked_viewer}
+  viewerAlt="Area chart with stacked areas"
 />
 
 ## Tips

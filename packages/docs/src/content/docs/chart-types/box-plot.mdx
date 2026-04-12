@@ -11,7 +11,8 @@ import box_plot_viewer from '../../../assets/screenshots/chart-types/box-plot-de
 import box_plot_designer from '../../../assets/screenshots/chart-types/box-plot-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import box_plot_props_designer from '../../../assets/screenshots/chart-types/box-plot-props-designer.png';
-import box_plot_props_scrolled_designer from '../../../assets/screenshots/chart-types/box-plot-props-scrolled-designer.png';
+import box_plot_wide_boxes_viewer from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-viewer.png';
+import box_plot_wide_boxes_designer from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-designer.png';
 
 # Box Plot
 
@@ -47,10 +48,12 @@ The categorical field used to create separate boxes for each group.
 
 The numeric field whose distribution is visualized.
 
-<FeatureScreenshot
-  src={box_plot_props_scrolled_designer}
-  alt="Value field binding"
-  caption="Configure value field binding in the property panel"
+<ScreenshotComparison
+  label="Wide boxes style"
+  designerSrc={box_plot_wide_boxes_designer}
+  designerAlt="Value field property configured in designer"
+  viewerSrc={box_plot_wide_boxes_viewer}
+  viewerAlt="Box plot with wide boxes"
 />
 
 ## Tips

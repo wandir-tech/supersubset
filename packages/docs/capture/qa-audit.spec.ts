@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:4321';
+const BASE = process.env.QA_BASE_URL || 'http://127.0.0.1:4321';
 
 const pages = [
   '/chart-types/line-chart/',
@@ -33,8 +33,8 @@ const pages = [
 
 for (const path of pages) {
   test(`QA: ${path}`, async ({ page }) => {
-    await page.goto(`${BASE}${path}`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`${BASE}${path}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1000);
     
     // Check for placeholder text
     const placeholderText = await page.locator('text=Screenshots will be captured').count();

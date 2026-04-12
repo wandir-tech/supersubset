@@ -11,7 +11,12 @@ import line_chart_viewer from '../../../assets/screenshots/chart-types/line-char
 import line_chart_designer from '../../../assets/screenshots/chart-types/line-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import line_chart_props_designer from '../../../assets/screenshots/chart-types/line-chart-props-designer.png';
-import line_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/line-chart-props-scrolled-designer.png';
+import line_chart_smooth_viewer from '../../../assets/screenshots/chart-types/line-chart-smooth-viewer.png';
+import line_chart_smooth_designer from '../../../assets/screenshots/chart-types/line-chart-smooth-designer.png';
+import line_chart_no_markers_viewer from '../../../assets/screenshots/chart-types/line-chart-no-markers-viewer.png';
+import line_chart_no_markers_designer from '../../../assets/screenshots/chart-types/line-chart-no-markers-designer.png';
+import line_chart_connect_nulls_viewer from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-viewer.png';
+import line_chart_connect_nulls_designer from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-designer.png';
 
 # Line Chart
 
@@ -57,10 +62,12 @@ One or more measure fields plotted as separate lines. Add multiple fields to com
 
 When enabled, lines are drawn as smooth curves instead of straight segments. This produces a more polished look but can obscure precise data point positions.
 
-<FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Smooth lines enabled"
-  caption="Configure smooth lines enabled in the property panel"
+<ScreenshotComparison
+  label="Smooth lines enabled"
+  designerSrc={line_chart_smooth_designer}
+  designerAlt="Smooth lines property toggled in designer"
+  viewerSrc={line_chart_smooth_viewer}
+  viewerAlt="Line chart with smooth curves"
 />
 
 ### Area Fill (`area`)
@@ -68,19 +75,33 @@ When enabled, lines are drawn as smooth curves instead of straight segments. Thi
 When enabled, the area below each line is filled with a semi-transparent color. Useful for emphasizing volume or magnitude.
 
 <FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Area fill enabled"
-  caption="Configure area fill enabled in the property panel"
+  src={line_chart_props_designer}
+  alt="Area fill property in the property panel"
+  caption="Enable area fill in the property panel"
 />
 
 ### Show Points (`showPoints`)
 
 Toggle the visibility of data point markers on the line. Hiding points gives a cleaner look; showing them makes individual values easier to read.
 
-<FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Data points visibility"
-  caption="Configure data points visibility in the property panel"
+<ScreenshotComparison
+  label="Markers hidden"
+  designerSrc={line_chart_no_markers_designer}
+  designerAlt="Show markers toggled off in designer"
+  viewerSrc={line_chart_no_markers_viewer}
+  viewerAlt="Line chart without point markers"
+/>
+
+### Connect Nulls (`connectNulls`)
+
+When enabled, lines bridge over missing data points instead of breaking.
+
+<ScreenshotComparison
+  label="Connect nulls enabled"
+  designerSrc={line_chart_connect_nulls_designer}
+  designerAlt="Connect nulls toggled on in designer"
+  viewerSrc={line_chart_connect_nulls_viewer}
+  viewerAlt="Line chart with connected null gaps"
 />
 
 ## Tips

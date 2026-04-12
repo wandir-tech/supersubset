@@ -11,6 +11,12 @@ import table_viewer from '../../../assets/screenshots/widgets/table-default-view
 import table_designer from '../../../assets/screenshots/widgets/table-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import table_props_scrolled_designer from '../../../assets/screenshots/widgets/table-props-scrolled-designer.png';
+import table_no_stripes_viewer from '../../../assets/screenshots/widgets/table-no-stripes-viewer.png';
+import table_no_stripes_designer from '../../../assets/screenshots/widgets/table-no-stripes-designer.png';
+import table_row_numbers_viewer from '../../../assets/screenshots/widgets/table-row-numbers-viewer.png';
+import table_row_numbers_designer from '../../../assets/screenshots/widgets/table-row-numbers-designer.png';
+import table_show_totals_viewer from '../../../assets/screenshots/widgets/table-show-totals-viewer.png';
+import table_show_totals_designer from '../../../assets/screenshots/widgets/table-show-totals-designer.png';
 
 # Table
 
@@ -40,6 +46,42 @@ The number of rows displayed per page. Smaller pages load faster; larger pages s
   src={table_props_scrolled_designer}
   alt="Page size adjustment"
   caption="Configure page size adjustment in the property panel"
+/>
+
+### Striped (`striped`)
+
+Toggle alternating row background colors for easier reading.
+
+<ScreenshotComparison
+  label="Striped rows disabled"
+  designerSrc={table_no_stripes_designer}
+  designerAlt="Striped property toggled off in designer"
+  viewerSrc={table_no_stripes_viewer}
+  viewerAlt="Table without striped rows"
+/>
+
+### Row Numbers (`showRowNumbers`)
+
+Show a row number column at the left edge of the table.
+
+<ScreenshotComparison
+  label="Row numbers enabled"
+  designerSrc={table_row_numbers_designer}
+  designerAlt="Row numbers property toggled on in designer"
+  viewerSrc={table_row_numbers_viewer}
+  viewerAlt="Table with row numbers displayed"
+/>
+
+### Show Totals (`showTotals`)
+
+Display a totals row at the bottom of the table with automatic aggregation.
+
+<ScreenshotComparison
+  label="Show totals enabled"
+  designerSrc={table_show_totals_designer}
+  designerAlt="Show totals property toggled on in designer"
+  viewerSrc={table_show_totals_viewer}
+  viewerAlt="Table with totals row displayed"
 />
 
 ## Tips

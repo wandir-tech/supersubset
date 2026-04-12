@@ -12,6 +12,10 @@ import kpi_card_designer from '../../../assets/screenshots/widgets/kpi-card-defa
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import kpi_card_props_designer from '../../../assets/screenshots/widgets/kpi-card-props-designer.png';
 import kpi_card_props_scrolled_designer from '../../../assets/screenshots/widgets/kpi-card-props-scrolled-designer.png';
+import kpi_card_large_font_viewer from '../../../assets/screenshots/widgets/kpi-card-large-font-viewer.png';
+import kpi_card_large_font_designer from '../../../assets/screenshots/widgets/kpi-card-large-font-designer.png';
+import kpi_card_down_good_viewer from '../../../assets/screenshots/widgets/kpi-card-down-good-viewer.png';
+import kpi_card_down_good_designer from '../../../assets/screenshots/widgets/kpi-card-down-good-designer.png';
 
 # KPI Card
 
@@ -81,6 +85,30 @@ A text suffix added after the value (e.g., `%`, `units`).
   src={kpi_card_props_scrolled_designer}
   alt="Unit suffix"
   caption="Configure unit suffix in the property panel"
+/>
+
+### Font Size (`fontSize`)
+
+Controls the size of the primary value display: `sm` (small), `md` (medium), or `lg` (large).
+
+<ScreenshotComparison
+  label="Large font size"
+  designerSrc={kpi_card_large_font_designer}
+  designerAlt="Font size property set to large in designer"
+  viewerSrc={kpi_card_large_font_viewer}
+  viewerAlt="KPI card with large font size"
+/>
+
+### Trend Direction (`trendDirection`)
+
+Controls how trend arrows are color-coded: `up-good` (green for increases) or `down-good` (green for decreases, useful for metrics like churn or bounce rate).
+
+<ScreenshotComparison
+  label="Down = Good trend direction"
+  designerSrc={kpi_card_down_good_designer}
+  designerAlt="Trend direction property set to down-good in designer"
+  viewerSrc={kpi_card_down_good_viewer}
+  viewerAlt="KPI card with down-is-good trend direction"
 />
 
 ## Tips

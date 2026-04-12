@@ -123,6 +123,27 @@ await page.goto('http://localhost:3000');
 
 **Naming**: `{category}/{feature-slug}-{property-name}-viewer.png`
 
+### Step 7.5: Verify Before/After Difference (MANDATORY)
+
+**This is a hard requirement.** Every property that claims to change the visual output MUST have at least two screenshots that visually demonstrate the difference.
+
+1. **Compare the "default" viewer screenshot with the "changed" viewer screenshot.** They MUST be visibly different. If they look the same, the property either:
+   - Didn't actually get toggled (capture script bug)
+   - Doesn't produce a visible change (documentation should not claim it does)
+   - Is broken (product bug — go to Step 9)
+
+2. **How to verify programmatically**: After capturing both screenshots, load them and compare pixel data or file hashes. If the MD5 hashes are identical, the screenshots are duplicates and the property change was not captured.
+
+3. **What constitutes a valid difference**:
+   - For boolean toggles (smooth, area fill, show points): the chart rendering must visibly change
+   - For field reference changes: different data should be plotted on the axis
+   - For enum changes (color scheme, aggregation): the visual output must reflect the new value
+   - For numeric changes (limit, padding): the layout or content must visibly shift
+
+4. **MDX must show both states**: The documentation page must include BOTH the before and after screenshots so the reader can see what the property actually does. A single screenshot of the property panel is NOT sufficient — the reader needs to see the visual result.
+
+**If the before and after screenshots are identical, STOP. Do not proceed. File a bug.**
+
 ### Step 8: Quality Check
 
 Verify all of the following:
@@ -187,13 +208,31 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 
 {Description of what this property controls and its valid values.}
 
+**Before** (default state):
+
+<FeatureScreenshot
+  src={import('../../../assets/screenshots/{path}-default-viewer.png')}
+  alt="{Feature} before {property} change"
+  caption="Default: {property} is off / at default value"
+/>
+
+**After** ({property} changed):
+
+<FeatureScreenshot
+  src={import('../../../assets/screenshots/{path}-{property}-viewer.png')}
+  alt="{Feature} after enabling {property}"
+  caption="{Property} enabled — note the visual difference"
+/>
+
 <ScreenshotComparison
-  label="{Property Name}"
+  label="{Property Name} designer config"
   designerSrc={import('../../../assets/screenshots/{path}-{property}-designer.png')}
   designerAlt="{Property} setting changed in the designer"
   viewerSrc={import('../../../assets/screenshots/{path}-{property}-viewer.png')}
   viewerAlt="Dashboard with {property} applied"
 />
+
+**IMPORTANT**: Both the "Before" and "After" viewer screenshots MUST be visibly different. If they are not, the property is either not working or the capture was incorrect. See Step 7.5.
 
 {Repeat ### for each configurable property}
 
@@ -295,6 +334,101 @@ test.describe('{Feature} screenshots', () => {
 
 Run with: `npx playwright test packages/docs/capture/{feature}.spec.ts`
 
+## Property Variant Capture (Before/After)
+
+The `property-variants.spec.ts` script captures **before/after** screenshots for
+every toggleable property on chart and widget blocks. It uses a data-driven
+`WidgetVariantSpec` interface and the shared helpers in `helpers.ts`.
+
+### Key Architecture Discovery
+
+When the Puck designer edits a dashboard via `onChange`, it re-serializes **all**
+layout node IDs from the original form (e.g., `w-line`) to a `layout-{widgetRef}`
+form (e.g., `layout-chart-revenue-trend`). This means `data-ss-node`-based
+selectors break after any property toggle.
+
+**Solution**: Capture variant screenshots from the **Puck canvas iframe** using
+`data-puck-component` attributes, NOT from the runtime viewer.
+
+### Puck Canvas Iframe Selectors
+
+Inside the Puck editor iframe (`page.frameLocator('iframe').first()`):
+
+| Attribute | Value | Example |
+|-----------|-------|---------|
+| `data-puck-component` | Puck component TYPE name | `LineChart`, `BarChart`, `HeaderBlock` |
+| `data-puck-dnd` | Content item instance ID | `chart-revenue-trend`, `divider-1` |
+
+Use `data-puck-dnd` (or `data-puck-component`) to target specific widget
+instances within the iframe. The `captureWidgetFromCanvas()` helper handles this.
+
+### Runtime Viewer Selectors
+
+In the runtime viewer (initial load, before any designer edits):
+
+| Attribute | Value | Example |
+|-----------|-------|---------|
+| `data-ss-node` | Layout node ID | `w-line`, `header-title`, `row-kpis` |
+| `.ss-widget` | Widget wrapper class | — |
+| `.ss-filter-bar` | Filter bar element | — |
+| `.ss-chart` | ECharts container | — |
+
+**IMPORTANT**: Chart titles render inside ECharts canvas, NOT as DOM text.
+`hasText`-based selectors will NOT work on chart widgets.
+
+### Property Toggle Helpers
+
+- `toggleRadioProperty(page, fieldLabel, targetValue)` — click a radio option
+- `changeSelectProperty(page, fieldLabel, targetValue)` — change a `<select>` value
+  (uses React-compatible event dispatch via `nativeInputValueSetter`)
+- `scrollPropertyIntoView(page, fieldLabel)` — scroll the sidebar to find a field
+
+### WidgetVariantSpec Interface
+
+```typescript
+interface WidgetVariantSpec {
+  layerLabel: string;       // Layer panel text to click
+  nodeId: string;           // Original data-ss-node ID (for viewer on initial load)
+  puckComponentId: string;  // data-puck-dnd value (for canvas iframe capture)
+  category: string;         // Screenshot category folder
+  slug: string;             // Feature slug for file names
+  page: 'overview' | 'gallery';
+  variants: Array<{
+    name: string;           // Variant name (e.g., 'smooth', 'horizontal')
+    field: string;          // Property panel field label
+    value: string;          // Target value to set
+    type: 'radio' | 'select';
+  }>;
+}
+```
+
+### Running Variant Captures
+
+```bash
+# All variants
+cd packages/docs && npx playwright test capture/property-variants.spec.ts
+
+# Specific category
+npx playwright test capture/property-variants.spec.ts -g "Overview"
+npx playwright test capture/property-variants.spec.ts -g "Gallery"
+
+# Specific chart
+npx playwright test capture/property-variants.spec.ts -g "line-chart"
+```
+
+### Layout and Filter Captures
+
+Use `layout-filters.spec.ts` for layout-element and filter-state screenshots:
+
+```bash
+npx playwright test capture/layout-filters.spec.ts
+```
+
+Layout elements use `data-ss-node` in the viewer (initial load) and viewport
+clipping or Puck layer selection in the designer. Filter screenshots capture
+different filter states (active, cleared, multiple active) and the filter
+builder panel.
+
 ## Quality Checklist Summary
 
 Before considering a feature page complete:
@@ -302,9 +436,12 @@ Before considering a feature page complete:
 - [ ] Feature brief is written (Step 1)
 - [ ] All default screenshots captured (Steps 3-4)
 - [ ] All property variant screenshots captured (Steps 5-7, repeated per property)
+- [ ] **Before/after difference verified for every property** (Step 7.5) — screenshots MUST be visibly different
 - [ ] Quality check passed — no console errors, correct rendering (Step 8)
 - [ ] No outstanding bugs — bug fix gate cleared (Step 9)
 - [ ] MDX page written with all sections (Step 10)
+- [ ] MDX shows BOTH before and after viewer screenshots for each property (not just the property panel)
 - [ ] Page added to sidebar navigation (Step 11)
 - [ ] Cross-references added (Step 12)
 - [ ] `pnpm docs:build` succeeds with the new page
+- [ ] Field reference inputs are dropdowns (not text boxes) — if text boxes are found, file a bug

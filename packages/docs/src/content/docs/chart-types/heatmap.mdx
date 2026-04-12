@@ -12,6 +12,8 @@ import heatmap_designer from '../../../assets/screenshots/chart-types/heatmap-de
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import heatmap_props_designer from '../../../assets/screenshots/chart-types/heatmap-props-designer.png';
 import heatmap_props_scrolled_designer from '../../../assets/screenshots/chart-types/heatmap-props-scrolled-designer.png';
+import heatmap_show_values_viewer from '../../../assets/screenshots/chart-types/heatmap-show-values-viewer.png';
+import heatmap_show_values_designer from '../../../assets/screenshots/chart-types/heatmap-show-values-designer.png';
 
 # Heatmap
 
@@ -57,10 +59,12 @@ The field for the vertical axis (rows).
 
 The numeric field that determines cell color intensity.
 
-<FeatureScreenshot
-  src={heatmap_props_scrolled_designer}
-  alt="Value field binding"
-  caption="Configure value field binding in the property panel"
+<ScreenshotComparison
+  label="Values shown on cells"
+  designerSrc={heatmap_show_values_designer}
+  designerAlt="Value field property configured in designer"
+  viewerSrc={heatmap_show_values_viewer}
+  viewerAlt="Heatmap with values shown on cells"
 />
 
 ### Color Range (`colorRange`)

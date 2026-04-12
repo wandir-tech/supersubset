@@ -11,7 +11,10 @@ import gauge_viewer from '../../../assets/screenshots/chart-types/gauge-default-
 import gauge_designer from '../../../assets/screenshots/chart-types/gauge-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import gauge_props_designer from '../../../assets/screenshots/chart-types/gauge-props-designer.png';
-import gauge_props_scrolled_designer from '../../../assets/screenshots/chart-types/gauge-props-scrolled-designer.png';
+import gauge_round_cap_viewer from '../../../assets/screenshots/chart-types/gauge-round-cap-viewer.png';
+import gauge_round_cap_designer from '../../../assets/screenshots/chart-types/gauge-round-cap-designer.png';
+import gauge_progress_viewer from '../../../assets/screenshots/chart-types/gauge-progress-viewer.png';
+import gauge_progress_designer from '../../../assets/screenshots/chart-types/gauge-progress-designer.png';
 
 # Gauge
 
@@ -57,20 +60,24 @@ The minimum value of the gauge range.
 
 The maximum value of the gauge range.
 
-<FeatureScreenshot
-  src={gauge_props_scrolled_designer}
-  alt="Maximum range setting"
-  caption="Configure maximum range setting in the property panel"
+<ScreenshotComparison
+  label="Round cap gauge style"
+  designerSrc={gauge_round_cap_designer}
+  designerAlt="Maximum range property configured in designer"
+  viewerSrc={gauge_round_cap_viewer}
+  viewerAlt="Gauge with round cap style"
 />
 
 ### Split Number (`splitNumber`)
 
 Number of segments dividing the gauge arc. More splits give finer graduation marks.
 
-<FeatureScreenshot
-  src={gauge_props_scrolled_designer}
-  alt="Split number adjustment"
-  caption="Configure split number adjustment in the property panel"
+<ScreenshotComparison
+  label="Progress gauge style"
+  designerSrc={gauge_progress_designer}
+  designerAlt="Split number property configured in designer"
+  viewerSrc={gauge_progress_viewer}
+  viewerAlt="Gauge with progress style"
 />
 
 ## Tips

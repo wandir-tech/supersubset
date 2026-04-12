@@ -72,7 +72,20 @@ export const MarkdownBlock: ComponentConfig = {
 export const DividerBlock: ComponentConfig = {
   label: 'Divider',
   fields: {
-    color: { type: 'text' as const, label: 'Color' },
+    color: {
+      type: 'select' as const,
+      label: 'Color',
+      options: [
+        { label: 'Light Gray', value: '#e0e0e0' },
+        { label: 'Medium Gray', value: '#bdbdbd' },
+        { label: 'Dark Gray', value: '#757575' },
+        { label: 'Blue', value: '#1890ff' },
+        { label: 'Green', value: '#52c41a' },
+        { label: 'Red', value: '#f5222d' },
+        { label: 'Orange', value: '#fa8c16' },
+        { label: 'Purple', value: '#722ed1' },
+      ],
+    },
     thickness: { type: 'number' as const, label: 'Thickness (px)' },
     margin: { type: 'number' as const, label: 'Margin (px)' },
   },

@@ -12,6 +12,8 @@ import sankey_designer from '../../../assets/screenshots/chart-types/sankey-defa
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import sankey_props_designer from '../../../assets/screenshots/chart-types/sankey-props-designer.png';
 import sankey_props_scrolled_designer from '../../../assets/screenshots/chart-types/sankey-props-scrolled-designer.png';
+import sankey_vertical_viewer from '../../../assets/screenshots/chart-types/sankey-vertical-viewer.png';
+import sankey_vertical_designer from '../../../assets/screenshots/chart-types/sankey-vertical-designer.png';
 
 # Sankey Diagram
 
@@ -57,10 +59,12 @@ The field identifying where each flow terminates.
 
 The numeric field determining the width of each flow link.
 
-<FeatureScreenshot
-  src={sankey_props_scrolled_designer}
-  alt="Value field binding"
-  caption="Configure value field binding in the property panel"
+<ScreenshotComparison
+  label="Vertical Sankey layout"
+  designerSrc={sankey_vertical_designer}
+  designerAlt="Value field property configured in designer"
+  viewerSrc={sankey_vertical_viewer}
+  viewerAlt="Sankey diagram with vertical layout"
 />
 
 ## Tips
