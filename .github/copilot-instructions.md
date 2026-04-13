@@ -61,3 +61,10 @@ It is NOT a full BI platform. It is a library-first, schema-first toolkit.
 - All architecture changes require ADR approval via the orchestrator
 - Subagents work in parallel only when interfaces are already specified or mockable
 - Every phase includes code validation, tests, and browser verification
+
+## Additional skills (`.github/skills/`)
+
+- **`work-kickoff`** — Plan/spec → GitHub issue before implementation
+- **`branch-ci-promotion`** — Branch + `pnpm lint` / `typecheck` / `test` (+ E2E when relevant) before merge
+- **`maintaining-ai-context`** — Keep skills, agents, and entry points lean and cross-linked
+- **`docs/dev/parallel-agent-environments.md`** — Avoid port conflicts when multiple agents or worktrees run dev servers (`SUPERSUBSET_DEV_APP_PORT`)

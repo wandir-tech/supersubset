@@ -15,17 +15,19 @@
 5. **`.github/copilot-instructions.md`** — Workspace-wide conventions
 6. **`docs/testing/human-checkpoints.md`** — Human gate definitions and review protocols
 7. **`docs/testing/verification-strategy.md`** — When/where Playwright and Chrome MCP tests happen
+8. **`docs/dev/parallel-agent-environments.md`** — Ports, worktrees, and running multiple dev servers or agents without collisions
 
 ### Where Things Are
 
 ```
 .github/
-├── agents/           # 7 specialized subagent definitions
-├── skills/           # 6 domain knowledge bundles
-├── instructions/     # 5 file-specific coding rules
+├── agents/           # Specialized subagent definitions (orchestrator + domain agents)
+├── skills/           # Domain + planning skills (orchestration, testing, work-kickoff, branch-ci-promotion, …)
+├── instructions/     # File-specific coding rules
 └── copilot-instructions.md
 
 docs/
+├── dev/              # Local multi-agent / port / worktree notes
 ├── adr/              # Architecture Decision Records
 ├── api/              # Public package reference docs
 ├── guides/           # Task-focused how-to guides

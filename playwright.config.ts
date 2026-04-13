@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const devAppPort = process.env.SUPERSUBSET_DEV_APP_PORT ?? '3000';
+const devAppOrigin = `http://localhost:${devAppPort}`;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'github' : 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: devAppOrigin,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -25,7 +28,8 @@ export default defineConfig({
   webServer: [
     {
       command: 'pnpm --filter @supersubset/dev-app dev',
-      url: 'http://localhost:3000',
+      url: devAppOrigin,
+      env: { ...process.env, SUPERSUBSET_DEV_APP_PORT: devAppPort },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

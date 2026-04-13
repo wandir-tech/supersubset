@@ -163,3 +163,10 @@ If resuming work after a context reset:
 4. Check `git log --oneline -20` — recent commits
 5. Read `docs/adr/` — architecture decisions constraining the work
 6. Resume from the first incomplete task in the current phase
+
+## See also
+
+- `.github/skills/work-kickoff/SKILL.md` — Spec and GitHub issue before large implementation
+- `.github/skills/branch-ci-promotion/SKILL.md` — `pnpm lint` / `typecheck` / `test` merge readiness
+- `.github/skills/maintaining-ai-context/SKILL.md` — Editing or auditing skills and agents
+- `docs/dev/parallel-agent-environments.md` — Ports and parallel worktrees / agents

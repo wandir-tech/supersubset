@@ -73,6 +73,16 @@ See `.github/agents/` for specialized agent definitions:
 
 The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It decomposes complex requests, delegates to specialized agents, parallelizes independent work, and verifies results. Use it for any task that spans multiple packages or domains. See `.github/skills/orchestration/SKILL.md` for the delegation methodology.
 
+### Planning, CI, and AI context skills
+
+| Skill | Use when |
+| ----- | -------- |
+| `work-kickoff` | Turning an idea into a reviewed GitHub issue + implementation plan |
+| `branch-ci-promotion` | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations |
+| `maintaining-ai-context` | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions` |
+
+Parallel dev servers / multiple agents on one machine: **`docs/dev/parallel-agent-environments.md`** (port `SUPERSUBSET_DEV_APP_PORT` for dev-app + Playwright).
+
 ## Context Reset Recovery
 
 If you are a fresh agent session resuming work:
