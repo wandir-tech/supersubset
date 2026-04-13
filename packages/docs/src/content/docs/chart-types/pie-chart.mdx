@@ -7,15 +7,18 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import pie_chart_viewer from '../../../assets/screenshots/chart-types/pie-chart-default-viewer.png';
 import pie_chart_designer from '../../../assets/screenshots/chart-types/pie-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import pie_chart_props_designer from '../../../assets/screenshots/chart-types/pie-chart-props-designer.png';
 import pie_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/pie-chart-props-scrolled-designer.png';
-import pie_chart_donut_viewer from '../../../assets/screenshots/chart-types/pie-chart-donut-viewer.png';
-import pie_chart_donut_designer from '../../../assets/screenshots/chart-types/pie-chart-donut-designer.png';
-import pie_chart_labels_inside_viewer from '../../../assets/screenshots/chart-types/pie-chart-labels-inside-viewer.png';
-import pie_chart_labels_inside_designer from '../../../assets/screenshots/chart-types/pie-chart-labels-inside-designer.png';
+import pie_chart_donut_before from '../../../assets/screenshots/chart-types/pie-chart-donut-before-viewer.png';
+import pie_chart_donut_after from '../../../assets/screenshots/chart-types/pie-chart-donut-viewer.png';
+import pie_chart_donut_callout from '../../../assets/screenshots/chart-types/pie-chart-donut-callout-designer.png';
+import pie_chart_labels_inside_before from '../../../assets/screenshots/chart-types/pie-chart-labels-inside-before-viewer.png';
+import pie_chart_labels_inside_after from '../../../assets/screenshots/chart-types/pie-chart-labels-inside-viewer.png';
+import pie_chart_labels_inside_callout from '../../../assets/screenshots/chart-types/pie-chart-labels-inside-callout-designer.png';
 
 # Pie Chart
 
@@ -61,12 +64,14 @@ The field that labels each slice.
 
 When enabled, the center of the pie is hollow, creating a donut shape. This is often preferred for a cleaner, more modern look and can display a summary value in the center.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Donut mode enabled"
-  designerSrc={pie_chart_donut_designer}
-  designerAlt="Donut mode property toggled in designer"
-  viewerSrc={pie_chart_donut_viewer}
-  viewerAlt="Pie chart in donut mode"
+  beforeSrc={pie_chart_donut_before}
+  beforeAlt="Pie chart with solid center"
+  afterSrc={pie_chart_donut_after}
+  afterAlt="Pie chart in donut mode"
+  calloutSrc={pie_chart_donut_callout}
+  calloutAlt="Donut property highlighted in designer"
 />
 
 ### Rose Type (`roseType`)
@@ -83,12 +88,14 @@ When enabled, slice radii vary by value — larger values have longer slices ext
 
 Toggle the visibility of slice labels. Disable when using a legend or when slices are obvious from color coding.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Labels shown inside slices"
-  designerSrc={pie_chart_labels_inside_designer}
-  designerAlt="Show labels property toggled in designer"
-  viewerSrc={pie_chart_labels_inside_viewer}
-  viewerAlt="Pie chart with labels inside slices"
+  beforeSrc={pie_chart_labels_inside_before}
+  beforeAlt="Pie chart with external labels"
+  afterSrc={pie_chart_labels_inside_after}
+  afterAlt="Pie chart with labels inside slices"
+  calloutSrc={pie_chart_labels_inside_callout}
+  calloutAlt="Show labels property highlighted in designer"
 />
 
 ## Tips

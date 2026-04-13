@@ -7,13 +7,15 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import scatter_chart_viewer from '../../../assets/screenshots/chart-types/scatter-chart-default-viewer.png';
 import scatter_chart_designer from '../../../assets/screenshots/chart-types/scatter-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import scatter_chart_props_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-designer.png';
 import scatter_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/scatter-chart-props-scrolled-designer.png';
-import scatter_chart_low_opacity_viewer from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-viewer.png';
-import scatter_chart_low_opacity_designer from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-designer.png';
+import scatter_chart_low_opacity_before from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-before-viewer.png';
+import scatter_chart_low_opacity_after from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-viewer.png';
+import scatter_chart_low_opacity_callout from '../../../assets/screenshots/chart-types/scatter-chart-low-opacity-callout-designer.png';
 
 # Scatter Chart
 
@@ -79,12 +81,14 @@ An optional categorical field that colors points by group.
 
 Controls the base size of data points. Increase for sparse data; decrease for dense datasets.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Low opacity points"
-  designerSrc={scatter_chart_low_opacity_designer}
-  designerAlt="Symbol size property adjusted in designer"
-  viewerSrc={scatter_chart_low_opacity_viewer}
-  viewerAlt="Scatter chart with low opacity points"
+  beforeSrc={scatter_chart_low_opacity_before}
+  beforeAlt="Scatter chart with default opacity"
+  afterSrc={scatter_chart_low_opacity_after}
+  afterAlt="Scatter chart with low opacity points"
+  calloutSrc={scatter_chart_low_opacity_callout}
+  calloutAlt="Symbol size property highlighted in designer"
 />
 
 ## Tips

@@ -180,8 +180,8 @@ sidebar:
   order: {N}
 ---
 
-import { Image } from 'astro:assets';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import ExpandAll from '../../../components/ExpandAll.astro';
 
 # {Feature Title}
@@ -204,35 +204,21 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 
 ## Configuration Options
 
-### {Property Name}
+### {Property Name} (`{propName}`)
 
 {Description of what this property controls and its valid values.}
 
-**Before** (default state):
-
-<FeatureScreenshot
-  src={import('../../../assets/screenshots/{path}-default-viewer.png')}
-  alt="{Feature} before {property} change"
-  caption="Default: {property} is off / at default value"
+<PropertyShowcase
+  label="{Property Name} toggled"
+  beforeSrc={import('../../../assets/screenshots/{path}-{variant}-before-viewer.png')}
+  beforeAlt="{Feature} before {property} change"
+  afterSrc={import('../../../assets/screenshots/{path}-{variant}-viewer.png')}
+  afterAlt="{Feature} after enabling {property}"
+  calloutSrc={import('../../../assets/screenshots/{path}-{variant}-callout-designer.png')}
+  calloutAlt="{Property} setting highlighted in designer"
 />
 
-**After** ({property} changed):
-
-<FeatureScreenshot
-  src={import('../../../assets/screenshots/{path}-{property}-viewer.png')}
-  alt="{Feature} after enabling {property}"
-  caption="{Property} enabled — note the visual difference"
-/>
-
-<ScreenshotComparison
-  label="{Property Name} designer config"
-  designerSrc={import('../../../assets/screenshots/{path}-{property}-designer.png')}
-  designerAlt="{Property} setting changed in the designer"
-  viewerSrc={import('../../../assets/screenshots/{path}-{property}-viewer.png')}
-  viewerAlt="Dashboard with {property} applied"
-/>
-
-**IMPORTANT**: Both the "Before" and "After" viewer screenshots MUST be visibly different. If they are not, the property is either not working or the capture was incorrect. See Step 7.5.
+**IMPORTANT**: The before and after viewer screenshots MUST be visibly different. If they are not, the property is either not working or the capture was incorrect. See Step 7.5.
 
 {Repeat ### for each configurable property}
 
@@ -273,9 +259,46 @@ Verify the page appears in the correct position in the sidebar.
 
 ## MDX Component Reference
 
+### `<PropertyShowcase>`
+
+Renders a three-panel comparison for a property toggle: before viewer, after viewer, and designer callout. Use this for all property variant documentation sections. Props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Display name for the comparison (shown in the collapsible summary) |
+| `beforeSrc` | `ImageMetadata` | Import of the viewer screenshot **before** the property change |
+| `beforeAlt` | `string` | Alt text for the "before" image |
+| `afterSrc` | `ImageMetadata` | Import of the viewer screenshot **after** the property change |
+| `afterAlt` | `string` | Alt text for the "after" image |
+| `calloutSrc` | `ImageMetadata` | Import of the designer callout screenshot (optional) |
+| `calloutAlt` | `string` | Alt text for the callout image |
+
+**Screenshot file pattern:**
+- Before viewer: `{slug}-{variantSlug}-before-viewer.png`
+- After viewer: `{slug}-{variantSlug}-viewer.png`
+- Designer callout: `{slug}-{variantSlug}-callout-designer.png`
+
+**Example usage:**
+```mdx
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
+import stacked_before from '../../../assets/screenshots/chart-types/bar-chart-stacked-before-viewer.png';
+import stacked_after from '../../../assets/screenshots/chart-types/bar-chart-stacked-viewer.png';
+import stacked_callout from '../../../assets/screenshots/chart-types/bar-chart-stacked-callout-designer.png';
+
+<PropertyShowcase
+  label="Stacked bars enabled"
+  beforeSrc={stacked_before}
+  beforeAlt="Bar chart with grouped bars"
+  afterSrc={stacked_after}
+  afterAlt="Bar chart with stacked bars"
+  calloutSrc={stacked_callout}
+  calloutAlt="Stacked property highlighted in designer"
+/>
+```
+
 ### `<ScreenshotComparison>`
 
-Renders a before/after pair inside a `<details>` element. Props:
+Renders a designer/viewer pair inside a `<details>` element. Use for "Default Appearance" sections where no before/after comparison is needed. Props:
 
 | Prop | Type | Description |
 |------|------|-------------|
@@ -378,10 +401,43 @@ In the runtime viewer (initial load, before any designer edits):
 
 ### Property Toggle Helpers
 
-- `toggleRadioProperty(page, fieldLabel, targetValue)` — click a radio option
-- `changeSelectProperty(page, fieldLabel, targetValue)` — change a `<select>` value
-  (uses React-compatible event dispatch via `nativeInputValueSetter`)
+- `toggleRadioProperty(page, fieldLabel, targetValue)` — toggle a radio option using React fiber `__reactProps$` onChange (primary), `.click()` fallback
+- `changeSelectProperty(page, fieldLabel, targetValue)` — change a `<select>` value using React fiber onChange with JSON-encoded option matching (Puck stores option values as `{"value":"actual_value"}`)
 - `scrollPropertyIntoView(page, fieldLabel)` — scroll the sidebar to find a field
+- `capturePropertyCallout(page, fieldLabel, category, slug, variant)` — capture a focused callout screenshot centered on a specific property field with a blue highlight border
+
+### Designer Callout Capture
+
+The `capturePropertyCallout` helper produces compact 340×250px screenshots centered on a specific property field:
+
+1. Uses Playwright locators to find the VISIBLE `PuckFields-field` container (Puck renders hidden field panels for all components — only the selected one is visible)
+2. Iterates all matching elements and finds the first one with non-zero `boundingBox()`
+3. Scrolls the field into view and recalculates its position
+4. Injects a temporary blue highlight `div` (3px solid #2563eb, border-radius 8px, box-shadow)
+5. Captures a 340×250px clip centered on the field
+6. Removes the highlight overlay
+7. Falls back to `capturePropertyPanel` if the field isn't found
+
+### React Fiber Event Dispatch
+
+Puck handles form field changes through React's synthetic event system. Native DOM events (`dispatchEvent`, `nativeInputValueSetter`) do NOT trigger Puck state updates. Both radio and select helpers use React fiber props (`__reactProps$` onChange) to trigger actual Puck state changes.
+
+**Important**: After changing a property via React fiber, the designer package must be rebuilt for ChartPreview fixes to take effect:
+```bash
+pnpm --filter @supersubset/designer build
+```
+
+### ChartPreview Boolean Mapping
+
+`packages/designer/src/preview/ChartPreview.tsx` `buildWidgetConfig()` maps Puck block props to widget config. Boolean radio props must handle BOTH `'true'` AND `'false'` string values:
+
+```typescript
+// CORRECT — handles both checked and unchecked states
+if (puckProps.smooth === 'true') config.smooth = true;
+else if (puckProps.smooth === 'false') config.smooth = false;
+```
+
+If only the `'true'` case is handled, toggling to 'false' is silently ignored when the DEFAULT_CONFIGS has the property set to `true`.
 
 ### WidgetVariantSpec Interface
 
@@ -440,7 +496,8 @@ Before considering a feature page complete:
 - [ ] Quality check passed — no console errors, correct rendering (Step 8)
 - [ ] No outstanding bugs — bug fix gate cleared (Step 9)
 - [ ] MDX page written with all sections (Step 10)
-- [ ] MDX shows BOTH before and after viewer screenshots for each property (not just the property panel)
+- [ ] Property variant sections use `<PropertyShowcase>` with before/after viewer + designer callout (3 images per variant)
+- [ ] Default Appearance sections use `<ScreenshotComparison>` with designer + viewer pair
 - [ ] Page added to sidebar navigation (Step 11)
 - [ ] Cross-references added (Step 12)
 - [ ] `pnpm docs:build` succeeds with the new page

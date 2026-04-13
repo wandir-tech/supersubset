@@ -7,12 +7,14 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import waterfall_viewer from '../../../assets/screenshots/chart-types/waterfall-default-viewer.png';
 import waterfall_designer from '../../../assets/screenshots/chart-types/waterfall-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import waterfall_props_designer from '../../../assets/screenshots/chart-types/waterfall-props-designer.png';
-import waterfall_show_values_viewer from '../../../assets/screenshots/chart-types/waterfall-show-values-viewer.png';
-import waterfall_show_values_designer from '../../../assets/screenshots/chart-types/waterfall-show-values-designer.png';
+import waterfall_show_values_before from '../../../assets/screenshots/chart-types/waterfall-show-values-before-viewer.png';
+import waterfall_show_values_after from '../../../assets/screenshots/chart-types/waterfall-show-values-viewer.png';
+import waterfall_show_values_callout from '../../../assets/screenshots/chart-types/waterfall-show-values-callout-designer.png';
 
 # Waterfall Chart
 
@@ -48,12 +50,14 @@ The field labeling each step in the waterfall.
 
 The numeric field representing the change (positive or negative) at each step.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Values shown on bars"
-  designerSrc={waterfall_show_values_designer}
-  designerAlt="Value field property configured in designer"
-  viewerSrc={waterfall_show_values_viewer}
-  viewerAlt="Waterfall chart with values shown"
+  beforeSrc={waterfall_show_values_before}
+  beforeAlt="Waterfall chart without values"
+  afterSrc={waterfall_show_values_after}
+  afterAlt="Waterfall chart with values shown"
+  calloutSrc={waterfall_show_values_callout}
+  calloutAlt="Value field property highlighted in designer"
 />
 
 ## Tips

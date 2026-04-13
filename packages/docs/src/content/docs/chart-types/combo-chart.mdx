@@ -7,12 +7,14 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import combo_chart_viewer from '../../../assets/screenshots/chart-types/combo-chart-default-viewer.png';
 import combo_chart_designer from '../../../assets/screenshots/chart-types/combo-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import combo_chart_props_designer from '../../../assets/screenshots/chart-types/combo-chart-props-designer.png';
-import combo_chart_straight_lines_viewer from '../../../assets/screenshots/chart-types/combo-chart-straight-lines-viewer.png';
-import combo_chart_straight_lines_designer from '../../../assets/screenshots/chart-types/combo-chart-straight-lines-designer.png';
+import combo_chart_straight_lines_before from '../../../assets/screenshots/chart-types/combo-chart-straight-lines-before-viewer.png';
+import combo_chart_straight_lines_after from '../../../assets/screenshots/chart-types/combo-chart-straight-lines-viewer.png';
+import combo_chart_straight_lines_callout from '../../../assets/screenshots/chart-types/combo-chart-straight-lines-callout-designer.png';
 
 # Combo Chart
 
@@ -48,12 +50,14 @@ Define multiple series, each with its own chart type (line, bar, or area), data 
 
 When enabled, a second Y-axis appears on the right side of the chart. Assign series to either the left or right axis based on their scale.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Straight lines with dual axis"
-  designerSrc={combo_chart_straight_lines_designer}
-  designerAlt="Dual axis property configured in designer"
-  viewerSrc={combo_chart_straight_lines_viewer}
-  viewerAlt="Combo chart with straight lines"
+  beforeSrc={combo_chart_straight_lines_before}
+  beforeAlt="Combo chart with smooth lines"
+  afterSrc={combo_chart_straight_lines_after}
+  afterAlt="Combo chart with straight lines"
+  calloutSrc={combo_chart_straight_lines_callout}
+  calloutAlt="Dual axis property highlighted in designer"
 />
 
 ## Tips

@@ -7,15 +7,18 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import alerts_viewer from '../../../assets/screenshots/widgets/alerts-default-viewer.png';
 import alerts_designer from '../../../assets/screenshots/widgets/alerts-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import alerts_props_designer from '../../../assets/screenshots/widgets/alerts-props-designer.png';
 import alerts_props_scrolled_designer from '../../../assets/screenshots/widgets/alerts-props-scrolled-designer.png';
-import alerts_inline_layout_viewer from '../../../assets/screenshots/widgets/alerts-inline-layout-viewer.png';
-import alerts_inline_layout_designer from '../../../assets/screenshots/widgets/alerts-inline-layout-designer.png';
-import alerts_no_timestamp_viewer from '../../../assets/screenshots/widgets/alerts-no-timestamp-viewer.png';
-import alerts_no_timestamp_designer from '../../../assets/screenshots/widgets/alerts-no-timestamp-designer.png';
+import alerts_inline_layout_before from '../../../assets/screenshots/widgets/alerts-inline-layout-before-viewer.png';
+import alerts_inline_layout_after from '../../../assets/screenshots/widgets/alerts-inline-layout-viewer.png';
+import alerts_inline_layout_callout from '../../../assets/screenshots/widgets/alerts-inline-layout-callout-designer.png';
+import alerts_no_timestamp_before from '../../../assets/screenshots/widgets/alerts-no-timestamp-before-viewer.png';
+import alerts_no_timestamp_after from '../../../assets/screenshots/widgets/alerts-no-timestamp-viewer.png';
+import alerts_no_timestamp_callout from '../../../assets/screenshots/widgets/alerts-no-timestamp-callout-designer.png';
 
 # Alerts
 
@@ -81,12 +84,14 @@ The datetime field shown as the alert's time.
 
 Choose between `wrap` (cards flow horizontally and wrap) and `list` (vertical stack).
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Inline layout enabled"
-  designerSrc={alerts_inline_layout_designer}
-  designerAlt="Layout property toggled in designer"
-  viewerSrc={alerts_inline_layout_viewer}
-  viewerAlt="Alerts widget with inline layout"
+  beforeSrc={alerts_inline_layout_before}
+  beforeAlt="Alerts widget with list layout"
+  afterSrc={alerts_inline_layout_after}
+  afterAlt="Alerts widget with inline layout"
+  calloutSrc={alerts_inline_layout_callout}
+  calloutAlt="Layout property highlighted in designer"
 />
 
 ### Max Items (`maxItems`)
@@ -103,12 +108,14 @@ Limit the number of alerts displayed. Useful for showing only the most recent or
 
 Toggle timestamp visibility.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Timestamp hidden"
-  designerSrc={alerts_no_timestamp_designer}
-  designerAlt="Show timestamp property toggled in designer"
-  viewerSrc={alerts_no_timestamp_viewer}
-  viewerAlt="Alerts widget with timestamp hidden"
+  beforeSrc={alerts_no_timestamp_before}
+  beforeAlt="Alerts widget with timestamps"
+  afterSrc={alerts_no_timestamp_after}
+  afterAlt="Alerts widget with timestamp hidden"
+  calloutSrc={alerts_no_timestamp_callout}
+  calloutAlt="Show timestamp property highlighted in designer"
 />
 
 ### Default Severity (`defaultSeverity`)

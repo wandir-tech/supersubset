@@ -7,15 +7,18 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import area_chart_viewer from '../../../assets/screenshots/chart-types/area-chart-default-viewer.png';
 import area_chart_designer from '../../../assets/screenshots/chart-types/area-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import area_chart_props_designer from '../../../assets/screenshots/chart-types/area-chart-props-designer.png';
 import area_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/area-chart-props-scrolled-designer.png';
-import area_chart_stacked_viewer from '../../../assets/screenshots/chart-types/area-chart-stacked-viewer.png';
-import area_chart_stacked_designer from '../../../assets/screenshots/chart-types/area-chart-stacked-designer.png';
-import area_chart_full_opacity_viewer from '../../../assets/screenshots/chart-types/area-chart-full-opacity-viewer.png';
-import area_chart_full_opacity_designer from '../../../assets/screenshots/chart-types/area-chart-full-opacity-designer.png';
+import area_chart_unstacked_before from '../../../assets/screenshots/chart-types/area-chart-unstacked-before-viewer.png';
+import area_chart_unstacked_after from '../../../assets/screenshots/chart-types/area-chart-unstacked-viewer.png';
+import area_chart_unstacked_callout from '../../../assets/screenshots/chart-types/area-chart-unstacked-callout-designer.png';
+import area_chart_full_opacity_before from '../../../assets/screenshots/chart-types/area-chart-full-opacity-before-viewer.png';
+import area_chart_full_opacity_after from '../../../assets/screenshots/chart-types/area-chart-full-opacity-viewer.png';
+import area_chart_full_opacity_callout from '../../../assets/screenshots/chart-types/area-chart-full-opacity-callout-designer.png';
 
 # Area Chart
 
@@ -71,24 +74,28 @@ When enabled, area boundaries are drawn as smooth curves.
 
 Controls the transparency of the fill. Lower values let overlapping areas show through; higher values produce more vivid fills.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Full opacity fill"
-  designerSrc={area_chart_full_opacity_designer}
-  designerAlt="Opacity property adjusted in designer"
-  viewerSrc={area_chart_full_opacity_viewer}
-  viewerAlt="Area chart with full opacity"
+  beforeSrc={area_chart_full_opacity_before}
+  beforeAlt="Area chart with semi-transparent fill"
+  afterSrc={area_chart_full_opacity_after}
+  afterAlt="Area chart with full opacity"
+  calloutSrc={area_chart_full_opacity_callout}
+  calloutAlt="Opacity property highlighted in designer"
 />
 
 ### Stacked Areas (`stacked`)
 
 When enabled, areas are stacked so each series starts where the previous one ends. This shows cumulative totals and the contribution of each series.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Stacked areas enabled"
-  designerSrc={area_chart_stacked_designer}
-  designerAlt="Stacked areas property toggled in designer"
-  viewerSrc={area_chart_stacked_viewer}
-  viewerAlt="Area chart with stacked areas"
+  beforeSrc={area_chart_unstacked_before}
+  beforeAlt="Area chart with overlapping areas"
+  afterSrc={area_chart_unstacked_after}
+  afterAlt="Area chart with stacked areas"
+  calloutSrc={area_chart_unstacked_callout}
+  calloutAlt="Stacked property highlighted in designer"
 />
 
 ## Tips

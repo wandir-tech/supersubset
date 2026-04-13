@@ -7,16 +7,20 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import line_chart_viewer from '../../../assets/screenshots/chart-types/line-chart-default-viewer.png';
 import line_chart_designer from '../../../assets/screenshots/chart-types/line-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import line_chart_props_designer from '../../../assets/screenshots/chart-types/line-chart-props-designer.png';
-import line_chart_smooth_viewer from '../../../assets/screenshots/chart-types/line-chart-smooth-viewer.png';
-import line_chart_smooth_designer from '../../../assets/screenshots/chart-types/line-chart-smooth-designer.png';
-import line_chart_no_markers_viewer from '../../../assets/screenshots/chart-types/line-chart-no-markers-viewer.png';
-import line_chart_no_markers_designer from '../../../assets/screenshots/chart-types/line-chart-no-markers-designer.png';
-import line_chart_connect_nulls_viewer from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-viewer.png';
-import line_chart_connect_nulls_designer from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-designer.png';
+import line_chart_straight_lines_before from '../../../assets/screenshots/chart-types/line-chart-straight-lines-before-viewer.png';
+import line_chart_straight_lines_after from '../../../assets/screenshots/chart-types/line-chart-straight-lines-viewer.png';
+import line_chart_straight_lines_callout from '../../../assets/screenshots/chart-types/line-chart-straight-lines-callout-designer.png';
+import line_chart_no_markers_before from '../../../assets/screenshots/chart-types/line-chart-no-markers-before-viewer.png';
+import line_chart_no_markers_after from '../../../assets/screenshots/chart-types/line-chart-no-markers-viewer.png';
+import line_chart_no_markers_callout from '../../../assets/screenshots/chart-types/line-chart-no-markers-callout-designer.png';
+import line_chart_connect_nulls_before from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-before-viewer.png';
+import line_chart_connect_nulls_after from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-viewer.png';
+import line_chart_connect_nulls_callout from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-callout-designer.png';
 
 # Line Chart
 
@@ -62,12 +66,14 @@ One or more measure fields plotted as separate lines. Add multiple fields to com
 
 When enabled, lines are drawn as smooth curves instead of straight segments. This produces a more polished look but can obscure precise data point positions.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Smooth lines enabled"
-  designerSrc={line_chart_smooth_designer}
-  designerAlt="Smooth lines property toggled in designer"
-  viewerSrc={line_chart_smooth_viewer}
-  viewerAlt="Line chart with smooth curves"
+  beforeSrc={line_chart_straight_lines_before}
+  beforeAlt="Line chart with straight line segments"
+  afterSrc={line_chart_straight_lines_after}
+  afterAlt="Line chart with smooth curves"
+  calloutSrc={line_chart_straight_lines_callout}
+  calloutAlt="Smooth property highlighted in designer"
 />
 
 ### Area Fill (`area`)
@@ -84,24 +90,28 @@ When enabled, the area below each line is filled with a semi-transparent color. 
 
 Toggle the visibility of data point markers on the line. Hiding points gives a cleaner look; showing them makes individual values easier to read.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Markers hidden"
-  designerSrc={line_chart_no_markers_designer}
-  designerAlt="Show markers toggled off in designer"
-  viewerSrc={line_chart_no_markers_viewer}
-  viewerAlt="Line chart without point markers"
+  beforeSrc={line_chart_no_markers_before}
+  beforeAlt="Line chart with point markers"
+  afterSrc={line_chart_no_markers_after}
+  afterAlt="Line chart without point markers"
+  calloutSrc={line_chart_no_markers_callout}
+  calloutAlt="Show markers property highlighted in designer"
 />
 
 ### Connect Nulls (`connectNulls`)
 
 When enabled, lines bridge over missing data points instead of breaking.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Connect nulls enabled"
-  designerSrc={line_chart_connect_nulls_designer}
-  designerAlt="Connect nulls toggled on in designer"
-  viewerSrc={line_chart_connect_nulls_viewer}
-  viewerAlt="Line chart with connected null gaps"
+  beforeSrc={line_chart_connect_nulls_before}
+  beforeAlt="Line chart with gaps at null values"
+  afterSrc={line_chart_connect_nulls_after}
+  afterAlt="Line chart with connected null gaps"
+  calloutSrc={line_chart_connect_nulls_callout}
+  calloutAlt="Connect nulls property highlighted in designer"
 />
 
 ## Tips

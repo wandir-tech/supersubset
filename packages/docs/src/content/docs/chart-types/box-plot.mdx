@@ -7,12 +7,14 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import box_plot_viewer from '../../../assets/screenshots/chart-types/box-plot-default-viewer.png';
 import box_plot_designer from '../../../assets/screenshots/chart-types/box-plot-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import box_plot_props_designer from '../../../assets/screenshots/chart-types/box-plot-props-designer.png';
-import box_plot_wide_boxes_viewer from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-viewer.png';
-import box_plot_wide_boxes_designer from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-designer.png';
+import box_plot_wide_boxes_before from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-before-viewer.png';
+import box_plot_wide_boxes_after from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-viewer.png';
+import box_plot_wide_boxes_callout from '../../../assets/screenshots/chart-types/box-plot-wide-boxes-callout-designer.png';
 
 # Box Plot
 
@@ -48,12 +50,14 @@ The categorical field used to create separate boxes for each group.
 
 The numeric field whose distribution is visualized.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Wide boxes style"
-  designerSrc={box_plot_wide_boxes_designer}
-  designerAlt="Value field property configured in designer"
-  viewerSrc={box_plot_wide_boxes_viewer}
-  viewerAlt="Box plot with wide boxes"
+  beforeSrc={box_plot_wide_boxes_before}
+  beforeAlt="Box plot with default box width"
+  afterSrc={box_plot_wide_boxes_after}
+  afterAlt="Box plot with wide boxes"
+  calloutSrc={box_plot_wide_boxes_callout}
+  calloutAlt="Value field property highlighted in designer"
 />
 
 ## Tips

@@ -7,15 +7,18 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import kpi_card_viewer from '../../../assets/screenshots/widgets/kpi-card-default-viewer.png';
 import kpi_card_designer from '../../../assets/screenshots/widgets/kpi-card-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import kpi_card_props_designer from '../../../assets/screenshots/widgets/kpi-card-props-designer.png';
 import kpi_card_props_scrolled_designer from '../../../assets/screenshots/widgets/kpi-card-props-scrolled-designer.png';
-import kpi_card_large_font_viewer from '../../../assets/screenshots/widgets/kpi-card-large-font-viewer.png';
-import kpi_card_large_font_designer from '../../../assets/screenshots/widgets/kpi-card-large-font-designer.png';
-import kpi_card_down_good_viewer from '../../../assets/screenshots/widgets/kpi-card-down-good-viewer.png';
-import kpi_card_down_good_designer from '../../../assets/screenshots/widgets/kpi-card-down-good-designer.png';
+import kpi_card_large_font_before from '../../../assets/screenshots/widgets/kpi-card-large-font-before-viewer.png';
+import kpi_card_large_font_after from '../../../assets/screenshots/widgets/kpi-card-large-font-viewer.png';
+import kpi_card_large_font_callout from '../../../assets/screenshots/widgets/kpi-card-large-font-callout-designer.png';
+import kpi_card_down_good_before from '../../../assets/screenshots/widgets/kpi-card-down-good-before-viewer.png';
+import kpi_card_down_good_after from '../../../assets/screenshots/widgets/kpi-card-down-good-viewer.png';
+import kpi_card_down_good_callout from '../../../assets/screenshots/widgets/kpi-card-down-good-callout-designer.png';
 
 # KPI Card
 
@@ -91,24 +94,28 @@ A text suffix added after the value (e.g., `%`, `units`).
 
 Controls the size of the primary value display: `sm` (small), `md` (medium), or `lg` (large).
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Large font size"
-  designerSrc={kpi_card_large_font_designer}
-  designerAlt="Font size property set to large in designer"
-  viewerSrc={kpi_card_large_font_viewer}
-  viewerAlt="KPI card with large font size"
+  beforeSrc={kpi_card_large_font_before}
+  beforeAlt="KPI card with default font size"
+  afterSrc={kpi_card_large_font_after}
+  afterAlt="KPI card with large font size"
+  calloutSrc={kpi_card_large_font_callout}
+  calloutAlt="Font size property highlighted in designer"
 />
 
 ### Trend Direction (`trendDirection`)
 
 Controls how trend arrows are color-coded: `up-good` (green for increases) or `down-good` (green for decreases, useful for metrics like churn or bounce rate).
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Down = Good trend direction"
-  designerSrc={kpi_card_down_good_designer}
-  designerAlt="Trend direction property set to down-good in designer"
-  viewerSrc={kpi_card_down_good_viewer}
-  viewerAlt="KPI card with down-is-good trend direction"
+  beforeSrc={kpi_card_down_good_before}
+  beforeAlt="KPI card with default up-good trend"
+  afterSrc={kpi_card_down_good_after}
+  afterAlt="KPI card with down-is-good trend direction"
+  calloutSrc={kpi_card_down_good_callout}
+  calloutAlt="Trend direction property highlighted in designer"
 />
 
 ## Tips

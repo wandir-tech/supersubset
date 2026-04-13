@@ -7,16 +7,20 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import bar_chart_viewer from '../../../assets/screenshots/chart-types/bar-chart-default-viewer.png';
 import bar_chart_designer from '../../../assets/screenshots/chart-types/bar-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import bar_chart_props_designer from '../../../assets/screenshots/chart-types/bar-chart-props-designer.png';
-import bar_chart_horizontal_viewer from '../../../assets/screenshots/chart-types/bar-chart-horizontal-viewer.png';
-import bar_chart_horizontal_designer from '../../../assets/screenshots/chart-types/bar-chart-horizontal-designer.png';
-import bar_chart_stacked_viewer from '../../../assets/screenshots/chart-types/bar-chart-stacked-viewer.png';
-import bar_chart_stacked_designer from '../../../assets/screenshots/chart-types/bar-chart-stacked-designer.png';
-import bar_chart_slim_bars_viewer from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-viewer.png';
-import bar_chart_slim_bars_designer from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-designer.png';
+import bar_chart_horizontal_before from '../../../assets/screenshots/chart-types/bar-chart-horizontal-before-viewer.png';
+import bar_chart_horizontal_after from '../../../assets/screenshots/chart-types/bar-chart-horizontal-viewer.png';
+import bar_chart_horizontal_callout from '../../../assets/screenshots/chart-types/bar-chart-horizontal-callout-designer.png';
+import bar_chart_stacked_before from '../../../assets/screenshots/chart-types/bar-chart-stacked-before-viewer.png';
+import bar_chart_stacked_after from '../../../assets/screenshots/chart-types/bar-chart-stacked-viewer.png';
+import bar_chart_stacked_callout from '../../../assets/screenshots/chart-types/bar-chart-stacked-callout-designer.png';
+import bar_chart_slim_bars_before from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-before-viewer.png';
+import bar_chart_slim_bars_after from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-viewer.png';
+import bar_chart_slim_bars_callout from '../../../assets/screenshots/chart-types/bar-chart-slim-bars-callout-designer.png';
 
 # Bar Chart
 
@@ -62,36 +66,42 @@ One or more measure fields. Multiple fields create grouped bars side by side.
 
 When enabled, bars are drawn horizontally. This is useful for long category labels or when you want to rank items.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Horizontal bars enabled"
-  designerSrc={bar_chart_horizontal_designer}
-  designerAlt="Horizontal layout property toggled in designer"
-  viewerSrc={bar_chart_horizontal_viewer}
-  viewerAlt="Bar chart with horizontal layout"
+  beforeSrc={bar_chart_horizontal_before}
+  beforeAlt="Bar chart with default vertical layout"
+  afterSrc={bar_chart_horizontal_after}
+  afterAlt="Bar chart with horizontal layout"
+  calloutSrc={bar_chart_horizontal_callout}
+  calloutAlt="Orientation property highlighted in designer"
 />
 
 ### Stacked Bars (`stacked`)
 
 When enabled with multiple Y fields, bars are stacked on top of each other instead of shown side by side. Useful for part-to-whole comparisons within categories.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Stacked bars enabled"
-  designerSrc={bar_chart_stacked_designer}
-  designerAlt="Stacked bars property toggled in designer"
-  viewerSrc={bar_chart_stacked_viewer}
-  viewerAlt="Bar chart with stacked bars"
+  beforeSrc={bar_chart_stacked_before}
+  beforeAlt="Bar chart with grouped bars"
+  afterSrc={bar_chart_stacked_after}
+  afterAlt="Bar chart with stacked bars"
+  calloutSrc={bar_chart_stacked_callout}
+  calloutAlt="Stacked property highlighted in designer"
 />
 
 ### Bar Width (`barWidth`)
 
 Controls the width of individual bars. Narrower bars leave more space between groups; wider bars are more prominent.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Slim bar width"
-  designerSrc={bar_chart_slim_bars_designer}
-  designerAlt="Bar width property adjusted in designer"
-  viewerSrc={bar_chart_slim_bars_viewer}
-  viewerAlt="Bar chart with slim bars"
+  beforeSrc={bar_chart_slim_bars_before}
+  beforeAlt="Bar chart with default bar width"
+  afterSrc={bar_chart_slim_bars_after}
+  afterAlt="Bar chart with slim bars"
+  calloutSrc={bar_chart_slim_bars_callout}
+  calloutAlt="Bar Width property highlighted in designer"
 />
 
 ## Tips

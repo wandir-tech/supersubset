@@ -326,6 +326,102 @@ export async function capturePropertyPanel(
   return filePath;
 }
 
+/**
+ * Capture a focused designer callout screenshot centered on a specific property field.
+ * Draws a blue highlight rectangle around the field, then captures just the sidebar
+ * area around it so the control is clearly visible and centered.
+ *
+ * Produces a compact image (~340×200px) suitable for "Designer Setting" callouts.
+ *
+ * @param page - Playwright page
+ * @param fieldLabel - The label text of the field to highlight (e.g., "Smooth")
+ * @param category - Screenshot category folder
+ * @param slug - Feature slug
+ * @param variant - Variant slug
+ * @returns The file path of the captured callout screenshot
+ */
+export async function capturePropertyCallout(
+  page: Page,
+  fieldLabel: string,
+  category: string,
+  slug: string,
+  variant: string,
+): Promise<string> {
+  const filePath = screenshotPath(category, slug, `${variant}-callout`, 'designer');
+
+  // Use Playwright locators to find the VISIBLE field container.
+  // Puck renders field panels for ALL components but only the selected one is visible.
+  // We must iterate because .first() may return a hidden duplicate with zero dimensions.
+  const fieldContainers = page.locator('[class*="PuckFields-field"]').filter({
+    has: page.locator('[class*="Input-label"]', { hasText: new RegExp(`^${fieldLabel}$`) }),
+  });
+
+  let fieldBox: { x: number; y: number; width: number; height: number } | null = null;
+  const count = await fieldContainers.count();
+  for (let i = 0; i < count; i++) {
+    const el = fieldContainers.nth(i);
+    const box = await el.boundingBox();
+    if (box && box.width > 0 && box.height > 0) {
+      // Scroll the field into the center of its scroll container before measuring
+      await el.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(200);
+      fieldBox = await el.boundingBox();
+      break;
+    }
+  }
+
+  if (fieldBox && fieldBox.width > 0 && fieldBox.height > 0) {
+    // Draw a blue highlight rectangle around the field using page.evaluate
+    // This injects a temporary overlay div
+    await page.evaluate((box) => {
+      const existing = document.getElementById('ss-field-highlight');
+      if (existing) existing.remove();
+
+      const highlight = document.createElement('div');
+      highlight.id = 'ss-field-highlight';
+      highlight.style.cssText = `
+        position: fixed;
+        left: ${box.x - 4}px;
+        top: ${box.y - 4}px;
+        width: ${box.width + 8}px;
+        height: ${box.height + 8}px;
+        border: 3px solid #2563eb;
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 99999;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      `;
+      document.body.appendChild(highlight);
+    }, fieldBox);
+
+    await page.waitForTimeout(100);
+
+    // Calculate a clip region centered on the field, ~340px wide, ~250px tall
+    const CALLOUT_WIDTH = 340;
+    const CALLOUT_HEIGHT = 250;
+    const centerX = fieldBox.x + fieldBox.width / 2;
+    const centerY = fieldBox.y + fieldBox.height / 2;
+    const clipX = Math.max(0, Math.round(centerX - CALLOUT_WIDTH / 2));
+    const clipY = Math.max(0, Math.round(centerY - CALLOUT_HEIGHT / 2));
+    await page.screenshot({
+      path: filePath,
+      clip: { x: clipX, y: clipY, width: CALLOUT_WIDTH, height: CALLOUT_HEIGHT },
+      animations: 'disabled',
+    });
+
+    // Remove the highlight overlay
+    await page.evaluate(() => {
+      const el = document.getElementById('ss-field-highlight');
+      if (el) el.remove();
+    });
+
+    return filePath;
+  }
+
+  // Fallback: capture the full property panel
+  return capturePropertyPanel(page, category, slug, variant);
+}
+
 // ─── Property Panel Interaction Helpers ──────────────────────
 
 /**
@@ -364,12 +460,27 @@ export async function toggleRadioProperty(
       const radioInners = inputContainer.querySelectorAll('[class*="Input-radioInner"]');
       for (const inner of radioInners) {
         if (inner.textContent?.trim() === targetValue) {
-          // Click the parent label element
-          const radioLabel = inner.closest('[class*="Input-radio"]') as HTMLElement;
-          if (radioLabel) {
-            radioLabel.click();
-            return true;
+          // Find the input element (sibling of radioInner inside the label)
+          const radioLabelEl = inner.closest('[class*="Input-radio"]') as HTMLElement;
+          if (!radioLabelEl) continue;
+
+          const input = radioLabelEl.querySelector('input[type="radio"]') as HTMLInputElement | null;
+          if (input) {
+            // Method 1: Try React onChange via __reactProps$
+            const propsKey = Object.keys(input).find(k => k.startsWith('__reactProps$'));
+            if (propsKey) {
+              const props = (input as any)[propsKey];
+              if (props?.onChange) {
+                input.checked = true;
+                props.onChange({ target: input, currentTarget: input });
+                return true;
+              }
+            }
           }
+
+          // Method 2: Fallback to native click on the label
+          radioLabelEl.click();
+          return true;
         }
       }
     }
@@ -394,7 +505,9 @@ export async function changeSelectProperty(
   fieldLabel: string,
   targetValue: string,
 ): Promise<boolean> {
-  // Use page.evaluate to reliably find the select and set its value with proper React event dispatch
+  // Puck JSON-encodes select option values as {"value":"actual_value"}.
+  // We need to find the matching option and use its raw value attribute,
+  // then trigger React's onChange handler properly.
   const changed = await page.evaluate(({ fieldLabel, targetValue }) => {
     const labelDivs = document.querySelectorAll('[class*="Input-label"]');
     for (const labelDiv of labelDivs) {
@@ -404,7 +517,6 @@ export async function changeSelectProperty(
         .join('');
       if (textContent !== fieldLabel) continue;
 
-      // Walk up to the field container (PuckFields-field)
       const fieldContainer = labelDiv.closest('[class*="PuckFields-field"]')
         ?? labelDiv.closest('[class*="Input_"]');
       if (!fieldContainer) continue;
@@ -412,11 +524,43 @@ export async function changeSelectProperty(
       const select = fieldContainer.querySelector('select') as HTMLSelectElement | null;
       if (!select) continue;
 
-      // Set value and dispatch events to trigger React state update
+      // Find the option whose value matches targetValue.
+      // Puck options may be JSON-encoded ({"value":"20%"}) or plain strings.
+      let matchingOptionValue: string | null = null;
+      for (const opt of select.options) {
+        if (opt.value === targetValue) {
+          matchingOptionValue = opt.value;
+          break;
+        }
+        // Try JSON-decoded match
+        try {
+          const parsed = JSON.parse(opt.value);
+          if (parsed?.value === targetValue) {
+            matchingOptionValue = opt.value;
+            break;
+          }
+        } catch { /* not JSON */ }
+      }
+
+      const valueToSet = matchingOptionValue ?? targetValue;
+
+      // Set the native value
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         HTMLSelectElement.prototype, 'value',
       )?.set;
-      nativeInputValueSetter?.call(select, targetValue);
+      nativeInputValueSetter?.call(select, valueToSet);
+
+      // Try React onChange via __reactProps$
+      const propsKey = Object.keys(select).find(k => k.startsWith('__reactProps$'));
+      if (propsKey) {
+        const props = (select as any)[propsKey];
+        if (props?.onChange) {
+          props.onChange({ target: select, currentTarget: select });
+          return true;
+        }
+      }
+
+      // Fallback: dispatch native change event
       select.dispatchEvent(new Event('change', { bubbles: true }));
       return true;
     }
@@ -424,7 +568,7 @@ export async function changeSelectProperty(
   }, { fieldLabel, targetValue });
 
   if (changed) {
-    await page.waitForTimeout(1200); // Wait for chart to re-render
+    await page.waitForTimeout(1200);
   }
   return changed;
 }

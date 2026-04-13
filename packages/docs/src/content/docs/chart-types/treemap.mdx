@@ -7,13 +7,15 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import treemap_viewer from '../../../assets/screenshots/chart-types/treemap-default-viewer.png';
 import treemap_designer from '../../../assets/screenshots/chart-types/treemap-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import treemap_props_designer from '../../../assets/screenshots/chart-types/treemap-props-designer.png';
 import treemap_props_scrolled_designer from '../../../assets/screenshots/chart-types/treemap-props-scrolled-designer.png';
-import treemap_parent_labels_viewer from '../../../assets/screenshots/chart-types/treemap-parent-labels-viewer.png';
-import treemap_parent_labels_designer from '../../../assets/screenshots/chart-types/treemap-parent-labels-designer.png';
+import treemap_parent_labels_before from '../../../assets/screenshots/chart-types/treemap-parent-labels-before-viewer.png';
+import treemap_parent_labels_after from '../../../assets/screenshots/chart-types/treemap-parent-labels-viewer.png';
+import treemap_parent_labels_callout from '../../../assets/screenshots/chart-types/treemap-parent-labels-callout-designer.png';
 
 # Treemap
 
@@ -59,12 +61,14 @@ The field used to label and group rectangles.
 
 Configure visual properties (colors, borders) for each level of hierarchy.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Parent labels visible"
-  designerSrc={treemap_parent_labels_designer}
-  designerAlt="Hierarchy level property configured in designer"
-  viewerSrc={treemap_parent_labels_viewer}
-  viewerAlt="Treemap with parent labels"
+  beforeSrc={treemap_parent_labels_before}
+  beforeAlt="Treemap without parent labels"
+  afterSrc={treemap_parent_labels_after}
+  afterAlt="Treemap with parent labels"
+  calloutSrc={treemap_parent_labels_callout}
+  calloutAlt="Hierarchy level property highlighted in designer"
 />
 
 ## Tips

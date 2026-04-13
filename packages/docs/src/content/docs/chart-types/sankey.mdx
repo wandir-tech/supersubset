@@ -7,13 +7,15 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import sankey_viewer from '../../../assets/screenshots/chart-types/sankey-default-viewer.png';
 import sankey_designer from '../../../assets/screenshots/chart-types/sankey-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import sankey_props_designer from '../../../assets/screenshots/chart-types/sankey-props-designer.png';
 import sankey_props_scrolled_designer from '../../../assets/screenshots/chart-types/sankey-props-scrolled-designer.png';
-import sankey_vertical_viewer from '../../../assets/screenshots/chart-types/sankey-vertical-viewer.png';
-import sankey_vertical_designer from '../../../assets/screenshots/chart-types/sankey-vertical-designer.png';
+import sankey_vertical_before from '../../../assets/screenshots/chart-types/sankey-vertical-before-viewer.png';
+import sankey_vertical_after from '../../../assets/screenshots/chart-types/sankey-vertical-viewer.png';
+import sankey_vertical_callout from '../../../assets/screenshots/chart-types/sankey-vertical-callout-designer.png';
 
 # Sankey Diagram
 
@@ -59,12 +61,14 @@ The field identifying where each flow terminates.
 
 The numeric field determining the width of each flow link.
 
-<ScreenshotComparison
+<PropertyShowcase
   label="Vertical Sankey layout"
-  designerSrc={sankey_vertical_designer}
-  designerAlt="Value field property configured in designer"
-  viewerSrc={sankey_vertical_viewer}
-  viewerAlt="Sankey diagram with vertical layout"
+  beforeSrc={sankey_vertical_before}
+  beforeAlt="Sankey diagram with horizontal layout"
+  afterSrc={sankey_vertical_after}
+  afterAlt="Sankey diagram with vertical layout"
+  calloutSrc={sankey_vertical_callout}
+  calloutAlt="Value field property highlighted in designer"
 />
 
 ## Tips

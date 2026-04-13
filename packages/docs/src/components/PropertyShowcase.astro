@@ -1,0 +1,171 @@
+---
+/**
+ * PropertyShowcase — renders a three-panel comparison for a property toggle:
+ *   1. Viewer BEFORE (default state)
+ *   2. Viewer AFTER (property changed)
+ *   3. Designer callout (property panel, centered and highlighted)
+ *
+ * This replaces ScreenshotComparison for property variant documentation.
+ * The reader can visually compare the before/after viewer output AND see
+ * exactly which designer control produced the change.
+ *
+ * Props:
+ *   label           — Display name (shown in the collapsible summary)
+ *   beforeSrc       — Viewer screenshot BEFORE the property change
+ *   beforeAlt       — Alt text for "before" image
+ *   afterSrc        — Viewer screenshot AFTER the property change
+ *   afterAlt        — Alt text for "after" image
+ *   calloutSrc      — Designer property panel callout (optional)
+ *   calloutAlt      — Alt text for the callout image
+ */
+interface Props {
+  label: string;
+  beforeSrc?: ImageMetadata;
+  beforeAlt?: string;
+  afterSrc?: ImageMetadata;
+  afterAlt?: string;
+  calloutSrc?: ImageMetadata;
+  calloutAlt?: string;
+}
+
+const {
+  label,
+  beforeSrc, beforeAlt = '',
+  afterSrc, afterAlt = '',
+  calloutSrc, calloutAlt = '',
+} = Astro.props;
+
+const hasBefore = !!beforeSrc;
+const hasAfter = !!afterSrc;
+const hasCallout = !!calloutSrc;
+const hasAny = hasBefore || hasAfter || hasCallout;
+---
+
+<details class="property-showcase">
+  <summary>
+    <span class="icon">▶</span>
+    {label}
+  </summary>
+  {hasAny ? (
+    <div class="showcase-layout">
+      {/* Viewer before/after row */}
+      <div class="viewer-comparison">
+        {hasBefore && (
+          <div class="viewer-pane">
+            <span class="pane-label before-label">Before</span>
+            <img
+              src={beforeSrc!.src}
+              alt={beforeAlt}
+              width={beforeSrc!.width}
+              height={beforeSrc!.height}
+              loading="lazy"
+              decoding="async"
+              data-lightbox
+            />
+          </div>
+        )}
+        {hasAfter && (
+          <div class="viewer-pane">
+            <span class="pane-label after-label">After</span>
+            <img
+              src={afterSrc!.src}
+              alt={afterAlt}
+              width={afterSrc!.width}
+              height={afterSrc!.height}
+              loading="lazy"
+              decoding="async"
+              data-lightbox
+            />
+          </div>
+        )}
+      </div>
+      {/* Designer callout below */}
+      {hasCallout && (
+        <div class="callout-pane">
+          <span class="pane-label callout-label">Designer Setting</span>
+          <img
+            src={calloutSrc!.src}
+            alt={calloutAlt}
+            width={calloutSrc!.width}
+            height={calloutSrc!.height}
+            loading="lazy"
+            decoding="async"
+            data-lightbox
+          />
+        </div>
+      )}
+    </div>
+  ) : (
+    <div class="showcase-layout">
+      <div class="screenshot-placeholder">
+        📸 Screenshots will be captured during documentation.
+      </div>
+    </div>
+  )}
+</details>
+
+<style>
+  .property-showcase {
+    margin: 1rem 0;
+    border: 1px solid var(--sl-color-gray-5, #e2e8f0);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  .property-showcase summary {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    user-select: none;
+  }
+  .property-showcase[open] summary .icon {
+    transform: rotate(90deg);
+  }
+  .showcase-layout {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .viewer-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .viewer-pane,
+  .callout-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .viewer-pane img,
+  .callout-pane img {
+    border: 1px solid var(--sl-color-gray-5, #e2e8f0);
+    border-radius: 0.375rem;
+    width: 100%;
+    height: auto;
+  }
+  .pane-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .before-label { color: var(--sl-color-gray-3, #64748b); }
+  .after-label { color: #2563eb; }
+  .callout-label { color: #7c3aed; }
+  .callout-pane {
+    max-width: 380px;
+  }
+  .callout-pane img {
+    border-color: #93c5fd;
+    border-width: 2px;
+  }
+  @media (max-width: 600px) {
+    .viewer-comparison {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

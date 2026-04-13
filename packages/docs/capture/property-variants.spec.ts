@@ -12,8 +12,8 @@ import * as fs from 'node:fs';
 import {
   switchToDesigner,
   waitForChartsReady,
-  captureFullPage,
   captureWidgetFromCanvas,
+  capturePropertyCallout,
   selectWidgetViaLayers,
   toggleRadioProperty,
   changeSelectProperty,
@@ -64,7 +64,7 @@ const overviewWidgets: WidgetVariantSpec[] = [
     slug: 'line-chart',
     page: 'overview',
     variants: [
-      { fieldLabel: 'Smooth', targetValue: 'Yes', variantSlug: 'smooth', fieldType: 'radio' },
+      { fieldLabel: 'Smooth', targetValue: 'No', variantSlug: 'straight-lines', fieldType: 'radio' },
       { fieldLabel: 'Show Markers', targetValue: 'No', variantSlug: 'no-markers', fieldType: 'radio' },
       { fieldLabel: 'Connect Nulls', targetValue: 'Yes', variantSlug: 'connect-nulls', fieldType: 'radio' },
     ],
@@ -155,7 +155,7 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'area-chart',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Stacked', targetValue: 'Yes', variantSlug: 'stacked', fieldType: 'radio' },
+      { fieldLabel: 'Stacked', targetValue: 'No', variantSlug: 'unstacked', fieldType: 'radio' },
       { fieldLabel: 'Area Opacity', targetValue: '1', variantSlug: 'full-opacity', fieldType: 'select' },
       { fieldLabel: 'Show Markers', targetValue: 'No', variantSlug: 'no-markers', fieldType: 'radio' },
     ],
@@ -293,6 +293,11 @@ function generateTests(widgets: WidgetVariantSpec[]) {
         const selected = await selectWidgetViaLayers(page, widget.layerLabel);
         expect(selected, `Could not select ${widget.layerLabel} via Layers`).toBe(true);
 
+        // 2b. Capture the DEFAULT viewer from canvas BEFORE toggling
+        const beforePath = await captureWidgetFromCanvas(
+          page, widget.puckComponentId, widget.category, widget.slug, `${variant.variantSlug}-before`,
+        );
+
         // 3. Scroll property into view and toggle it
         await scrollPropertyIntoView(page, variant.fieldLabel);
 
@@ -304,23 +309,28 @@ function generateTests(widgets: WidgetVariantSpec[]) {
         }
         expect(toggled, `Could not toggle ${variant.fieldLabel} to ${variant.targetValue}`).toBe(true);
 
-        // 4. Capture designer screenshot (full-page showing toggled property panel)
-        await captureFullPage(page, widget.category, widget.slug, variant.variantSlug, 'designer');
+        // 4. Wait for Puck re-render to settle after property change
+        await page.waitForTimeout(1500);
 
-        // 5. Capture the widget from the Puck canvas iframe (preserves demo data)
-        const variantPath = await captureWidgetFromCanvas(
+        // 5. Capture designer callout — focused, centered, with blue highlight
+        await scrollPropertyIntoView(page, variant.fieldLabel);
+        await page.waitForTimeout(500);
+        await capturePropertyCallout(
+          page, variant.fieldLabel, widget.category, widget.slug, variant.variantSlug,
+        );
+
+        // 5. Capture the AFTER viewer from the Puck canvas iframe
+        const afterPath = await captureWidgetFromCanvas(
           page, widget.puckComponentId, widget.category, widget.slug, variant.variantSlug,
         );
 
-        // 6. Compare with default viewer screenshot — verify they differ
-        const defaultPath = screenshotPath(widget.category, widget.slug, 'default', 'viewer');
-        if (fs.existsSync(defaultPath)) {
-          const defaultHash = md5(defaultPath);
-          const variantHash = md5(variantPath);
-          // Don't hard-fail on hash match — some toggles have subtle effects
-          if (variantHash === defaultHash) {
+        // 6. Compare before and after — verify they differ
+        if (fs.existsSync(beforePath)) {
+          const beforeHash = md5(beforePath);
+          const afterHash = md5(afterPath);
+          if (afterHash === beforeHash) {
             console.warn(
-              `WARNING: ${widget.slug}-${variant.variantSlug}-viewer.png looks identical to default`,
+              `WARNING: ${widget.slug}-${variant.variantSlug} before/after viewer screenshots are identical`,
             );
           }
         }
