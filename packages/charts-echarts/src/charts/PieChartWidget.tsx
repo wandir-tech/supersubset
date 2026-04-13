@@ -30,7 +30,8 @@ export function PieChartWidget({ config, data, columns, title, height }: WidgetP
     const valueField = (config.valueField as string) ?? columns?.[1]?.fieldId ?? '';
     const donut = config.donut === true;
     const roseType = config.roseType as 'radius' | 'area' | undefined;
-    const innerRadius = config.innerRadius != null ? (config.innerRadius as number) : (donut ? 40 : 0);
+    const explicitInner = config.innerRadius != null ? Number(config.innerRadius) : null;
+    const innerRadius = (explicitInner != null && explicitInner > 0) ? explicitInner : (donut ? 40 : 0);
     const outerRadius = config.outerRadius != null ? (config.outerRadius as number) : 70;
     const labelPosition = (config.labelPosition as 'outside' | 'inside' | 'center' | 'none') ?? 'outside';
     const padAngle = (config.padAngle as number) ?? 0;
@@ -49,12 +50,12 @@ export function PieChartWidget({ config, data, columns, title, height }: WidgetP
           `${params.name}: ${formatNumber(params.value, shared.numberFormat!)}`
       : '{b}: {d}%';
 
-    const labelConfig = labelPosition === 'none' || shared.showValues === false
+    const labelConfig = labelPosition === 'none'
       ? { show: false }
       : {
           show: true,
           position: labelPosition === 'center' ? 'center' : labelPosition,
-          formatter: labelFormatter,
+          formatter: shared.showValues === false ? '{b}' : labelFormatter,
         };
 
     return {

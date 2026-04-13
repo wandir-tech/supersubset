@@ -19,6 +19,7 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
   }, [config, columns]);
 
   const pageSize = (config.pageSize as number) ?? 50;
+  const striped = config.striped !== false;
   const showRowNumbers = config.showRowNumbers === true;
   const showTotals = config.showTotals === true;
   const headerAlign = (config.headerAlign as 'left' | 'center' | 'right') ?? 'left';
@@ -94,7 +95,7 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
           {displayData.map((row, rowIdx) => (
             <tr
               key={rowIdx}
-              style={{ background: rowIdx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)' }}
+              style={{ background: striped && rowIdx % 2 !== 0 ? 'rgba(0,0,0,0.02)' : 'transparent' }}
             >
               {showRowNumbers && (
                 <td style={{ padding: '6px 12px', borderBottom: '1px solid #f0f0f0', textAlign: cellAlign, color: '#999' }}>{rowIdx + 1}</td>

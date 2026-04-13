@@ -37,7 +37,10 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
     const fmt = shared.numberFormat;
 
     const axisLine: Record<string, unknown> = {};
-    if (thresholds && thresholds.length > 0) {
+    if (progressMode) {
+      // In progress mode, the axis line is a neutral track behind the progress bar
+      axisLine.lineStyle = { width: 15, color: [[1, '#e6e8eb']] };
+    } else if (thresholds && thresholds.length > 0) {
       const colorStops = thresholds.map((t) => [
         (t.value - min) / (max - min),
         t.color,
@@ -48,6 +51,8 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
       axisLine.lineStyle = { width: 15, color: [[1, colors[0]]] };
     }
 
+    const progressColor = colors.length >= 1 ? colors[0] : '#1FA8C9';
+
     return {
       ...(buildTitleOption(title) ? { title: buildTitleOption(title) } : {}),
       series: [
@@ -57,8 +62,11 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
           max,
           startAngle,
           endAngle,
+          roundCap,
           splitNumber: splitCount,
-          progress: progressMode ? { show: true, roundCap } : undefined,
+          progress: progressMode
+            ? { show: true, roundCap, itemStyle: { color: progressColor } }
+            : undefined,
           data: [{ value, name: title ?? '' }],
           axisLine: (thresholds || colors.length >= 1) ? axisLine : undefined,
           detail: {
