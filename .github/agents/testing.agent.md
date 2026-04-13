@@ -106,3 +106,5 @@ Return:
 - Console error logs if any
 - Updated test plans/checklists
 - Filed issues as markdown in `docs/testing/issues/`
+
+When multiple agents or worktrees may run dev servers locally, read **`docs/dev/parallel-agent-environments.md`** and set **`SUPERSUBSET_DEV_APP_PORT`** so Playwright and Vite agree on the dev-app URL.
