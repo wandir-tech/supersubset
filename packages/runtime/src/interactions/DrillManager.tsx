@@ -47,8 +47,12 @@ type DrillAction =
 function drillReducer(state: DrillState, action: DrillAction): DrillState {
   switch (action.type) {
     case 'DRILL_DOWN': {
+      const label =
+        action.value != null && typeof action.value === 'object'
+          ? Object.values(action.value as Record<string, unknown>).join(' — ')
+          : String(action.value);
       const newCrumb: DrillBreadcrumb = {
-        label: String(action.value),
+        label,
         fieldRef: action.fieldRef,
         value: action.value,
       };

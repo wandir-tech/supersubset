@@ -36,7 +36,7 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
       let isNumeric = false;
       for (const row of data) {
         const v = row[col.fieldId];
-        if (typeof v === 'number') { sum += v; isNumeric = true; }
+        if (typeof v === 'number' && Number.isFinite(v)) { sum += v; isNumeric = true; }
       }
       if (isNumeric) sums[col.fieldId] = sum;
     }

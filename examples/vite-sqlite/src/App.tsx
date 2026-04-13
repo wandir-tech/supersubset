@@ -24,9 +24,19 @@ export default function App() {
     const storedVersion = window.localStorage.getItem(FIXTURE_VERSION_KEY);
     if (storedVersion && Number(storedVersion) >= FIXTURE_VERSION) {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored) as DashboardDefinition;
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as DashboardDefinition;
+          // Basic structural validation: must have pages array with at least one page
+          if (Array.isArray(parsed.pages) && parsed.pages.length > 0 && parsed.pages[0].layout) {
+            return parsed;
+          }
+        } catch {
+          // Corrupt JSON — fall through to reset
+        }
+      }
     }
-    // Stale or missing — reset to bundled default
+    // Stale, missing, or structurally invalid — reset to bundled default
     window.localStorage.setItem(FIXTURE_VERSION_KEY, String(FIXTURE_VERSION));
     return defaultDashboard;
   });
@@ -90,7 +100,12 @@ export default function App() {
     registerEssentialWidgets(registryInstance);
 
     const originalGet = registryInstance.get.bind(registryInstance);
+    const wrappedCache = new Map<string, (props: WidgetProps) => React.JSX.Element>();
+
     registryInstance.get = (type: string) => {
+      const cached = wrappedCache.get(type);
+      if (cached) return cached;
+
       const Original = originalGet(type);
       if (!Original) return undefined;
 
@@ -106,6 +121,7 @@ export default function App() {
       };
 
       Wrapped.displayName = `SqliteQuery(${type})`;
+      wrappedCache.set(type, Wrapped);
       return Wrapped;
     };
 

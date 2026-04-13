@@ -31,15 +31,23 @@ export function SankeyWidget({ config, data, columns, title, height }: WidgetPro
     const orient = (config.orient as 'horizontal' | 'vertical') ?? 'horizontal';
     const shared = extractSharedConfig(config);
 
-    // Collect unique nodes
+    // Collect unique nodes and links, filtering out invalid edges
     const nodeSet = new Set<string>();
-    const links = data.map((row) => {
+    const links: Array<{ source: string; target: string; value: number }> = [];
+    for (const row of data) {
       const source = String(row[sourceField] ?? '');
       const target = String(row[targetField] ?? '');
+      // Skip self-loop and empty-node edges that crash ECharts
+      if (!source || !target || source === target) continue;
       nodeSet.add(source);
       nodeSet.add(target);
-      return { source, target, value: Number(row[valueField] ?? 0) };
-    });
+      links.push({ source, target, value: Number(row[valueField] ?? 0) });
+    }
+
+    if (links.length === 0) {
+      return buildEmptyOption(title);
+    }
+
     const nodes = Array.from(nodeSet).map((name) => ({ name }));
 
     return {
