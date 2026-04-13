@@ -113,7 +113,7 @@ export default function App() {
   }, [bundle]);
 
   return (
-    <div className="shell">
+    <div className={mode === 'designer' ? 'shell shell--designer' : 'shell'}>
       <header className="hero">
         <div>
           <div className="eyebrow">Vite + SQLite host example</div>

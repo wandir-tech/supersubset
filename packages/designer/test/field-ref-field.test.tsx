@@ -387,3 +387,71 @@ describe('createFieldRefField — value switching', () => {
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 });
+
+// ─── Regression: field labels visible ────────────────────────
+
+describe('createFieldRefField — labels are rendered', () => {
+  it('renders a visible label above the select when datasets exist', () => {
+    const field = createFieldRefField('X-Axis Field', ['time', 'dimension']);
+    const onChange = vi.fn();
+    renderFieldRef(field, '', onChange, SINGLE_DATASET);
+
+    // The label text must be in the document
+    expect(screen.getByText('X-Axis Field')).toBeTruthy();
+  });
+
+  it('renders a visible label above the input when no datasets exist', () => {
+    const field = createFieldRefField('Y-Axis Field', ['measure']);
+    const onChange = vi.fn();
+    renderFieldRef(field, '', onChange, []);
+
+    expect(screen.getByText('Y-Axis Field')).toBeTruthy();
+  });
+
+  it('renders each field-ref label distinctly', () => {
+    const xField = createFieldRefField('X-Axis Field', ['time', 'dimension']);
+    const yField = createFieldRefField('Y-Axis Field', ['measure']);
+    const seriesField = createFieldRefField('Series Field', ['dimension']);
+    const onChange = vi.fn();
+
+    const { container } = render(
+      React.createElement(
+        DatasetProvider,
+        { datasets: SINGLE_DATASET },
+        React.createElement(
+          'div',
+          null,
+          xField.render({ value: '', onChange, id: 'x', name: 'xAxisField', readOnly: false }),
+          yField.render({ value: '', onChange, id: 'y', name: 'yAxisField', readOnly: false }),
+          seriesField.render({ value: '', onChange, id: 's', name: 'seriesField', readOnly: false }),
+        ),
+      ),
+    );
+
+    expect(screen.getByText('X-Axis Field')).toBeTruthy();
+    expect(screen.getByText('Y-Axis Field')).toBeTruthy();
+    expect(screen.getByText('Series Field')).toBeTruthy();
+
+    // Each label should be a <span> inside a <label>
+    const labels = container.querySelectorAll('label');
+    expect(labels.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('createDatasetRefField — labels are rendered', () => {
+  it('renders "Dataset" label above the select', () => {
+    const field = createDatasetRefField();
+    const onChange = vi.fn();
+    renderDatasetRef(field, '', onChange, SINGLE_DATASET);
+
+    expect(screen.getByText('Dataset')).toBeTruthy();
+  });
+
+  it('renders "Dataset" label above the input when no datasets', () => {
+    const field = createDatasetRefField();
+    const onChange = vi.fn();
+    renderDatasetRef(field, '', onChange, []);
+
+    expect(screen.getByText('Dataset')).toBeTruthy();
+  });
+});

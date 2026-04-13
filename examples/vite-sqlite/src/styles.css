@@ -123,7 +123,11 @@ body {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(13, 92, 99, 0.12);
   border-radius: 24px;
-  overflow: hidden;
+  overflow: clip;
+}
+
+.designer-shell {
+  height: calc(100vh - 120px);
 }
 
 .code-panel {
@@ -141,6 +145,33 @@ body {
   font-size: 12px;
   line-height: 1.5;
   white-space: pre-wrap;
+}
+
+/* Designer mode: full-width layout, no query sidebar */
+.shell--designer {
+  max-width: none;
+  padding: 12px 12px 0;
+}
+
+.shell--designer .hero {
+  border-radius: 16px;
+  padding: 16px 24px;
+}
+
+.shell--designer .hero h1 {
+  font-size: 28px;
+}
+
+.shell--designer .info-grid {
+  display: none;
+}
+
+.shell--designer .workspace {
+  grid-template-columns: 1fr;
+}
+
+.shell--designer .query-panel {
+  display: none;
 }
 
 @media (max-width: 1100px) {

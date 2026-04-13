@@ -21,6 +21,14 @@ const ROLE_BADGE_COLORS: Record<FieldRole, string> = {
 
 // ─── Field selector component used inside Puck custom fields ─
 
+const FIELD_LABEL_STYLE: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 600,
+  color: '#64748b',
+  marginBottom: 4,
+};
+
 function FieldRefSelect({
   value,
   onChange,
@@ -61,56 +69,66 @@ function FieldRefSelect({
 
   // If no datasets are available, fall back to a text input
   if (datasets.length === 0) {
-    return React.createElement('input', {
-      type: 'text',
-      id,
-      name,
-      value: value ?? '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
-      placeholder: `Enter ${label.toLowerCase()}…`,
-      readOnly,
-      'aria-label': label,
-      style: {
-        width: '100%',
-        padding: '6px 10px',
-        borderRadius: 6,
-        border: '1px solid #d9d9d9',
-        fontSize: 13,
-        boxSizing: 'border-box' as const,
-      },
-    });
+    return React.createElement(
+      'label',
+      { htmlFor: id, style: { display: 'block' } },
+      React.createElement('span', { style: FIELD_LABEL_STYLE }, label),
+      React.createElement('input', {
+        type: 'text',
+        id,
+        name,
+        value: value ?? '',
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
+        placeholder: `Enter ${label.toLowerCase()}…`,
+        readOnly,
+        'aria-label': label,
+        style: {
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: '1px solid #d9d9d9',
+          fontSize: 13,
+          boxSizing: 'border-box' as const,
+        },
+      }),
+    );
   }
 
   const showDatasetPrefix = datasets.length > 1;
 
   return React.createElement(
-    'select',
-    {
-      id,
-      name,
-      value: value ?? '',
-      onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value),
-      disabled: readOnly,
-      'aria-label': label,
-      'data-testid': `field-ref-${name}`,
-      style: {
-        width: '100%',
-        padding: '6px 10px',
-        borderRadius: 6,
-        border: '1px solid #d9d9d9',
-        fontSize: 13,
-        boxSizing: 'border-box' as const,
-        background: '#fff',
+    'label',
+    { htmlFor: id, style: { display: 'block' } },
+    React.createElement('span', { style: FIELD_LABEL_STYLE }, label),
+    React.createElement(
+      'select',
+      {
+        id,
+        name,
+        value: value ?? '',
+        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value),
+        disabled: readOnly,
+        'aria-label': label,
+        'data-testid': `field-ref-${name}`,
+        style: {
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: '1px solid #d9d9d9',
+          fontSize: 13,
+          boxSizing: 'border-box' as const,
+          background: '#fff',
+        },
       },
-    },
-    React.createElement('option', { value: '' }, `Select ${label.toLowerCase()}…`),
-    ...options.map((opt) =>
-      React.createElement(
-        'option',
-        { key: `${opt.dataset}-${opt.value}`, value: opt.value },
-        showDatasetPrefix ? `${opt.dataset} › ${opt.label}` : opt.label
+      React.createElement('option', { value: '' }, `Select ${label.toLowerCase()}…`),
+      ...options.map((opt) =>
+        React.createElement(
+          'option',
+          { key: `${opt.dataset}-${opt.value}`, value: opt.value },
+          showDatasetPrefix ? `${opt.dataset} › ${opt.label}` : opt.label
+        )
       )
-    )
+    ),
   );
 }
 
@@ -132,54 +150,64 @@ function DatasetRefSelect({
   const datasets = useDatasets();
 
   if (datasets.length === 0) {
-    return React.createElement('input', {
-      type: 'text',
-      id,
-      name,
-      value: value ?? '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
-      placeholder: 'Enter dataset reference…',
-      readOnly,
-      'aria-label': 'Dataset Reference',
-      style: {
-        width: '100%',
-        padding: '6px 10px',
-        borderRadius: 6,
-        border: '1px solid #d9d9d9',
-        fontSize: 13,
-        boxSizing: 'border-box' as const,
-      },
-    });
+    return React.createElement(
+      'label',
+      { htmlFor: id, style: { display: 'block' } },
+      React.createElement('span', { style: FIELD_LABEL_STYLE }, 'Dataset'),
+      React.createElement('input', {
+        type: 'text',
+        id,
+        name,
+        value: value ?? '',
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
+        placeholder: 'Enter dataset reference…',
+        readOnly,
+        'aria-label': 'Dataset Reference',
+        style: {
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: '1px solid #d9d9d9',
+          fontSize: 13,
+          boxSizing: 'border-box' as const,
+        },
+      }),
+    );
   }
 
   return React.createElement(
-    'select',
-    {
-      id,
-      name,
-      value: value ?? '',
-      onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value),
-      disabled: readOnly,
-      'aria-label': 'Dataset Reference',
-      'data-testid': `field-ref-${name}`,
-      style: {
-        width: '100%',
-        padding: '6px 10px',
-        borderRadius: 6,
-        border: '1px solid #d9d9d9',
-        fontSize: 13,
-        boxSizing: 'border-box' as const,
-        background: '#fff',
+    'label',
+    { htmlFor: id, style: { display: 'block' } },
+    React.createElement('span', { style: FIELD_LABEL_STYLE }, 'Dataset'),
+    React.createElement(
+      'select',
+      {
+        id,
+        name,
+        value: value ?? '',
+        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value),
+        disabled: readOnly,
+        'aria-label': 'Dataset Reference',
+        'data-testid': `field-ref-${name}`,
+        style: {
+          width: '100%',
+          padding: '6px 10px',
+          borderRadius: 6,
+          border: '1px solid #d9d9d9',
+          fontSize: 13,
+          boxSizing: 'border-box' as const,
+          background: '#fff',
+        },
       },
-    },
-    React.createElement('option', { value: '' }, 'Select dataset…'),
-    ...datasets.map((ds) =>
-      React.createElement(
-        'option',
-        { key: ds.id, value: ds.id },
-        ds.label
+      React.createElement('option', { value: '' }, 'Select dataset…'),
+      ...datasets.map((ds) =>
+        React.createElement(
+          'option',
+          { key: ds.id, value: ds.id },
+          ds.label
+        )
       )
-    )
+    ),
   );
 }
 

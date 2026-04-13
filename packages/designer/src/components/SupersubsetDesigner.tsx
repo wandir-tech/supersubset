@@ -29,7 +29,7 @@ const SIDEBAR_CSS = `\
 [data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-frame-width:minmax(0,1fr)}\
 [data-supersubset-designer-root] [class*="PuckCanvas"]{min-width:0}\
 [data-supersubset-designer-root] [class*="PuckHeader-inner"]{grid-template-columns:auto auto 1fr}\
-[data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0;overflow:hidden}\
+[data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0}\
 }\
 @media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}}\
 `;
