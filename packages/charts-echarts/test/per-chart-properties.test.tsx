@@ -377,6 +377,26 @@ describe('PieChartWidget — per-chart properties', () => {
     })} />);
     expect(getSeries().roseType).toBe('radius');
   });
+
+  // Regression: #9 — innerRadius=0 (Puck default) must not block donut hole
+  it('donut=true with innerRadius=0 still uses 40% (Puck default bug)', () => {
+    render(<PieChartWidget {...makeProps({
+      config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 0 },
+      data: samplePieData,
+    })} />);
+    expect(getSeries().radius).toEqual(['40%', '70%']);
+  });
+
+  // Regression: #10 — showValues=false must not hide labels when labelPosition is set
+  it('labelPosition=inside with showValues=false still shows labels', () => {
+    render(<PieChartWidget {...makeProps({
+      config: { nameField: 'name', valueField: 'value', labelPosition: 'inside', showValues: false },
+      data: samplePieData,
+    })} />);
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(true);
+    expect(label.position).toBe('inside');
+  });
 });
 
 // ─── AREA CHART ──────────────────────────────────────────────
@@ -904,6 +924,41 @@ describe('GaugeWidget — per-chart properties', () => {
     expect(getSeries().endAngle).toBe(-45);
     expect(getSeries().splitNumber).toBe(10);
   });
+
+  // Regression: #11 — roundCap must be set at series level (not just inside progress)
+  it('roundCap=true sets roundCap on the series itself', () => {
+    render(<GaugeWidget {...makeProps({
+      config: { valueField: 'val', roundCap: true },
+      data: [{ val: 50 }],
+    })} />);
+    expect(getSeries().roundCap).toBe(true);
+  });
+
+  // Regression: #12 — progressMode must use a neutral track so progress bar is visible
+  it('progressMode=true uses neutral axis line color (not same as progress)', () => {
+    render(<GaugeWidget {...makeProps({
+      config: { valueField: 'val', progressMode: true },
+      data: [{ val: 50 }],
+    })} />);
+    const axisLine = getSeries().axisLine as Record<string, unknown> | undefined;
+    expect(axisLine).toBeDefined();
+    const lineStyle = (axisLine as Record<string, unknown>).lineStyle as Record<string, unknown>;
+    // Track color should be neutral (not the accent palette color)
+    const colorStops = lineStyle.color as Array<[number, string]>;
+    expect(colorStops[0][1]).toBe('#e6e8eb');
+  });
+
+  // Regression: #12 — progress bar must have a visible color
+  it('progressMode=true sets progress itemStyle color', () => {
+    render(<GaugeWidget {...makeProps({
+      config: { valueField: 'val', progressMode: true },
+      data: [{ val: 50 }],
+    })} />);
+    const progress = getSeries().progress as Record<string, unknown>;
+    expect(progress.show).toBe(true);
+    const itemStyle = progress.itemStyle as Record<string, unknown>;
+    expect(itemStyle.color).toBeDefined();
+  });
 });
 
 // ─── TABLE ───────────────────────────────────────────────────
@@ -986,6 +1041,37 @@ describe('TableWidget — per-chart properties', () => {
     const td = container.querySelector('tbody td');
     expect(td?.style.textAlign).toBe('right');
   });
+
+  // Regression: #15 — striped=true renders alternating row backgrounds
+  it('striped=true (default) renders alternating row backgrounds', () => {
+    const { container } = render(
+      <TableWidget {...makeProps({
+        config: { striped: true },
+        data: tableData,
+        columns: tableCols,
+      })} />
+    );
+    const rows = container.querySelectorAll('tbody tr');
+    // Odd rows (index 1, 3, ...) should have non-transparent background
+    expect(rows[0].getAttribute('style')).toContain('transparent');
+    expect(rows[1].getAttribute('style')).toContain('rgba(0, 0, 0, 0.02)');
+  });
+
+  // Regression: #15 — striped=false must NOT render alternating backgrounds
+  it('striped=false disables alternating row backgrounds', () => {
+    const { container } = render(
+      <TableWidget {...makeProps({
+        config: { striped: false },
+        data: tableData,
+        columns: tableCols,
+      })} />
+    );
+    const rows = container.querySelectorAll('tbody tr');
+    // ALL rows should have transparent background
+    for (let i = 0; i < rows.length; i++) {
+      expect(rows[i].getAttribute('style')).toContain('transparent');
+    }
+  });
 });
 
 // ─── KPI CARD ────────────────────────────────────────────────
@@ -1063,6 +1149,36 @@ describe('KPICardWidget — per-chart properties', () => {
     );
     const deltaEl = container.querySelector('.ss-kpi')?.lastChild as HTMLElement;
     expect(deltaEl.style.color).toBe('rgb(82, 196, 26)'); // #52c41a
+  });
+
+  // Regression: #16 — trendDirection=down-good must show visible indicator text
+  it('trendDirection=down-good shows direction indicator label', () => {
+    const { container } = render(
+      <KPICardWidget {...makeProps({
+        config: {
+          valueField: 'current',
+          comparisonField: 'previous',
+          trendDirection: 'down-good',
+        },
+        data: [{ current: 120, previous: 100 }],
+      })} />
+    );
+    // Should contain the visual indicator
+    expect(container.textContent).toContain('↓ is good');
+  });
+
+  // Regression: #16 — trendDirection=up-good must NOT show direction indicator label
+  it('trendDirection=up-good (default) does not show direction indicator label', () => {
+    const { container } = render(
+      <KPICardWidget {...makeProps({
+        config: {
+          valueField: 'current',
+          comparisonField: 'previous',
+        },
+        data: [{ current: 120, previous: 100 }],
+      })} />
+    );
+    expect(container.textContent).not.toContain('↓ is good');
   });
 });
 
