@@ -130,9 +130,9 @@ const hasAny = hasBefore || hasAfter || hasCallout;
     gap: 1rem;
   }
   .viewer-comparison {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
   }
   .viewer-pane,
   .callout-pane {
@@ -140,7 +140,13 @@ const hasAny = hasBefore || hasAfter || hasCallout;
     flex-direction: column;
     gap: 0.5rem;
   }
-  .viewer-pane img,
+  .viewer-pane img {
+    border: 1px solid var(--sl-color-gray-5, #e2e8f0);
+    border-radius: 0.375rem;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+  }
   .callout-pane img {
     border: 1px solid var(--sl-color-gray-5, #e2e8f0);
     border-radius: 0.375rem;
@@ -162,10 +168,5 @@ const hasAny = hasBefore || hasAfter || hasCallout;
   .callout-pane img {
     border-color: #93c5fd;
     border-width: 2px;
-  }
-  @media (max-width: 600px) {
-    .viewer-comparison {
-      grid-template-columns: 1fr;
-    }
   }
 </style>
