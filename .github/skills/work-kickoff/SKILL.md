@@ -51,6 +51,8 @@ Structure:
 
 ### Step 4: Create or augment the GitHub issue
 
+Follow **`.github/skills/github-cli/SKILL.md`** for `gh` flags and JSON output patterns.
+
 - If an issue already exists, **append** a planning comment with the tiers + plan; do not duplicate tickets.
 - Otherwise `gh issue create` with summary, requirements, **tiered skills table**, design, plan, testing, verification.
 - Link **`docs/adr/`** candidates when the change might need a new ADR (orchestrator approves architecture ADRs per `AGENTS.md`).
@@ -81,6 +83,7 @@ After approval, implementers: follow the issue, load essential skills, respect a
 
 ## See also
 
+- `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
 - `.github/skills/document-feature/SKILL.md`
 - `docs/dev/parallel-agent-environments.md`
