@@ -86,3 +86,9 @@ export {
   SlideOverPanel,
   type SlideOverPanelProps,
 } from './components/SlideOverPanel';
+
+// Dataset context (for custom field editors and advanced usage)
+export { DatasetProvider, useDatasets } from './context/DatasetContext';
+
+// Puck custom field factories
+export { createFieldRefField, createDatasetRefField } from './fields/field-ref-field';

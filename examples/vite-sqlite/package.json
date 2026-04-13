@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supersubset/charts-echarts": "workspace:*",
+    "@supersubset/data-model": "workspace:*",
     "@supersubset/designer": "workspace:*",
     "@supersubset/runtime": "workspace:*",
     "@supersubset/schema": "workspace:*",

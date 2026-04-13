@@ -8,9 +8,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Puck, blocksPlugin, outlinePlugin } from '@puckeditor/core';
 import type { Data, PuckAction } from '@puckeditor/core';
 import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
+import type { NormalizedDataset } from '@supersubset/data-model';
 import { createPuckConfig } from '../config/puck-config';
 import { puckToCanonical, canonicalToPuck } from '../adapters/puck-canonical';
 import { getComponentIcon } from '../icons/component-icons';
+import { DatasetProvider } from '../context/DatasetContext';
 
 // Import Puck's CSS
 import '@puckeditor/core/puck.css';
@@ -72,6 +74,8 @@ export interface SupersubsetDesignerProps {
   disableIframe?: boolean;
   /** Additional metadata passed to Puck components */
   metadata?: Record<string, unknown>;
+  /** Available datasets for field reference dropdowns */
+  datasets?: NormalizedDataset[];
   /** Custom actions rendered in the Puck header (right side, before Publish) */
   headerActions?: React.ReactNode;
 }
@@ -97,6 +101,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     height = '100vh',
     disableIframe = false,
     metadata,
+    datasets,
     headerActions,
   } = props;
 
@@ -749,19 +754,23 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         overflow: 'hidden',
       },
     },
-    React.createElement(Puck, {
-      key: editorKey,
-      config,
-      data: initialData,
-      onChange: canMutateDashboard ? handleChange : undefined,
-      onPublish: onPublish ? handlePublish : undefined,
-      headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
-      height,
-      iframe: { enabled: !disableIframe },
-      metadata: metadata ?? {},
-      plugins,
-      overrides: overrides as never,
-    })
+    React.createElement(
+      DatasetProvider,
+      { datasets: datasets ?? [] },
+      React.createElement(Puck, {
+        key: editorKey,
+        config,
+        data: initialData,
+        onChange: canMutateDashboard ? handleChange : undefined,
+        onPublish: onPublish ? handlePublish : undefined,
+        headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
+        height,
+        iframe: { enabled: !disableIframe },
+        metadata: metadata ?? {},
+        plugins,
+        overrides: overrides as never,
+      })
+    )
   );
 }
 

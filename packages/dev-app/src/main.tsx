@@ -292,6 +292,7 @@ function App() {
               onPublish={handlePublish}
               headerTitle="Supersubset Designer"
               height="100%"
+              datasets={demoDatasets}
               headerActions={
                 <div
                   data-testid="dev-app-designer-actions"

@@ -6,58 +6,32 @@
 import type { ComponentConfig } from '@puckeditor/core';
 import React from 'react';
 import { ChartPreview } from '../../preview/ChartPreview';
+import { createFieldRefField, createDatasetRefField } from '../../fields/field-ref-field';
 
 // ─── Shared Chart Field Definitions ──────────────────────────
 
-const datasetRefField = {
-  type: 'text' as const,
-  label: 'Dataset Reference',
-};
+const datasetRefField = createDatasetRefField();
 
 const titleField = {
   type: 'text' as const,
   label: 'Title',
 };
 
-const xAxisFieldRef = {
-  type: 'text' as const,
-  label: 'X-Axis Field',
-};
+const xAxisFieldRef = createFieldRefField('X-Axis Field', ['time', 'dimension']);
 
-const yAxisFieldRef = {
-  type: 'text' as const,
-  label: 'Y-Axis Field',
-};
+const yAxisFieldRef = createFieldRefField('Y-Axis Field', ['measure']);
 
-const seriesFieldRef = {
-  type: 'text' as const,
-  label: 'Series Field',
-};
+const seriesFieldRef = createFieldRefField('Series Field', ['dimension']);
 
-const valueFieldRef = {
-  type: 'text' as const,
-  label: 'Value Field',
-};
+const valueFieldRef = createFieldRefField('Value Field', ['measure']);
 
-const categoryFieldRef = {
-  type: 'text' as const,
-  label: 'Category Field',
-};
+const categoryFieldRef = createFieldRefField('Category Field', ['dimension']);
 
-const messageFieldRef = {
-  type: 'text' as const,
-  label: 'Message Field',
-};
+const messageFieldRef = createFieldRefField('Message Field', ['dimension']);
 
-const severityFieldRef = {
-  type: 'text' as const,
-  label: 'Severity Field',
-};
+const severityFieldRef = createFieldRefField('Severity Field', ['dimension']);
 
-const timestampFieldRef = {
-  type: 'text' as const,
-  label: 'Timestamp Field',
-};
+const timestampFieldRef = createFieldRefField('Timestamp Field', ['time']);
 
 const aggregation = {
   type: 'select' as const,
@@ -378,8 +352,8 @@ export const ScatterChart: ComponentConfig = {
     datasetRef: datasetRefField,
     xAxisField: xAxisFieldRef,
     yAxisField: yAxisFieldRef,
-    sizeField: { type: 'text' as const, label: 'Size Field' },
-    colorGroupField: { type: 'text' as const, label: 'Color Group Field' },
+    sizeField: createFieldRefField('Size Field', ['measure']),
+    colorGroupField: createFieldRefField('Color Group Field', ['dimension']),
     symbolSize: { type: 'number' as const, label: 'Symbol Size' },
     opacity: { type: 'select' as const, label: 'Opacity', options: [
       { label: '100%', value: '1' },
@@ -454,8 +428,8 @@ export const ComboChart: ComponentConfig = {
     title: titleField,
     datasetRef: datasetRefField,
     xAxisField: xAxisFieldRef,
-    barField: { type: 'text' as const, label: 'Bar Field' },
-    lineField: { type: 'text' as const, label: 'Line Field' },
+    barField: createFieldRefField('Bar Field', ['measure']),
+    lineField: createFieldRefField('Line Field', ['measure']),
     aggregation,
     lineSmooth: { type: 'radio', label: 'Smooth Lines', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
     barBorderRadius: { type: 'number' as const, label: 'Bar Corner Radius' },
@@ -583,9 +557,9 @@ export const TreemapChart: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
-    nameField: { type: 'text' as const, label: 'Name Field' },
+    nameField: createFieldRefField('Name Field', ['dimension']),
     valueField: valueFieldRef,
-    parentField: { type: 'text' as const, label: 'Parent Field' },
+    parentField: createFieldRefField('Parent Field', ['dimension']),
     showUpperLabel: { type: 'radio', label: 'Show Parent Labels', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
     maxDepth: { type: 'number' as const, label: 'Max Depth' },
     borderWidth: { type: 'number' as const, label: 'Border Width' },
@@ -610,8 +584,8 @@ export const SankeyChart: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
-    sourceField: { type: 'text' as const, label: 'Source Field' },
-    targetField: { type: 'text' as const, label: 'Target Field' },
+    sourceField: createFieldRefField('Source Field', ['dimension']),
+    targetField: createFieldRefField('Target Field', ['dimension']),
     valueField: valueFieldRef,
     nodeWidth: { type: 'number' as const, label: 'Node Width' },
     nodeGap: { type: 'number' as const, label: 'Node Gap' },
@@ -752,10 +726,7 @@ export const AlertsWidgetBlock: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
-    titleField: {
-      type: 'text' as const,
-      label: 'Alert Title Field',
-    },
+    titleField: createFieldRefField('Alert Title Field', ['dimension']),
     messageField: messageFieldRef,
     severityField: severityFieldRef,
     timestampField: timestampFieldRef,
@@ -857,8 +828,8 @@ export const KPICard: ComponentConfig = {
     aggregation,
     prefix: { type: 'text' as const, label: 'Prefix (e.g. $)' },
     suffix: { type: 'text' as const, label: 'Suffix (e.g. %)' },
-    comparisonField: { type: 'text' as const, label: 'Comparison Field' },
-    subtitleField: { type: 'text' as const, label: 'Subtitle Field' },
+    comparisonField: createFieldRefField('Comparison Field', ['measure']),
+    subtitleField: createFieldRefField('Subtitle Field', ['dimension']),
     fontSize: { type: 'select' as const, label: 'Font Size', options: [
       { label: 'Small', value: 'sm' },
       { label: 'Medium', value: 'md' },

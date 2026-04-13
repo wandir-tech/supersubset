@@ -80,7 +80,7 @@ describe('Chart blocks — universal properties', () => {
   it.each(CHART_BLOCK_NAMES)('%s has a datasetRef field', (name) => {
     const block = ALL_BLOCKS[name].block as { fields?: Record<string, { type: string }> };
     expect(block.fields!.datasetRef).toBeDefined();
-    expect(block.fields!.datasetRef.type).toBe('text');
+    expect(block.fields!.datasetRef.type).toBe('custom');
   });
 
   it.each(CHART_BLOCK_NAMES)('%s defaultProps includes title', (name) => {
@@ -301,4 +301,71 @@ describe('Mapping completeness', () => {
     const types = Object.values(PUCK_NAME_TO_WIDGET_TYPE);
     expect(new Set(types).size).toBe(types.length);
   });
+});
+
+// ─── Field-reference fields use custom type with render ──────
+
+/** Map of chart block → field-ref field names that must be type: 'custom' with render */
+const FIELD_REF_FIELDS: Record<string, string[]> = {
+  LineChart: ['datasetRef', 'xAxisField', 'yAxisField', 'seriesField'],
+  BarChart: ['datasetRef', 'xAxisField', 'yAxisField', 'seriesField'],
+  PieChart: ['datasetRef', 'categoryField', 'valueField'],
+  ScatterChart: ['datasetRef', 'xAxisField', 'yAxisField', 'sizeField', 'colorGroupField'],
+  AreaChart: ['datasetRef', 'xAxisField', 'yAxisField', 'seriesField'],
+  ComboChart: ['datasetRef', 'xAxisField', 'barField', 'lineField'],
+  HeatmapChart: ['datasetRef', 'xAxisField', 'yAxisField', 'valueField'],
+  RadarChart: ['datasetRef', 'categoryField', 'valueField', 'seriesField'],
+  FunnelChart: ['datasetRef', 'categoryField', 'valueField'],
+  TreemapChart: ['datasetRef', 'nameField', 'valueField', 'parentField'],
+  SankeyChart: ['datasetRef', 'sourceField', 'targetField', 'valueField'],
+  WaterfallChart: ['datasetRef', 'categoryField', 'valueField'],
+  BoxPlotChart: ['datasetRef', 'categoryField', 'valueField'],
+  GaugeChart: ['datasetRef', 'valueField'],
+  AlertsWidgetBlock: ['datasetRef', 'titleField', 'messageField', 'severityField', 'timestampField'],
+  Table: ['datasetRef'],
+  KPICard: ['datasetRef', 'valueField', 'comparisonField', 'subtitleField'],
+};
+
+describe('Chart blocks — field-ref fields are custom dropdowns', () => {
+  for (const [blockName, fieldNames] of Object.entries(FIELD_REF_FIELDS)) {
+    describe(blockName, () => {
+      for (const fieldName of fieldNames) {
+        it(`${fieldName} is type: "custom" with a render function`, () => {
+          const block = ALL_BLOCKS[blockName].block as {
+            fields?: Record<string, { type: string; render?: unknown }>;
+          };
+          const field = block.fields![fieldName];
+          expect(field).toBeDefined();
+          expect(field.type).toBe('custom');
+          expect(field.render).toBeTypeOf('function');
+        });
+      }
+    });
+  }
+});
+
+/** Fields that should remain plain text (not field-refs) */
+const NON_FIELD_REF_TEXT_FIELDS: Record<string, string[]> = {
+  LineChart: ['title'],
+  BarChart: ['title'],
+  PieChart: ['title'],
+  KPICard: ['title', 'prefix', 'suffix'],
+  AlertsWidgetBlock: ['title'],
+  WaterfallChart: ['title', 'totalLabel'],
+  Table: ['title'],
+};
+
+describe('Chart blocks — non-field-ref text fields remain type: "text"', () => {
+  for (const [blockName, fieldNames] of Object.entries(NON_FIELD_REF_TEXT_FIELDS)) {
+    describe(blockName, () => {
+      for (const fieldName of fieldNames) {
+        it(`${fieldName} is type: "text"`, () => {
+          const block = ALL_BLOCKS[blockName].block as {
+            fields?: Record<string, { type: string }>;
+          };
+          expect(block.fields![fieldName].type).toBe('text');
+        });
+      }
+    });
+  }
 });
