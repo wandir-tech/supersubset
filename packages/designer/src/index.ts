@@ -28,6 +28,15 @@ export type { SampleDataSet } from './data/sample-data';
 // Chart preview (for advanced customization)
 export { ChartPreview } from './preview/ChartPreview';
 
+// Preview data provider (host-supplied data for chart previews)
+export {
+  PreviewDataProvider,
+  usePreviewData,
+  type FetchPreviewData,
+  type PreviewDataRequest,
+  type PreviewDataContextValue,
+} from './context/PreviewDataContext';
+
 // Import/Export panel
 export { ImportExportPanel, type ImportExportPanelProps } from './components/ImportExportPanel';
 

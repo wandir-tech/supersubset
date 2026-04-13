@@ -13,6 +13,7 @@ import { createPuckConfig } from '../config/puck-config';
 import { puckToCanonical, canonicalToPuck } from '../adapters/puck-canonical';
 import { getComponentIcon } from '../icons/component-icons';
 import { DatasetProvider } from '../context/DatasetContext';
+import { PreviewDataProvider, type FetchPreviewData } from '../context/PreviewDataContext';
 
 // Import Puck's CSS
 import '@puckeditor/core/puck.css';
@@ -24,7 +25,13 @@ const SIDEBAR_CSS = `\
 [class*="DrawerItem"]:hover .ss-drawer-icon{color:var(--puck-color-azure-04,#3b82f6)}\
 [data-supersubset-scroll-inline="true"]{-ms-overflow-style:none;scrollbar-width:none}\
 [data-supersubset-scroll-inline="true"]::-webkit-scrollbar{display:none;width:0;height:0}\
-@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,auto)}}\
+@media (min-width:638px){\
+[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-frame-width:minmax(0,1fr)}\
+[data-supersubset-designer-root] [class*="PuckCanvas"]{min-width:0}\
+[data-supersubset-designer-root] [class*="PuckHeader-inner"]{grid-template-columns:auto auto 1fr}\
+[data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0;overflow:hidden}\
+}\
+@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}}\
 `;
 
 let sidebarStyleInjected = false;
@@ -76,6 +83,9 @@ export interface SupersubsetDesignerProps {
   metadata?: Record<string, unknown>;
   /** Available datasets for field reference dropdowns */
   datasets?: NormalizedDataset[];
+  /** Callback to fetch real data for chart previews. When provided,
+   *  chart previews show live data instead of static sample data. */
+  fetchPreviewData?: FetchPreviewData;
   /** Custom actions rendered in the Puck header (right side, before Publish) */
   headerActions?: React.ReactNode;
 }
@@ -102,6 +112,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     disableIframe = false,
     metadata,
     datasets,
+    fetchPreviewData,
     headerActions,
   } = props;
 
@@ -757,19 +768,37 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     React.createElement(
       DatasetProvider,
       { datasets: datasets ?? [] },
-      React.createElement(Puck, {
-        key: editorKey,
-        config,
-        data: initialData,
-        onChange: canMutateDashboard ? handleChange : undefined,
-        onPublish: onPublish ? handlePublish : undefined,
-        headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
-        height,
-        iframe: { enabled: !disableIframe },
-        metadata: metadata ?? {},
-        plugins,
-        overrides: overrides as never,
-      })
+      fetchPreviewData
+        ? React.createElement(
+            PreviewDataProvider,
+            { fetchPreviewData },
+            React.createElement(Puck, {
+              key: editorKey,
+              config,
+              data: initialData,
+              onChange: canMutateDashboard ? handleChange : undefined,
+              onPublish: onPublish ? handlePublish : undefined,
+              headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
+              height,
+              iframe: { enabled: !disableIframe },
+              metadata: metadata ?? {},
+              plugins,
+              overrides: overrides as never,
+            })
+          )
+        : React.createElement(Puck, {
+            key: editorKey,
+            config,
+            data: initialData,
+            onChange: canMutateDashboard ? handleChange : undefined,
+            onPublish: onPublish ? handlePublish : undefined,
+            headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
+            height,
+            iframe: { enabled: !disableIframe },
+            metadata: metadata ?? {},
+            plugins,
+            overrides: overrides as never,
+          })
     )
   );
 }

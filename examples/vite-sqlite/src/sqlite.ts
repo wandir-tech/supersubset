@@ -257,3 +257,111 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
     queryLog,
   };
 }
+
+// ─── Preview Data Provider for Designer ──────────────────────
+
+/**
+ * Column name mapping: field ids from the dataset → SQL column names.
+ * Most map 1:1 except those that need aggregation or transformation.
+ */
+const FIELD_TO_COLUMN: Record<string, string> = {
+  ordered_at: 'ordered_at',
+  month: "strftime('%m', ordered_at)",
+  region: 'region',
+  category: 'category',
+  product_name: 'product_name',
+  channel: 'channel',
+  revenue: 'ROUND(SUM(revenue), 2)',
+  orders: 'COUNT(*)',
+  units: 'SUM(units)',
+  aov: 'ROUND(SUM(revenue) / COUNT(*), 2)',
+};
+
+/** Measures that require GROUP BY when used */
+const AGGREGATE_FIELDS = new Set([
+  'revenue', 'orders', 'units', 'aov',
+]);
+
+/** Dimensions that can be used in GROUP BY */
+const DIMENSION_FIELDS = new Set([
+  'ordered_at', 'month', 'region', 'category', 'product_name', 'channel',
+]);
+
+/**
+ * Generic preview data fetcher for the designer.
+ * Builds and runs a SQL query based on the requested fields.
+ */
+export async function fetchDesignerPreviewData(
+  request: { datasetRef: string; fields: Record<string, string | string[] | undefined> }
+): Promise<Record<string, unknown>[]> {
+  const db = await getDatabase();
+  const { fields } = request;
+
+  // Collect all field ids from the request
+  const allFieldIds = new Set<string>();
+  for (const val of Object.values(fields)) {
+    if (typeof val === 'string' && val.length > 0) allFieldIds.add(val);
+    if (Array.isArray(val)) val.forEach((v) => { if (v.length > 0) allFieldIds.add(v); });
+  }
+
+  if (allFieldIds.size === 0) return [];
+
+  // Separate dimensions from measures
+  const dimensions: string[] = [];
+  const measures: string[] = [];
+  for (const fieldId of allFieldIds) {
+    if (AGGREGATE_FIELDS.has(fieldId)) {
+      measures.push(fieldId);
+    } else if (DIMENSION_FIELDS.has(fieldId)) {
+      dimensions.push(fieldId);
+    }
+  }
+
+  // Build SELECT columns
+  const selectParts: string[] = [];
+  for (const dim of dimensions) {
+    const col = FIELD_TO_COLUMN[dim];
+    if (col) {
+      selectParts.push(`${col} AS ${dim}`);
+    } else {
+      selectParts.push(dim);
+    }
+  }
+  for (const meas of measures) {
+    const col = FIELD_TO_COLUMN[meas];
+    if (col) {
+      selectParts.push(`${col} AS ${meas}`);
+    } else {
+      selectParts.push(`SUM(${meas}) AS ${meas}`);
+    }
+  }
+
+  if (selectParts.length === 0) return [];
+
+  let sql = `SELECT ${selectParts.join(', ')} FROM orders`;
+
+  // Add GROUP BY for dimensions if we have measures
+  if (dimensions.length > 0 && measures.length > 0) {
+    const groupByParts = dimensions.map((dim) => FIELD_TO_COLUMN[dim] ?? dim);
+    sql += ` GROUP BY ${groupByParts.join(', ')}`;
+    sql += ` ORDER BY ${groupByParts[0]}`;
+  } else if (dimensions.length > 0) {
+    sql += ` ORDER BY ${FIELD_TO_COLUMN[dimensions[0]] ?? dimensions[0]}`;
+  }
+
+  sql += ' LIMIT 100';
+
+  const rows = queryRows(db, sql);
+
+  // Post-process: convert month numbers to names
+  if (allFieldIds.has('month')) {
+    for (const row of rows) {
+      const monthNum = Number(row.month);
+      if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
+        row.month = monthNames[monthNum - 1];
+      }
+    }
+  }
+
+  return rows;
+}

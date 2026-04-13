@@ -12,14 +12,23 @@ const DesignerSurface = lazy(() =>
 );
 
 const STORAGE_KEY = 'supersubset:vite-sqlite-dashboard';
+/** Bump when the default fixture changes to invalidate localStorage cache. */
+const FIXTURE_VERSION = 4;
+const FIXTURE_VERSION_KEY = 'supersubset:vite-sqlite-fixture-version';
 
 export default function App() {
   const [mode, setMode] = useState<'viewer' | 'designer'>('viewer');
   const [showCode, setShowCode] = useState(false);
   const [designerRevision, setDesignerRevision] = useState(0);
   const [dashboard, setDashboard] = useState<DashboardDefinition>(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? (JSON.parse(stored) as DashboardDefinition) : defaultDashboard;
+    const storedVersion = window.localStorage.getItem(FIXTURE_VERSION_KEY);
+    if (storedVersion && Number(storedVersion) >= FIXTURE_VERSION) {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) return JSON.parse(stored) as DashboardDefinition;
+    }
+    // Stale or missing — reset to bundled default
+    window.localStorage.setItem(FIXTURE_VERSION_KEY, String(FIXTURE_VERSION));
+    return defaultDashboard;
   });
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
   const [bundle, setBundle] = useState<QueryBundle | null>(null);

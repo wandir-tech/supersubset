@@ -1,6 +1,7 @@
 import { CodeViewPanel, ImportExportPanel, SupersubsetDesigner } from '@supersubset/designer';
 import type { DashboardDefinition } from '@supersubset/schema';
 import type { NormalizedDataset } from '@supersubset/data-model';
+import { fetchDesignerPreviewData } from './sqlite';
 
 /**
  * Metadata describing the SQLite orders table.
@@ -13,11 +14,17 @@ const SQLITE_DATASETS: NormalizedDataset[] = [
     source: { type: 'table', ref: 'orders' },
     fields: [
       { id: 'ordered_at', label: 'Order Date', dataType: 'date', role: 'time' },
+      { id: 'month', label: 'Month', dataType: 'string', role: 'time' },
       { id: 'region', label: 'Region', dataType: 'string', role: 'dimension' },
       { id: 'category', label: 'Category', dataType: 'string', role: 'dimension' },
       { id: 'product_name', label: 'Product Name', dataType: 'string', role: 'dimension' },
       { id: 'channel', label: 'Channel', dataType: 'string', role: 'dimension' },
       { id: 'revenue', label: 'Revenue', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
+      { id: 'previousRevenue', label: 'Previous Revenue', dataType: 'number', role: 'measure' },
+      { id: 'orders', label: 'Orders', dataType: 'integer', role: 'measure', defaultAggregation: 'count' },
+      { id: 'previousOrders', label: 'Previous Orders', dataType: 'integer', role: 'measure' },
+      { id: 'aov', label: 'Avg Order Value', dataType: 'number', role: 'measure' },
+      { id: 'previousAov', label: 'Previous AOV', dataType: 'number', role: 'measure' },
       { id: 'units', label: 'Units', dataType: 'integer', role: 'measure', defaultAggregation: 'sum' },
     ],
   },
@@ -52,6 +59,7 @@ export function DesignerSurface({
         height="100%"
         headerTitle="SQLite Analytics Workbench"
         datasets={SQLITE_DATASETS}
+        fetchPreviewData={fetchDesignerPreviewData}
         headerActions={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <ImportExportPanel dashboard={dashboard} onImport={onImport} />

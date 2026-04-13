@@ -7,9 +7,10 @@
  * This component maps Puck block props → WidgetProps config shape expected by
  * each chart widget.
  */
-import React, { useMemo, type ComponentType } from 'react';
+import React, { useMemo, useState, useEffect, type ComponentType } from 'react';
 import type { WidgetProps } from '@supersubset/runtime';
 import { getSampleData } from '../data/sample-data';
+import { usePreviewData, type PreviewDataRequest } from '../context/PreviewDataContext';
 
 // Lazy-import chart widgets to keep them tree-shakeable when not used
 import {
@@ -299,12 +300,25 @@ function buildWidgetConfig(
   // Override defaults if user has set actual field references (non-empty strings)
   const s = (v: unknown) => typeof v === 'string' && v.length > 0 ? v : undefined;
   if (s(puckProps.xAxisField)) config.xField = puckProps.xAxisField;
-  if (s(puckProps.yAxisField)) config.yFields = [puckProps.yAxisField as string];
+  if (s(puckProps.yAxisField)) {
+    config.yFields = [puckProps.yAxisField as string];
+    config.yField = puckProps.yAxisField;
+  }
+  if (s(puckProps.seriesField)) config.seriesField = puckProps.seriesField;
   if (s(puckProps.categoryField)) {
     config.nameField = puckProps.categoryField;
     config.categoryField = puckProps.categoryField;
   }
   if (s(puckProps.valueField)) config.valueField = puckProps.valueField;
+  if (s(puckProps.sizeField)) config.sizeField = puckProps.sizeField;
+  if (s(puckProps.colorGroupField)) config.colorGroupField = puckProps.colorGroupField;
+  if (s(puckProps.nameField)) config.nameField = puckProps.nameField;
+  if (s(puckProps.parentField)) config.parentField = puckProps.parentField;
+  if (s(puckProps.sourceField)) config.sourceField = puckProps.sourceField;
+  if (s(puckProps.targetField)) config.targetField = puckProps.targetField;
+  if (s(puckProps.barField)) config.barFields = [puckProps.barField as string];
+  if (s(puckProps.lineField)) config.lineFields = [puckProps.lineField as string];
+  if (s(puckProps.comparisonField)) config.comparisonField = puckProps.comparisonField;
   if (s(puckProps.titleField)) config.titleField = puckProps.titleField;
   if (s(puckProps.messageField)) config.messageField = puckProps.messageField;
   if (s(puckProps.severityField)) config.severityField = puckProps.severityField;
@@ -421,7 +435,118 @@ function buildWidgetConfig(
   return config;
 }
 
+// ─── Sample Data Remapping ───────────────────────────────────
+
+/**
+ * Build a mapping from config field names → original sample data keys.
+ *
+ * When a user picks "units" as Y-axis, the config says yFields: ['units'],
+ * but sample data rows only have { month, revenue, orders }. We remap
+ * sample data keys so 'revenue' → 'units', keeping the chart working.
+ */
+function buildFieldRemap(
+  widgetType: string,
+  config: Record<string, unknown>
+): Record<string, string> {
+  const defaults = DEFAULT_CONFIGS[widgetType] ?? {};
+  const remap: Record<string, string> = {};
+
+  const addRemap = (configKey: string, defaultKey: string | undefined) => {
+    const userVal = config[configKey];
+    if (typeof userVal === 'string' && userVal.length > 0 && typeof defaultKey === 'string' && defaultKey !== userVal) {
+      remap[defaultKey] = userVal;
+    }
+  };
+
+  const addArrayRemap = (configKey: string, defaultKey: string | undefined, index: number) => {
+    const arr = config[configKey];
+    if (Array.isArray(arr) && arr[index] && typeof arr[index] === 'string') {
+      const userVal = arr[index] as string;
+      if (typeof defaultKey === 'string' && defaultKey !== userVal) {
+        remap[defaultKey] = userVal;
+      }
+    }
+  };
+
+  addRemap('xField', defaults.xField as string | undefined);
+  // yFields: first element maps to first default yField
+  const defaultYFields = defaults.yFields as string[] | undefined;
+  if (defaultYFields) {
+    addArrayRemap('yFields', defaultYFields[0], 0);
+  }
+  addRemap('yField', defaults.yField as string | undefined);
+  addRemap('valueField', defaults.valueField as string | undefined);
+  addRemap('nameField', defaults.nameField as string | undefined);
+  addRemap('categoryField', defaults.categoryField as string | undefined);
+  addRemap('sizeField', defaults.sizeField as string | undefined);
+  addRemap('sourceField', defaults.sourceField as string | undefined);
+  addRemap('targetField', defaults.targetField as string | undefined);
+  addRemap('indicatorField', defaults.indicatorField as string | undefined);
+  addRemap('comparisonField', defaults.comparisonField as string | undefined);
+  // Combo chart
+  const defaultBarFields = defaults.barFields as string[] | undefined;
+  if (defaultBarFields) addArrayRemap('barFields', defaultBarFields[0], 0);
+  const defaultLineFields = defaults.lineFields as string[] | undefined;
+  if (defaultLineFields) addArrayRemap('lineFields', defaultLineFields[0], 0);
+
+  return remap;
+}
+
+/**
+ * Apply key remapping to sample data rows.
+ * Returns original data unchanged if no remapping is needed.
+ */
+function remapSampleData(
+  data: Record<string, unknown>[],
+  fieldRemap: Record<string, string>
+): Record<string, unknown>[] {
+  const entries = Object.entries(fieldRemap);
+  if (entries.length === 0) return data;
+
+  return data.map((row) => {
+    const newRow: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(row)) {
+      const newKey = fieldRemap[key] ?? key;
+      newRow[newKey] = value;
+    }
+    return newRow;
+  });
+}
+
 // ─── Chart Preview Component ─────────────────────────────────
+
+/**
+ * Extract a flat map of field roles → field ids from the widget config.
+ * This tells the host app which columns are needed for the preview query.
+ */
+function extractFieldsFromConfig(
+  config: Record<string, unknown>
+): Record<string, string | string[] | undefined> {
+  const fields: Record<string, string | string[] | undefined> = {};
+  const str = (v: unknown) => typeof v === 'string' && v.length > 0 ? v : undefined;
+  const strArr = (v: unknown) => Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string' && s.length > 0) : undefined;
+
+  fields.xField = str(config.xField);
+  fields.yFields = strArr(config.yFields);
+  fields.yField = str(config.yField);
+  fields.nameField = str(config.nameField);
+  fields.valueField = str(config.valueField);
+  fields.categoryField = str(config.categoryField);
+  fields.sizeField = str(config.sizeField);
+  fields.sourceField = str(config.sourceField);
+  fields.targetField = str(config.targetField);
+  fields.seriesField = str(config.seriesField);
+  fields.colorGroupField = str(config.colorGroupField);
+  fields.barFields = strArr(config.barFields);
+  fields.lineFields = strArr(config.lineFields);
+  fields.comparisonField = str(config.comparisonField);
+
+  // Remove undefined entries
+  for (const key of Object.keys(fields)) {
+    if (fields[key] === undefined) delete fields[key];
+  }
+  return fields;
+}
 
 interface ChartPreviewProps {
   widgetType: string;
@@ -430,31 +555,71 @@ interface ChartPreviewProps {
 }
 
 /**
- * Renders a live ECharts preview using sample data, or falls back to a
- * placeholder if the widget type isn't available.
+ * Renders a live ECharts preview using real data from the host app when
+ * available, or static sample data as a fallback.
  */
 export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPreviewProps) {
   const Component = WIDGET_COMPONENTS[widgetType];
   const sampleData = useMemo(() => getSampleData(widgetType), [widgetType]);
+  const fetchPreviewData = usePreviewData();
   const config = useMemo(
     () => buildWidgetConfig(widgetType, puckProps),
     [widgetType, puckProps]
   );
 
+  // Build the data request from current field config
+  const datasetRef = (puckProps.datasetRef as string) || '';
+  const dataRequest = useMemo<PreviewDataRequest | null>(() => {
+    if (!fetchPreviewData || !datasetRef) return null;
+    return {
+      datasetRef,
+      fields: extractFieldsFromConfig(config),
+    };
+  }, [fetchPreviewData, datasetRef, config]);
+
+  // Fetch real data from host when available
+  const [hostData, setHostData] = useState<Record<string, unknown>[] | null>(null);
+  useEffect(() => {
+    if (!dataRequest || !fetchPreviewData) {
+      setHostData(null);
+      return;
+    }
+    let cancelled = false;
+    const result = fetchPreviewData(dataRequest);
+    if (result instanceof Promise) {
+      result.then((rows) => {
+        if (!cancelled) setHostData(rows);
+      }).catch(() => {
+        if (!cancelled) setHostData(null);
+      });
+    } else {
+      setHostData(result);
+    }
+    return () => { cancelled = true; };
+  }, [dataRequest, fetchPreviewData]);
+
+  // Use host data when available, otherwise fall back to remapped sample data
+  const fieldRemap = useMemo(() => buildFieldRemap(widgetType, config), [widgetType, config]);
+  const fallbackData = useMemo(
+    () => sampleData ? remapSampleData(sampleData.data, fieldRemap) : [],
+    [sampleData, fieldRemap]
+  );
+  const previewData = hostData ?? fallbackData;
+
   const displayTitle = (puckProps.title as string) || widgetType;
 
-  if (widgetType === 'alerts' && sampleData) {
+  if (widgetType === 'alerts' && (sampleData || hostData)) {
     return (
       <AlertsPreview
         title={displayTitle}
-        data={sampleData.data}
+        data={previewData}
         config={config}
         fallbackIcon={fallbackIcon}
       />
     );
   }
 
-  if (!Component || !sampleData) {
+  if (!Component || (!sampleData && !hostData)) {
     return React.createElement(
       'div',
       {
@@ -483,9 +648,9 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
     widgetType,
     title: displayTitle,
     config,
-    data: sampleData.data,
-    columns: sampleData.columns?.map((c) => ({
-      fieldId: c.key,
+    data: previewData,
+    columns: sampleData?.columns?.map((c) => ({
+      fieldId: fieldRemap[c.key] ?? c.key,
       label: c.title,
       dataType: 'string',
     })),

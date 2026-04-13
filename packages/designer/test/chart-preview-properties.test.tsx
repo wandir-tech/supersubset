@@ -57,6 +57,25 @@ function renderPreview(widgetType: string, puckProps: Record<string, unknown>) {
     .config as Record<string, unknown>;
 }
 
+/** Capture both config and data from the rendered widget */
+function renderPreviewFull(widgetType: string, puckProps: Record<string, unknown>) {
+  mockChartWidget.mockClear();
+  render(
+    React.createElement(ChartPreview, {
+      widgetType,
+      puckProps: { title: 'Test', ...puckProps },
+      fallbackIcon: '📊',
+    })
+  );
+  expect(mockChartWidget).toHaveBeenCalled();
+  const props = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
+  return {
+    config: props.config as Record<string, unknown>,
+    data: props.data as Record<string, unknown>[],
+    columns: props.columns as Array<{ fieldId: string; label: string }> | undefined,
+  };
+}
+
 // ─── LINE-CHART per-chart props ──────────────────────────────
 
 describe('ChartPreview — Line per-chart props', () => {
@@ -393,5 +412,215 @@ describe('ChartPreview — KPI per-chart props', () => {
   it('maps trendDirection', () => {
     const c = renderPreview('kpi-card', { trendDirection: 'down-good' });
     expect(c.trendDirection).toBe('down-good');
+  });
+});
+
+// ─── Field-change data remapping ─────────────────────────────
+
+describe('ChartPreview — field-change data remapping', () => {
+  describe('line-chart', () => {
+    it('remaps yAxisField when changed from default', () => {
+      const { config, data } = renderPreviewFull('line-chart', { yAxisField: 'units' });
+      expect(config.yFields).toEqual(['units']);
+      // Sample data should have 'units' key (remapped from 'revenue')
+      expect(data[0]).toHaveProperty('units');
+      expect(typeof data[0].units).toBe('number');
+    });
+
+    it('remaps xAxisField when changed from default', () => {
+      const { config, data } = renderPreviewFull('line-chart', { xAxisField: 'category' });
+      expect(config.xField).toBe('category');
+      expect(data[0]).toHaveProperty('category');
+    });
+
+    it('remaps both x and y simultaneously', () => {
+      const { data } = renderPreviewFull('line-chart', { xAxisField: 'region', yAxisField: 'sales' });
+      expect(data[0]).toHaveProperty('region');
+      expect(data[0]).toHaveProperty('sales');
+    });
+
+    it('keeps original keys when fields match defaults', () => {
+      const { data } = renderPreviewFull('line-chart', { xAxisField: 'month', yAxisField: 'revenue' });
+      expect(data[0]).toHaveProperty('month');
+      expect(data[0]).toHaveProperty('revenue');
+    });
+  });
+
+  describe('bar-chart', () => {
+    it('remaps yAxisField', () => {
+      const { config, data } = renderPreviewFull('bar-chart', { yAxisField: 'amount' });
+      expect(config.yFields).toEqual(['amount']);
+      expect(data[0]).toHaveProperty('amount');
+    });
+
+    it('remaps xAxisField', () => {
+      const { data } = renderPreviewFull('bar-chart', { xAxisField: 'region' });
+      expect(data[0]).toHaveProperty('region');
+    });
+  });
+
+  describe('pie-chart', () => {
+    it('remaps categoryField', () => {
+      const { config, data } = renderPreviewFull('pie-chart', { categoryField: 'region' });
+      expect(config.nameField).toBe('region');
+      expect(data[0]).toHaveProperty('region');
+    });
+
+    it('remaps valueField', () => {
+      const { config, data } = renderPreviewFull('pie-chart', { valueField: 'revenue' });
+      expect(config.valueField).toBe('revenue');
+      expect(data[0]).toHaveProperty('revenue');
+    });
+  });
+
+  describe('scatter-chart', () => {
+    it('remaps xAxisField and yAxisField', () => {
+      const { data } = renderPreviewFull('scatter-chart', { xAxisField: 'quantity', yAxisField: 'amount' });
+      expect(data[0]).toHaveProperty('quantity');
+      expect(data[0]).toHaveProperty('amount');
+    });
+
+    it('remaps sizeField', () => {
+      const { config, data } = renderPreviewFull('scatter-chart', { sizeField: 'profit' });
+      expect(config.sizeField).toBe('profit');
+      expect(data[0]).toHaveProperty('profit');
+    });
+  });
+
+  describe('combo-chart', () => {
+    it('remaps barField and lineField', () => {
+      const { config, data } = renderPreviewFull('combo-chart', { barField: 'revenue', lineField: 'margin' });
+      expect(config.barFields).toEqual(['revenue']);
+      expect(config.lineFields).toEqual(['margin']);
+      expect(data[0]).toHaveProperty('revenue');
+      expect(data[0]).toHaveProperty('margin');
+    });
+  });
+
+  describe('heatmap', () => {
+    it('remaps all three fields', () => {
+      const { data } = renderPreviewFull('heatmap', { xAxisField: 'hour', yAxisField: 'day', valueField: 'sales' });
+      expect(data[0]).toHaveProperty('hour');
+      expect(data[0]).toHaveProperty('day');
+      expect(data[0]).toHaveProperty('sales');
+    });
+  });
+
+  describe('funnel-chart', () => {
+    it('remaps categoryField and valueField', () => {
+      const { config, data } = renderPreviewFull('funnel-chart', { categoryField: 'phase', valueField: 'count' });
+      expect(config.nameField).toBe('phase');
+      expect(data[0]).toHaveProperty('phase');
+      expect(data[0]).toHaveProperty('count');
+    });
+  });
+
+  describe('treemap', () => {
+    it('remaps nameField and valueField', () => {
+      const { config, data } = renderPreviewFull('treemap', { nameField: 'category', valueField: 'amount' });
+      expect(config.nameField).toBe('category');
+      expect(data[0]).toHaveProperty('category');
+      expect(data[0]).toHaveProperty('amount');
+    });
+  });
+
+  describe('sankey', () => {
+    it('remaps all three fields', () => {
+      const { config, data } = renderPreviewFull('sankey', { sourceField: 'origin', targetField: 'destination', valueField: 'visits' });
+      expect(config.sourceField).toBe('origin');
+      expect(config.targetField).toBe('destination');
+      expect(data[0]).toHaveProperty('origin');
+      expect(data[0]).toHaveProperty('destination');
+      expect(data[0]).toHaveProperty('visits');
+    });
+  });
+
+  describe('waterfall', () => {
+    it('remaps categoryField and valueField', () => {
+      const { config, data } = renderPreviewFull('waterfall', { categoryField: 'item', valueField: 'amount' });
+      expect(config.categoryField).toBe('item');
+      expect(data[0]).toHaveProperty('item');
+      expect(data[0]).toHaveProperty('amount');
+    });
+  });
+
+  describe('kpi-card', () => {
+    it('remaps valueField and comparisonField', () => {
+      const { config, data } = renderPreviewFull('kpi-card', { valueField: 'revenue', comparisonField: 'prevRevenue' });
+      expect(config.valueField).toBe('revenue');
+      expect(config.comparisonField).toBe('prevRevenue');
+      expect(data[0]).toHaveProperty('revenue');
+      expect(data[0]).toHaveProperty('prevRevenue');
+    });
+  });
+
+  describe('gauge', () => {
+    it('remaps valueField', () => {
+      const { config, data } = renderPreviewFull('gauge', { valueField: 'achievement' });
+      expect(config.valueField).toBe('achievement');
+      expect(data[0]).toHaveProperty('achievement');
+    });
+  });
+
+  describe('table data remapping', () => {
+    it('remaps column fieldIds when sample data keys change', () => {
+      const { columns } = renderPreviewFull('table', {});
+      expect(columns).toBeDefined();
+      expect(columns!.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+// ─── Missing field mappings in buildWidgetConfig ─────────────
+
+describe('ChartPreview — field config mappings', () => {
+  it('maps seriesField to config', () => {
+    const c = renderPreview('line-chart', { seriesField: 'region' });
+    expect(c.seriesField).toBe('region');
+  });
+
+  it('maps sizeField to config', () => {
+    const c = renderPreview('scatter-chart', { sizeField: 'profit' });
+    expect(c.sizeField).toBe('profit');
+  });
+
+  it('maps colorGroupField to config', () => {
+    const c = renderPreview('scatter-chart', { colorGroupField: 'category' });
+    expect(c.colorGroupField).toBe('category');
+  });
+
+  it('maps nameField to config (treemap)', () => {
+    const c = renderPreview('treemap', { nameField: 'label' });
+    expect(c.nameField).toBe('label');
+  });
+
+  it('maps parentField to config (treemap)', () => {
+    const c = renderPreview('treemap', { parentField: 'group' });
+    expect(c.parentField).toBe('group');
+  });
+
+  it('maps sourceField to config (sankey)', () => {
+    const c = renderPreview('sankey', { sourceField: 'from' });
+    expect(c.sourceField).toBe('from');
+  });
+
+  it('maps targetField to config (sankey)', () => {
+    const c = renderPreview('sankey', { targetField: 'to' });
+    expect(c.targetField).toBe('to');
+  });
+
+  it('maps barField to barFields (combo)', () => {
+    const c = renderPreview('combo-chart', { barField: 'revenue' });
+    expect(c.barFields).toEqual(['revenue']);
+  });
+
+  it('maps lineField to lineFields (combo)', () => {
+    const c = renderPreview('combo-chart', { lineField: 'margin' });
+    expect(c.lineFields).toEqual(['margin']);
+  });
+
+  it('maps comparisonField to config (kpi)', () => {
+    const c = renderPreview('kpi-card', { comparisonField: 'prev' });
+    expect(c.comparisonField).toBe('prev');
   });
 });

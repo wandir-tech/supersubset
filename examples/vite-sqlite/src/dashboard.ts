@@ -131,27 +131,53 @@ export const defaultDashboard: DashboardDefinition = {
           id: 'kpi-revenue',
           type: 'kpi-card',
           title: 'Revenue',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [
+              { role: 'value', fieldRef: 'revenue' },
+              { role: 'comparison', fieldRef: 'previousRevenue' },
+            ],
+          },
           config: { valueField: 'revenue', comparisonField: 'previousRevenue', format: 'currency', prefix: '$' },
         },
         {
           id: 'kpi-orders',
           type: 'kpi-card',
           title: 'Orders',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [
+              { role: 'value', fieldRef: 'orders' },
+              { role: 'comparison', fieldRef: 'previousOrders' },
+            ],
+          },
           config: { valueField: 'orders', comparisonField: 'previousOrders', format: 'compact' },
         },
         {
           id: 'kpi-aov',
           type: 'kpi-card',
           title: 'Average Order Value',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [
+              { role: 'value', fieldRef: 'aov' },
+              { role: 'comparison', fieldRef: 'previousAov' },
+            ],
+          },
           config: { valueField: 'aov', comparisonField: 'previousAov', format: 'currency', prefix: '$' },
         },
         {
           id: 'chart-monthly-sales',
           type: 'line-chart',
           title: 'Monthly Revenue + Orders',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'month' },
+              { role: 'y-axis', fieldRef: 'revenue' },
+            ],
+          },
           config: {
-            xField: 'month',
-            yFields: ['revenue', 'orders'],
             smooth: true,
             showLegend: true,
             legendPosition: 'top',
@@ -161,9 +187,14 @@ export const defaultDashboard: DashboardDefinition = {
           id: 'chart-category-sales',
           type: 'bar-chart',
           title: 'Revenue by Category',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'category' },
+              { role: 'y-axis', fieldRef: 'revenue' },
+            ],
+          },
           config: {
-            xField: 'category',
-            yFields: ['revenue'],
             showLegend: false,
           },
         },
@@ -171,6 +202,10 @@ export const defaultDashboard: DashboardDefinition = {
           id: 'table-top-products',
           type: 'table',
           title: 'Top Products',
+          dataBinding: {
+            datasetRef: 'sqlite-orders',
+            fields: [],
+          },
           config: { columns: ['product_name', 'units', 'revenue', 'region'] },
         },
       ],

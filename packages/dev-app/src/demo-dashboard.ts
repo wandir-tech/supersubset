@@ -156,8 +156,16 @@ export const demoDashboard: DashboardDefinition = {
           id: 'alerts-overview',
           type: 'alerts',
           title: 'Operations Watchlist',
-          config: {
+          dataBinding: {
             datasetRef: 'ds-ops-alerts',
+            fields: [
+              { role: 'alert-title', fieldRef: 'alert_title' },
+              { role: 'alert-message', fieldRef: 'alert_message' },
+              { role: 'alert-severity', fieldRef: 'severity' },
+              { role: 'alert-timestamp', fieldRef: 'detected_at' },
+            ],
+          },
+          config: {
             titleField: 'alert_title',
             messageField: 'alert_message',
             severityField: 'severity',
@@ -173,36 +181,74 @@ export const demoDashboard: DashboardDefinition = {
           id: 'kpi-revenue',
           type: 'kpi-card',
           title: 'Total Revenue',
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'value', fieldRef: 'revenue' },
+              { role: 'comparison', fieldRef: 'prevRevenue' },
+            ],
+          },
           config: { valueField: 'revenue', comparisonField: 'prevRevenue', format: 'compact', prefix: '$' },
         },
         {
           id: 'kpi-orders',
           type: 'kpi-card',
           title: 'Orders',
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'value', fieldRef: 'orders' },
+              { role: 'comparison', fieldRef: 'prevOrders' },
+            ],
+          },
           config: { valueField: 'orders', comparisonField: 'prevOrders', format: 'compact' },
         },
         {
           id: 'kpi-aov',
           type: 'kpi-card',
           title: 'Avg Order Value',
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'value', fieldRef: 'aov' },
+            ],
+          },
           config: { valueField: 'aov', format: 'currency' },
         },
         {
           id: 'chart-revenue-trend',
           type: 'line-chart',
           title: 'Revenue Trend',
-          config: { xField: 'month', yFields: ['revenue', 'cost'], smooth: true, area: false },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'month' },
+              { role: 'y-axis', fieldRef: 'revenue' },
+            ],
+          },
+          config: { smooth: true, area: false },
         },
         {
           id: 'chart-region-sales',
           type: 'bar-chart',
           title: 'Sales by Region',
-          config: { xField: 'region', yFields: ['revenue'], horizontal: true },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'region' },
+              { role: 'y-axis', fieldRef: 'revenue' },
+            ],
+          },
+          config: { horizontal: true },
         },
         {
           id: 'table-orders',
           type: 'table',
           title: 'Recent Orders',
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [],
+          },
           config: { pageSize: 10 },
         },
       ],
@@ -393,73 +439,159 @@ export const demoDashboard: DashboardDefinition = {
           id: 'chart-pie',
           type: 'pie-chart',
           title: 'Revenue by Region',
-          config: { nameField: 'region', valueField: 'revenue', donut: true },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'category', fieldRef: 'region' },
+              { role: 'value', fieldRef: 'revenue' },
+            ],
+          },
+          config: { donut: true },
         },
         {
           id: 'chart-scatter',
           type: 'scatter-chart',
           title: 'Order Size vs Quantity',
-          config: { xField: 'quantity', yField: 'amount', sizeField: 'profit' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'quantity' },
+              { role: 'y-axis', fieldRef: 'amount' },
+              { role: 'size', fieldRef: 'profit' },
+            ],
+          },
+          config: {},
         },
         {
           id: 'chart-area',
           type: 'area-chart',
           title: 'Revenue Breakdown (Stacked)',
-          config: { xField: 'month', yFields: ['online', 'retail', 'wholesale'], smooth: true, stacked: true },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'month' },
+              { role: 'y-axis', fieldRef: 'online' },
+            ],
+          },
+          config: { smooth: true, stacked: true },
         },
         {
           id: 'chart-combo',
           type: 'combo-chart',
           title: 'Revenue vs Margin %',
-          config: { xField: 'month', barFields: ['revenue'], lineFields: ['margin'] },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'month' },
+              { role: 'bar-y', fieldRef: 'revenue' },
+              { role: 'line-y', fieldRef: 'margin' },
+            ],
+          },
+          config: {},
         },
         {
           id: 'chart-gauge',
           type: 'gauge',
           title: 'Target Achievement',
-          config: { valueField: 'achievement', min: 0, max: 100, thresholds: [{ value: 30, color: '#f5222d' }, { value: 70, color: '#faad14' }, { value: 100, color: '#52c41a' }] },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'value', fieldRef: 'achievement' },
+            ],
+          },
+          config: { min: 0, max: 100, thresholds: [{ value: 30, color: '#f5222d' }, { value: 70, color: '#faad14' }, { value: 100, color: '#52c41a' }] },
         },
         {
           id: 'chart-funnel',
           type: 'funnel-chart',
           title: 'Sales Pipeline',
-          config: { nameField: 'stage', valueField: 'count', sort: 'descending' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'category', fieldRef: 'stage' },
+              { role: 'value', fieldRef: 'count' },
+            ],
+          },
+          config: { sort: 'descending' },
         },
         {
           id: 'chart-radar',
           type: 'radar-chart',
           title: 'Product Comparison',
-          config: { nameField: 'product', valueFields: ['quality', 'price', 'support', 'features', 'delivery'] },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'category', fieldRef: 'product' },
+            ],
+          },
+          config: { valueFields: ['quality', 'price', 'support', 'features', 'delivery'] },
         },
         {
           id: 'chart-treemap',
           type: 'treemap',
           title: 'Expense Breakdown',
-          config: { nameField: 'category', valueField: 'amount' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'name', fieldRef: 'category' },
+              { role: 'value', fieldRef: 'amount' },
+            ],
+          },
+          config: {},
         },
         {
           id: 'chart-heatmap',
           type: 'heatmap',
           title: 'Sales by Day × Hour',
-          config: { xField: 'hour', yField: 'day', valueField: 'sales' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'hour' },
+              { role: 'y-axis', fieldRef: 'day' },
+              { role: 'value', fieldRef: 'sales' },
+            ],
+          },
+          config: {},
         },
         {
           id: 'chart-waterfall',
           type: 'waterfall',
           title: 'Profit Bridge',
-          config: { nameField: 'item', valueField: 'amount', totalLabel: 'Net Profit' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'category', fieldRef: 'item' },
+              { role: 'value', fieldRef: 'amount' },
+            ],
+          },
+          config: { totalLabel: 'Net Profit' },
         },
         {
           id: 'chart-sankey',
           type: 'sankey',
           title: 'Traffic Sources → Pages',
-          config: { sourceField: 'source', targetField: 'page', valueField: 'visits' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'source', fieldRef: 'source' },
+              { role: 'target', fieldRef: 'page' },
+              { role: 'value', fieldRef: 'visits' },
+            ],
+          },
+          config: {},
         },
         {
           id: 'chart-boxplot',
           type: 'box-plot',
           title: 'Order Amount Distribution',
-          config: { categoryField: 'region', valueField: 'amount' },
+          dataBinding: {
+            datasetRef: 'ds-orders',
+            fields: [
+              { role: 'category', fieldRef: 'region' },
+              { role: 'value', fieldRef: 'amount' },
+            ],
+          },
+          config: {},
         },
       ],
     },

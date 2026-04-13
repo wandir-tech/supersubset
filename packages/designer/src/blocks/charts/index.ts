@@ -350,8 +350,8 @@ export const ScatterChart: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
-    xAxisField: xAxisFieldRef,
-    yAxisField: yAxisFieldRef,
+    xAxisField: createFieldRefField('X-Axis Field'),
+    yAxisField: createFieldRefField('Y-Axis Field'),
     sizeField: createFieldRefField('Size Field', ['measure']),
     colorGroupField: createFieldRefField('Color Group Field', ['dimension']),
     symbolSize: { type: 'number' as const, label: 'Symbol Size' },
@@ -454,8 +454,8 @@ export const HeatmapChart: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
-    xAxisField: xAxisFieldRef,
-    yAxisField: yAxisFieldRef,
+    xAxisField: createFieldRefField('X-Axis Field', ['dimension', 'time']),
+    yAxisField: createFieldRefField('Y-Axis Field', ['dimension']),
     valueField: valueFieldRef,
     cellBorderWidth: { type: 'number' as const, label: 'Cell Border Width' },
     cellBorderColor: {

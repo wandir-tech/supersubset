@@ -299,9 +299,9 @@ function buildWidgetDefinition(
       }
     }
 
-    if (fields.length > 0) {
-      widget.dataBinding = { datasetRef, fields };
-    }
+    // Always create dataBinding when datasetRef is present (even without fields,
+    // e.g. Table widget needs datasetRef to know which dataset to query)
+    widget.dataBinding = { datasetRef, fields };
   }
 
   // Non-binding config props
@@ -408,6 +408,42 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
         props.aggregation = field.aggregation;
       }
     }
+  }
+
+  // Fallback: map field-ref keys stored in widget.config to Puck props
+  // (for legacy/hand-authored dashboards that don't use dataBinding)
+  const configFieldFallbacks: Array<[string, string]> = [
+    // Standard keys (config key → Puck prop)
+    ['valueField', 'valueField'],
+    ['comparisonField', 'comparisonField'],
+    ['categoryField', 'categoryField'],
+    ['sourceField', 'sourceField'],
+    ['targetField', 'targetField'],
+    ['sizeField', 'sizeField'],
+    ['colorGroupField', 'colorGroupField'],
+    ['nameField', 'nameField'],
+    ['parentField', 'parentField'],
+    ['datasetRef', 'datasetRef'],
+    // Alternative legacy keys
+    ['xField', 'xAxisField'],
+    ['yField', 'yAxisField'],
+  ];
+
+  for (const [configKey, puckProp] of configFieldFallbacks) {
+    if (!props[puckProp] && widget.config[configKey]) {
+      props[puckProp] = widget.config[configKey];
+    }
+  }
+
+  // Handle array-valued fields (yFields, barFields, lineFields)
+  if (!props.yAxisField && Array.isArray(widget.config.yFields) && widget.config.yFields.length > 0) {
+    props.yAxisField = widget.config.yFields[0];
+  }
+  if (!props.barField && Array.isArray(widget.config.barFields) && widget.config.barFields.length > 0) {
+    props.barField = widget.config.barFields[0];
+  }
+  if (!props.lineField && Array.isArray(widget.config.lineFields) && widget.config.lineFields.length > 0) {
+    props.lineField = widget.config.lineFields[0];
   }
 
   // Spread config props

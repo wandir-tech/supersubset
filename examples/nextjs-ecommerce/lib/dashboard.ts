@@ -122,27 +122,53 @@ export const ecommerceDashboard: DashboardDefinition = {
           id: 'kpi-gmv',
           type: 'kpi-card',
           title: 'Gross Merchandise Value',
+          dataBinding: {
+            datasetRef: 'sales-orders',
+            fields: [
+              { role: 'value', fieldRef: 'gmv' },
+              { role: 'comparison', fieldRef: 'previousGmv' },
+            ],
+          },
           config: { valueField: 'gmv', comparisonField: 'previousGmv', format: 'currency', prefix: '$' },
         },
         {
           id: 'kpi-orders',
           type: 'kpi-card',
           title: 'Orders Fulfilled',
+          dataBinding: {
+            datasetRef: 'sales-orders',
+            fields: [
+              { role: 'value', fieldRef: 'orders' },
+              { role: 'comparison', fieldRef: 'previousOrders' },
+            ],
+          },
           config: { valueField: 'orders', comparisonField: 'previousOrders', format: 'compact' },
         },
         {
           id: 'kpi-aov',
           type: 'kpi-card',
           title: 'Average Order Value',
+          dataBinding: {
+            datasetRef: 'sales-orders',
+            fields: [
+              { role: 'value', fieldRef: 'aov' },
+              { role: 'comparison', fieldRef: 'previousAov' },
+            ],
+          },
           config: { valueField: 'aov', comparisonField: 'previousAov', format: 'currency', prefix: '$' },
         },
         {
           id: 'chart-revenue-trend',
           type: 'line-chart',
           title: 'Revenue + Orders by Month',
+          dataBinding: {
+            datasetRef: 'sales-orders',
+            fields: [
+              { role: 'x-axis', fieldRef: 'month' },
+              { role: 'y-axis', fieldRef: 'gmv' },
+            ],
+          },
           config: {
-            xField: 'month',
-            yFields: ['gmv', 'orders'],
             smooth: true,
             showLegend: true,
             legendPosition: 'top',
@@ -152,9 +178,14 @@ export const ecommerceDashboard: DashboardDefinition = {
           id: 'chart-channel-mix',
           type: 'pie-chart',
           title: 'Channel Mix',
+          dataBinding: {
+            datasetRef: 'sales-orders',
+            fields: [
+              { role: 'name', fieldRef: 'channel' },
+              { role: 'value', fieldRef: 'gmv' },
+            ],
+          },
           config: {
-            nameField: 'channel',
-            valueField: 'gmv',
             donut: true,
             showLegend: true,
             legendPosition: 'right',
