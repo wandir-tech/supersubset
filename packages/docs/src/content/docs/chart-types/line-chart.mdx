@@ -7,11 +7,20 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import line_chart_viewer from '../../../assets/screenshots/chart-types/line-chart-default-viewer.png';
 import line_chart_designer from '../../../assets/screenshots/chart-types/line-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import line_chart_props_designer from '../../../assets/screenshots/chart-types/line-chart-props-designer.png';
-import line_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/line-chart-props-scrolled-designer.png';
+import line_chart_straight_lines_before from '../../../assets/screenshots/chart-types/line-chart-straight-lines-before-viewer.png';
+import line_chart_straight_lines_after from '../../../assets/screenshots/chart-types/line-chart-straight-lines-viewer.png';
+import line_chart_straight_lines_callout from '../../../assets/screenshots/chart-types/line-chart-straight-lines-callout-designer.png';
+import line_chart_no_markers_before from '../../../assets/screenshots/chart-types/line-chart-no-markers-before-viewer.png';
+import line_chart_no_markers_after from '../../../assets/screenshots/chart-types/line-chart-no-markers-viewer.png';
+import line_chart_no_markers_callout from '../../../assets/screenshots/chart-types/line-chart-no-markers-callout-designer.png';
+import line_chart_connect_nulls_before from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-before-viewer.png';
+import line_chart_connect_nulls_after from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-viewer.png';
+import line_chart_connect_nulls_callout from '../../../assets/screenshots/chart-types/line-chart-connect-nulls-callout-designer.png';
 
 # Line Chart
 
@@ -57,10 +66,14 @@ One or more measure fields plotted as separate lines. Add multiple fields to com
 
 When enabled, lines are drawn as smooth curves instead of straight segments. This produces a more polished look but can obscure precise data point positions.
 
-<FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Smooth lines enabled"
-  caption="Configure smooth lines enabled in the property panel"
+<PropertyShowcase
+  label="Smooth lines enabled"
+  beforeSrc={line_chart_straight_lines_before}
+  beforeAlt="Line chart with straight line segments"
+  afterSrc={line_chart_straight_lines_after}
+  afterAlt="Line chart with smooth curves"
+  calloutSrc={line_chart_straight_lines_callout}
+  calloutAlt="Smooth property highlighted in designer"
 />
 
 ### Area Fill (`area`)
@@ -68,19 +81,37 @@ When enabled, lines are drawn as smooth curves instead of straight segments. Thi
 When enabled, the area below each line is filled with a semi-transparent color. Useful for emphasizing volume or magnitude.
 
 <FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Area fill enabled"
-  caption="Configure area fill enabled in the property panel"
+  src={line_chart_props_designer}
+  alt="Area fill property in the property panel"
+  caption="Enable area fill in the property panel"
 />
 
 ### Show Points (`showPoints`)
 
 Toggle the visibility of data point markers on the line. Hiding points gives a cleaner look; showing them makes individual values easier to read.
 
-<FeatureScreenshot
-  src={line_chart_props_scrolled_designer}
-  alt="Data points visibility"
-  caption="Configure data points visibility in the property panel"
+<PropertyShowcase
+  label="Markers hidden"
+  beforeSrc={line_chart_no_markers_before}
+  beforeAlt="Line chart with point markers"
+  afterSrc={line_chart_no_markers_after}
+  afterAlt="Line chart without point markers"
+  calloutSrc={line_chart_no_markers_callout}
+  calloutAlt="Show markers property highlighted in designer"
+/>
+
+### Connect Nulls (`connectNulls`)
+
+When enabled, lines bridge over missing data points instead of breaking.
+
+<PropertyShowcase
+  label="Connect nulls enabled"
+  beforeSrc={line_chart_connect_nulls_before}
+  beforeAlt="Line chart with gaps at null values"
+  afterSrc={line_chart_connect_nulls_after}
+  afterAlt="Line chart with connected null gaps"
+  calloutSrc={line_chart_connect_nulls_callout}
+  calloutAlt="Connect nulls property highlighted in designer"
 />
 
 ## Tips

@@ -123,6 +123,27 @@ await page.goto('http://localhost:3000');
 
 **Naming**: `{category}/{feature-slug}-{property-name}-viewer.png`
 
+### Step 7.5: Verify Before/After Difference (MANDATORY)
+
+**This is a hard requirement.** Every property that claims to change the visual output MUST have at least two screenshots that visually demonstrate the difference.
+
+1. **Compare the "default" viewer screenshot with the "changed" viewer screenshot.** They MUST be visibly different. If they look the same, the property either:
+   - Didn't actually get toggled (capture script bug)
+   - Doesn't produce a visible change (documentation should not claim it does)
+   - Is broken (product bug — go to Step 9)
+
+2. **How to verify programmatically**: After capturing both screenshots, load them and compare pixel data or file hashes. If the MD5 hashes are identical, the screenshots are duplicates and the property change was not captured.
+
+3. **What constitutes a valid difference**:
+   - For boolean toggles (smooth, area fill, show points): the chart rendering must visibly change
+   - For field reference changes: different data should be plotted on the axis
+   - For enum changes (color scheme, aggregation): the visual output must reflect the new value
+   - For numeric changes (limit, padding): the layout or content must visibly shift
+
+4. **MDX must show both states**: The documentation page must include BOTH the before and after screenshots so the reader can see what the property actually does. A single screenshot of the property panel is NOT sufficient — the reader needs to see the visual result.
+
+**If the before and after screenshots are identical, STOP. Do not proceed. File a bug.**
+
 ### Step 8: Quality Check
 
 Verify all of the following:
@@ -159,8 +180,8 @@ sidebar:
   order: {N}
 ---
 
-import { Image } from 'astro:assets';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import ExpandAll from '../../../components/ExpandAll.astro';
 
 # {Feature Title}
@@ -183,17 +204,21 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 
 ## Configuration Options
 
-### {Property Name}
+### {Property Name} (`{propName}`)
 
 {Description of what this property controls and its valid values.}
 
-<ScreenshotComparison
-  label="{Property Name}"
-  designerSrc={import('../../../assets/screenshots/{path}-{property}-designer.png')}
-  designerAlt="{Property} setting changed in the designer"
-  viewerSrc={import('../../../assets/screenshots/{path}-{property}-viewer.png')}
-  viewerAlt="Dashboard with {property} applied"
+<PropertyShowcase
+  label="{Property Name} toggled"
+  beforeSrc={import('../../../assets/screenshots/{path}-{variant}-before-viewer.png')}
+  beforeAlt="{Feature} before {property} change"
+  afterSrc={import('../../../assets/screenshots/{path}-{variant}-viewer.png')}
+  afterAlt="{Feature} after enabling {property}"
+  calloutSrc={import('../../../assets/screenshots/{path}-{variant}-callout-designer.png')}
+  calloutAlt="{Property} setting highlighted in designer"
 />
+
+**IMPORTANT**: The before and after viewer screenshots MUST be visibly different. If they are not, the property is either not working or the capture was incorrect. See Step 7.5.
 
 {Repeat ### for each configurable property}
 
@@ -234,9 +259,46 @@ Verify the page appears in the correct position in the sidebar.
 
 ## MDX Component Reference
 
+### `<PropertyShowcase>`
+
+Renders a three-panel comparison for a property toggle: before viewer, after viewer, and designer callout. Use this for all property variant documentation sections. Props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `label` | `string` | Display name for the comparison (shown in the collapsible summary) |
+| `beforeSrc` | `ImageMetadata` | Import of the viewer screenshot **before** the property change |
+| `beforeAlt` | `string` | Alt text for the "before" image |
+| `afterSrc` | `ImageMetadata` | Import of the viewer screenshot **after** the property change |
+| `afterAlt` | `string` | Alt text for the "after" image |
+| `calloutSrc` | `ImageMetadata` | Import of the designer callout screenshot (optional) |
+| `calloutAlt` | `string` | Alt text for the callout image |
+
+**Screenshot file pattern:**
+- Before viewer: `{slug}-{variantSlug}-before-viewer.png`
+- After viewer: `{slug}-{variantSlug}-viewer.png`
+- Designer callout: `{slug}-{variantSlug}-callout-designer.png`
+
+**Example usage:**
+```mdx
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
+import stacked_before from '../../../assets/screenshots/chart-types/bar-chart-stacked-before-viewer.png';
+import stacked_after from '../../../assets/screenshots/chart-types/bar-chart-stacked-viewer.png';
+import stacked_callout from '../../../assets/screenshots/chart-types/bar-chart-stacked-callout-designer.png';
+
+<PropertyShowcase
+  label="Stacked bars enabled"
+  beforeSrc={stacked_before}
+  beforeAlt="Bar chart with grouped bars"
+  afterSrc={stacked_after}
+  afterAlt="Bar chart with stacked bars"
+  calloutSrc={stacked_callout}
+  calloutAlt="Stacked property highlighted in designer"
+/>
+```
+
 ### `<ScreenshotComparison>`
 
-Renders a before/after pair inside a `<details>` element. Props:
+Renders a designer/viewer pair inside a `<details>` element. Use for "Default Appearance" sections where no before/after comparison is needed. Props:
 
 | Prop | Type | Description |
 |------|------|-------------|
@@ -295,6 +357,134 @@ test.describe('{Feature} screenshots', () => {
 
 Run with: `npx playwright test packages/docs/capture/{feature}.spec.ts`
 
+## Property Variant Capture (Before/After)
+
+The `property-variants.spec.ts` script captures **before/after** screenshots for
+every toggleable property on chart and widget blocks. It uses a data-driven
+`WidgetVariantSpec` interface and the shared helpers in `helpers.ts`.
+
+### Key Architecture Discovery
+
+When the Puck designer edits a dashboard via `onChange`, it re-serializes **all**
+layout node IDs from the original form (e.g., `w-line`) to a `layout-{widgetRef}`
+form (e.g., `layout-chart-revenue-trend`). This means `data-ss-node`-based
+selectors break after any property toggle.
+
+**Solution**: Capture variant screenshots from the **Puck canvas iframe** using
+`data-puck-component` attributes, NOT from the runtime viewer.
+
+### Puck Canvas Iframe Selectors
+
+Inside the Puck editor iframe (`page.frameLocator('iframe').first()`):
+
+| Attribute | Value | Example |
+|-----------|-------|---------|
+| `data-puck-component` | Puck component TYPE name | `LineChart`, `BarChart`, `HeaderBlock` |
+| `data-puck-dnd` | Content item instance ID | `chart-revenue-trend`, `divider-1` |
+
+Use `data-puck-dnd` (or `data-puck-component`) to target specific widget
+instances within the iframe. The `captureWidgetFromCanvas()` helper handles this.
+
+### Runtime Viewer Selectors
+
+In the runtime viewer (initial load, before any designer edits):
+
+| Attribute | Value | Example |
+|-----------|-------|---------|
+| `data-ss-node` | Layout node ID | `w-line`, `header-title`, `row-kpis` |
+| `.ss-widget` | Widget wrapper class | — |
+| `.ss-filter-bar` | Filter bar element | — |
+| `.ss-chart` | ECharts container | — |
+
+**IMPORTANT**: Chart titles render inside ECharts canvas, NOT as DOM text.
+`hasText`-based selectors will NOT work on chart widgets.
+
+### Property Toggle Helpers
+
+- `toggleRadioProperty(page, fieldLabel, targetValue)` — toggle a radio option using React fiber `__reactProps$` onChange (primary), `.click()` fallback
+- `changeSelectProperty(page, fieldLabel, targetValue)` — change a `<select>` value using React fiber onChange with JSON-encoded option matching (Puck stores option values as `{"value":"actual_value"}`)
+- `scrollPropertyIntoView(page, fieldLabel)` — scroll the sidebar to find a field
+- `capturePropertyCallout(page, fieldLabel, category, slug, variant)` — capture a focused callout screenshot centered on a specific property field with a blue highlight border
+
+### Designer Callout Capture
+
+The `capturePropertyCallout` helper produces compact 340×250px screenshots centered on a specific property field:
+
+1. Uses Playwright locators to find the VISIBLE `PuckFields-field` container (Puck renders hidden field panels for all components — only the selected one is visible)
+2. Iterates all matching elements and finds the first one with non-zero `boundingBox()`
+3. Scrolls the field into view and recalculates its position
+4. Injects a temporary blue highlight `div` (3px solid #2563eb, border-radius 8px, box-shadow)
+5. Captures a 340×250px clip centered on the field
+6. Removes the highlight overlay
+7. Falls back to `capturePropertyPanel` if the field isn't found
+
+### React Fiber Event Dispatch
+
+Puck handles form field changes through React's synthetic event system. Native DOM events (`dispatchEvent`, `nativeInputValueSetter`) do NOT trigger Puck state updates. Both radio and select helpers use React fiber props (`__reactProps$` onChange) to trigger actual Puck state changes.
+
+**Important**: After changing a property via React fiber, the designer package must be rebuilt for ChartPreview fixes to take effect:
+```bash
+pnpm --filter @supersubset/designer build
+```
+
+### ChartPreview Boolean Mapping
+
+`packages/designer/src/preview/ChartPreview.tsx` `buildWidgetConfig()` maps Puck block props to widget config. Boolean radio props must handle BOTH `'true'` AND `'false'` string values:
+
+```typescript
+// CORRECT — handles both checked and unchecked states
+if (puckProps.smooth === 'true') config.smooth = true;
+else if (puckProps.smooth === 'false') config.smooth = false;
+```
+
+If only the `'true'` case is handled, toggling to 'false' is silently ignored when the DEFAULT_CONFIGS has the property set to `true`.
+
+### WidgetVariantSpec Interface
+
+```typescript
+interface WidgetVariantSpec {
+  layerLabel: string;       // Layer panel text to click
+  nodeId: string;           // Original data-ss-node ID (for viewer on initial load)
+  puckComponentId: string;  // data-puck-dnd value (for canvas iframe capture)
+  category: string;         // Screenshot category folder
+  slug: string;             // Feature slug for file names
+  page: 'overview' | 'gallery';
+  variants: Array<{
+    name: string;           // Variant name (e.g., 'smooth', 'horizontal')
+    field: string;          // Property panel field label
+    value: string;          // Target value to set
+    type: 'radio' | 'select';
+  }>;
+}
+```
+
+### Running Variant Captures
+
+```bash
+# All variants
+cd packages/docs && npx playwright test capture/property-variants.spec.ts
+
+# Specific category
+npx playwright test capture/property-variants.spec.ts -g "Overview"
+npx playwright test capture/property-variants.spec.ts -g "Gallery"
+
+# Specific chart
+npx playwright test capture/property-variants.spec.ts -g "line-chart"
+```
+
+### Layout and Filter Captures
+
+Use `layout-filters.spec.ts` for layout-element and filter-state screenshots:
+
+```bash
+npx playwright test capture/layout-filters.spec.ts
+```
+
+Layout elements use `data-ss-node` in the viewer (initial load) and viewport
+clipping or Puck layer selection in the designer. Filter screenshots capture
+different filter states (active, cleared, multiple active) and the filter
+builder panel.
+
 ## Quality Checklist Summary
 
 Before considering a feature page complete:
@@ -302,9 +492,13 @@ Before considering a feature page complete:
 - [ ] Feature brief is written (Step 1)
 - [ ] All default screenshots captured (Steps 3-4)
 - [ ] All property variant screenshots captured (Steps 5-7, repeated per property)
+- [ ] **Before/after difference verified for every property** (Step 7.5) — screenshots MUST be visibly different
 - [ ] Quality check passed — no console errors, correct rendering (Step 8)
 - [ ] No outstanding bugs — bug fix gate cleared (Step 9)
 - [ ] MDX page written with all sections (Step 10)
+- [ ] Property variant sections use `<PropertyShowcase>` with before/after viewer + designer callout (3 images per variant)
+- [ ] Default Appearance sections use `<ScreenshotComparison>` with designer + viewer pair
 - [ ] Page added to sidebar navigation (Step 11)
 - [ ] Cross-references added (Step 12)
 - [ ] `pnpm docs:build` succeeds with the new page
+- [ ] Field reference inputs are dropdowns (not text boxes) — if text boxes are found, file a bug

@@ -9,7 +9,7 @@ import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
 import cross_filter_viewer from '../../../assets/screenshots/filters/cross-filter-default-viewer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
-import cross_filter_default_viewer from '../../../assets/screenshots/filters/cross-filter-default-viewer.png';
+import cross_filter_bar_clicked from '../../../assets/screenshots/filters/cross-filter-bar-clicked-viewer.png';
 import filter_bar_active_viewer from '../../../assets/screenshots/filters/filter-bar-active-viewer.png';
 
 # Cross-Filtering
@@ -35,9 +35,9 @@ When cross-filtering is configured, clicking a chart element highlights it and f
 The user action that activates the filter: `click` is the most common.
 
 <FeatureScreenshot
-  src={cross_filter_default_viewer}
-  alt="Trigger type configuration"
-  caption="Trigger type configuration"
+  src={cross_filter_bar_clicked}
+  alt="Dashboard after clicking a bar chart element"
+  caption="Cross-filter triggered by clicking a bar chart element"
 />
 
 ### Source Widget (`trigger.sourceWidgetId`)
@@ -45,9 +45,9 @@ The user action that activates the filter: `click` is the most common.
 The widget whose elements can be clicked to trigger filtering.
 
 <FeatureScreenshot
-  src={filter_bar_active_viewer}
-  alt="Source widget selection"
-  caption="Source widget selection"
+  src={cross_filter_viewer}
+  alt="Cross-filter source: bar chart with region data"
+  caption="The bar chart serves as the cross-filter source widget"
 />
 
 ### Filter Field (`action.fieldRef`)
@@ -56,8 +56,8 @@ The field that gets filtered when the user clicks a chart element.
 
 <FeatureScreenshot
   src={filter_bar_active_viewer}
-  alt="Filter field binding"
-  caption="Filter field binding"
+  alt="Filter bar showing active filter state from cross-filtering"
+  caption="Cross-filter updates the filter bar with the selected field value"
 />
 
 ## Tips

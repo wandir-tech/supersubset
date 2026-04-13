@@ -7,10 +7,20 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import table_viewer from '../../../assets/screenshots/widgets/table-default-viewer.png';
 import table_designer from '../../../assets/screenshots/widgets/table-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import table_props_scrolled_designer from '../../../assets/screenshots/widgets/table-props-scrolled-designer.png';
+import table_no_stripes_before from '../../../assets/screenshots/widgets/table-no-stripes-before-viewer.png';
+import table_no_stripes_after from '../../../assets/screenshots/widgets/table-no-stripes-viewer.png';
+import table_no_stripes_callout from '../../../assets/screenshots/widgets/table-no-stripes-callout-designer.png';
+import table_row_numbers_before from '../../../assets/screenshots/widgets/table-row-numbers-before-viewer.png';
+import table_row_numbers_after from '../../../assets/screenshots/widgets/table-row-numbers-viewer.png';
+import table_row_numbers_callout from '../../../assets/screenshots/widgets/table-row-numbers-callout-designer.png';
+import table_show_totals_before from '../../../assets/screenshots/widgets/table-show-totals-before-viewer.png';
+import table_show_totals_after from '../../../assets/screenshots/widgets/table-show-totals-viewer.png';
+import table_show_totals_callout from '../../../assets/screenshots/widgets/table-show-totals-callout-designer.png';
 
 # Table
 
@@ -40,6 +50,48 @@ The number of rows displayed per page. Smaller pages load faster; larger pages s
   src={table_props_scrolled_designer}
   alt="Page size adjustment"
   caption="Configure page size adjustment in the property panel"
+/>
+
+### Striped (`striped`)
+
+Toggle alternating row background colors for easier reading.
+
+<PropertyShowcase
+  label="Striped rows disabled"
+  beforeSrc={table_no_stripes_before}
+  beforeAlt="Table with striped rows"
+  afterSrc={table_no_stripes_after}
+  afterAlt="Table without striped rows"
+  calloutSrc={table_no_stripes_callout}
+  calloutAlt="Striped property highlighted in designer"
+/>
+
+### Row Numbers (`showRowNumbers`)
+
+Show a row number column at the left edge of the table.
+
+<PropertyShowcase
+  label="Row numbers enabled"
+  beforeSrc={table_row_numbers_before}
+  beforeAlt="Table without row numbers"
+  afterSrc={table_row_numbers_after}
+  afterAlt="Table with row numbers displayed"
+  calloutSrc={table_row_numbers_callout}
+  calloutAlt="Row numbers property highlighted in designer"
+/>
+
+### Show Totals (`showTotals`)
+
+Display a totals row at the bottom of the table with automatic aggregation.
+
+<PropertyShowcase
+  label="Show totals enabled"
+  beforeSrc={table_show_totals_before}
+  beforeAlt="Table without totals row"
+  afterSrc={table_show_totals_after}
+  afterAlt="Table with totals row displayed"
+  calloutSrc={table_show_totals_callout}
+  calloutAlt="Show totals property highlighted in designer"
 />
 
 ## Tips

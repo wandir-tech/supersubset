@@ -11,6 +11,8 @@ import select_filter_viewer from '../../../assets/screenshots/filters/select-fil
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import filter_builder_default_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
 import select_filter_active_viewer from '../../../assets/screenshots/filters/select-filter-active-viewer.png';
+import select_filter_region_viewer from '../../../assets/screenshots/filters/select-filter-region-north-viewer.png';
+import select_filter_category_viewer from '../../../assets/screenshots/filters/select-filter-category-active-viewer.png';
 
 # Select Filter
 
@@ -55,9 +57,9 @@ The dataset containing the field. This determines which data source provides the
 The comparison operator: `equals` (exact match), `contains`, `in` (multiple values).
 
 <FeatureScreenshot
-  src={select_filter_active_viewer}
-  alt="Filter operator options"
-  caption="Filter operator options"
+  src={select_filter_region_viewer}
+  alt="Filter bar with Region set to North"
+  caption="Select filter with 'equals' operator applied to Region"
 />
 
 ### Scope
@@ -65,9 +67,9 @@ The comparison operator: `equals` (exact match), `contains`, `in` (multiple valu
 Controls which widgets are affected by this filter. See [Filter Scope](/filters/filter-scope/) for details.
 
 <FeatureScreenshot
-  src={select_filter_active_viewer}
-  alt="Filter scope configuration"
-  caption="Filter scope configuration"
+  src={select_filter_category_viewer}
+  alt="Filter bar with Category filter active"
+  caption="Multiple select filters can target different fields"
 />
 
 ## Tips

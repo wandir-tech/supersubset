@@ -7,11 +7,17 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import radar_chart_viewer from '../../../assets/screenshots/chart-types/radar-chart-default-viewer.png';
 import radar_chart_designer from '../../../assets/screenshots/chart-types/radar-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import radar_chart_props_designer from '../../../assets/screenshots/chart-types/radar-chart-props-designer.png';
-import radar_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/radar-chart-props-scrolled-designer.png';
+import radar_chart_circle_before from '../../../assets/screenshots/chart-types/radar-chart-circle-before-viewer.png';
+import radar_chart_circle_after from '../../../assets/screenshots/chart-types/radar-chart-circle-viewer.png';
+import radar_chart_circle_callout from '../../../assets/screenshots/chart-types/radar-chart-circle-callout-designer.png';
+import radar_chart_no_fill_before from '../../../assets/screenshots/chart-types/radar-chart-no-fill-before-viewer.png';
+import radar_chart_no_fill_after from '../../../assets/screenshots/chart-types/radar-chart-no-fill-viewer.png';
+import radar_chart_no_fill_callout from '../../../assets/screenshots/chart-types/radar-chart-no-fill-callout-designer.png';
 
 # Radar Chart
 
@@ -57,20 +63,28 @@ The categorical field used to create multiple overlapping polygons for compariso
 
 Choose between `polygon` (straight edges) and `circle` (smooth) for the axis grid lines.
 
-<FeatureScreenshot
-  src={radar_chart_props_scrolled_designer}
-  alt="Shape: polygon vs circle"
-  caption="Configure shape: polygon vs circle in the property panel"
+<PropertyShowcase
+  label="Circle shape grid"
+  beforeSrc={radar_chart_circle_before}
+  beforeAlt="Radar chart with polygon grid"
+  afterSrc={radar_chart_circle_after}
+  afterAlt="Radar chart with circle grid"
+  calloutSrc={radar_chart_circle_callout}
+  calloutAlt="Shape property highlighted in designer"
 />
 
 ### Filled (`filled`)
 
 When enabled, the area inside the polygon is filled with a semi-transparent color.
 
-<FeatureScreenshot
-  src={radar_chart_props_scrolled_designer}
-  alt="Filled radar areas"
-  caption="Configure filled radar areas in the property panel"
+<PropertyShowcase
+  label="Unfilled radar (no fill)"
+  beforeSrc={radar_chart_no_fill_before}
+  beforeAlt="Radar chart with filled area"
+  afterSrc={radar_chart_no_fill_after}
+  afterAlt="Radar chart without fill"
+  calloutSrc={radar_chart_no_fill_callout}
+  calloutAlt="Filled property highlighted in designer"
 />
 
 ## Tips

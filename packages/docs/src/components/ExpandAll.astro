@@ -17,7 +17,7 @@
   if (btn) {
     btn.addEventListener('click', () => {
       const isExpanded = btn.getAttribute('data-expanded') === 'true';
-      const details = document.querySelectorAll('details.screenshot-comparison');
+      const details = document.querySelectorAll('details.screenshot-comparison, details.property-showcase');
       details.forEach((d) => {
         (d as HTMLDetailsElement).open = !isExpanded;
       });

@@ -11,6 +11,7 @@ import filter_bar_viewer from '../../../assets/screenshots/filters/filter-bar-de
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import filter_bar_active_viewer from '../../../assets/screenshots/filters/filter-bar-active-viewer.png';
 import filter_builder_default_designer from '../../../assets/screenshots/filters/filter-builder-default-designer.png';
+import date_filter_bar_viewer from '../../../assets/screenshots/filters/date-filter-bar-viewer.png';
 
 # Date Filter
 
@@ -24,8 +25,8 @@ A date filter with default settings shows a date range picker.
 
 <ScreenshotComparison
   label="Default date filter"
-  viewerSrc={filter_bar_viewer}
-  viewerAlt="Default date filter in viewer mode"
+  viewerSrc={date_filter_bar_viewer}
+  viewerAlt="Date filter in the filter bar"
 />
 
 ## Configuration Options
@@ -55,9 +56,9 @@ The comparison operator for dates: `between` (range), `before`, `after`, `equals
 Controls which widgets are affected. See [Filter Scope](/filters/filter-scope/).
 
 <FeatureScreenshot
-  src={filter_bar_active_viewer}
-  alt="Date filter scope"
-  caption="Date filter scope"
+  src={filter_bar_viewer}
+  alt="Filter bar showing all filters including date"
+  caption="Date filter alongside select filters in the filter bar"
 />
 
 ## Tips

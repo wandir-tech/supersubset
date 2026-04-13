@@ -284,6 +284,18 @@ function buildWidgetConfig(
   // Map common Puck field names → widget config keys
   const config: Record<string, unknown> = { ...defaults };
 
+  // Pass through raw boolean/number config values from dashboard JSON.
+  // When a dashboard is first loaded into Puck, its config values retain their
+  // original types (boolean/number). Puck radio/select fields produce string
+  // values only after user interaction, which the string-based handlers below
+  // will override.
+  for (const key of Object.keys(puckProps)) {
+    const val = puckProps[key];
+    if (typeof val === 'boolean' || typeof val === 'number') {
+      config[key] = val;
+    }
+  }
+
   // Override defaults if user has set actual field references (non-empty strings)
   const s = (v: unknown) => typeof v === 'string' && v.length > 0 ? v : undefined;
   if (s(puckProps.xAxisField)) config.xField = puckProps.xAxisField;
@@ -304,8 +316,11 @@ function buildWidgetConfig(
   else if (puckProps.showTimestamp === 'false') config.showTimestamp = false;
   if (s(puckProps.defaultSeverity)) config.defaultSeverity = puckProps.defaultSeverity;
   if (puckProps.smooth === 'true') config.smooth = true;
+  else if (puckProps.smooth === 'false') config.smooth = false;
   if (puckProps.stacked === 'true') config.stacked = true;
+  else if (puckProps.stacked === 'false') config.stacked = false;
   if (puckProps.orientation === 'horizontal') config.horizontal = true;
+  else if (puckProps.orientation === 'vertical') config.horizontal = false;
 
   // Shared visual controls (Phase 2.A.1)
   if (s(puckProps.colorScheme)) config.colorScheme = puckProps.colorScheme;
@@ -323,14 +338,18 @@ function buildWidgetConfig(
   if (puckProps.yAxisMin != null && puckProps.yAxisMin !== '') config.yAxisMin = Number(puckProps.yAxisMin);
   if (puckProps.yAxisMax != null && puckProps.yAxisMax !== '') config.yAxisMax = Number(puckProps.yAxisMax);
   if (puckProps.logAxis === 'true') config.logAxis = true;
+  else if (puckProps.logAxis === 'false') config.logAxis = false;
   if (puckProps.zoomable === 'true') config.zoomable = true;
+  else if (puckProps.zoomable === 'false') config.zoomable = false;
 
   // Per-chart controls (Phase 2.A.2–2.A.17)
   // Line / Area
-  if (puckProps.showMarkers === 'false') config.showMarkers = false;
+  if (puckProps.showMarkers === 'true') config.showMarkers = true;
+  else if (puckProps.showMarkers === 'false') config.showMarkers = false;
   if (puckProps.markerSize != null && puckProps.markerSize !== '') config.markerSize = Number(puckProps.markerSize);
   if (s(puckProps.step)) config.step = puckProps.step;
   if (puckProps.connectNulls === 'true') config.connectNulls = true;
+  else if (puckProps.connectNulls === 'false') config.connectNulls = false;
   if (s(puckProps.areaOpacity)) config.areaOpacity = Number(puckProps.areaOpacity);
   // Bar
   if (s(puckProps.barWidth)) config.barWidth = puckProps.barWidth;
@@ -343,6 +362,7 @@ function buildWidgetConfig(
   if (s(puckProps.labelPosition)) config.labelPosition = puckProps.labelPosition;
   if (puckProps.padAngle != null && Number(puckProps.padAngle) > 0) config.padAngle = Number(puckProps.padAngle);
   if (puckProps.variant === 'donut') config.donut = true;
+  else if (puckProps.variant === 'pie') config.donut = false;
   if (puckProps.variant === 'rose') config.roseType = 'radius';
   // Scatter
   if (puckProps.symbolSize != null && puckProps.symbolSize !== '') config.symbolSize = Number(puckProps.symbolSize);
@@ -362,6 +382,7 @@ function buildWidgetConfig(
   if (puckProps.gap != null && Number(puckProps.gap) > 0) config.gap = Number(puckProps.gap);
   // Treemap
   if (puckProps.showUpperLabel === 'true') config.showUpperLabel = true;
+  else if (puckProps.showUpperLabel === 'false') config.showUpperLabel = false;
   if (puckProps.maxDepth != null && Number(puckProps.maxDepth) > 0) config.maxDepth = Number(puckProps.maxDepth);
   if (puckProps.borderWidth != null && Number(puckProps.borderWidth) > 0) config.borderWidth = Number(puckProps.borderWidth);
   // Sankey
@@ -379,11 +400,17 @@ function buildWidgetConfig(
   if (puckProps.startAngle != null && puckProps.startAngle !== '') config.startAngle = Number(puckProps.startAngle);
   if (puckProps.endAngle != null && puckProps.endAngle !== '') config.endAngle = Number(puckProps.endAngle);
   if (puckProps.roundCap === 'true') config.roundCap = true;
+  else if (puckProps.roundCap === 'false') config.roundCap = false;
   if (puckProps.splitCount != null && puckProps.splitCount !== '') config.splitCount = Number(puckProps.splitCount);
   if (puckProps.progressMode === 'true') config.progressMode = true;
+  else if (puckProps.progressMode === 'false') config.progressMode = false;
   // Table
+  if (puckProps.striped === 'true') config.striped = true;
+  else if (puckProps.striped === 'false') config.striped = false;
   if (puckProps.showRowNumbers === 'true') config.showRowNumbers = true;
+  else if (puckProps.showRowNumbers === 'false') config.showRowNumbers = false;
   if (puckProps.showTotals === 'true') config.showTotals = true;
+  else if (puckProps.showTotals === 'false') config.showTotals = false;
   if (s(puckProps.headerAlign)) config.headerAlign = puckProps.headerAlign;
   if (s(puckProps.cellAlign)) config.cellAlign = puckProps.cellAlign;
   // KPI

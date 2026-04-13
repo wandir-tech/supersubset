@@ -7,11 +7,17 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import gauge_viewer from '../../../assets/screenshots/chart-types/gauge-default-viewer.png';
 import gauge_designer from '../../../assets/screenshots/chart-types/gauge-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import gauge_props_designer from '../../../assets/screenshots/chart-types/gauge-props-designer.png';
-import gauge_props_scrolled_designer from '../../../assets/screenshots/chart-types/gauge-props-scrolled-designer.png';
+import gauge_round_cap_before from '../../../assets/screenshots/chart-types/gauge-round-cap-before-viewer.png';
+import gauge_round_cap_after from '../../../assets/screenshots/chart-types/gauge-round-cap-viewer.png';
+import gauge_round_cap_callout from '../../../assets/screenshots/chart-types/gauge-round-cap-callout-designer.png';
+import gauge_progress_before from '../../../assets/screenshots/chart-types/gauge-progress-before-viewer.png';
+import gauge_progress_after from '../../../assets/screenshots/chart-types/gauge-progress-viewer.png';
+import gauge_progress_callout from '../../../assets/screenshots/chart-types/gauge-progress-callout-designer.png';
 
 # Gauge
 
@@ -57,20 +63,28 @@ The minimum value of the gauge range.
 
 The maximum value of the gauge range.
 
-<FeatureScreenshot
-  src={gauge_props_scrolled_designer}
-  alt="Maximum range setting"
-  caption="Configure maximum range setting in the property panel"
+<PropertyShowcase
+  label="Round cap gauge style"
+  beforeSrc={gauge_round_cap_before}
+  beforeAlt="Gauge with default flat cap"
+  afterSrc={gauge_round_cap_after}
+  afterAlt="Gauge with round cap style"
+  calloutSrc={gauge_round_cap_callout}
+  calloutAlt="Maximum range property highlighted in designer"
 />
 
 ### Split Number (`splitNumber`)
 
 Number of segments dividing the gauge arc. More splits give finer graduation marks.
 
-<FeatureScreenshot
-  src={gauge_props_scrolled_designer}
-  alt="Split number adjustment"
-  caption="Configure split number adjustment in the property panel"
+<PropertyShowcase
+  label="Progress gauge style"
+  beforeSrc={gauge_progress_before}
+  beforeAlt="Gauge with default dial style"
+  afterSrc={gauge_progress_after}
+  afterAlt="Gauge with progress style"
+  calloutSrc={gauge_progress_callout}
+  calloutAlt="Split number property highlighted in designer"
 />
 
 ## Tips

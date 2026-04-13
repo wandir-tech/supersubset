@@ -7,11 +7,15 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import heatmap_viewer from '../../../assets/screenshots/chart-types/heatmap-default-viewer.png';
 import heatmap_designer from '../../../assets/screenshots/chart-types/heatmap-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import heatmap_props_designer from '../../../assets/screenshots/chart-types/heatmap-props-designer.png';
 import heatmap_props_scrolled_designer from '../../../assets/screenshots/chart-types/heatmap-props-scrolled-designer.png';
+import heatmap_show_values_before from '../../../assets/screenshots/chart-types/heatmap-show-values-before-viewer.png';
+import heatmap_show_values_after from '../../../assets/screenshots/chart-types/heatmap-show-values-viewer.png';
+import heatmap_show_values_callout from '../../../assets/screenshots/chart-types/heatmap-show-values-callout-designer.png';
 
 # Heatmap
 
@@ -57,10 +61,14 @@ The field for the vertical axis (rows).
 
 The numeric field that determines cell color intensity.
 
-<FeatureScreenshot
-  src={heatmap_props_scrolled_designer}
-  alt="Value field binding"
-  caption="Configure value field binding in the property panel"
+<PropertyShowcase
+  label="Values shown on cells"
+  beforeSrc={heatmap_show_values_before}
+  beforeAlt="Heatmap without cell values"
+  afterSrc={heatmap_show_values_after}
+  afterAlt="Heatmap with values shown on cells"
+  calloutSrc={heatmap_show_values_callout}
+  calloutAlt="Value field property highlighted in designer"
 />
 
 ### Color Range (`colorRange`)

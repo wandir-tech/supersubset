@@ -484,7 +484,17 @@ export const HeatmapChart: ComponentConfig = {
     yAxisField: yAxisFieldRef,
     valueField: valueFieldRef,
     cellBorderWidth: { type: 'number' as const, label: 'Cell Border Width' },
-    cellBorderColor: { type: 'text' as const, label: 'Cell Border Color' },
+    cellBorderColor: {
+      type: 'select' as const,
+      label: 'Cell Border Color',
+      options: [
+        { label: 'White', value: '#fff' },
+        { label: 'Light Gray', value: '#e0e0e0' },
+        { label: 'Medium Gray', value: '#bdbdbd' },
+        { label: 'Dark Gray', value: '#757575' },
+        { label: 'None (Transparent)', value: 'transparent' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {
@@ -633,9 +643,33 @@ export const WaterfallChart: ComponentConfig = {
     categoryField: categoryFieldRef,
     valueField: valueFieldRef,
     totalLabel: { type: 'text' as const, label: 'Total Label' },
-    increaseColor: { type: 'text' as const, label: 'Increase Color' },
-    decreaseColor: { type: 'text' as const, label: 'Decrease Color' },
-    totalColor: { type: 'text' as const, label: 'Total Color' },
+    increaseColor: {
+      type: 'select' as const,
+      label: 'Increase Color',
+      options: [
+        { label: 'Green', value: '#52c41a' },
+        { label: 'Blue', value: '#1890ff' },
+        { label: 'Teal', value: '#13c2c2' },
+      ],
+    },
+    decreaseColor: {
+      type: 'select' as const,
+      label: 'Decrease Color',
+      options: [
+        { label: 'Red', value: '#f5222d' },
+        { label: 'Orange', value: '#fa8c16' },
+        { label: 'Pink', value: '#eb2f96' },
+      ],
+    },
+    totalColor: {
+      type: 'select' as const,
+      label: 'Total Color',
+      options: [
+        { label: 'Blue', value: '#1890ff' },
+        { label: 'Gray', value: '#8c8c8c' },
+        { label: 'Purple', value: '#722ed1' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {

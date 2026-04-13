@@ -7,11 +7,17 @@ sidebar:
 
 import ExpandAll from '../../../components/ExpandAll.astro';
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
+import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import funnel_chart_viewer from '../../../assets/screenshots/chart-types/funnel-chart-default-viewer.png';
 import funnel_chart_designer from '../../../assets/screenshots/chart-types/funnel-chart-default-designer.png';
 import FeatureScreenshot from '../../../components/FeatureScreenshot.astro';
 import funnel_chart_props_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-designer.png';
-import funnel_chart_props_scrolled_designer from '../../../assets/screenshots/chart-types/funnel-chart-props-scrolled-designer.png';
+import funnel_chart_ascending_before from '../../../assets/screenshots/chart-types/funnel-chart-ascending-before-viewer.png';
+import funnel_chart_ascending_after from '../../../assets/screenshots/chart-types/funnel-chart-ascending-viewer.png';
+import funnel_chart_ascending_callout from '../../../assets/screenshots/chart-types/funnel-chart-ascending-callout-designer.png';
+import funnel_chart_align_left_before from '../../../assets/screenshots/chart-types/funnel-chart-align-left-before-viewer.png';
+import funnel_chart_align_left_after from '../../../assets/screenshots/chart-types/funnel-chart-align-left-viewer.png';
+import funnel_chart_align_left_callout from '../../../assets/screenshots/chart-types/funnel-chart-align-left-callout-designer.png';
 
 # Funnel Chart
 
@@ -57,20 +63,28 @@ The field used to label each funnel stage.
 
 Control whether stages are sorted by value (`descending`, `ascending`) or displayed in data order (`none`).
 
-<FeatureScreenshot
-  src={funnel_chart_props_scrolled_designer}
-  alt="Sort order options"
-  caption="Configure sort order options in the property panel"
+<PropertyShowcase
+  label="Ascending sort order"
+  beforeSrc={funnel_chart_ascending_before}
+  beforeAlt="Funnel chart with descending sort"
+  afterSrc={funnel_chart_ascending_after}
+  afterAlt="Funnel chart with ascending sort"
+  calloutSrc={funnel_chart_ascending_callout}
+  calloutAlt="Sort order property highlighted in designer"
 />
 
 ### Gap (`gap`)
 
 Spacing between funnel segments. Increase for a cleaner separated look.
 
-<FeatureScreenshot
-  src={funnel_chart_props_scrolled_designer}
-  alt="Gap between segments"
-  caption="Configure gap between segments in the property panel"
+<PropertyShowcase
+  label="Left-aligned funnel"
+  beforeSrc={funnel_chart_align_left_before}
+  beforeAlt="Funnel chart with centered alignment"
+  afterSrc={funnel_chart_align_left_after}
+  afterAlt="Funnel chart with left alignment"
+  calloutSrc={funnel_chart_align_left_callout}
+  calloutAlt="Gap property highlighted in designer"
 />
 
 ## Tips
