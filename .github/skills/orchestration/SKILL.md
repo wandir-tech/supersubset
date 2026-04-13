@@ -166,6 +166,7 @@ If resuming work after a context reset:
 
 ## See also
 
+- `.github/skills/github-cli/SKILL.md` — Issues, PRs, Actions via `gh`
 - `.github/skills/work-kickoff/SKILL.md` — Spec and GitHub issue before large implementation
 - `.github/skills/branch-ci-promotion/SKILL.md` — `pnpm lint` / `typecheck` / `test` merge readiness
 - `.github/skills/maintaining-ai-context/SKILL.md` — Editing or auditing skills and agents

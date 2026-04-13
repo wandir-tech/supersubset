@@ -64,6 +64,7 @@ It is NOT a full BI platform. It is a library-first, schema-first toolkit.
 
 ## Additional skills (`.github/skills/`)
 
+- **`github-cli`** — Prefer `gh` for issues, PRs, Actions runs, and API (`gh auth status` first)
 - **`work-kickoff`** — Plan/spec → GitHub issue before implementation
 - **`branch-ci-promotion`** — Branch + `pnpm lint` / `typecheck` / `test` (+ E2E when relevant) before merge
 - **`maintaining-ai-context`** — Keep skills, agents, and entry points lean and cross-linked

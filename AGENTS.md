@@ -77,6 +77,7 @@ The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It deco
 
 | Skill | Use when |
 | ----- | -------- |
+| `github-cli` | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser |
 | `work-kickoff` | Turning an idea into a reviewed GitHub issue + implementation plan |
 | `branch-ci-promotion` | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations |
 | `maintaining-ai-context` | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions` |

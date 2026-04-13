@@ -15,6 +15,7 @@ Supersubset keeps agent/playbook context in **`.github/`** and **`docs/`** (not 
 | `.github/agents/*.agent.md` | Subagent definitions + tool allowlists |
 | `AGENTS.md` | Orchestrator + recovery + pointers |
 | `.github/copilot-instructions.md` | Lean always-on Copilot summary |
+| `.github/skills/github-cli/SKILL.md` | Canonical `gh` patterns for GitHub operations |
 | `docs/bootstrap.md` | Fresh-session orientation |
 | `docs/status/*` | Master plan, risks, phase summaries, checkpoints |
 | `docs/testing/*` | Verification strategy, QA lists, browser plans |
@@ -72,6 +73,7 @@ Run these when context feels bloated or agents misfire.
 
 ## See also
 
+- `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
 - `.github/skills/branch-ci-promotion/SKILL.md`
 - `docs/bootstrap.md`

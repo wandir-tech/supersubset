@@ -45,7 +45,7 @@ pnpm test:e2e
 
 If `.github/workflows/` defines PR checks:
 
-- Treat **required** checks as merge blockers; investigate with `gh run view <id> --log-failed`.
+- Treat **required** checks as merge blockers; investigate with `gh run view <id> --log-failed` (see **`.github/skills/github-cli/SKILL.md`** for listing runs and JSON filters).
 - **Optional** checks (e.g. informational scans): note failures in the PR without blocking if project policy says so — state that explicitly in the PR description.
 
 If **no workflows** yet, this skill still applies: **run the same commands locally** and paste summarized results in the PR for reviewers.
@@ -64,6 +64,7 @@ If **no workflows** yet, this skill still applies: **run the same commands local
 
 ## See also
 
+- `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
 - `.github/skills/browser-testing/SKILL.md`
 - `docs/bootstrap.md`
