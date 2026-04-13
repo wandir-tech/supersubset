@@ -53,10 +53,12 @@ export function KPICardWidget({ config, data, title }: WidgetProps) {
   }
 
   // Trend color: green/red depends on trendDirection
+  const isPositive = delta !== null && delta >= 0;
+  const isGood = delta !== null
+    ? (trendDirection === 'up-good' ? isPositive : !isPositive)
+    : undefined;
   const deltaColor = delta !== null
-    ? (trendDirection === 'up-good'
-      ? (delta >= 0 ? '#52c41a' : '#f5222d')
-      : (delta >= 0 ? '#f5222d' : '#52c41a'))
+    ? (isGood ? '#52c41a' : '#f5222d')
     : undefined;
 
   return (
@@ -74,9 +76,15 @@ export function KPICardWidget({ config, data, title }: WidgetProps) {
             fontSize: '14px',
             color: deltaColor,
             marginTop: '4px',
+            fontWeight: 600,
           }}
         >
-          {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+          {isPositive ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
+          {trendDirection === 'down-good' && (
+            <span style={{ fontSize: '11px', fontWeight: 400, marginLeft: '4px', opacity: 0.7 }}>
+              (↓ is good)
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -102,12 +102,8 @@ export function getSampleData(widgetType: string): SampleDataSet | null {
     case 'radar-chart':
       return {
         data: [
-          { indicator: 'Speed', valueA: 80, valueB: 60 },
-          { indicator: 'Strength', valueA: 60, valueB: 80 },
-          { indicator: 'Defense', valueA: 90, valueB: 50 },
-          { indicator: 'Magic', valueA: 40, valueB: 85 },
-          { indicator: 'Agility', valueA: 70, valueB: 65 },
-          { indicator: 'Luck', valueA: 55, valueB: 70 },
+          { name: 'Player A', Speed: 80, Strength: 60, Defense: 90, Magic: 40, Agility: 70, Luck: 55 },
+          { name: 'Player B', Speed: 60, Strength: 80, Defense: 50, Magic: 85, Agility: 65, Luck: 70 },
         ],
       };
 
@@ -125,11 +121,14 @@ export function getSampleData(widgetType: string): SampleDataSet | null {
     case 'treemap':
       return {
         data: [
-          { name: 'Electronics', value: 450 },
-          { name: 'Clothing', value: 320 },
-          { name: 'Food', value: 280 },
-          { name: 'Books', value: 190 },
-          { name: 'Sports', value: 160 },
+          { name: 'Laptops', value: 250, parent: 'Electronics' },
+          { name: 'Phones', value: 200, parent: 'Electronics' },
+          { name: 'Shirts', value: 180, parent: 'Clothing' },
+          { name: 'Shoes', value: 140, parent: 'Clothing' },
+          { name: 'Dairy', value: 160, parent: 'Food' },
+          { name: 'Snacks', value: 120, parent: 'Food' },
+          { name: 'Fiction', value: 100, parent: 'Books' },
+          { name: 'Non-Fiction', value: 90, parent: 'Books' },
         ],
       };
 
