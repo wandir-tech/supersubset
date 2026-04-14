@@ -17,6 +17,7 @@ import type {
 import { PUCK_NAME_TO_WIDGET_TYPE, WIDGET_TYPE_TO_PUCK_NAME } from '../blocks/charts';
 import { CONTENT_PUCK_NAME_TO_TYPE } from '../blocks/content';
 import { CONTROL_PUCK_NAME_TO_TYPE } from '../blocks/controls';
+import { LAYOUT_PUCK_NAME_TO_TYPE } from '../blocks/layout';
 
 // All component type maps merged
 const puckNameToType: Record<string, string> = {
@@ -45,71 +46,24 @@ export function puckToCanonical(
     pageIndex?: number;
     pageId?: string;
     pageTitle?: string;
-  }
+  },
 ): DashboardDefinition {
   const rootProps = puckData.root?.props ?? (puckData.root as Record<string, unknown>) ?? {};
   const title =
     options?.dashboardTitle ??
-    (rootProps as Record<string, unknown>).title as string ??
+    ((rootProps as Record<string, unknown>).title as string) ??
     'Untitled Dashboard';
 
   const layout: LayoutMap = {};
   const widgets: WidgetDefinition[] = [];
-  const childIds: string[] = [];
 
-  // Walk content items and convert each to layout + widget entries
-  const content = puckData.content ?? [];
-  for (const item of content) {
-    const componentData = item as ComponentData;
-    const puckType = componentData.type;
-    const props = componentData.props ?? {};
-    const itemId = (props as Record<string, unknown>).id as string ?? generateId();
-
-    const widgetType = puckNameToType[puckType];
-    if (!widgetType) continue;
-
-    // Is this a chart/table/KPI/control (widget) or a content block?
-    const isWidget = !!PUCK_NAME_TO_WIDGET_TYPE[puckType] || !!CONTROL_PUCK_NAME_TO_TYPE[puckType];
-
-    if (isWidget) {
-      // Create widget definition
-      const { id: _id, ...widgetProps } = props as Record<string, unknown>;
-      const widget = buildWidgetDefinition(itemId, widgetType, widgetProps);
-      widgets.push(widget);
-
-      // Create layout entry for the widget
-      const layoutId = `layout-${itemId}`;
-      layout[layoutId] = {
-        id: layoutId,
-        type: 'widget',
-        children: [],
-        parentId: 'root',
-        meta: {
-          widgetRef: itemId,
-          width: 12, // full width by default
-        },
-      };
-      childIds.push(layoutId);
-    } else {
-      // Content block → layout component
-      const layoutType = CONTENT_PUCK_NAME_TO_TYPE[puckType] as LayoutComponent['type'];
-      const layoutId = `layout-${itemId}`;
-      const { id: _id, ...contentProps } = props as Record<string, unknown>;
-
-      layout[layoutId] = {
-        id: layoutId,
-        type: layoutType || 'header',
-        children: [],
-        parentId: 'root',
-        meta: {
-          text: contentProps.text as string,
-          headerSize: contentProps.size as 'small' | 'medium' | 'large',
-          ...buildContentMeta(puckType, contentProps),
-        },
-      };
-      childIds.push(layoutId);
-    }
-  }
+  // Recursively walk content items
+  const childIds = processContentItems(
+    (puckData.content ?? []) as ComponentData[],
+    'grid-main',
+    layout,
+    widgets,
+  );
 
   // Root layout node
   const rootId = 'root';
@@ -181,7 +135,7 @@ export function puckToCanonical(
  */
 export function canonicalToPuck(
   dashboard: DashboardDefinition,
-  options?: { pageIndex?: number }
+  options?: { pageIndex?: number },
 ): Data {
   const pageIndex = options?.pageIndex ?? 0;
   const page = dashboard.pages[pageIndex];
@@ -189,50 +143,13 @@ export function canonicalToPuck(
     return { root: { props: {} }, content: [] };
   }
 
-  const content: ComponentData[] = [];
-
-  // Walk layout tree from root → grid → children
   const rootNode = page.layout[page.rootNodeId];
   if (!rootNode) {
     return { root: { props: {} }, content: [] };
   }
 
-  // Flatten: collect leaf-level layout components
-  const leafIds = collectLeaves(page.layout, page.rootNodeId);
-
-  for (const leafId of leafIds) {
-    const layoutNode = page.layout[leafId];
-    if (!layoutNode) continue;
-
-    if (layoutNode.type === 'widget' && layoutNode.meta.widgetRef) {
-      // Find the widget definition
-      const widget = page.widgets.find((w) => w.id === layoutNode.meta.widgetRef);
-      if (!widget) continue;
-
-      const puckName = typeToPuckName[widget.type];
-      if (!puckName) continue;
-
-      content.push({
-        type: puckName,
-        props: {
-          id: widget.id,
-          title: widget.title ?? '',
-          ...widgetConfigToPuckProps(widget),
-        },
-      } as ComponentData);
-    } else if (['header', 'divider', 'spacer'].includes(layoutNode.type)) {
-      const puckName = typeToPuckName[layoutNode.type];
-      if (!puckName) continue;
-
-      content.push({
-        type: puckName,
-        props: {
-          id: layoutNode.id,
-          ...layoutMetaToPuckProps(layoutNode),
-        },
-      } as ComponentData);
-    }
-  }
+  // Walk layout tree, reconstructing nested Puck content
+  const content = layoutChildrenToPuck(rootNode.children, page.layout, page.widgets);
 
   return {
     root: { props: {} },
@@ -246,10 +163,200 @@ function generateId(): string {
   return `ss-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+const layoutTypeToPuckName: Record<string, string> = {
+  row: 'RowBlock',
+  column: 'ColumnBlock',
+};
+
+/**
+ * Recursively walk Puck content items and build layout nodes + widgets.
+ * Handles RowBlock/ColumnBlock nesting by creating row/column layout nodes.
+ */
+function processContentItems(
+  items: ComponentData[],
+  parentLayoutId: string,
+  layout: LayoutMap,
+  widgets: WidgetDefinition[],
+): string[] {
+  const childIds: string[] = [];
+
+  for (const item of items) {
+    const puckType = item.type;
+    const props = (item.props ?? {}) as Record<string, unknown>;
+    const itemId = (props.id as string) ?? generateId();
+
+    // Layout block (RowBlock, ColumnBlock) → recurse into slot content
+    const layoutBlockType = LAYOUT_PUCK_NAME_TO_TYPE[puckType];
+    if (layoutBlockType) {
+      const layoutId = `layout-${itemId}`;
+      const slotContent = (props.content as ComponentData[]) ?? [];
+      const nestedChildIds = processContentItems(slotContent, layoutId, layout, widgets);
+
+      layout[layoutId] = {
+        id: layoutId,
+        type: layoutBlockType as LayoutComponent['type'],
+        children: nestedChildIds,
+        parentId: parentLayoutId,
+        meta: buildLayoutBlockMeta(puckType, props),
+      };
+      childIds.push(layoutId);
+      continue;
+    }
+
+    const widgetType = puckNameToType[puckType];
+    if (!widgetType) continue;
+
+    const isWidget = !!PUCK_NAME_TO_WIDGET_TYPE[puckType] || !!CONTROL_PUCK_NAME_TO_TYPE[puckType];
+
+    if (isWidget) {
+      const { id: _id, ...widgetProps } = props;
+      const widget = buildWidgetDefinition(itemId, widgetType, widgetProps);
+      widgets.push(widget);
+
+      const layoutId = `layout-${itemId}`;
+      layout[layoutId] = {
+        id: layoutId,
+        type: 'widget',
+        children: [],
+        parentId: parentLayoutId,
+        meta: {
+          widgetRef: itemId,
+          width: 12,
+        },
+      };
+      childIds.push(layoutId);
+    } else {
+      const layoutType = CONTENT_PUCK_NAME_TO_TYPE[puckType] as LayoutComponent['type'];
+      const layoutId = `layout-${itemId}`;
+      const { id: _id, ...contentProps } = props;
+
+      layout[layoutId] = {
+        id: layoutId,
+        type: layoutType || 'header',
+        children: [],
+        parentId: parentLayoutId,
+        meta: {
+          text: contentProps.text as string,
+          headerSize: contentProps.size as 'small' | 'medium' | 'large',
+          ...buildContentMeta(puckType, contentProps),
+        },
+      };
+      childIds.push(layoutId);
+    }
+  }
+
+  return childIds;
+}
+
+/**
+ * Walk canonical layout children and reconstruct nested Puck content.
+ * Preserves row/column nesting instead of flattening.
+ */
+function layoutChildrenToPuck(
+  childIds: string[],
+  layout: LayoutMap,
+  widgets: WidgetDefinition[],
+): ComponentData[] {
+  const content: ComponentData[] = [];
+
+  for (const childId of childIds) {
+    const node = layout[childId];
+    if (!node) continue;
+
+    // Grid nodes are transparent — recurse through their children
+    if (node.type === 'grid' || node.type === 'root') {
+      content.push(...layoutChildrenToPuck(node.children, layout, widgets));
+      continue;
+    }
+
+    // Row or column → reconstruct as RowBlock/ColumnBlock with nested content
+    const puckLayoutName = layoutTypeToPuckName[node.type];
+    if (puckLayoutName) {
+      const nestedContent = layoutChildrenToPuck(node.children, layout, widgets);
+      content.push({
+        type: puckLayoutName,
+        props: {
+          id: node.id,
+          content: nestedContent,
+          ...layoutNodeToPuckProps(node),
+        },
+      } as ComponentData);
+      continue;
+    }
+
+    // Widget node
+    if (node.type === 'widget' && node.meta.widgetRef) {
+      const widget = widgets.find((w) => w.id === node.meta.widgetRef);
+      if (!widget) continue;
+      const puckName = typeToPuckName[widget.type];
+      if (!puckName) continue;
+
+      content.push({
+        type: puckName,
+        props: {
+          id: widget.id,
+          title: widget.title ?? '',
+          ...widgetConfigToPuckProps(widget),
+        },
+      } as ComponentData);
+      continue;
+    }
+
+    // Content block (header, divider, spacer)
+    if (['header', 'divider', 'spacer'].includes(node.type)) {
+      const puckName = typeToPuckName[node.type];
+      if (!puckName) continue;
+
+      content.push({
+        type: puckName,
+        props: {
+          id: node.id,
+          ...layoutMetaToPuckProps(node),
+        },
+      } as ComponentData);
+    }
+  }
+
+  return content;
+}
+
+function buildLayoutBlockMeta(
+  puckType: string,
+  props: Record<string, unknown>,
+): Record<string, unknown> {
+  const meta: Record<string, unknown> = {};
+  if (puckType === 'RowBlock') {
+    if (props.gap !== undefined) meta.gap = props.gap;
+    if (props.padding !== undefined) meta.padding = props.padding;
+    if (props.minHeight !== undefined) meta.minHeight = props.minHeight;
+    if (props.background) meta.background = props.background;
+  }
+  if (puckType === 'ColumnBlock') {
+    if (props.span !== undefined) meta.width = props.span;
+    if (props.verticalAlign) meta.verticalAlign = props.verticalAlign;
+  }
+  return meta;
+}
+
+function layoutNodeToPuckProps(node: LayoutComponent): Record<string, unknown> {
+  const props: Record<string, unknown> = {};
+  if (node.type === 'row') {
+    if (node.meta.gap !== undefined) props.gap = node.meta.gap;
+    if (node.meta.padding !== undefined) props.padding = node.meta.padding;
+    if (node.meta.minHeight !== undefined) props.minHeight = node.meta.minHeight;
+    if (node.meta.background) props.background = node.meta.background;
+  }
+  if (node.type === 'column') {
+    if (node.meta.width !== undefined) props.span = node.meta.width;
+    if (node.meta.verticalAlign) props.verticalAlign = node.meta.verticalAlign;
+  }
+  return props;
+}
+
 function buildWidgetDefinition(
   id: string,
   widgetType: string,
-  props: Record<string, unknown>
+  props: Record<string, unknown>,
 ): WidgetDefinition {
   const widget: WidgetDefinition = {
     id,
@@ -304,37 +411,21 @@ function buildWidgetDefinition(
     widget.dataBinding = { datasetRef, fields };
   }
 
-  // Non-binding config props
-  const configKeys = [
-    'smooth', 'orientation', 'stacked', 'variant',
-    'pageSize', 'striped', 'prefix', 'suffix', 'format',
-    'minValue', 'maxValue',
-    // Shared visual controls (Phase 2.A.1)
-    'colorScheme', 'showLegend', 'legendPosition', 'showValues',
-    'numberFormat', 'xAxisTitle', 'yAxisTitle', 'xAxisLabelRotate',
-    'yAxisMin', 'yAxisMax', 'logAxis', 'zoomable',
-    // Per-chart controls (Phase 2.A.2–2.A.17)
-    'showMarkers', 'markerSize', 'step', 'connectNulls',
-    'barWidth', 'barGap', 'borderRadius', 'barMinHeight',
-    'innerRadius', 'outerRadius', 'labelPosition', 'padAngle',
-    'areaOpacity', 'symbolSize', 'opacity',
-    'lineSmooth', 'barBorderRadius',
-    'cellBorderWidth', 'cellBorderColor',
-    'shape', 'areaFill',
-    'sort', 'funnelAlign', 'gap',
-    'showUpperLabel', 'maxDepth', 'borderWidth',
-    'nodeWidth', 'nodeGap', 'orient',
-    'totalLabel', 'increaseColor', 'decreaseColor', 'totalColor',
-    'boxWidth',
-    'startAngle', 'endAngle', 'roundCap', 'splitCount', 'progressMode',
-    'showRowNumbers', 'showTotals', 'headerAlign', 'cellAlign',
-    'subtitleField', 'fontSize', 'trendDirection', 'conditionalColor',
-    'titleField', 'messageField', 'severityField', 'timestampField',
-    'layout', 'maxItems', 'emptyState', 'showTimestamp', 'defaultSeverity',
-  ];
-  for (const key of configKeys) {
-    if (props[key] !== undefined && props[key] !== '') {
-      widget.config[key] = props[key];
+  // Transfer all remaining props to config except known non-config keys.
+  // Using a blacklist ensures new fields are never silently dropped.
+  const NON_CONFIG_KEYS = new Set([
+    'title', // → widget.title
+    'datasetRef', // → dataBinding.datasetRef
+    'aggregation', // → field binding .aggregation
+    'puck', // Puck internal prop
+    // Puck-specific field names that differ from config key names;
+    // the runtime translates dataBinding roles back to config keys.
+    'xAxisField',
+    'yAxisField',
+  ]);
+  for (const [key, value] of Object.entries(props)) {
+    if (!NON_CONFIG_KEYS.has(key) && value !== undefined && value !== '') {
+      widget.config[key] = value;
     }
   }
 
@@ -343,7 +434,7 @@ function buildWidgetDefinition(
 
 function buildContentMeta(
   puckType: string,
-  props: Record<string, unknown>
+  props: Record<string, unknown>,
 ): Record<string, unknown> {
   const meta: Record<string, unknown> = {};
   if (puckType === 'DividerBlock') {
@@ -357,18 +448,6 @@ function buildContentMeta(
     meta.text = props.content;
   }
   return meta;
-}
-
-function collectLeaves(layout: LayoutMap, nodeId: string): string[] {
-  const node = layout[nodeId];
-  if (!node) return [];
-  if (node.children.length === 0) return [nodeId];
-
-  const results: string[] = [];
-  for (const childId of node.children) {
-    results.push(...collectLeaves(layout, childId));
-  }
-  return results;
 }
 
 function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unknown> {
@@ -436,13 +515,25 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
   }
 
   // Handle array-valued fields (yFields, barFields, lineFields)
-  if (!props.yAxisField && Array.isArray(widget.config.yFields) && widget.config.yFields.length > 0) {
+  if (
+    !props.yAxisField &&
+    Array.isArray(widget.config.yFields) &&
+    widget.config.yFields.length > 0
+  ) {
     props.yAxisField = widget.config.yFields[0];
   }
-  if (!props.barField && Array.isArray(widget.config.barFields) && widget.config.barFields.length > 0) {
+  if (
+    !props.barField &&
+    Array.isArray(widget.config.barFields) &&
+    widget.config.barFields.length > 0
+  ) {
     props.barField = widget.config.barFields[0];
   }
-  if (!props.lineField && Array.isArray(widget.config.lineFields) && widget.config.lineFields.length > 0) {
+  if (
+    !props.lineField &&
+    Array.isArray(widget.config.lineFields) &&
+    widget.config.lineFields.length > 0
+  ) {
     props.lineField = widget.config.lineFields[0];
   }
 
