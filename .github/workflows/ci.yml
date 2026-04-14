@@ -23,11 +23,41 @@ env:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  # ── Change Detection ───────────────────────────────────────
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'packages/**'
+              - 'examples/**'
+              - 'e2e/**'
+              - 'src/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.json'
+              - 'nx.json'
+              - 'eslint.config.*'
+              - 'playwright.config.*'
+              - '.github/workflows/**'
+              - '.github/actions/**'
+
   # ── Build ──────────────────────────────────────────────────
   build:
     name: Build
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +77,8 @@ jobs:
   # ── Lint ───────────────────────────────────────────────────
   lint:
     name: Lint
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,11 +115,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
-        continue-on-error: true  # TODO: remove after running `pnpm format` on the full codebase
+        continue-on-error: true # TODO: remove after running `pnpm format` on the full codebase
 
   # ── Typecheck ──────────────────────────────────────────────
   typecheck:
     name: Typecheck
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,6 +145,8 @@ jobs:
   # ── Unit Tests ─────────────────────────────────────────────
   unit-tests:
     name: Unit Tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -134,6 +170,8 @@ jobs:
   # ── E2E (Playwright) ──────────────────────────────────────
   e2e:
     name: E2E Tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -178,6 +216,8 @@ jobs:
   # ── Security (Snyk) ───────────────────────────────────────
   security:
     name: Security Scan
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -201,3 +241,31 @@ jobs:
         with:
           command: code test
           args: --severity-threshold=high
+
+  # ── CI Gate (required check for branch protection) ─────────
+  ci-gate:
+    name: CI Gate
+    if: always()
+    needs: [changes, build, lint, format, typecheck, unit-tests, e2e, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          # If code changed, all code jobs must have succeeded
+          if [[ "${{ needs.changes.outputs.code }}" == "true" ]]; then
+            results=(
+              "${{ needs.build.result }}"
+              "${{ needs.lint.result }}"
+              "${{ needs.typecheck.result }}"
+              "${{ needs.unit-tests.result }}"
+              "${{ needs.e2e.result }}"
+              "${{ needs.security.result }}"
+            )
+            for r in "${results[@]}"; do
+              if [[ "$r" != "success" ]]; then
+                echo "❌ A required job failed or was cancelled: $r"
+                exit 1
+              fi
+            done
+          fi
+          echo "✅ All required checks passed (or skipped for doc-only changes)"

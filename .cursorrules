@@ -1,0 +1,85 @@
+# Supersubset — Cursor Rules
+# See also: .github/copilot-instructions.md (canonical source), CLAUDE.md, AGENTS.md
+
+## Project Identity
+
+Supersubset is an embeddable open-source analytics builder/runtime library for React apps.
+It is NOT a full BI platform. It is library-first, schema-first.
+
+## Architecture Invariants
+
+1. Library-first: Everything ships as npm packages consumable by host React apps.
+2. Schema-first: The canonical dashboard schema IS the product contract.
+3. Backend-agnostic: No required Superset/Rill/Lightdash backend.
+4. Adapter-first metadata: Designer/runtime never depend on Prisma/dbt/ClickHouse specifics.
+5. Renderer independent from editor: Runtime works without designer dependencies.
+6. Host-owned persistence: Designer emits schema; host app persists it.
+7. Host-owned auth: Supersubset accepts capability metadata within caller permissions.
+8. No iframe architecture: Core editor/renderer are React components, not iframes.
+
+## Tech Stack
+
+- TypeScript throughout all frontend packages
+- React for UI components
+- Puck as the base editor shell
+- Apache ECharts as primary chart runtime
+- Zod for runtime validation
+- JSON Schema generated from canonical types
+- pnpm workspaces + Nx monorepo
+- Storybook for component documentation
+
+## Key Commands
+
+- `pnpm install` — Install all deps
+- `pnpm build` — Build all packages
+- `pnpm dev` — Start dev server
+- `pnpm test` — Unit tests
+- `pnpm test:e2e` — Playwright E2E
+- `pnpm lint` — ESLint
+- `pnpm typecheck` — TypeScript checking
+
+## Conventions
+
+- All code lives in `packages/` — each has own package.json, tsconfig.json, tests
+- Use pnpm as the package manager (not npm or yarn)
+- Tests are mandatory for every significant feature
+- ADRs go in `docs/adr/`
+- No hardcoded credentials or secrets
+- Validate all external inputs at system boundaries
+- Follow OWASP Top 10 guidelines
+
+## Package-Specific Rules
+
+When editing files in these packages, read the corresponding rules file:
+
+- packages/schema/** → .github/instructions/schema.instructions.md
+- packages/runtime/** → .github/instructions/runtime.instructions.md
+- packages/designer/** → .github/instructions/designer.instructions.md
+- packages/charts-echarts/** → .github/instructions/charts.instructions.md
+- packages/data-model/**, packages/adapter-*/**, packages/query-client/** → .github/instructions/adapters.instructions.md
+
+## Skills (read on demand for domain expertise)
+
+- Schema design: .github/skills/schema-design/SKILL.md
+- ECharts widgets: .github/skills/echarts-widgets/SKILL.md
+- Puck integration: .github/skills/puck-integration/SKILL.md
+- Adapter development: .github/skills/adapter-development/SKILL.md
+- Browser testing: .github/skills/browser-testing/SKILL.md
+- GitHub CLI: .github/skills/github-cli/SKILL.md
+- Branch/CI: .github/skills/branch-ci-promotion/SKILL.md
+- Feature docs: .github/skills/document-feature/SKILL.md
+
+## Non-Goals (Do NOT Build)
+
+- Full BI warehouse platform
+- Warehouse-native semantic layer product
+- Multi-tenant hosted analytics service
+- iframe-based embedded whole-app clone
+- Tight dependency on dbt, Rill, ClickHouse, or any single modeling system
+
+## Context Recovery
+
+1. Read docs/status/master-plan.md for current phase
+2. Read docs/adr/ for architecture decisions
+3. Read AGENTS.md for agent coordination model
+4. Check git log --oneline -20 for recent activity
