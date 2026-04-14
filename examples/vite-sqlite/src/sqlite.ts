@@ -173,8 +173,8 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
     `,
   );
 
-  // Build comparison WHERE clause: apply same region/category filters but use a fixed date range
-  const comparisonConditions: string[] = ["ordered_at < '2026-04-01'"];
+  // Build comparison WHERE clause: apply same region/category filters, previous period = before start of current month
+  const comparisonConditions: string[] = ["ordered_at < date('now', 'start of month')"];
   const comparisonParams: unknown[] = [];
   const region = filters['filter-region'];
   if (typeof region === 'string' && region.length > 0) {
