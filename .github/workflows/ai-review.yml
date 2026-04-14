@@ -1,0 +1,44 @@
+# ──────────────────────────────────────────────────────────────
+# Supersubset — AI Code Review
+# Runs AFTER CI passes on PRs targeting develop.
+# Uses the pluggable composite action to call an AI reviewer,
+# then labels the PR for human review.
+# ──────────────────────────────────────────────────────────────
+name: AI Review
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    # Only run when CI succeeded on a PR targeting develop
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      contains(github.event.workflow_run.pull_requests[0].base.ref, 'develop')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # Fetch the base branch for diff
+      - name: Fetch base branch
+        run: git fetch origin develop
+
+      - name: Run AI Review
+        uses: ./.github/actions/ai-review
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ai-api-endpoint: ${{ secrets.AI_REVIEW_ENDPOINT }}
+          ai-api-key: ${{ secrets.AI_REVIEW_API_KEY }}
+          ai-model: ${{ secrets.AI_REVIEW_MODEL || '' }}

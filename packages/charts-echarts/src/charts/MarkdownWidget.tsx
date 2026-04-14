@@ -56,7 +56,7 @@ function renderMarkdown(md: string): string {
     // Horizontal rule
     .replace(/^---$/gm, '<hr/>')
     // Unordered lists
-    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
     // Line breaks
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br/>');

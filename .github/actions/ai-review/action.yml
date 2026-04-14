@@ -1,0 +1,205 @@
+# ──────────────────────────────────────────────────────────────
+# Pluggable AI Code Review — Composite Action
+#
+# Accepts a PR diff and sends it to a configurable AI endpoint
+# for automated code review. Designed to be backend-agnostic:
+# swap OpenClaw / Claude / OpenAI by changing the endpoint +
+# response parser.
+# ──────────────────────────────────────────────────────────────
+name: AI Code Review
+description: Run an AI-powered code review on a PR diff
+
+inputs:
+  github-token:
+    description: GitHub token with PR write permissions
+    required: true
+  ai-api-endpoint:
+    description: AI review API endpoint URL
+    required: true
+  ai-api-key:
+    description: API key for the AI review service
+    required: true
+  ai-model:
+    description: Model identifier to use
+    required: false
+    default: ''
+  prompt-template:
+    description: Path to the review prompt template file
+    required: false
+    default: .github/ai-review-prompt.md
+  max-diff-lines:
+    description: Maximum diff lines to send (truncate large PRs)
+    required: false
+    default: '3000'
+
+outputs:
+  verdict:
+    description: '"approve" or "request_changes"'
+    value: ${{ steps.review.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    # ── 1. Generate PR diff ────────────────────────────────
+    - name: Generate diff
+      id: diff
+      shell: bash
+      run: |
+        DIFF=$(git diff origin/${{ github.event.pull_request.base.ref }}...HEAD -- \
+          'packages/**' 'e2e/**' 'examples/**' \
+          ':!pnpm-lock.yaml' ':!*.snap' ':!screenshots/**')
+        LINES=$(echo "$DIFF" | wc -l)
+        MAX=${{ inputs.max-diff-lines }}
+        if [ "$LINES" -gt "$MAX" ]; then
+          DIFF=$(echo "$DIFF" | head -n "$MAX")
+          DIFF="$DIFF"$'\n\n[... diff truncated at '"$MAX"' lines ...]'
+        fi
+        # Write to file to avoid shell escaping issues
+        echo "$DIFF" > /tmp/pr-diff.txt
+
+    # ── 2. Load prompt template ────────────────────────────
+    - name: Load prompt template
+      id: prompt
+      shell: bash
+      run: |
+        if [ -f "${{ inputs.prompt-template }}" ]; then
+          TEMPLATE=$(cat "${{ inputs.prompt-template }}")
+        else
+          TEMPLATE="Review this code diff for quality, security, and best practices."
+        fi
+        echo "$TEMPLATE" > /tmp/review-prompt.txt
+
+    # ── 3. Build review payload & call AI ──────────────────
+    - name: Call AI review endpoint
+      id: review
+      shell: bash
+      env:
+        AI_API_ENDPOINT: ${{ inputs.ai-api-endpoint }}
+        AI_API_KEY: ${{ inputs.ai-api-key }}
+        AI_MODEL: ${{ inputs.ai-model }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        PROMPT=$(cat /tmp/review-prompt.txt)
+        DIFF=$(cat /tmp/pr-diff.txt)
+
+        # Build the request payload — adapt this section for your AI backend
+        PAYLOAD=$(jq -n \
+          --arg model "$AI_MODEL" \
+          --arg prompt "$PROMPT" \
+          --arg diff "$DIFF" \
+          '{
+            model: $model,
+            messages: [
+              { role: "system", content: $prompt },
+              { role: "user",   content: ("Review this PR diff:\n\n" + $diff) }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "code_review",
+                schema: {
+                  type: "object",
+                  properties: {
+                    verdict:  { type: "string", enum: ["approve", "request_changes"] },
+                    summary:  { type: "string" },
+                    comments: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          file:       { type: "string" },
+                          line:       { type: "integer" },
+                          severity:   { type: "string", enum: ["info","warning","critical"] },
+                          message:    { type: "string" }
+                        },
+                        required: ["file", "severity", "message"]
+                      }
+                    }
+                  },
+                  required: ["verdict", "summary", "comments"]
+                }
+              }
+            }
+          }')
+
+        # Call the AI endpoint
+        RESPONSE=$(curl -sS --fail-with-body \
+          -H "Authorization: Bearer $AI_API_KEY" \
+          -H "Content-Type: application/json" \
+          -d "$PAYLOAD" \
+          "$AI_API_ENDPOINT")
+
+        # Parse the response — adapt for your AI backend's response format
+        # Default assumes OpenAI-compatible: .choices[0].message.content
+        REVIEW_JSON=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // .')
+
+        VERDICT=$(echo "$REVIEW_JSON" | jq -r '.verdict')
+        SUMMARY=$(echo "$REVIEW_JSON" | jq -r '.summary')
+        COMMENTS=$(echo "$REVIEW_JSON" | jq -c '.comments // []')
+
+        echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+
+        # ── 4. Post review to PR ────────────────────────────
+        if [ "$VERDICT" = "approve" ]; then
+          EVENT="APPROVE"
+        else
+          EVENT="REQUEST_CHANGES"
+        fi
+
+        # Build review body
+        BODY="## AI Code Review\n\n"
+        BODY+="**Verdict:** $VERDICT\n\n"
+        BODY+="$SUMMARY\n\n"
+
+        # Add inline comments if any
+        COMMENT_COUNT=$(echo "$COMMENTS" | jq 'length')
+        if [ "$COMMENT_COUNT" -gt 0 ]; then
+          BODY+="### Comments ($COMMENT_COUNT)\n\n"
+          for i in $(seq 0 $(( COMMENT_COUNT - 1 ))); do
+            FILE=$(echo "$COMMENTS" | jq -r ".[$i].file")
+            SEVERITY=$(echo "$COMMENTS" | jq -r ".[$i].severity")
+            MSG=$(echo "$COMMENTS" | jq -r ".[$i].message")
+            LINE=$(echo "$COMMENTS" | jq -r ".[$i].line // \"\"")
+            ICON=""
+            case $SEVERITY in
+              critical) ICON="🔴" ;;
+              warning)  ICON="🟡" ;;
+              info)     ICON="🔵" ;;
+            esac
+            if [ -n "$LINE" ] && [ "$LINE" != "null" ]; then
+              BODY+="- $ICON **$FILE:$LINE** — $MSG\n"
+            else
+              BODY+="- $ICON **$FILE** — $MSG\n"
+            fi
+          done
+        fi
+
+        # Post review via GitHub API
+        gh api \
+          --method POST \
+          "/repos/$REPO/pulls/$PR_NUMBER/reviews" \
+          -f event="$EVENT" \
+          -f body="$(echo -e "$BODY")"
+
+    # ── 5. Manage labels ────────────────────────────────────
+    - name: Apply labels
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        VERDICT: ${{ steps.review.outputs.verdict }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        if [ "$VERDICT" = "approve" ]; then
+          # Add HumanReview, remove AIReviewFailed if present
+          gh issue edit "$PR_NUMBER" --repo "$REPO" --add-label "HumanReview" --remove-label "AIReviewFailed" 2>/dev/null || \
+          gh issue edit "$PR_NUMBER" --repo "$REPO" --add-label "HumanReview"
+          echo "✅ AI approved — HumanReview label applied"
+        else
+          # Add AIReviewFailed, remove HumanReview if present
+          gh issue edit "$PR_NUMBER" --repo "$REPO" --add-label "AIReviewFailed" --remove-label "HumanReview" 2>/dev/null || \
+          gh issue edit "$PR_NUMBER" --repo "$REPO" --add-label "AIReviewFailed"
+          echo "❌ AI requested changes — AIReviewFailed label applied"
+        fi
