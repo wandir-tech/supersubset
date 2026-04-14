@@ -55,7 +55,14 @@ export const demoDashboard: DashboardDefinition = {
         'grid-main': {
           id: 'grid-main',
           type: 'grid',
-          children: ['header-title', 'divider-1', 'row-alerts', 'row-kpis', 'row-charts', 'row-table'],
+          children: [
+            'header-title',
+            'divider-1',
+            'row-alerts',
+            'row-kpis',
+            'row-charts',
+            'row-table',
+          ],
           parentId: 'root',
           meta: { columns: 12 },
         },
@@ -188,7 +195,12 @@ export const demoDashboard: DashboardDefinition = {
               { role: 'comparison', fieldRef: 'prevRevenue' },
             ],
           },
-          config: { valueField: 'revenue', comparisonField: 'prevRevenue', format: 'compact', prefix: '$' },
+          config: {
+            valueField: 'revenue',
+            comparisonField: 'prevRevenue',
+            format: 'compact',
+            prefix: '$',
+          },
         },
         {
           id: 'kpi-orders',
@@ -209,9 +221,7 @@ export const demoDashboard: DashboardDefinition = {
           title: 'Avg Order Value',
           dataBinding: {
             datasetRef: 'ds-orders',
-            fields: [
-              { role: 'value', fieldRef: 'aov' },
-            ],
+            fields: [{ role: 'value', fieldRef: 'aov' }],
           },
           config: { valueField: 'aov', format: 'currency' },
         },
@@ -262,7 +272,17 @@ export const demoDashboard: DashboardDefinition = {
         'gallery-grid': {
           id: 'gallery-grid',
           type: 'grid',
-          children: ['gallery-header', 'gallery-divider', 'gallery-md-row', 'row-pie-scatter', 'row-area-combo', 'row-gauge-funnel', 'row-radar-treemap', 'row-heatmap-waterfall', 'row-sankey-box'],
+          children: [
+            'gallery-header',
+            'gallery-divider',
+            'gallery-md-row',
+            'row-pie-scatter',
+            'row-area-combo',
+            'row-gauge-funnel',
+            'row-radar-treemap',
+            'row-heatmap-waterfall',
+            'row-sankey-box',
+          ],
           parentId: 'gallery-root',
           meta: { columns: 12 },
         },
@@ -433,7 +453,10 @@ export const demoDashboard: DashboardDefinition = {
           id: 'widget-markdown',
           type: 'markdown',
           title: '',
-          config: { content: 'This page showcases **all 17 widget types** available in the Supersubset chart library. Each chart uses inline fixture data.' },
+          config: {
+            content:
+              'This page showcases **all 17 widget types** available in the Supersubset chart library. Each chart uses inline fixture data.',
+          },
         },
         {
           id: 'chart-pie',
@@ -495,11 +518,17 @@ export const demoDashboard: DashboardDefinition = {
           title: 'Target Achievement',
           dataBinding: {
             datasetRef: 'ds-orders',
-            fields: [
-              { role: 'value', fieldRef: 'achievement' },
+            fields: [{ role: 'value', fieldRef: 'achievement' }],
+          },
+          config: {
+            min: 0,
+            max: 100,
+            thresholds: [
+              { value: 30, color: '#f5222d' },
+              { value: 70, color: '#faad14' },
+              { value: 100, color: '#52c41a' },
             ],
           },
-          config: { min: 0, max: 100, thresholds: [{ value: 30, color: '#f5222d' }, { value: 70, color: '#faad14' }, { value: 100, color: '#52c41a' }] },
         },
         {
           id: 'chart-funnel',
@@ -520,9 +549,7 @@ export const demoDashboard: DashboardDefinition = {
           title: 'Product Comparison',
           dataBinding: {
             datasetRef: 'ds-orders',
-            fields: [
-              { role: 'category', fieldRef: 'product' },
-            ],
+            fields: [{ role: 'category', fieldRef: 'product' }],
           },
           config: { valueFields: ['quality', 'price', 'support', 'features', 'delivery'] },
         },
@@ -578,7 +605,7 @@ export const demoDashboard: DashboardDefinition = {
               { role: 'value', fieldRef: 'visits' },
             ],
           },
-          config: {},
+          config: { sourceField: 'source', targetField: 'page', valueField: 'visits' },
         },
         {
           id: 'chart-boxplot',
@@ -634,14 +661,62 @@ export const regionData = [
 ];
 
 export const ordersTableData = [
-  { orderId: 'ORD-1001', customer: 'Acme Corp', amount: 2450, status: 'Delivered', date: '2026-04-01' },
-  { orderId: 'ORD-1002', customer: 'Globex Inc', amount: 1890, status: 'Shipped', date: '2026-04-02' },
-  { orderId: 'ORD-1003', customer: 'Initech', amount: 3200, status: 'Delivered', date: '2026-04-03' },
-  { orderId: 'ORD-1004', customer: 'Umbrella', amount: 1560, status: 'Processing', date: '2026-04-04' },
-  { orderId: 'ORD-1005', customer: 'Waystar', amount: 4100, status: 'Delivered', date: '2026-04-05' },
-  { orderId: 'ORD-1006', customer: 'Stark Ind', amount: 2780, status: 'Shipped', date: '2026-04-06' },
-  { orderId: 'ORD-1007', customer: 'Wayne Ent', amount: 5200, status: 'Delivered', date: '2026-04-07' },
-  { orderId: 'ORD-1008', customer: 'Cyberdyne', amount: 1920, status: 'Processing', date: '2026-04-08' },
+  {
+    orderId: 'ORD-1001',
+    customer: 'Acme Corp',
+    amount: 2450,
+    status: 'Delivered',
+    date: '2026-04-01',
+  },
+  {
+    orderId: 'ORD-1002',
+    customer: 'Globex Inc',
+    amount: 1890,
+    status: 'Shipped',
+    date: '2026-04-02',
+  },
+  {
+    orderId: 'ORD-1003',
+    customer: 'Initech',
+    amount: 3200,
+    status: 'Delivered',
+    date: '2026-04-03',
+  },
+  {
+    orderId: 'ORD-1004',
+    customer: 'Umbrella',
+    amount: 1560,
+    status: 'Processing',
+    date: '2026-04-04',
+  },
+  {
+    orderId: 'ORD-1005',
+    customer: 'Waystar',
+    amount: 4100,
+    status: 'Delivered',
+    date: '2026-04-05',
+  },
+  {
+    orderId: 'ORD-1006',
+    customer: 'Stark Ind',
+    amount: 2780,
+    status: 'Shipped',
+    date: '2026-04-06',
+  },
+  {
+    orderId: 'ORD-1007',
+    customer: 'Wayne Ent',
+    amount: 5200,
+    status: 'Delivered',
+    date: '2026-04-07',
+  },
+  {
+    orderId: 'ORD-1008',
+    customer: 'Cyberdyne',
+    amount: 1920,
+    status: 'Processing',
+    date: '2026-04-08',
+  },
 ];
 
 export const ordersTableColumns = [
@@ -655,25 +730,29 @@ export const ordersTableColumns = [
 export const alertsData = [
   {
     alert_title: 'Revenue ETL delayed in North America',
-    alert_message: 'The 08:00 UTC warehouse refresh is 37 minutes behind schedule. Executive revenue charts may lag fresh orders.',
+    alert_message:
+      'The 08:00 UTC warehouse refresh is 37 minutes behind schedule. Executive revenue charts may lag fresh orders.',
     severity: 'danger',
     detected_at: '2026-04-11 08:21 UTC',
   },
   {
     alert_title: 'Checkout retry rate elevated',
-    alert_message: 'Checkout API retries climbed to 8.2% in the last 15 minutes, above the 3% operating target.',
+    alert_message:
+      'Checkout API retries climbed to 8.2% in the last 15 minutes, above the 3% operating target.',
     severity: 'warning',
     detected_at: '2026-04-11 09:12 UTC',
   },
   {
     alert_title: 'EU fulfillment backlog cleared',
-    alert_message: 'Average pick-pack latency returned below 2 hours after the overnight queue drain completed.',
+    alert_message:
+      'Average pick-pack latency returned below 2 hours after the overnight queue drain completed.',
     severity: 'success',
     detected_at: '2026-04-11 08:45 UTC',
   },
   {
     alert_title: 'Forecast refresh queued',
-    alert_message: 'A finance-approved model refresh is scheduled for 10:00 UTC after the latest bookings import.',
+    alert_message:
+      'A finance-approved model refresh is scheduled for 10:00 UTC after the latest bookings import.',
     severity: 'info',
     detected_at: '2026-04-11 07:55 UTC',
   },
@@ -797,8 +876,20 @@ export const sankeyData = [
 
 export const boxplotData = [
   // Raw order amounts per region — box plot computes stats
-  ...Array.from({ length: 30 }, () => ({ region: 'North', amount: Math.floor(Math.random() * 300 + 100) })),
-  ...Array.from({ length: 30 }, () => ({ region: 'South', amount: Math.floor(Math.random() * 250 + 80) })),
-  ...Array.from({ length: 30 }, () => ({ region: 'East', amount: Math.floor(Math.random() * 400 + 150) })),
-  ...Array.from({ length: 30 }, () => ({ region: 'West', amount: Math.floor(Math.random() * 200 + 90) })),
+  ...Array.from({ length: 30 }, () => ({
+    region: 'North',
+    amount: Math.floor(Math.random() * 300 + 100),
+  })),
+  ...Array.from({ length: 30 }, () => ({
+    region: 'South',
+    amount: Math.floor(Math.random() * 250 + 80),
+  })),
+  ...Array.from({ length: 30 }, () => ({
+    region: 'East',
+    amount: Math.floor(Math.random() * 400 + 150),
+  })),
+  ...Array.from({ length: 30 }, () => ({
+    region: 'West',
+    amount: Math.floor(Math.random() * 200 + 90),
+  })),
 ];

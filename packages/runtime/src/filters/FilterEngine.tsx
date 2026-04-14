@@ -8,6 +8,7 @@ import {
   useReducer,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode,
 } from 'react';
 import type { FilterDefinition, FilterScope } from '@supersubset/schema';
@@ -82,21 +83,25 @@ export function FilterProvider({
     values: initialValues ?? {},
   });
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const setFilter = useCallback(
     (filterId: string, value: unknown) => {
       dispatch({ type: 'SET_FILTER', filterId, value });
-      onFilterChange?.({ values: { ...state.values, [filterId]: value } });
+      const newValues = { ...stateRef.current.values, [filterId]: value };
+      onFilterChange?.({ values: newValues });
     },
-    [onFilterChange, state.values],
+    [onFilterChange],
   );
 
   const resetFilter = useCallback(
     (filterId: string) => {
       dispatch({ type: 'RESET_FILTER', filterId });
-      const { [filterId]: _, ...rest } = state.values;
+      const { [filterId]: _, ...rest } = stateRef.current.values;
       onFilterChange?.({ values: rest });
     },
-    [onFilterChange, state.values],
+    [onFilterChange],
   );
 
   const resetAll = useCallback(() => {

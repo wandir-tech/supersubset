@@ -1,0 +1,12 @@
+dist
+build
+node_modules
+pnpm-lock.yaml
+*.png
+*.jpg
+*.svg
+*.ico
+*.wasm
+playwright-report
+test-results
+.next

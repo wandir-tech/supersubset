@@ -13,6 +13,7 @@ const sampleDashboard: DashboardDefinition = {
     {
       id: 'page-1',
       title: 'Overview',
+      rootNodeId: 'root-1',
       widgets: [
         {
           id: 'kpi-1',
@@ -21,7 +22,11 @@ const sampleDashboard: DashboardDefinition = {
           config: {},
         },
       ],
-      layout: { type: 'flow', children: ['kpi-1'] },
+      layout: {
+        'root-1': { id: 'root-1', type: 'root', children: ['grid-1'], meta: {} },
+        'grid-1': { id: 'grid-1', type: 'grid', children: ['w-kpi-1'], parentId: 'root-1', meta: {} },
+        'w-kpi-1': { id: 'w-kpi-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'kpi-1' } },
+      },
     },
   ],
 };

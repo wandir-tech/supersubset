@@ -1,0 +1,121 @@
+# ──────────────────────────────────────────────────────────────
+# Supersubset — Promote to Staging
+# Manual workflow to create a PR from develop → staging.
+# Runs full (non-affected) test suite on the promotion PR.
+# ──────────────────────────────────────────────────────────────
+name: Promote to Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      description:
+        description: 'Release description (shown in PR body)'
+        required: false
+        default: 'Promote develop → staging for QA'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  create-promotion-pr:
+    name: Create Promotion PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits on develop not yet in staging
+          LAST_STAGING=$(git merge-base origin/staging origin/develop 2>/dev/null || echo "")
+          if [ -n "$LAST_STAGING" ]; then
+            LOG=$(git log --oneline "$LAST_STAGING"..origin/develop)
+          else
+            LOG=$(git log --oneline origin/develop -20)
+          fi
+          # Write to file for multi-line handling
+          echo "$LOG" > /tmp/changelog.txt
+          echo "count=$(echo "$LOG" | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CHANGELOG=$(cat /tmp/changelog.txt)
+          BODY="## Promote develop → staging
+
+          ${{ github.event.inputs.description }}
+
+          ### Commits included (${{ steps.changelog.outputs.count }})
+
+          \`\`\`
+          ${CHANGELOG}
+          \`\`\`
+
+          ### Checklist
+          - [ ] Full test suite passes (CI will verify)
+          - [ ] E2E tests pass
+          - [ ] Manual QA review completed
+          "
+
+          # Check if a promotion PR already exists
+          EXISTING=$(gh pr list --base staging --head develop --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "Promotion PR #$EXISTING already exists — updating body"
+            gh pr edit "$EXISTING" --body "$BODY"
+          else
+            gh pr create \
+              --base staging \
+              --head develop \
+              --title "chore: promote develop → staging" \
+              --body "$BODY" \
+              --label "promotion"
+          fi
+
+  # Full suite on staging promotion (not Nx-affected — integration gate)
+  full-tests:
+    name: Full Test Suite
+    needs: create-promotion-pr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm lint
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm test:e2e --project=chromium
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

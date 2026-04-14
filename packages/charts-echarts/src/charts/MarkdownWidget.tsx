@@ -40,6 +40,7 @@ function renderMarkdown(md: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
     // Headers
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
@@ -55,7 +56,7 @@ function renderMarkdown(md: string): string {
     // Horizontal rule
     .replace(/^---$/gm, '<hr/>')
     // Unordered lists
-    .replace(/^\- (.+)$/gm, '<li>$1</li>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
     // Line breaks
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br/>');

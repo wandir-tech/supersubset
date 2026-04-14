@@ -72,7 +72,7 @@ const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   'box-plot': { categoryField: 'category' },
   'gauge': { valueField: 'value', min: 0, max: 100 },
   'table': {},
-  'kpi-card': { valueField: 'value', comparisonField: 'comparison', prefix: '$' },
+  'kpi-card': { valueField: 'value', comparisonField: 'comparison' },
   'alerts': {
     titleField: 'alert_title',
     messageField: 'alert_message',
@@ -431,6 +431,9 @@ function buildWidgetConfig(
   if (s(puckProps.subtitleField)) config.subtitleField = puckProps.subtitleField;
   if (s(puckProps.fontSize)) config.fontSize = puckProps.fontSize;
   if (s(puckProps.trendDirection)) config.trendDirection = puckProps.trendDirection;
+  if (s(puckProps.prefix)) config.prefix = puckProps.prefix;
+  if (s(puckProps.suffix)) config.suffix = puckProps.suffix;
+  if (s(puckProps.format)) config.format = puckProps.format;
 
   return config;
 }
@@ -604,7 +607,7 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
     () => sampleData ? remapSampleData(sampleData.data, fieldRemap) : [],
     [sampleData, fieldRemap]
   );
-  const previewData = hostData ?? fallbackData;
+  const previewData = (hostData && hostData.length > 0) ? hostData : fallbackData;
 
   const displayTitle = (puckProps.title as string) || widgetType;
 

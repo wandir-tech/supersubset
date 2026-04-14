@@ -155,6 +155,16 @@ function generatePage(dataset: NormalizedDataset): PageDefinition {
     },
   };
 
+  for (const wid of widgetIds) {
+    layout[wid] = {
+      id: wid,
+      type: 'widget',
+      children: [],
+      parentId: 'grid-main',
+      meta: { widgetRef: wid, width: 12 },
+    };
+  }
+
   return {
     id: `page-${slug}`,
     title: dataset.label,
@@ -174,23 +184,20 @@ async function getDatasets(options: ImportSchemaOptions): Promise<NormalizedData
     }
     case 'sql': {
       const adapter = new SqlAdapter();
-      const source = typeof options.source === 'string'
-        ? JSON.parse(options.source)
-        : options.source;
+      const source =
+        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
       return adapter.getDatasets(source);
     }
     case 'json': {
       const adapter = new JsonAdapter();
-      const source = typeof options.source === 'string'
-        ? JSON.parse(options.source)
-        : options.source;
+      const source =
+        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
       return adapter.getDatasets(source);
     }
     case 'dbt': {
       const adapter = new DbtAdapter();
-      const source = typeof options.source === 'string'
-        ? JSON.parse(options.source)
-        : options.source;
+      const source =
+        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
       return adapter.getDatasets(source);
     }
     default:

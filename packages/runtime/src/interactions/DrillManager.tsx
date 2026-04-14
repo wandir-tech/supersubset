@@ -3,14 +3,7 @@
  * Provides a React context so widgets and the interaction engine can
  * drill down into data, drill back up, or reset to the top level.
  */
-import {
-  createContext,
-  useContext,
-  useReducer,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext, useReducer, useCallback, useMemo, type ReactNode } from 'react';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -47,8 +40,14 @@ type DrillAction =
 function drillReducer(state: DrillState, action: DrillAction): DrillState {
   switch (action.type) {
     case 'DRILL_DOWN': {
+      const label =
+        action.value != null && typeof action.value === 'object'
+          ? Object.entries(action.value as Record<string, unknown>)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(', ')
+          : String(action.value);
       const newCrumb: DrillBreadcrumb = {
-        label: String(action.value),
+        label,
         fieldRef: action.fieldRef,
         value: action.value,
       };
@@ -116,12 +115,9 @@ export interface DrillProviderProps {
 export function DrillProvider({ children }: DrillProviderProps) {
   const [drillState, dispatch] = useReducer(drillReducer, INITIAL_DRILL_STATE);
 
-  const drillDown = useCallback(
-    (sourceWidgetId: string, fieldRef: string, value: unknown) => {
-      dispatch({ type: 'DRILL_DOWN', sourceWidgetId, fieldRef, value });
-    },
-    [],
-  );
+  const drillDown = useCallback((sourceWidgetId: string, fieldRef: string, value: unknown) => {
+    dispatch({ type: 'DRILL_DOWN', sourceWidgetId, fieldRef, value });
+  }, []);
 
   const drillUp = useCallback(() => {
     dispatch({ type: 'DRILL_UP' });

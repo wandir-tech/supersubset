@@ -1,0 +1,17 @@
+---
+description: "Runtime package rules — rendering engine, layout, widget registry, filter engine, lifecycle hooks"
+globs: ["packages/runtime/**"]
+---
+
+# Runtime Package Rules
+
+- Runtime must be mountable as `<SupersubsetRenderer />` with props/callbacks
+- Runtime must NOT import from `packages/designer/`
+- Accept canonical DashboardDefinition and QueryAdapter as props
+- Widget registry must support dynamic registration
+- Filter engine must propagate state across widgets without prop drilling
+- All widgets must handle loading/error/empty states
+- Layout engine must support grid, flex, tabs, stack containers
+- Expose lifecycle hooks: onLoad, onError, onFilterChange, onWidgetClick
+- No backend dependencies — queries go through adapter interface
+- Test with fixture dashboard definitions
