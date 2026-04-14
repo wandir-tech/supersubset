@@ -307,7 +307,7 @@ function buildWidgetDefinition(
   // Non-binding config props
   const configKeys = [
     'smooth', 'orientation', 'stacked', 'variant',
-    'pageSize', 'striped', 'prefix', 'suffix',
+    'pageSize', 'striped', 'prefix', 'suffix', 'format',
     'minValue', 'maxValue',
     // Shared visual controls (Phase 2.A.1)
     'colorScheme', 'showLegend', 'legendPosition', 'showValues',

@@ -173,6 +173,20 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
     `,
   );
 
+  // Build comparison WHERE clause: apply same region/category filters, previous period = before start of current month
+  const comparisonConditions: string[] = ["ordered_at < date('now', 'start of month')"];
+  const comparisonParams: unknown[] = [];
+  const region = filters['filter-region'];
+  if (typeof region === 'string' && region.length > 0) {
+    comparisonConditions.push('region = ?');
+    comparisonParams.push(region);
+  }
+  const category = filters['filter-category'];
+  if (typeof category === 'string' && category.length > 0) {
+    comparisonConditions.push('category = ?');
+    comparisonParams.push(category);
+  }
+
   const previousRows = run(
     `
       SELECT
@@ -180,9 +194,9 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
         COUNT(*) AS previousOrders,
         ROUND(SUM(revenue) / COUNT(*), 2) AS previousAov
       FROM orders
-      WHERE ordered_at < '2026-04-01'
+      WHERE ${comparisonConditions.join(' AND ')}
     `,
-    [],
+    comparisonParams,
   );
 
   const monthlyRows = run(

@@ -2,7 +2,7 @@
  * Layout renderer — walks the flat normalized layout map and renders components.
  * Starts from rootNodeId, recursively renders children.
  */
-import { type CSSProperties, type ReactNode, createElement, useState } from 'react';
+import { type CSSProperties, type ReactNode, createElement, useState, Component, type ErrorInfo, type PropsWithChildren } from 'react';
 import type {
   LayoutMap,
   LayoutComponent,
@@ -15,6 +15,9 @@ import type { WidgetRegistry, WidgetProps, WidgetEvent } from '../widgets/regist
 import type { FilterValue } from '../filters/FilterEngine';
 
 // ─── Layout Renderer Props ───────────────────────────────────
+
+/** Maximum recursion depth to prevent infinite loops from circular references */
+const MAX_LAYOUT_DEPTH = 50;
 
 export interface LayoutRendererProps {
   layout: LayoutMap;
@@ -49,7 +52,7 @@ export function LayoutRenderer({
   return createElement(
     'div',
     { className: `ss-layout-root ${className ?? ''}`.trim(), 'data-ss-node': rootNodeId },
-    renderChildren(rootNode.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+    renderChildren(rootNode.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, new Set([rootNodeId]), 0),
   );
 }
 
@@ -64,11 +67,21 @@ function renderChildren(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode[] {
+  if (depth > MAX_LAYOUT_DEPTH) {
+    return [createElement('div', { key: 'depth-limit', className: 'ss-layout-error' }, 'Layout depth limit exceeded')];
+  }
   return childIds.map((childId) => {
+    if (visited.has(childId)) {
+      return createElement('div', { key: childId, className: 'ss-layout-error' }, `Circular reference: ${childId}`);
+    }
     const node = layout[childId];
     if (!node) return null;
-    return renderNode(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent);
+    const nextVisited = new Set(visited);
+    nextVisited.add(childId);
+    return renderNode(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, nextVisited, depth + 1);
   });
 }
 
@@ -81,12 +94,14 @@ function renderNode(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   const renderer = COMPONENT_RENDERERS[node.type];
   if (!renderer) {
     return createElement('div', { key: node.id, className: 'ss-unknown' }, `Unknown: ${node.type}`);
   }
-  return renderer(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent);
+  return renderer(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth);
 }
 
 // ─── Component Type Renderers ────────────────────────────────
@@ -100,6 +115,8 @@ type NodeRenderer = (
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ) => ReactNode;
 
 const COMPONENT_RENDERERS: Record<LayoutComponentType, NodeRenderer> = {
@@ -124,6 +141,8 @@ function renderGrid(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   const style: CSSProperties = {
     display: 'flex',
@@ -134,7 +153,7 @@ function renderGrid(
   return createElement(
     'div',
     { key: node.id, className: `ss-grid`, style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
   );
 }
 
@@ -147,6 +166,8 @@ function renderRow(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   const style: CSSProperties = {
     display: 'grid',
@@ -157,7 +178,7 @@ function renderRow(
   return createElement(
     'div',
     { key: node.id, className: 'ss-row', style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
   );
 }
 
@@ -184,6 +205,8 @@ function renderColumn(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   const style: CSSProperties = {
     display: 'flex',
@@ -193,19 +216,21 @@ function renderColumn(
   return createElement(
     'div',
     { key: node.id, className: 'ss-column', style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
   );
 }
 
 function renderWidget(
   node: LayoutComponent,
-  layout: LayoutMap,
+  _layout: LayoutMap,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  _visited: Set<string>,
+  _depth: number,
 ): ReactNode {
   const widgetDef = widgets.find((w) => w.id === node.meta.widgetRef);
   if (!widgetDef) {
@@ -236,11 +261,16 @@ function renderWidget(
   // Compute active filters for this widget
   const widgetActiveFilters = computeActiveFilters(widgetDef.id, filters, activeFilterValues);
 
+  // Translate dataBinding field roles into config keys so widgets can
+  // access field references (e.g. xField, yFields) without knowing about
+  // the dataBinding abstraction.
+  const mergedConfig = resolveDataBindingConfig(widgetDef);
+
   const widgetProps: WidgetProps = {
     widgetId: widgetDef.id,
     widgetType: widgetDef.type,
     title: widgetDef.title,
-    config: widgetDef.config,
+    config: mergedConfig,
     theme,
     activeFilters: widgetActiveFilters.length > 0 ? widgetActiveFilters : undefined,
     onEvent: onWidgetEvent,
@@ -249,7 +279,9 @@ function renderWidget(
   return createElement(
     'div',
     { key: node.id, className: 'ss-widget', style, 'data-ss-node': node.id },
-    createElement(Component, widgetProps),
+    createElement(WidgetErrorBoundary, { widgetId: widgetDef.id, title: widgetDef.title },
+      createElement(Component, widgetProps),
+    ),
   );
 }
 
@@ -291,6 +323,8 @@ function renderTabs(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   return createElement(TabsContainer, {
     key: node.id,
@@ -302,6 +336,8 @@ function renderTabs(
     filters,
     activeFilterValues,
     onWidgetEvent,
+    visited,
+    depth,
   });
 }
 
@@ -317,6 +353,8 @@ function TabsContainer({
   filters,
   activeFilterValues,
   onWidgetEvent,
+  visited,
+  depth,
 }: {
   node: LayoutComponent;
   layout: LayoutMap;
@@ -326,6 +364,8 @@ function TabsContainer({
   filters?: FilterDefinition[];
   activeFilterValues?: FilterValue[];
   onWidgetEvent?: (event: WidgetEvent) => void;
+  visited: Set<string>;
+  depth: number;
 }) {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -365,7 +405,7 @@ function TabsContainer({
       ? createElement(
           'div',
           { className: 'ss-tab-content', 'data-ss-node': tabNodes[activeTab].id },
-          renderChildren(tabNodes[activeTab].children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+          renderChildren(tabNodes[activeTab].children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
         )
       : null,
   );
@@ -380,12 +420,14 @@ function renderTab(
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  visited: Set<string>,
+  depth: number,
 ): ReactNode {
   // Tabs renders tab content directly — this is only called if a tab is rendered standalone
   return createElement(
     'div',
     { key: node.id, className: 'ss-tab', 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent),
+    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
   );
 }
 
@@ -398,6 +440,8 @@ function renderSpacer(
   _filters: FilterDefinition[] | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  _visited: Set<string>,
+  _depth: number,
 ): ReactNode {
   const style: CSSProperties = {
     height: node.meta.height ? `${node.meta.height}px` : '24px',
@@ -414,6 +458,8 @@ function renderHeader(
   _filters: FilterDefinition[] | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  _visited: Set<string>,
+  _depth: number,
 ): ReactNode {
   const sizeMap = { small: 'h3', medium: 'h2', large: 'h1' } as const;
   const tag = sizeMap[node.meta.headerSize ?? 'medium'];
@@ -432,6 +478,8 @@ function renderDivider(
   _filters: FilterDefinition[] | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  _visited: Set<string>,
+  _depth: number,
 ): ReactNode {
   const style: CSSProperties = {
     border: 'none',
@@ -439,4 +487,95 @@ function renderDivider(
     margin: '8px 0',
   };
   return createElement('hr', { key: node.id, className: 'ss-divider', style, 'data-ss-node': node.id });
+}
+
+// ─── dataBinding → config translation ────────────────────────
+
+const ROLE_TO_CONFIG_KEY: Record<string, string> = {
+  'x-axis': 'xField',
+  'y-axis': 'yField',
+  series: 'seriesField',
+  value: 'valueField',
+  category: 'categoryField',
+  size: 'sizeField',
+  'color-group': 'colorGroupField',
+  'bar-y': 'barField',
+  'line-y': 'lineField',
+  name: 'nameField',
+  parent: 'parentField',
+  source: 'sourceField',
+  target: 'targetField',
+  comparison: 'comparisonField',
+  'alert-title': 'titleField',
+  'alert-message': 'messageField',
+  'alert-severity': 'severityField',
+  'alert-timestamp': 'timestampField',
+};
+
+function resolveDataBindingConfig(widgetDef: WidgetDefinition): Record<string, unknown> {
+  const config = { ...widgetDef.config };
+  if (!widgetDef.dataBinding?.fields) return config;
+
+  for (const field of widgetDef.dataBinding.fields) {
+    const configKey = ROLE_TO_CONFIG_KEY[field.role];
+    if (configKey && config[configKey] === undefined) {
+      config[configKey] = field.fieldRef;
+    }
+  }
+
+  // Also expose datasetRef in config for widgets that need it
+  if (widgetDef.dataBinding.datasetRef && !config.datasetRef) {
+    config.datasetRef = widgetDef.dataBinding.datasetRef;
+  }
+
+  return config;
+}
+
+// ─── Error Boundary ──────────────────────────────────────────
+
+interface WidgetErrorBoundaryProps {
+  widgetId: string;
+  title?: string;
+}
+
+interface WidgetErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class WidgetErrorBoundary extends Component<PropsWithChildren<WidgetErrorBoundaryProps>, WidgetErrorBoundaryState> {
+  constructor(props: WidgetErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): WidgetErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error(`Widget "${this.props.widgetId}" crashed:`, error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return createElement(
+        'div',
+        {
+          className: 'ss-widget-error',
+          style: {
+            padding: '16px',
+            color: '#cf1322',
+            background: '#fff1f0',
+            border: '1px solid #ffa39e',
+            borderRadius: '8px',
+            fontSize: '13px',
+          },
+        },
+        createElement('strong', null, this.props.title ?? this.props.widgetId),
+        createElement('div', { style: { marginTop: '4px' } }, 'This widget encountered an error and could not render.'),
+      );
+    }
+    return this.props.children;
+  }
 }
