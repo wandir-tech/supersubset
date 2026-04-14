@@ -1,6 +1,6 @@
 ---
 name: work-kickoff
-description: "Plan new Supersubset work (feature, bug, refactor) from conversation to an implementation-ready GitHub issue. Use when the human wants a spec before code, needs a tiered skill list for implementers, or should gate scope via master-plan / ADRs. Planning only — not implementation."
+description: 'Plan new Supersubset work (feature, bug, refactor) from conversation to an implementation-ready GitHub issue. Use when the human wants a spec before code, needs a tiered skill list for implementers, or should gate scope via master-plan / ADRs. Planning only — not implementation.'
 ---
 
 # Work Kickoff (Supersubset)
@@ -29,10 +29,10 @@ Turn a described work item into a **self-contained GitHub issue** so a fresh age
 
 Scan **`.github/skills/*/SKILL.md`** and classify each as **essential**, **supporting**, or **not relevant**. Optionally map work to **`.github/agents/`** (e.g. `designer`, `runtime`, `testing`) for delegation later.
 
-| Tier | Meaning |
-| ---- | ------- |
-| **Essential** | Implementer must read before coding |
-| **Supporting** | Read when touching that surface |
+| Tier             | Meaning                                        |
+| ---------------- | ---------------------------------------------- |
+| **Essential**    | Implementer must read before coding            |
+| **Supporting**   | Read when touching that surface                |
 | **Not relevant** | Explicitly excluded (proves you considered it) |
 
 Always evaluate **`orchestration`** for multi-package delivery and **`browser-testing`** when UI behavior is in scope.
@@ -65,7 +65,7 @@ Stop for human approval of the issue before implementation unless they explicitl
 
 ### Step 6: Hand off
 
-After approval, implementers: follow the issue, load essential skills, respect agent/package boundaries from **`AGENTS.md`**. For **parallel agents or multiple checkouts**, see **`docs/dev/parallel-agent-environments.md`** to avoid port collisions.
+After approval, implementers: follow the issue, load essential skills, respect agent/package boundaries from **`AGENTS.md`**. For **parallel agents or multiple checkouts**, see **`.github/skills/parallel-agent-environments/SKILL.md`** to avoid port and file-scope collisions.
 
 ## Principles
 
@@ -86,5 +86,5 @@ After approval, implementers: follow the issue, load essential skills, respect a
 - `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
 - `.github/skills/document-feature/SKILL.md`
-- `docs/dev/parallel-agent-environments.md`
+- `.github/skills/parallel-agent-environments/SKILL.md`
 - `docs/bootstrap.md`
