@@ -27,30 +27,246 @@ interface OrderRow {
 }
 
 const seedOrders: OrderRow[] = [
-  { id: 1, orderedAt: '2026-01-08', region: 'North America', category: 'Footwear', productName: 'Nimbus Runner', channel: 'Direct', revenue: 1820, units: 24 },
-  { id: 2, orderedAt: '2026-01-12', region: 'Europe', category: 'Accessories', productName: 'Commuter Tote', channel: 'Marketplace', revenue: 960, units: 18 },
-  { id: 3, orderedAt: '2026-01-19', region: 'APAC', category: 'Apparel', productName: 'Merino Tee', channel: 'Direct', revenue: 1380, units: 32 },
-  { id: 4, orderedAt: '2026-02-02', region: 'North America', category: 'Accessories', productName: 'Trail Cap', channel: 'Retail', revenue: 740, units: 27 },
-  { id: 5, orderedAt: '2026-02-11', region: 'Europe', category: 'Footwear', productName: 'Nimbus Runner', channel: 'Direct', revenue: 2140, units: 28 },
-  { id: 6, orderedAt: '2026-02-21', region: 'APAC', category: 'Apparel', productName: 'Merino Tee', channel: 'Marketplace', revenue: 1250, units: 29 },
-  { id: 7, orderedAt: '2026-03-05', region: 'North America', category: 'Hydration', productName: 'Altitude Bottle', channel: 'Direct', revenue: 880, units: 44 },
-  { id: 8, orderedAt: '2026-03-09', region: 'Europe', category: 'Footwear', productName: 'Nimbus Runner', channel: 'Marketplace', revenue: 2360, units: 31 },
-  { id: 9, orderedAt: '2026-03-17', region: 'APAC', category: 'Apparel', productName: 'Merino Tee', channel: 'Retail', revenue: 1420, units: 35 },
-  { id: 10, orderedAt: '2026-03-28', region: 'North America', category: 'Accessories', productName: 'Weekender Tote', channel: 'Direct', revenue: 1640, units: 19 },
-  { id: 11, orderedAt: '2026-04-03', region: 'Europe', category: 'Hydration', productName: 'Altitude Bottle', channel: 'Marketplace', revenue: 920, units: 46 },
-  { id: 12, orderedAt: '2026-04-14', region: 'APAC', category: 'Footwear', productName: 'Nimbus Runner', channel: 'Direct', revenue: 2480, units: 33 },
-  { id: 13, orderedAt: '2026-04-22', region: 'North America', category: 'Apparel', productName: 'Storm Shell', channel: 'Retail', revenue: 1780, units: 21 },
-  { id: 14, orderedAt: '2026-05-02', region: 'Europe', category: 'Accessories', productName: 'Weekender Tote', channel: 'Direct', revenue: 1710, units: 22 },
-  { id: 15, orderedAt: '2026-05-10', region: 'APAC', category: 'Hydration', productName: 'Altitude Bottle', channel: 'Marketplace', revenue: 980, units: 49 },
-  { id: 16, orderedAt: '2026-05-19', region: 'North America', category: 'Footwear', productName: 'Summit Hiker', channel: 'Direct', revenue: 2650, units: 26 },
-  { id: 17, orderedAt: '2026-05-26', region: 'Europe', category: 'Apparel', productName: 'Storm Shell', channel: 'Retail', revenue: 1840, units: 23 },
-  { id: 18, orderedAt: '2026-06-04', region: 'APAC', category: 'Accessories', productName: 'Commuter Tote', channel: 'Direct', revenue: 1120, units: 20 },
-  { id: 19, orderedAt: '2026-06-12', region: 'North America', category: 'Hydration', productName: 'Altitude Bottle', channel: 'Marketplace', revenue: 1025, units: 52 },
-  { id: 20, orderedAt: '2026-06-18', region: 'Europe', category: 'Footwear', productName: 'Summit Hiker', channel: 'Direct', revenue: 2760, units: 27 },
-  { id: 21, orderedAt: '2026-06-23', region: 'APAC', category: 'Apparel', productName: 'Storm Shell', channel: 'Marketplace', revenue: 1910, units: 24 },
-  { id: 22, orderedAt: '2026-06-25', region: 'North America', category: 'Accessories', productName: 'Trail Cap', channel: 'Retail', revenue: 810, units: 29 },
-  { id: 23, orderedAt: '2026-06-27', region: 'Europe', category: 'Footwear', productName: 'Nimbus Runner', channel: 'Marketplace', revenue: 2210, units: 30 },
-  { id: 24, orderedAt: '2026-06-30', region: 'APAC', category: 'Hydration', productName: 'Altitude Bottle', channel: 'Direct', revenue: 995, units: 48 }
+  {
+    id: 1,
+    orderedAt: '2026-01-08',
+    region: 'North America',
+    category: 'Footwear',
+    productName: 'Nimbus Runner',
+    channel: 'Direct',
+    revenue: 1820,
+    units: 24,
+  },
+  {
+    id: 2,
+    orderedAt: '2026-01-12',
+    region: 'Europe',
+    category: 'Accessories',
+    productName: 'Commuter Tote',
+    channel: 'Marketplace',
+    revenue: 960,
+    units: 18,
+  },
+  {
+    id: 3,
+    orderedAt: '2026-01-19',
+    region: 'APAC',
+    category: 'Apparel',
+    productName: 'Merino Tee',
+    channel: 'Direct',
+    revenue: 1380,
+    units: 32,
+  },
+  {
+    id: 4,
+    orderedAt: '2026-02-02',
+    region: 'North America',
+    category: 'Accessories',
+    productName: 'Trail Cap',
+    channel: 'Retail',
+    revenue: 740,
+    units: 27,
+  },
+  {
+    id: 5,
+    orderedAt: '2026-02-11',
+    region: 'Europe',
+    category: 'Footwear',
+    productName: 'Nimbus Runner',
+    channel: 'Direct',
+    revenue: 2140,
+    units: 28,
+  },
+  {
+    id: 6,
+    orderedAt: '2026-02-21',
+    region: 'APAC',
+    category: 'Apparel',
+    productName: 'Merino Tee',
+    channel: 'Marketplace',
+    revenue: 1250,
+    units: 29,
+  },
+  {
+    id: 7,
+    orderedAt: '2026-03-05',
+    region: 'North America',
+    category: 'Hydration',
+    productName: 'Altitude Bottle',
+    channel: 'Direct',
+    revenue: 880,
+    units: 44,
+  },
+  {
+    id: 8,
+    orderedAt: '2026-03-09',
+    region: 'Europe',
+    category: 'Footwear',
+    productName: 'Nimbus Runner',
+    channel: 'Marketplace',
+    revenue: 2360,
+    units: 31,
+  },
+  {
+    id: 9,
+    orderedAt: '2026-03-17',
+    region: 'APAC',
+    category: 'Apparel',
+    productName: 'Merino Tee',
+    channel: 'Retail',
+    revenue: 1420,
+    units: 35,
+  },
+  {
+    id: 10,
+    orderedAt: '2026-03-28',
+    region: 'North America',
+    category: 'Accessories',
+    productName: 'Weekender Tote',
+    channel: 'Direct',
+    revenue: 1640,
+    units: 19,
+  },
+  {
+    id: 11,
+    orderedAt: '2026-04-03',
+    region: 'Europe',
+    category: 'Hydration',
+    productName: 'Altitude Bottle',
+    channel: 'Marketplace',
+    revenue: 920,
+    units: 46,
+  },
+  {
+    id: 12,
+    orderedAt: '2026-04-14',
+    region: 'APAC',
+    category: 'Footwear',
+    productName: 'Nimbus Runner',
+    channel: 'Direct',
+    revenue: 2480,
+    units: 33,
+  },
+  {
+    id: 13,
+    orderedAt: '2026-04-22',
+    region: 'North America',
+    category: 'Apparel',
+    productName: 'Storm Shell',
+    channel: 'Retail',
+    revenue: 1780,
+    units: 21,
+  },
+  {
+    id: 14,
+    orderedAt: '2026-05-02',
+    region: 'Europe',
+    category: 'Accessories',
+    productName: 'Weekender Tote',
+    channel: 'Direct',
+    revenue: 1710,
+    units: 22,
+  },
+  {
+    id: 15,
+    orderedAt: '2026-05-10',
+    region: 'APAC',
+    category: 'Hydration',
+    productName: 'Altitude Bottle',
+    channel: 'Marketplace',
+    revenue: 980,
+    units: 49,
+  },
+  {
+    id: 16,
+    orderedAt: '2026-05-19',
+    region: 'North America',
+    category: 'Footwear',
+    productName: 'Summit Hiker',
+    channel: 'Direct',
+    revenue: 2650,
+    units: 26,
+  },
+  {
+    id: 17,
+    orderedAt: '2026-05-26',
+    region: 'Europe',
+    category: 'Apparel',
+    productName: 'Storm Shell',
+    channel: 'Retail',
+    revenue: 1840,
+    units: 23,
+  },
+  {
+    id: 18,
+    orderedAt: '2026-06-04',
+    region: 'APAC',
+    category: 'Accessories',
+    productName: 'Commuter Tote',
+    channel: 'Direct',
+    revenue: 1120,
+    units: 20,
+  },
+  {
+    id: 19,
+    orderedAt: '2026-06-12',
+    region: 'North America',
+    category: 'Hydration',
+    productName: 'Altitude Bottle',
+    channel: 'Marketplace',
+    revenue: 1025,
+    units: 52,
+  },
+  {
+    id: 20,
+    orderedAt: '2026-06-18',
+    region: 'Europe',
+    category: 'Footwear',
+    productName: 'Summit Hiker',
+    channel: 'Direct',
+    revenue: 2760,
+    units: 27,
+  },
+  {
+    id: 21,
+    orderedAt: '2026-06-23',
+    region: 'APAC',
+    category: 'Apparel',
+    productName: 'Storm Shell',
+    channel: 'Marketplace',
+    revenue: 1910,
+    units: 24,
+  },
+  {
+    id: 22,
+    orderedAt: '2026-06-25',
+    region: 'North America',
+    category: 'Accessories',
+    productName: 'Trail Cap',
+    channel: 'Retail',
+    revenue: 810,
+    units: 29,
+  },
+  {
+    id: 23,
+    orderedAt: '2026-06-27',
+    region: 'Europe',
+    category: 'Footwear',
+    productName: 'Nimbus Runner',
+    channel: 'Marketplace',
+    revenue: 2210,
+    units: 30,
+  },
+  {
+    id: 24,
+    orderedAt: '2026-06-30',
+    region: 'APAC',
+    category: 'Hydration',
+    productName: 'Altitude Bottle',
+    channel: 'Direct',
+    revenue: 995,
+    units: 48,
+  },
 ];
 
 function getSqlRuntime() {
@@ -150,7 +366,20 @@ function buildWhereClause(filters: Record<string, unknown>) {
   };
 }
 
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthNames = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 
 export async function runAnalyticsQueries(filters: Record<string, unknown>): Promise<QueryBundle> {
   const db = await getDatabase();
@@ -173,19 +402,10 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
     `,
   );
 
-  // Build comparison WHERE clause: apply same region/category filters, previous period = before start of current month
-  const comparisonConditions: string[] = ["ordered_at < date('now', 'start of month')"];
-  const comparisonParams: unknown[] = [];
-  const region = filters['filter-region'];
-  if (typeof region === 'string' && region.length > 0) {
-    comparisonConditions.push('region = ?');
-    comparisonParams.push(region);
-  }
-  const category = filters['filter-category'];
-  if (typeof category === 'string' && category.length > 0) {
-    comparisonConditions.push('category = ?');
-    comparisonParams.push(category);
-  }
+  const comparisonTimeCondition = "ordered_at < date('now', 'start of month')";
+  const comparisonWhereClause = whereClause
+    ? `${whereClause} AND ${comparisonTimeCondition}`
+    : `WHERE ${comparisonTimeCondition}`;
 
   const previousRows = run(
     `
@@ -194,9 +414,9 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
         COUNT(*) AS previousOrders,
         ROUND(SUM(revenue) / COUNT(*), 2) AS previousAov
       FROM orders
-      WHERE ${comparisonConditions.join(' AND ')}
+      ${comparisonWhereClause}
     `,
-    comparisonParams,
+    params,
   );
 
   const monthlyRows = run(
@@ -241,8 +461,12 @@ export async function runAnalyticsQueries(filters: Record<string, unknown>): Pro
     `,
   );
 
-  const regionOptions = run('SELECT DISTINCT region FROM orders ORDER BY region', []).map((row) => String(row.region));
-  const categoryOptions = run('SELECT DISTINCT category FROM orders ORDER BY category', []).map((row) => String(row.category));
+  const regionOptions = run('SELECT DISTINCT region FROM orders ORDER BY region', []).map((row) =>
+    String(row.region),
+  );
+  const categoryOptions = run('SELECT DISTINCT category FROM orders ORDER BY category', []).map(
+    (row) => String(row.category),
+  );
 
   const summary = summaryRows[0] ?? { revenue: 0, orders: 0, aov: 0 };
   const previous = previousRows[0] ?? { previousRevenue: 0, previousOrders: 0, previousAov: 0 };
@@ -292,22 +516,26 @@ const FIELD_TO_COLUMN: Record<string, string> = {
 };
 
 /** Measures that require GROUP BY when used */
-const AGGREGATE_FIELDS = new Set([
-  'revenue', 'orders', 'units', 'aov',
-]);
+const AGGREGATE_FIELDS = new Set(['revenue', 'orders', 'units', 'aov']);
 
 /** Dimensions that can be used in GROUP BY */
 const DIMENSION_FIELDS = new Set([
-  'ordered_at', 'month', 'region', 'category', 'product_name', 'channel',
+  'ordered_at',
+  'month',
+  'region',
+  'category',
+  'product_name',
+  'channel',
 ]);
 
 /**
  * Generic preview data fetcher for the designer.
  * Builds and runs a SQL query based on the requested fields.
  */
-export async function fetchDesignerPreviewData(
-  request: { datasetRef: string; fields: Record<string, string | string[] | undefined> }
-): Promise<Record<string, unknown>[]> {
+export async function fetchDesignerPreviewData(request: {
+  datasetRef: string;
+  fields: Record<string, string | string[] | undefined>;
+}): Promise<Record<string, unknown>[]> {
   const db = await getDatabase();
   const { fields } = request;
 
@@ -315,7 +543,10 @@ export async function fetchDesignerPreviewData(
   const allFieldIds = new Set<string>();
   for (const val of Object.values(fields)) {
     if (typeof val === 'string' && val.length > 0) allFieldIds.add(val);
-    if (Array.isArray(val)) val.forEach((v) => { if (v.length > 0) allFieldIds.add(v); });
+    if (Array.isArray(val))
+      val.forEach((v) => {
+        if (v.length > 0) allFieldIds.add(v);
+      });
   }
 
   if (allFieldIds.size === 0) return [];
