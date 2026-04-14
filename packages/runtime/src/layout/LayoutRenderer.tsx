@@ -2,7 +2,15 @@
  * Layout renderer — walks the flat normalized layout map and renders components.
  * Starts from rootNodeId, recursively renders children.
  */
-import { type CSSProperties, type ReactNode, createElement, useState, Component, type ErrorInfo, type PropsWithChildren } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  createElement,
+  useState,
+  Component,
+  type ErrorInfo,
+  type PropsWithChildren,
+} from 'react';
 import type {
   LayoutMap,
   LayoutComponent,
@@ -52,7 +60,18 @@ export function LayoutRenderer({
   return createElement(
     'div',
     { className: `ss-layout-root ${className ?? ''}`.trim(), 'data-ss-node': rootNodeId },
-    renderChildren(rootNode.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, new Set([rootNodeId]), 0),
+    renderChildren(
+      rootNode.children,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      new Set([rootNodeId]),
+      0,
+    ),
   );
 }
 
@@ -71,17 +90,38 @@ function renderChildren(
   depth: number,
 ): ReactNode[] {
   if (depth > MAX_LAYOUT_DEPTH) {
-    return [createElement('div', { key: 'depth-limit', className: 'ss-layout-error' }, 'Layout depth limit exceeded')];
+    return [
+      createElement(
+        'div',
+        { key: 'depth-limit', className: 'ss-layout-error' },
+        'Layout depth limit exceeded',
+      ),
+    ];
   }
   return childIds.map((childId) => {
     if (visited.has(childId)) {
-      return createElement('div', { key: childId, className: 'ss-layout-error' }, `Circular reference: ${childId}`);
+      return createElement(
+        'div',
+        { key: childId, className: 'ss-layout-error' },
+        `Circular reference: ${childId}`,
+      );
     }
     const node = layout[childId];
     if (!node) return null;
     const nextVisited = new Set(visited);
     nextVisited.add(childId);
-    return renderNode(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, nextVisited, depth + 1);
+    return renderNode(
+      node,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      nextVisited,
+      depth + 1,
+    );
   });
 }
 
@@ -101,7 +141,18 @@ function renderNode(
   if (!renderer) {
     return createElement('div', { key: node.id, className: 'ss-unknown' }, `Unknown: ${node.type}`);
   }
-  return renderer(node, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth);
+  return renderer(
+    node,
+    layout,
+    widgets,
+    registry,
+    theme,
+    filters,
+    activeFilterValues,
+    onWidgetEvent,
+    visited,
+    depth,
+  );
 }
 
 // ─── Component Type Renderers ────────────────────────────────
@@ -153,7 +204,18 @@ function renderGrid(
   return createElement(
     'div',
     { key: node.id, className: `ss-grid`, style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
+    renderChildren(
+      node.children,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      visited,
+      depth,
+    ),
   );
 }
 
@@ -178,7 +240,18 @@ function renderRow(
   return createElement(
     'div',
     { key: node.id, className: 'ss-row', style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
+    renderChildren(
+      node.children,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      visited,
+      depth,
+    ),
   );
 }
 
@@ -216,7 +289,18 @@ function renderColumn(
   return createElement(
     'div',
     { key: node.id, className: 'ss-column', style, 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
+    renderChildren(
+      node.children,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      visited,
+      depth,
+    ),
   );
 }
 
@@ -279,7 +363,9 @@ function renderWidget(
   return createElement(
     'div',
     { key: node.id, className: 'ss-widget', style, 'data-ss-node': node.id },
-    createElement(WidgetErrorBoundary, { widgetId: widgetDef.id, title: widgetDef.title },
+    createElement(
+      WidgetErrorBoundary,
+      { widgetId: widgetDef.id, title: widgetDef.title },
       createElement(Component, widgetProps),
     ),
   );
@@ -379,7 +465,15 @@ function TabsContainer({
     // Tab buttons
     createElement(
       'div',
-      { className: 'ss-tabs-header', style: { display: 'flex', gap: '4px', borderBottom: '1px solid #e0e0e0', marginBottom: '16px' } },
+      {
+        className: 'ss-tabs-header',
+        style: {
+          display: 'flex',
+          gap: '4px',
+          borderBottom: '1px solid #e0e0e0',
+          marginBottom: '16px',
+        },
+      },
       ...tabNodes.map((tab, i) =>
         createElement(
           'button',
@@ -390,7 +484,10 @@ function TabsContainer({
             style: {
               padding: '8px 16px',
               border: 'none',
-              borderBottom: i === activeTab ? '2px solid var(--ss-color-primary, #1677ff)' : '2px solid transparent',
+              borderBottom:
+                i === activeTab
+                  ? '2px solid var(--ss-color-primary, #1677ff)'
+                  : '2px solid transparent',
               background: 'transparent',
               cursor: 'pointer',
               fontWeight: i === activeTab ? 600 : 400,
@@ -405,7 +502,18 @@ function TabsContainer({
       ? createElement(
           'div',
           { className: 'ss-tab-content', 'data-ss-node': tabNodes[activeTab].id },
-          renderChildren(tabNodes[activeTab].children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
+          renderChildren(
+            tabNodes[activeTab].children,
+            layout,
+            widgets,
+            registry,
+            theme,
+            filters,
+            activeFilterValues,
+            onWidgetEvent,
+            visited,
+            depth,
+          ),
         )
       : null,
   );
@@ -427,7 +535,18 @@ function renderTab(
   return createElement(
     'div',
     { key: node.id, className: 'ss-tab', 'data-ss-node': node.id },
-    renderChildren(node.children, layout, widgets, registry, theme, filters, activeFilterValues, onWidgetEvent, visited, depth),
+    renderChildren(
+      node.children,
+      layout,
+      widgets,
+      registry,
+      theme,
+      filters,
+      activeFilterValues,
+      onWidgetEvent,
+      visited,
+      depth,
+    ),
   );
 }
 
@@ -446,7 +565,12 @@ function renderSpacer(
   const style: CSSProperties = {
     height: node.meta.height ? `${node.meta.height}px` : '24px',
   };
-  return createElement('div', { key: node.id, className: 'ss-spacer', style, 'data-ss-node': node.id });
+  return createElement('div', {
+    key: node.id,
+    className: 'ss-spacer',
+    style,
+    'data-ss-node': node.id,
+  });
 }
 
 function renderHeader(
@@ -466,7 +590,11 @@ function renderHeader(
   const style: CSSProperties = {
     margin: 0,
   };
-  return createElement(tag, { key: node.id, className: 'ss-header', style, 'data-ss-node': node.id }, node.meta.text ?? '');
+  return createElement(
+    tag,
+    { key: node.id, className: 'ss-header', style, 'data-ss-node': node.id },
+    node.meta.text ?? '',
+  );
 }
 
 function renderDivider(
@@ -486,7 +614,12 @@ function renderDivider(
     borderTop: '1px solid #e0e0e0',
     margin: '8px 0',
   };
-  return createElement('hr', { key: node.id, className: 'ss-divider', style, 'data-ss-node': node.id });
+  return createElement('hr', {
+    key: node.id,
+    className: 'ss-divider',
+    style,
+    'data-ss-node': node.id,
+  });
 }
 
 // ─── dataBinding → config translation ────────────────────────
@@ -543,7 +676,10 @@ interface WidgetErrorBoundaryState {
   error?: Error;
 }
 
-class WidgetErrorBoundary extends Component<PropsWithChildren<WidgetErrorBoundaryProps>, WidgetErrorBoundaryState> {
+class WidgetErrorBoundary extends Component<
+  PropsWithChildren<WidgetErrorBoundaryProps>,
+  WidgetErrorBoundaryState
+> {
   constructor(props: WidgetErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -573,7 +709,11 @@ class WidgetErrorBoundary extends Component<PropsWithChildren<WidgetErrorBoundar
           },
         },
         createElement('strong', null, this.props.title ?? this.props.widgetId),
-        createElement('div', { style: { marginTop: '4px' } }, 'This widget encountered an error and could not render.'),
+        createElement(
+          'div',
+          { style: { marginTop: '4px' } },
+          `Widget error: ${this.state.error?.message ?? 'Unknown error'}`,
+        ),
       );
     }
     return this.props.children;
