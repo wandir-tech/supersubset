@@ -28,12 +28,15 @@ export function PieChartWidget({ config, data, columns, title, height }: WidgetP
 
     const nameField = (config.nameField as string) ?? columns?.[0]?.fieldId ?? '';
     const valueField = (config.valueField as string) ?? columns?.[1]?.fieldId ?? '';
-    const donut = config.donut === true;
-    const roseType = config.roseType as 'radius' | 'area' | undefined;
+    const donut = config.donut === true || config.variant === 'donut';
+    const roseType =
+      (config.roseType as 'radius' | 'area' | undefined) ??
+      (config.variant === 'rose' ? 'radius' : undefined);
     const explicitInner = config.innerRadius != null ? Number(config.innerRadius) : null;
-    const innerRadius = (explicitInner != null && explicitInner > 0) ? explicitInner : (donut ? 40 : 0);
+    const innerRadius = explicitInner != null && explicitInner > 0 ? explicitInner : donut ? 40 : 0;
     const outerRadius = config.outerRadius != null ? (config.outerRadius as number) : 70;
-    const labelPosition = (config.labelPosition as 'outside' | 'inside' | 'center' | 'none') ?? 'outside';
+    const labelPosition =
+      (config.labelPosition as 'outside' | 'inside' | 'center' | 'none') ?? 'outside';
     const padAngle = (config.padAngle as number) ?? 0;
     const shared = extractSharedConfig(config);
 
@@ -50,13 +53,14 @@ export function PieChartWidget({ config, data, columns, title, height }: WidgetP
           `${params.name}: ${formatNumber(params.value, shared.numberFormat!)}`
       : '{b}: {d}%';
 
-    const labelConfig = labelPosition === 'none'
-      ? { show: false }
-      : {
-          show: true,
-          position: labelPosition === 'center' ? 'center' : labelPosition,
-          formatter: shared.showValues === false ? '{b}' : labelFormatter,
-        };
+    const labelConfig =
+      labelPosition === 'none'
+        ? { show: false }
+        : {
+            show: true,
+            position: labelPosition === 'center' ? 'center' : labelPosition,
+            formatter: shared.showValues === false ? '{b}' : labelFormatter,
+          };
 
     return {
       ...(buildTitleOption(title) ? { title: buildTitleOption(title) } : {}),
@@ -68,7 +72,10 @@ export function PieChartWidget({ config, data, columns, title, height }: WidgetP
               `${params.name}: ${formatNumber(params.value, shared.numberFormat!)} (${params.percent}%)`
           : '{b}: {c} ({d}%)',
       },
-      legend: buildLegendOption(shared, sliceNames, hasTitle) ?? { orient: 'vertical' as const, left: 'left' },
+      legend: buildLegendOption(shared, sliceNames, hasTitle) ?? {
+        orient: 'vertical' as const,
+        left: 'left',
+      },
       series: [
         {
           type: 'pie' as const,

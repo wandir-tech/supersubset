@@ -29,9 +29,9 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
     const thresholds = config.thresholds as Array<{ value: number; color: string }> | undefined;
     const startAngle = (config.startAngle as number) ?? 225;
     const endAngle = (config.endAngle as number) ?? -45;
-    const roundCap = config.roundCap === true;
+    const roundCap = config.roundCap === true || config.roundCap === 'true';
     const splitCount = (config.splitCount as number) ?? 10;
-    const progressMode = config.progressMode === true;
+    const progressMode = config.progressMode === true || config.progressMode === 'true';
     const shared = extractSharedConfig(config);
     const colors = buildColorOption(shared);
     const fmt = shared.numberFormat;
@@ -41,10 +41,7 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
       // In progress mode, the axis line is a neutral track behind the progress bar
       axisLine.lineStyle = { width: 15, color: [[1, '#e6e8eb']] };
     } else if (thresholds && thresholds.length > 0) {
-      const colorStops = thresholds.map((t) => [
-        (t.value - min) / (max - min),
-        t.color,
-      ]);
+      const colorStops = thresholds.map((t) => [(t.value - min) / (max - min), t.color]);
       axisLine.lineStyle = { width: 15, color: colorStops };
     } else if (colors.length >= 1) {
       // Use color from palette for the gauge pointer
@@ -68,11 +65,9 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
             ? { show: true, roundCap, itemStyle: { color: progressColor } }
             : undefined,
           data: [{ value, name: title ?? '' }],
-          axisLine: (thresholds || colors.length >= 1) ? axisLine : undefined,
+          axisLine: thresholds || colors.length >= 1 ? axisLine : undefined,
           detail: {
-            formatter: fmt
-              ? (v: number) => formatNumber(v, fmt)
-              : '{value}',
+            formatter: fmt ? (v: number) => formatNumber(v, fmt) : '{value}',
             fontSize: 24,
             fontWeight: 'bold' as const,
           },
