@@ -21,10 +21,14 @@ env:
 permissions:
   contents: read
 
+# ── Reusable setup steps (YAML anchor) ──────────────────────
+# Each job checks out with full history so nx affected can diff.
+# pnpm + node caching makes repeated installs fast.
+
 jobs:
-  # ── Install & Cache ────────────────────────────────────────
-  install:
-    name: Install
+  # ── Lint ───────────────────────────────────────────────────
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,57 +42,26 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Derive Nx SHAs
-        uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v4
 
-      - name: Cache Nx
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: .nx/cache
           key: nx-${{ runner.os }}-${{ github.sha }}
           restore-keys: nx-${{ runner.os }}-
 
-      - name: Upload workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: |
-            .
-            !.git
-          retention-days: 1
-
-  # ── Lint ───────────────────────────────────────────────────
-  lint:
-    name: Lint
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
       - run: npx nx affected -t lint
 
   # ── Typecheck ──────────────────────────────────────────────
   typecheck:
     name: Typecheck
-    needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: workspace
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -98,17 +71,25 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: nx-${{ runner.os }}-
+
       - run: npx nx affected -t typecheck
 
   # ── Unit Tests ─────────────────────────────────────────────
   unit-tests:
     name: Unit Tests
-    needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: workspace
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -118,17 +99,25 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: nx-${{ runner.os }}-
+
       - run: npx nx affected -t test
 
   # ── Build ──────────────────────────────────────────────────
   build:
     name: Build
-    needs: install
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: workspace
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -138,6 +127,15 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ github.sha }}
+          restore-keys: nx-${{ runner.os }}-
+
       - run: npx nx affected -t build
 
   # ── E2E (Playwright) ──────────────────────────────────────
@@ -146,9 +144,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: workspace
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -158,7 +156,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: npx nx affected -t build
+      - run: pnpm build
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -181,14 +179,11 @@ jobs:
   # ── Security (Snyk) ───────────────────────────────────────
   security:
     name: Security Scan
-    needs: install
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
 
