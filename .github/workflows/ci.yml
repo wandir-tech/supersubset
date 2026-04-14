@@ -3,6 +3,9 @@
 # Runs on every PR targeting develop, staging, or main.
 # Each job reports independently so PRs show granular status.
 # Uses Nx affected to only lint/test/build changed packages.
+#
+# Build runs first because lint (eslint), typecheck, and tests
+# all need compiled inter-package dependencies (.d.ts / dist).
 # ──────────────────────────────────────────────────────────────
 name: CI
 
@@ -21,96 +24,8 @@ env:
 permissions:
   contents: read
 
-# ── Reusable setup steps (YAML anchor) ──────────────────────
-# Each job checks out with full history so nx affected can diff.
-# pnpm + node caching makes repeated installs fast.
-
 jobs:
-  # ── Lint ───────────────────────────────────────────────────
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - uses: nrwl/nx-set-shas@v4
-
-      - uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ github.sha }}
-          restore-keys: nx-${{ runner.os }}-
-
-      - run: npx nx affected -t lint
-
-  # ── Typecheck ──────────────────────────────────────────────
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - uses: nrwl/nx-set-shas@v4
-
-      - uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ github.sha }}
-          restore-keys: nx-${{ runner.os }}-
-
-      - run: npx nx affected -t typecheck
-
-  # ── Unit Tests ─────────────────────────────────────────────
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - uses: nrwl/nx-set-shas@v4
-
-      - uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ github.sha }}
-          restore-keys: nx-${{ runner.os }}-
-
-      - run: npx nx affected -t test
-
-  # ── Build ──────────────────────────────────────────────────
+  # ── Build (runs first — other jobs need compiled output) ──
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -130,13 +45,100 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
 
-      - uses: actions/cache@v4
-        with:
-          path: .nx/cache
-          key: nx-${{ runner.os }}-${{ github.sha }}
-          restore-keys: nx-${{ runner.os }}-
+      - run: pnpm build
 
-      - run: npx nx affected -t build
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            packages/*/dist
+            packages/*/build
+          retention-days: 1
+
+  # ── Lint ───────────────────────────────────────────────────
+  lint:
+    name: Lint
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: npx nx affected -t lint
+
+  # ── Typecheck ──────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: npx nx affected -t typecheck
+
+  # ── Unit Tests ─────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: npx nx affected -t test
 
   # ── E2E (Playwright) ──────────────────────────────────────
   e2e:
@@ -156,7 +158,11 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -167,7 +173,7 @@ jobs:
           CI: true
 
       - name: Upload Playwright report
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
