@@ -1,9 +1,17 @@
 /**
  * Storybook stories for the UndoRedo components.
  */
-import React, { useState } from 'react';
+import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { UndoRedoToolbar, useUndoRedo } from '../components/UndoRedo';
+import type { DashboardDefinition } from '@supersubset/schema';
+
+const baseDashboard: DashboardDefinition = {
+  id: 'demo',
+  schemaVersion: '1.0',
+  title: 'Step 0',
+  pages: [],
+};
 
 const meta: Meta<typeof UndoRedoToolbar> = {
   title: 'Designer/UndoRedoToolbar',
@@ -47,9 +55,11 @@ export const BothDisabled: Story = {
   },
 };
 
+let stepCounter = 0;
+
 function InteractiveDemo() {
   const { current, push, undo, redo, canUndo, canRedo, undoCount, redoCount } =
-    useUndoRedo(0, { debounceMs: 0 });
+    useUndoRedo(baseDashboard, { debounceMs: 0 });
   return (
     <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
       <UndoRedoToolbar
@@ -60,12 +70,12 @@ function InteractiveDemo() {
         undoCount={undoCount}
         redoCount={redoCount}
       />
-      <div style={{ marginTop: 20, fontSize: 24 }}>Counter: {current}</div>
+      <div style={{ marginTop: 20, fontSize: 24 }}>Title: {current.title}</div>
       <button
-        onClick={() => push(current + 1)}
+        onClick={() => push({ ...current, title: `Step ${++stepCounter}` })}
         style={{ marginTop: 10, padding: '8px 16px', fontSize: 14 }}
       >
-        Increment
+        Change Title
       </button>
     </div>
   );

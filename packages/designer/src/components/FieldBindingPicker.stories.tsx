@@ -18,7 +18,7 @@ const ordersDataset: NormalizedDataset = {
     { id: 'profit', label: 'Profit', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
     { id: 'customer_id', label: 'Customer ID', dataType: 'string', role: 'key' },
   ],
-  source: { type: 'table', name: 'orders' },
+  source: { type: 'table', ref: 'orders' },
 };
 
 const productsDataset: NormalizedDataset = {
@@ -29,7 +29,7 @@ const productsDataset: NormalizedDataset = {
     { id: 'price', label: 'Price', dataType: 'number', role: 'measure' },
     { id: 'sku', label: 'SKU', dataType: 'string', role: 'key' },
   ],
-  source: { type: 'table', name: 'products' },
+  source: { type: 'table', ref: 'products' },
 };
 
 const meta: Meta<typeof FieldBindingPicker> = {

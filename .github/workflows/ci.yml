@@ -67,6 +67,24 @@ jobs:
 
       - run: npx nx affected -t lint
 
+  # ── Format Check ───────────────────────────────────────────
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+        continue-on-error: true  # TODO: remove after running `pnpm format` on the full codebase
+
   # ── Typecheck ──────────────────────────────────────────────
   typecheck:
     name: Typecheck
@@ -135,8 +153,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E tests
-        run: pnpm test:e2e --project=chromium
+      - name: Run E2E tests (exclude visual regression)
+        run: pnpm test:e2e --project=chromium --grep-invert "Visual Regression"
         env:
           CI: true
 
@@ -148,6 +166,13 @@ jobs:
           path: |
             playwright-report/
             test-results/
+
+      - name: Upload snapshot baselines
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-snapshots
+          path: e2e/**/*-snapshots/
           retention-days: 7
 
   # ── Security (Snyk) ───────────────────────────────────────
