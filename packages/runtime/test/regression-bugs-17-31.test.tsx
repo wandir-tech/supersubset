@@ -102,9 +102,27 @@ describe('LayoutRenderer — #26 error boundary isolates widget crashes', () => 
 
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
-      'grid-1': { id: 'grid-1', type: 'grid', children: ['w-ok', 'w-crash'], parentId: 'root', meta: {} },
-      'w-ok': { id: 'w-ok', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'ok-1' } },
-      'w-crash': { id: 'w-crash', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'crash-1' } },
+      'grid-1': {
+        id: 'grid-1',
+        type: 'grid',
+        children: ['w-ok', 'w-crash'],
+        parentId: 'root',
+        meta: {},
+      },
+      'w-ok': {
+        id: 'w-ok',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'ok-1' },
+      },
+      'w-crash': {
+        id: 'w-crash',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'crash-1' },
+      },
     };
     const widgets: WidgetDefinition[] = [
       { id: 'ok-1', type: 'kpi-card', title: 'Healthy KPI', config: {} },
@@ -120,7 +138,7 @@ describe('LayoutRenderer — #26 error boundary isolates widget crashes', () => 
     expect(container.textContent).toContain('Healthy KPI');
     // The crashing widget should show error state, not crash the page
     expect(container.querySelector('.ss-widget-error')).toBeTruthy();
-    expect(container.textContent).toContain('could not render');
+    expect(container.textContent).toContain('Widget error: Widget render explosion');
 
     consoleSpy.mockRestore();
   });
@@ -133,7 +151,13 @@ describe('LayoutRenderer — #18 dataBinding → config translation', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: {} },
-      'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'chart-1' } },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'chart-1' },
+      },
     };
     const widgets: WidgetDefinition[] = [
       {
@@ -174,7 +198,13 @@ describe('LayoutRenderer — #18 dataBinding → config translation', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: {} },
-      'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'chart-1' } },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'chart-1' },
+      },
     };
     const widgets: WidgetDefinition[] = [
       {
@@ -185,9 +215,7 @@ describe('LayoutRenderer — #18 dataBinding → config translation', () => {
         config: { xField: 'date' },
         dataBinding: {
           datasetRef: 'sales',
-          fields: [
-            { role: 'x-axis', fieldRef: 'month' },
-          ],
+          fields: [{ role: 'x-axis', fieldRef: 'month' }],
         },
       },
     ];
@@ -215,11 +243,7 @@ function InteractionConsumer({
   return null;
 }
 
-function FilterStateReader({
-  onRead,
-}: {
-  onRead: (values: Record<string, unknown>) => void;
-}) {
+function FilterStateReader({ onRead }: { onRead: (values: Record<string, unknown>) => void }) {
   const { state } = useFilters();
   onRead(state.values);
   return null;
@@ -258,10 +282,24 @@ describe('InteractionEngine — #29 cross-filter toggle with object values', () 
     let ctx: ReturnType<typeof useInteractions> | null = null;
     let filterValues: Record<string, unknown> = {};
 
-    renderWithProviders(interactions, {}, createElement('div', null,
-      createElement(InteractionConsumer, { onReady: (c) => { ctx = c; } }),
-      createElement(FilterStateReader, { onRead: (v) => { filterValues = v; } }),
-    ));
+    renderWithProviders(
+      interactions,
+      {},
+      createElement(
+        'div',
+        null,
+        createElement(InteractionConsumer, {
+          onReady: (c) => {
+            ctx = c;
+          },
+        }),
+        createElement(FilterStateReader, {
+          onRead: (v) => {
+            filterValues = v;
+          },
+        }),
+      ),
+    );
 
     // First click: set filter with an object value
     act(() => {
@@ -297,10 +335,24 @@ describe('InteractionEngine — #29 cross-filter toggle with object values', () 
     let ctx: ReturnType<typeof useInteractions> | null = null;
     let filterValues: Record<string, unknown> = {};
 
-    renderWithProviders(interactions, {}, createElement('div', null,
-      createElement(InteractionConsumer, { onReady: (c) => { ctx = c; } }),
-      createElement(FilterStateReader, { onRead: (v) => { filterValues = v; } }),
-    ));
+    renderWithProviders(
+      interactions,
+      {},
+      createElement(
+        'div',
+        null,
+        createElement(InteractionConsumer, {
+          onReady: (c) => {
+            ctx = c;
+          },
+        }),
+        createElement(FilterStateReader, {
+          onRead: (v) => {
+            filterValues = v;
+          },
+        }),
+      ),
+    );
 
     act(() => {
       ctx!.handleWidgetEvent({
@@ -325,11 +377,7 @@ describe('InteractionEngine — #29 cross-filter toggle with object values', () 
 
 // ─── #31: DrillManager breadcrumb shows [object Object] ──────
 
-function DrillConsumer({
-  onReady,
-}: {
-  onReady: (ctx: DrillContextValue) => void;
-}) {
+function DrillConsumer({ onReady }: { onReady: (ctx: DrillContextValue) => void }) {
   const ctx = useDrill();
   onReady(ctx);
   return null;
@@ -340,8 +388,14 @@ describe('DrillManager — #31 breadcrumb label for object values', () => {
     let ctx: DrillContextValue | null = null;
 
     render(
-      createElement(DrillProvider, null,
-        createElement(DrillConsumer, { onReady: (c) => { ctx = c; } }),
+      createElement(
+        DrillProvider,
+        null,
+        createElement(DrillConsumer, {
+          onReady: (c) => {
+            ctx = c;
+          },
+        }),
       ),
     );
 
@@ -352,16 +406,22 @@ describe('DrillManager — #31 breadcrumb label for object values', () => {
     const label = ctx!.drillState.breadcrumb[0].label;
     // Before fix: would be "[object Object]"
     expect(label).not.toContain('[object Object]');
-    expect(label).toContain('NYC');
-    expect(label).toContain('NY');
+    expect(label).toContain('city: NYC');
+    expect(label).toContain('state: NY');
   });
 
   it('still handles simple string values correctly', () => {
     let ctx: DrillContextValue | null = null;
 
     render(
-      createElement(DrillProvider, null,
-        createElement(DrillConsumer, { onReady: (c) => { ctx = c; } }),
+      createElement(
+        DrillProvider,
+        null,
+        createElement(DrillConsumer, {
+          onReady: (c) => {
+            ctx = c;
+          },
+        }),
       ),
     );
 
@@ -376,8 +436,14 @@ describe('DrillManager — #31 breadcrumb label for object values', () => {
     let ctx: DrillContextValue | null = null;
 
     render(
-      createElement(DrillProvider, null,
-        createElement(DrillConsumer, { onReady: (c) => { ctx = c; } }),
+      createElement(
+        DrillProvider,
+        null,
+        createElement(DrillConsumer, {
+          onReady: (c) => {
+            ctx = c;
+          },
+        }),
       ),
     );
 
