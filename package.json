@@ -18,19 +18,38 @@
     "docs:dev": "pnpm --filter @supersubset/docs dev",
     "docs:build": "pnpm --filter @supersubset/docs build",
     "docs:preview": "pnpm --filter @supersubset/docs preview",
-    "docs:screenshots": "npx playwright test --config packages/docs/playwright.config.ts"
+    "docs:screenshots": "npx playwright test --config packages/docs/playwright.config.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@nx/js": "^22.6.4",
     "@playwright/test": "^1.45.0",
     "@storybook/addon-essentials": "^8.6.0",
     "@storybook/blocks": "^8.6.0",
     "@storybook/react": "^8.6.0",
     "@storybook/react-vite": "^8.6.0",
+    "eslint": "^10.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "nx": "^22.6.4",
+    "prettier": "^3.8.2",
     "storybook": "^8.6.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.58.2"
   },
   "packageManager": "pnpm@9.0.0",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml,css,scss}": [
+      "prettier --write"
+    ]
+  },
   "license": "Apache-2.0"
 }

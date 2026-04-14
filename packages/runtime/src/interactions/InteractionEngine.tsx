@@ -178,7 +178,9 @@ function executeCrossFilter(
 
   // Toggle behavior: if same value is already set, clear it
   const currentValue = ctx.filterValues[filterId];
-  if (currentValue !== undefined && currentValue === value) {
+  const isEqual = currentValue !== undefined &&
+    (currentValue === value || JSON.stringify(currentValue) === JSON.stringify(value));
+  if (isEqual) {
     ctx.resetFilter(filterId);
   } else {
     ctx.setFilter(filterId, value);

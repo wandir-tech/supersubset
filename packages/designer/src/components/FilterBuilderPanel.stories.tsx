@@ -14,7 +14,7 @@ const ordersDataset: NormalizedDataset = {
     { id: 'region', label: 'Region', dataType: 'string', role: 'dimension' },
     { id: 'revenue', label: 'Revenue', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
   ],
-  source: { type: 'table', name: 'orders' },
+  source: { type: 'table', ref: 'orders' },
 };
 
 const sampleFilters: FilterDefinition[] = [

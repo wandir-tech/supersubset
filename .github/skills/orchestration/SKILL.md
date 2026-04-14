@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: "Expert delegation of multi-step tasks to specialized subagents. Use when coordinating complex work across architecture, designer, runtime, charts, metadata, testing, or research agents. Covers task decomposition, dependency analysis, parallel vs sequential planning, brief writing, result reconciliation, and phase-gate verification."
+description: 'Expert delegation of multi-step tasks to specialized subagents. Use when coordinating complex work across architecture, designer, runtime, charts, metadata, testing, or research agents. Covers task decomposition, dependency analysis, parallel vs sequential planning, brief writing, result reconciliation, and phase-gate verification.'
 ---
 
 # Agent Orchestration Skill
@@ -17,16 +17,16 @@ This skill teaches how to decompose complex tasks and delegate them to specializ
 
 ## Available Subagents
 
-| Agent | Domain | Modifies | Read-only tools? |
-|-------|--------|----------|-----------------|
-| `architecture` | Schema, ADRs, package boundaries | `packages/schema/`, `docs/adr/`, `docs/schema/` | No |
-| `designer` | Puck editor, drag/drop, property panels | `packages/designer/`, `packages/dev-app/` | No |
-| `runtime` | Renderer, layout, widget registry, filters | `packages/runtime/`, `packages/dev-app/` | No |
-| `charts` | ECharts wrappers, config translation, themes | `packages/charts-echarts/` | No |
-| `metadata` | Adapters, Prisma/SQL/dbt/JSON, data-model | `packages/data-model/`, `packages/adapter-*/`, `packages/query-client/` | No |
-| `testing` | E2E tests, Chrome MCP, QA, fixtures | `e2e/`, `docs/testing/`, `screenshots/` | No |
-| `research` | OSS archaeology, reuse analysis, landscape | `docs/research/` | Yes (read + web) |
-| `Explore` | Fast read-only codebase Q&A | None | Yes |
+| Agent          | Domain                                       | Modifies                                                                | Read-only tools? |
+| -------------- | -------------------------------------------- | ----------------------------------------------------------------------- | ---------------- |
+| `architecture` | Schema, ADRs, package boundaries             | `packages/schema/`, `docs/adr/`, `docs/schema/`                         | No               |
+| `designer`     | Puck editor, drag/drop, property panels      | `packages/designer/`, `packages/dev-app/`                               | No               |
+| `runtime`      | Renderer, layout, widget registry, filters   | `packages/runtime/`, `packages/dev-app/`                                | No               |
+| `charts`       | ECharts wrappers, config translation, themes | `packages/charts-echarts/`                                              | No               |
+| `metadata`     | Adapters, Prisma/SQL/dbt/JSON, data-model    | `packages/data-model/`, `packages/adapter-*/`, `packages/query-client/` | No               |
+| `testing`      | E2E tests, Chrome MCP, QA, fixtures          | `e2e/`, `docs/testing/`, `screenshots/`                                 | No               |
+| `research`     | OSS archaeology, reuse analysis, landscape   | `docs/research/`                                                        | Yes (read + web) |
+| `Explore`      | Fast read-only codebase Q&A                  | None                                                                    | Yes              |
 
 ## Task Decomposition Protocol
 
@@ -170,4 +170,4 @@ If resuming work after a context reset:
 - `.github/skills/work-kickoff/SKILL.md` — Spec and GitHub issue before large implementation
 - `.github/skills/branch-ci-promotion/SKILL.md` — `pnpm lint` / `typecheck` / `test` merge readiness
 - `.github/skills/maintaining-ai-context/SKILL.md` — Editing or auditing skills and agents
-- `docs/dev/parallel-agent-environments.md` — Ports and parallel worktrees / agents
+- `.github/skills/parallel-agent-environments/SKILL.md` — Parallel work: branch isolation, file ownership, ports, merge order

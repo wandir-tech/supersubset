@@ -1,5 +1,10 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { SupersubsetRenderer, createWidgetRegistry, type FilterState, type WidgetProps } from '@supersubset/runtime';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  SupersubsetRenderer,
+  createWidgetRegistry,
+  type FilterState,
+  type WidgetProps,
+} from '@supersubset/runtime';
 import { registerEssentialWidgets } from '@supersubset/charts-echarts/essentials';
 import { resolveTheme, themeToCssVariables } from '@supersubset/theme';
 import type { DashboardDefinition } from '@supersubset/schema';
@@ -24,14 +29,26 @@ export default function App() {
     const storedVersion = window.localStorage.getItem(FIXTURE_VERSION_KEY);
     if (storedVersion && Number(storedVersion) >= FIXTURE_VERSION) {
       const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored) as DashboardDefinition;
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as DashboardDefinition;
+          // Basic structural validation: must have pages array with at least one page
+          if (Array.isArray(parsed.pages) && parsed.pages.length > 0 && parsed.pages[0].layout) {
+            return parsed;
+          }
+        } catch {
+          // Corrupt JSON — fall through to reset
+        }
+      }
     }
-    // Stale or missing — reset to bundled default
+    // Stale, missing, or structurally invalid — reset to bundled default
     window.localStorage.setItem(FIXTURE_VERSION_KEY, String(FIXTURE_VERSION));
     return defaultDashboard;
   });
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
   const [bundle, setBundle] = useState<QueryBundle | null>(null);
+  const bundleRef = useRef(bundle);
+  bundleRef.current = bundle;
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -61,20 +78,21 @@ export default function App() {
   }, [filterState.values]);
 
   const resolvedTheme = useMemo(
-    () => resolveTheme({
-      type: 'inline',
-      colors: {
-        primary: '#0d5c63',
-        background: '#f4fbfb',
-        surface: '#ffffff',
-        text: '#11333a',
-        muted: '#5f7b81',
-        border: '#d7e7e9',
-      },
-      typography: {
-        fontFamily: 'Avenir Next, Segoe UI, sans-serif',
-      },
-    }),
+    () =>
+      resolveTheme({
+        type: 'inline',
+        colors: {
+          primary: '#0d5c63',
+          background: '#f4fbfb',
+          surface: '#ffffff',
+          text: '#11333a',
+          muted: '#5f7b81',
+          border: '#d7e7e9',
+        },
+        typography: {
+          fontFamily: 'Avenir Next, Segoe UI, sans-serif',
+        },
+      }),
     [],
   );
 
@@ -85,17 +103,29 @@ export default function App() {
     setDesignerRevision((current) => current + 1);
   };
 
+  const handleReset = () => {
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.setItem(FIXTURE_VERSION_KEY, String(FIXTURE_VERSION));
+    setDashboard(defaultDashboard);
+    setDesignerRevision((current) => current + 1);
+  };
+
   const registry = useMemo(() => {
     const registryInstance = createWidgetRegistry();
     registerEssentialWidgets(registryInstance);
 
     const originalGet = registryInstance.get.bind(registryInstance);
+    const wrappedCache = new Map<string, (props: WidgetProps) => React.JSX.Element>();
+
     registryInstance.get = (type: string) => {
+      const cached = wrappedCache.get(type);
+      if (cached) return cached;
+
       const Original = originalGet(type);
       if (!Original) return undefined;
 
       const Wrapped = (props: WidgetProps) => {
-        const fixture = bundle?.widgetData[props.widgetId];
+        const fixture = bundleRef.current?.widgetData[props.widgetId];
         return (
           <Original
             {...props}
@@ -106,11 +136,12 @@ export default function App() {
       };
 
       Wrapped.displayName = `SqliteQuery(${type})`;
+      wrappedCache.set(type, Wrapped);
       return Wrapped;
     };
 
     return registryInstance;
-  }, [bundle]);
+  }, []);
 
   return (
     <div className={mode === 'designer' ? 'shell shell--designer' : 'shell'}>
@@ -119,28 +150,45 @@ export default function App() {
           <div className="eyebrow">Vite + SQLite host example</div>
           <h1>Supersubset backed by an in-browser analytics store.</h1>
           <p>
-            The host app owns query execution. Supersubset emits filter state; this app turns that state into
-            SQLite queries and injects the resulting rows into the runtime widgets.
+            The host app owns query execution. Supersubset emits filter state; this app turns that
+            state into SQLite queries and injects the resulting rows into the runtime widgets.
           </p>
         </div>
         <div className="mode-toggle">
-          <button className={mode === 'viewer' ? 'active' : ''} onClick={() => setMode('viewer')}>Viewer</button>
-          <button className={mode === 'designer' ? 'active' : ''} onClick={() => setMode('designer')}>Designer</button>
+          <button className={mode === 'viewer' ? 'active' : ''} onClick={() => setMode('viewer')}>
+            Viewer
+          </button>
+          <button
+            className={mode === 'designer' ? 'active' : ''}
+            onClick={() => setMode('designer')}
+          >
+            Designer
+          </button>
+          <button onClick={handleReset} title="Reset dashboard to bundled defaults">
+            Reset
+          </button>
         </div>
       </header>
 
       <section className="info-grid">
         <div className="info-card">
           <h2>Host-owned persistence</h2>
-          <p>Dashboard definition persists to localStorage. Importing a schema replaces the live dashboard state.</p>
+          <p>
+            Dashboard definition persists to localStorage. Importing a schema replaces the live
+            dashboard state.
+          </p>
         </div>
         <div className="info-card">
           <h2>Filter-driven SQL</h2>
-          <p>Viewer filters feed directly into SQLite WHERE clauses and trigger fresh host queries.</p>
+          <p>
+            Viewer filters feed directly into SQLite WHERE clauses and trigger fresh host queries.
+          </p>
         </div>
       </section>
 
-      {status === 'error' ? <div className="error-panel">SQLite bootstrap failed: {error}</div> : null}
+      {status === 'error' ? (
+        <div className="error-panel">SQLite bootstrap failed: {error}</div>
+      ) : null}
 
       <main className="workspace">
         <section className="canvas-area">
@@ -158,7 +206,9 @@ export default function App() {
             </Suspense>
           ) : (
             <div className="viewer-shell">
-              {status === 'loading' || !bundle ? <div className="loading-panel">Running SQLite queries…</div> : null}
+              {status === 'loading' || !bundle ? (
+                <div className="loading-panel">Running SQLite queries…</div>
+              ) : null}
               {bundle ? (
                 <SupersubsetRenderer
                   definition={dashboard}

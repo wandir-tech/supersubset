@@ -1,11 +1,29 @@
 ---
 name: branch-ci-promotion
-description: "Lightweight branch and CI readiness for Supersubset: verify pnpm lint/typecheck/test before merge, interpret PR checks, and keep `main` shippable. Use when preparing or reviewing a PR, validating a topic branch, or documenting release discipline — not full Tripmatch-style release trains."
+description: 'Branch model (feature→develop→staging→main), CI readiness, and merge gates for Supersubset. Use when preparing or reviewing a PR, choosing a target branch, promoting between environments, or validating a topic branch.'
 ---
 
 # Branch & CI Readiness (Supersubset)
 
-Supersubset is a **library monorepo** without Tripmatch’s `rel-*` / staging / multi-env deploy matrix. This skill is the **subset** that still matters: **branch hygiene + local/CI verification + merge gates**.
+Supersubset uses a **four-tier branch model**: feature branches → `develop` → `staging` → `main`. This skill covers the model, merge gates, and local/CI verification.
+
+## Branch model
+
+| Branch                          | Purpose                           | PR target for        | Deploys to             |
+| ------------------------------- | --------------------------------- | -------------------- | ---------------------- |
+| `feature/*`, `fix/*`, `issue/*` | All new work                      | `develop`            | —                      |
+| `develop`                       | Integration of completed features | feature/fix branches | Dev preview (if any)   |
+| `staging`                       | Pre-release validation            | `develop`            | Staging env (if any)   |
+| `main`                          | Production-ready                  | `staging`            | Docs site, npm publish |
+
+### Rules
+
+1. **Feature branches always target `develop`** — never `staging` or `main` directly.
+2. **`develop → staging`** is a promotion PR. Create it when `develop` is stable and ready for validation.
+3. **`staging → main`** is a release promotion PR. Create it after staging passes all checks.
+4. **No direct commits** to `develop`, `staging`, or `main` — all changes go through PRs.
+5. **Hotfixes**: branch from `main`, merge back to both `main` and `develop` (two PRs or cherry-pick).
+6. **CI runs on PRs targeting** `develop`, `staging`, and `main` (see `.github/workflows/ci.yml`).
 
 ## When to Use
 
@@ -29,7 +47,7 @@ For UI/e2e coverage when you touched designer/runtime/examples:
 pnpm test:e2e
 ```
 
-(E2E starts dev servers via Playwright `webServer`; ensure ports per **`docs/dev/parallel-agent-environments.md`** if multiple agents run locally.)
+(E2E starts dev servers via Playwright `webServer`; ensure ports per **`.github/skills/parallel-agent-environments/SKILL.md`** if multiple agents run locally.)
 
 ## PR / merge checklist
 

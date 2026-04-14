@@ -15,7 +15,7 @@
 5. **`.github/copilot-instructions.md`** — Workspace-wide conventions
 6. **`docs/testing/human-checkpoints.md`** — Human gate definitions and review protocols
 7. **`docs/testing/verification-strategy.md`** — When/where Playwright and Chrome MCP tests happen
-8. **`docs/dev/parallel-agent-environments.md`** — Ports, worktrees, and running multiple dev servers or agents without collisions
+8. **`.github/skills/parallel-agent-environments/SKILL.md`** — Parallel work: branch isolation, file-scope ownership, ports, merge sequencing
 9. **`.github/skills/github-cli/SKILL.md`** — Use `gh` for GitHub (issues, PRs, Actions, API); avoid slow browser-first flows
 
 ### Where Things Are
@@ -125,6 +125,7 @@ packages/             # Monorepo packages (once created)
 ## Non-Goals
 
 Do NOT accidentally build:
+
 - A full BI platform
 - A warehouse-native semantic layer
 - An iframe-based embedding system

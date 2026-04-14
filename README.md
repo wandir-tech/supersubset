@@ -5,7 +5,23 @@
 
 <p align="center"><strong>An embeddable, open-source analytics builder and runtime for React applications.</strong></p>
 
-Supersubset aims to be an embeddable [Apache Superset](https://superset.apache.org/) — giving React host apps a drag-and-drop dashboard designer and a lightweight rendering engine without requiring a full BI server.
+> **⚠️ Experimental — not production-ready.**
+> This project is an experiment and may not be actively maintained.
+> Use it for exploration, prototyping, or as a reference — not for production workloads.
+
+## Origin Story
+
+Supersubset grew out of a search for an embeddable analytics library that checked every box: React-native components (no iframes), host-owned persistence, backend-agnostic data access, and a real drag-and-drop designer. There were a lot of close calls — Apache Superset, Rill, Perspective, Dashbuilder — but nothing fit the "library you drop into your own app" model without dragging in a full BI server or a tightly coupled backend.
+
+The experiment: **can AI conjure a production-shaped library by using those other projects as a living spec?** Every adapter interface, chart wrapper, and schema contract in Supersubset was shaped by studying what worked (and what coupled too tightly) in the open-source analytics landscape, then having AI agents generate, test, and iterate on the code. The result is this library — useful, but honest about its origins.
+
+## Workflow Assumptions
+
+Supersubset assumes:
+
+- **The data model is set by the developer and the backend.** Modeling tools, semantic layers, and warehouse management are out of scope. You bring your own schema; Supersubset renders against it.
+- **A secure SQL interface is available.** The query client sends queries to an endpoint you provide. Auth, row-level security, and connection management are your responsibility.
+- **Dashboards can live in code _or_ in a database.** Define dashboards as JSON/YAML in your repo and manage them through CI/CD, or store them in a database and let end users build and edit them through the designer. Either workflow is supported — the library doesn't prescribe one.
 
 ## Key Principles
 
@@ -19,21 +35,21 @@ Supersubset aims to be an embeddable [Apache Superset](https://superset.apache.o
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `@supersubset/schema` | Canonical dashboard types, Zod validation, JSON/YAML serialization, migration engine |
-| `@supersubset/runtime` | `<SupersubsetRenderer />`, widget registry, filter engine, interactions, state persistence |
-| `@supersubset/designer` | `<SupersubsetDesigner />` — Puck-based drag-and-drop editor with property panels |
+| Package                       | Description                                                                                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@supersubset/schema`         | Canonical dashboard types, Zod validation, JSON/YAML serialization, migration engine                                                                                      |
+| `@supersubset/runtime`        | `<SupersubsetRenderer />`, widget registry, filter engine, interactions, state persistence                                                                                |
+| `@supersubset/designer`       | `<SupersubsetDesigner />` — Puck-based drag-and-drop editor with property panels                                                                                          |
 | `@supersubset/charts-echarts` | 18 ECharts widget wrappers (line, bar, pie, scatter, area, combo, heatmap, radar, treemap, funnel, gauge, waterfall, sankey, box-plot, table, KPI card, markdown, alerts) |
-| `@supersubset/theme` | Theme tokens, defaults, CSS variable bridge, ECharts theme integration |
-| `@supersubset/data-model` | Normalized analytical metadata model (entities, fields, measures, relationships) |
-| `@supersubset/query-client` | Query abstraction with fluent `QueryBuilder` |
-| `@supersubset/cli` | `npx supersubset import-schema` — introspect Prisma/SQL/dbt/JSON sources |
-| `@supersubset/adapter-prisma` | Prisma schema → normalized metadata adapter |
-| `@supersubset/adapter-sql` | PostgreSQL/MySQL/SQLite introspection adapter |
-| `@supersubset/adapter-json` | JSON/fixture metadata adapter |
-| `@supersubset/adapter-dbt` | dbt manifest adapter |
-| `@supersubset/docs` | End-user docs site (Astro Starlight) with screenshots |
+| `@supersubset/theme`          | Theme tokens, defaults, CSS variable bridge, ECharts theme integration                                                                                                    |
+| `@supersubset/data-model`     | Normalized analytical metadata model (entities, fields, measures, relationships)                                                                                          |
+| `@supersubset/query-client`   | Query abstraction with fluent `QueryBuilder`                                                                                                                              |
+| `@supersubset/cli`            | `npx supersubset import-schema` — introspect Prisma/SQL/dbt/JSON sources                                                                                                  |
+| `@supersubset/adapter-prisma` | Prisma schema → normalized metadata adapter                                                                                                                               |
+| `@supersubset/adapter-sql`    | PostgreSQL/MySQL/SQLite introspection adapter                                                                                                                             |
+| `@supersubset/adapter-json`   | JSON/fixture metadata adapter                                                                                                                                             |
+| `@supersubset/adapter-dbt`    | dbt manifest adapter                                                                                                                                                      |
+| `@supersubset/docs`           | End-user docs site (Astro Starlight) with screenshots                                                                                                                     |
 
 ## Quick Start
 
@@ -123,7 +139,7 @@ function Editor({ definition, onSave }) {
   return (
     <SupersubsetDesigner
       definition={definition}
-      onSave={onSave}           // Host owns persistence
+      onSave={onSave} // Host owns persistence
       widgetRegistry={registry}
     />
   );

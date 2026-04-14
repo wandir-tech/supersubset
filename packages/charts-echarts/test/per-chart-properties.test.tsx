@@ -118,8 +118,14 @@ const sampleWaterfallData = [
 ];
 
 const sampleBoxData = [
-  { cat: 'A', val: 10 }, { cat: 'A', val: 20 }, { cat: 'A', val: 30 }, { cat: 'A', val: 40 },
-  { cat: 'B', val: 15 }, { cat: 'B', val: 25 }, { cat: 'B', val: 35 }, { cat: 'B', val: 45 },
+  { cat: 'A', val: 10 },
+  { cat: 'A', val: 20 },
+  { cat: 'A', val: 30 },
+  { cat: 'A', val: 40 },
+  { cat: 'B', val: 15 },
+  { cat: 'B', val: 25 },
+  { cat: 'B', val: 35 },
+  { cat: 'B', val: 45 },
 ];
 
 function getOption(): Record<string, unknown> {
@@ -141,93 +147,139 @@ function getAllSeries(): Array<Record<string, unknown>> {
 // ─── LINE CHART ──────────────────────────────────────────────
 
 describe('LineChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('smooth=true produces smooth series', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], smooth: true },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], smooth: true },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().smooth).toBe(true);
   });
 
   it('smooth=false produces non-smooth series', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], smooth: false },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], smooth: false },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().smooth).toBe(false);
   });
 
   it('showMarkers=false hides symbols', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], showMarkers: false },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], showMarkers: false },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().showSymbol).toBe(false);
   });
 
   it('showMarkers=true (default) shows symbols', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'] },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'] },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().showSymbol).toBe(true);
   });
 
   it('markerSize sets symbolSize', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], markerSize: 8 },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], markerSize: 8 },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().symbolSize).toBe(8);
   });
 
   it('step=start produces step interpolation', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], step: 'start' },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], step: 'start' },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().step).toBe('start');
   });
 
   it('step=middle produces step interpolation', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], step: 'middle' },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], step: 'middle' },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().step).toBe('middle');
   });
 
   it('connectNulls=true is passed to series', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], connectNulls: true },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], connectNulls: true },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().connectNulls).toBe(true);
   });
 
   it('connectNulls defaults to false', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'] },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'] },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().connectNulls).toBe(false);
   });
 
   it('area=true produces areaStyle', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], area: true },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], area: true },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().areaStyle).toEqual({});
   });
 
   it('area=false does not produce areaStyle', () => {
-    render(<LineChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'] },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <LineChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'] },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().areaStyle).toBeUndefined();
   });
 });
@@ -235,53 +287,79 @@ describe('LineChartWidget — per-chart properties', () => {
 // ─── BAR CHART ───────────────────────────────────────────────
 
 describe('BarChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('barWidth sets bar width on series', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], barWidth: '40%' },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], barWidth: '40%' },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect(getSeries().barWidth).toBe('40%');
   });
 
   it('barGap sets gap between bars', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], barGap: '10%' },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], barGap: '10%' },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect(getSeries().barGap).toBe('10%');
   });
 
   it('borderRadius sets itemStyle.borderRadius', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], borderRadius: 6 },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], borderRadius: 6 },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect((getSeries().itemStyle as Record<string, unknown>)?.borderRadius).toBe(6);
   });
 
   it('borderRadius=0 does not set itemStyle', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], borderRadius: 0 },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], borderRadius: 0 },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect(getSeries().itemStyle).toBeUndefined();
   });
 
   it('barMinHeight sets bar minimum height', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], barMinHeight: 5 },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], barMinHeight: 5 },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect(getSeries().barMinHeight).toBe(5);
   });
 
   it('horizontal=true swaps axes', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales'], horizontal: true },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], horizontal: true },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     const opt = getOption();
     // x-axis should be value type, y-axis should be category
     expect((opt.xAxis as Record<string, unknown>).type).toBe('value');
@@ -289,10 +367,14 @@ describe('BarChartWidget — per-chart properties', () => {
   });
 
   it('stacked=true sets stack on series', () => {
-    render(<BarChartWidget {...makeProps({
-      config: { xField: 'category', yFields: ['sales', 'target'], stacked: true },
-      data: sampleCategoryData,
-    })} />);
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales', 'target'], stacked: true },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
     expect(getSeries(0).stack).toBe('total');
     expect(getSeries(1).stack).toBe('total');
   });
@@ -301,98 +383,186 @@ describe('BarChartWidget — per-chart properties', () => {
 // ─── PIE CHART ───────────────────────────────────────────────
 
 describe('PieChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('donut=true with no explicit innerRadius uses 40%', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', donut: true },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', donut: true },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().radius).toEqual(['40%', '70%']);
   });
 
   it('donut=false with no explicit innerRadius uses 0%', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value' },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value' },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().radius).toEqual(['0%', '70%']);
   });
 
   it('explicit innerRadius overrides donut default', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 60 },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 60 },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().radius).toEqual(['60%', '70%']);
   });
 
   it('outerRadius sets outer radius', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', outerRadius: 85 },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', outerRadius: 85 },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().radius).toEqual(['0%', '85%']);
   });
 
   it('labelPosition=inside sets label inside', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', labelPosition: 'inside' },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', labelPosition: 'inside' },
+          data: samplePieData,
+        })}
+      />,
+    );
     const label = getSeries().label as Record<string, unknown>;
     expect(label.show).toBe(true);
     expect(label.position).toBe('inside');
   });
 
   it('labelPosition=none hides labels', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', labelPosition: 'none' },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', labelPosition: 'none' },
+          data: samplePieData,
+        })}
+      />,
+    );
     const label = getSeries().label as Record<string, unknown>;
     expect(label.show).toBe(false);
   });
 
   it('padAngle sets pad angle', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', padAngle: 5 },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', padAngle: 5 },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().padAngle).toBe(5);
   });
 
   it('padAngle=0 does not set padAngle', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', padAngle: 0 },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', padAngle: 0 },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().padAngle).toBeUndefined();
   });
 
   it('roseType=radius produces rose chart', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', roseType: 'radius' },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', roseType: 'radius' },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().roseType).toBe('radius');
   });
 
   // Regression: #9 — innerRadius=0 (Puck default) must not block donut hole
   it('donut=true with innerRadius=0 still uses 40% (Puck default bug)', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 0 },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 0 },
+          data: samplePieData,
+        })}
+      />,
+    );
     expect(getSeries().radius).toEqual(['40%', '70%']);
+  });
+
+  // Regression: #9 — variant='donut' from canonical schema (not config.donut)
+  it('variant=donut uses 40% inner radius', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', variant: 'donut' },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().radius).toEqual(['40%', '70%']);
+  });
+
+  it('variant=donut with innerRadius=0 still uses 40%', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', variant: 'donut', innerRadius: 0 },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().radius).toEqual(['40%', '70%']);
+  });
+
+  it('variant=rose sets roseType to radius', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', variant: 'rose' },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().roseType).toBe('radius');
   });
 
   // Regression: #10 — showValues=false must not hide labels when labelPosition is set
   it('labelPosition=inside with showValues=false still shows labels', () => {
-    render(<PieChartWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', labelPosition: 'inside', showValues: false },
-      data: samplePieData,
-    })} />);
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            labelPosition: 'inside',
+            showValues: false,
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
     const label = getSeries().label as Record<string, unknown>;
     expect(label.show).toBe(true);
     expect(label.position).toBe('inside');
@@ -402,63 +572,93 @@ describe('PieChartWidget — per-chart properties', () => {
 // ─── AREA CHART ──────────────────────────────────────────────
 
 describe('AreaChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('areaOpacity sets areaStyle opacity', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], areaOpacity: 0.3 },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], areaOpacity: 0.3 },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     const style = getSeries().areaStyle as Record<string, unknown>;
     expect(style.opacity).toBe(0.3);
   });
 
   it('default areaOpacity is 0.7', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'] },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'] },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     const style = getSeries().areaStyle as Record<string, unknown>;
     expect(style.opacity).toBe(0.7);
   });
 
   it('showMarkers=false hides symbols', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], showMarkers: false },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], showMarkers: false },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().showSymbol).toBe(false);
   });
 
   it('step=end produces step interpolation', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], step: 'end' },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], step: 'end' },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().step).toBe('end');
   });
 
   it('connectNulls=true is passed to series', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], connectNulls: true },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], connectNulls: true },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().connectNulls).toBe(true);
   });
 
   it('stacked=false removes stack', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'], stacked: false },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'], stacked: false },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().stack).toBeUndefined();
   });
 
   it('stacked defaults to true', () => {
-    render(<AreaChartWidget {...makeProps({
-      config: { xField: 'month', yFields: ['revenue'] },
-      data: sampleTimeData,
-    })} />);
+    render(
+      <AreaChartWidget
+        {...makeProps({
+          config: { xField: 'month', yFields: ['revenue'] },
+          data: sampleTimeData,
+        })}
+      />,
+    );
     expect(getSeries().stack).toBe('total');
   });
 });
@@ -466,47 +666,69 @@ describe('AreaChartWidget — per-chart properties', () => {
 // ─── SCATTER CHART ───────────────────────────────────────────
 
 describe('ScatterChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('symbolSize sets symbol size for single series', () => {
-    render(<ScatterChartWidget {...makeProps({
-      config: { xField: 'x', yField: 'y', symbolSize: 15 },
-      data: sampleScatterData,
-    })} />);
+    render(
+      <ScatterChartWidget
+        {...makeProps({
+          config: { xField: 'x', yField: 'y', symbolSize: 15 },
+          data: sampleScatterData,
+        })}
+      />,
+    );
     expect(getSeries().symbolSize).toBe(15);
   });
 
   it('default symbolSize is 10', () => {
-    render(<ScatterChartWidget {...makeProps({
-      config: { xField: 'x', yField: 'y' },
-      data: sampleScatterData,
-    })} />);
+    render(
+      <ScatterChartWidget
+        {...makeProps({
+          config: { xField: 'x', yField: 'y' },
+          data: sampleScatterData,
+        })}
+      />,
+    );
     expect(getSeries().symbolSize).toBe(10);
   });
 
   it('opacity sets itemStyle opacity', () => {
-    render(<ScatterChartWidget {...makeProps({
-      config: { xField: 'x', yField: 'y', opacity: 0.4 },
-      data: sampleScatterData,
-    })} />);
+    render(
+      <ScatterChartWidget
+        {...makeProps({
+          config: { xField: 'x', yField: 'y', opacity: 0.4 },
+          data: sampleScatterData,
+        })}
+      />,
+    );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.opacity).toBe(0.4);
   });
 
   it('sizeField overrides symbolSize with a function', () => {
-    render(<ScatterChartWidget {...makeProps({
-      config: { xField: 'x', yField: 'y', sizeField: 'size', symbolSize: 20 },
-      data: sampleScatterData,
-    })} />);
+    render(
+      <ScatterChartWidget
+        {...makeProps({
+          config: { xField: 'x', yField: 'y', sizeField: 'size', symbolSize: 20 },
+          data: sampleScatterData,
+        })}
+      />,
+    );
     // When sizeField is set, symbolSize should be a function, not the static value
     expect(typeof getSeries().symbolSize).toBe('function');
   });
 
   it('colorField groups data into multiple series', () => {
-    render(<ScatterChartWidget {...makeProps({
-      config: { xField: 'x', yField: 'y', colorField: 'group' },
-      data: sampleScatterData,
-    })} />);
+    render(
+      <ScatterChartWidget
+        {...makeProps({
+          config: { xField: 'x', yField: 'y', colorField: 'group' },
+          data: sampleScatterData,
+        })}
+      />,
+    );
     const series = getAllSeries();
     expect(series.length).toBe(2); // 'A' and 'B'
     expect(series[0].name).toBe('A');
@@ -517,7 +739,9 @@ describe('ScatterChartWidget — per-chart properties', () => {
 // ─── COMBO CHART ─────────────────────────────────────────────
 
 describe('ComboChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   const comboData = [
     { month: 'Jan', bar: 100, line: 50 },
@@ -525,30 +749,42 @@ describe('ComboChartWidget — per-chart properties', () => {
   ];
 
   it('lineSmooth=false produces non-smooth lines', () => {
-    render(<ComboChartWidget {...makeProps({
-      config: { xField: 'month', barFields: ['bar'], lineFields: ['line'], lineSmooth: false },
-      data: comboData,
-    })} />);
+    render(
+      <ComboChartWidget
+        {...makeProps({
+          config: { xField: 'month', barFields: ['bar'], lineFields: ['line'], lineSmooth: false },
+          data: comboData,
+        })}
+      />,
+    );
     // Line series is at index 1
-    const lineSeries = getAllSeries().find(s => s.type === 'line');
+    const lineSeries = getAllSeries().find((s) => s.type === 'line');
     expect(lineSeries?.smooth).toBe(false);
   });
 
   it('lineSmooth defaults to true', () => {
-    render(<ComboChartWidget {...makeProps({
-      config: { xField: 'month', barFields: ['bar'], lineFields: ['line'] },
-      data: comboData,
-    })} />);
-    const lineSeries = getAllSeries().find(s => s.type === 'line');
+    render(
+      <ComboChartWidget
+        {...makeProps({
+          config: { xField: 'month', barFields: ['bar'], lineFields: ['line'] },
+          data: comboData,
+        })}
+      />,
+    );
+    const lineSeries = getAllSeries().find((s) => s.type === 'line');
     expect(lineSeries?.smooth).toBe(true);
   });
 
   it('barBorderRadius sets itemStyle on bar series', () => {
-    render(<ComboChartWidget {...makeProps({
-      config: { xField: 'month', barFields: ['bar'], lineFields: ['line'], barBorderRadius: 4 },
-      data: comboData,
-    })} />);
-    const barSeries = getAllSeries().find(s => s.type === 'bar');
+    render(
+      <ComboChartWidget
+        {...makeProps({
+          config: { xField: 'month', barFields: ['bar'], lineFields: ['line'], barBorderRadius: 4 },
+          data: comboData,
+        })}
+      />,
+    );
+    const barSeries = getAllSeries().find((s) => s.type === 'bar');
     expect((barSeries?.itemStyle as Record<string, unknown>)?.borderRadius).toBe(4);
   });
 });
@@ -556,31 +792,45 @@ describe('ComboChartWidget — per-chart properties', () => {
 // ─── HEATMAP ─────────────────────────────────────────────────
 
 describe('HeatmapWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('cellBorderWidth sets itemStyle borderWidth', () => {
-    render(<HeatmapWidget {...makeProps({
-      config: { xField: 'day', yField: 'hour', valueField: 'val', cellBorderWidth: 3 },
-      data: sampleHeatmapData,
-    })} />);
+    render(
+      <HeatmapWidget
+        {...makeProps({
+          config: { xField: 'day', yField: 'hour', valueField: 'val', cellBorderWidth: 3 },
+          data: sampleHeatmapData,
+        })}
+      />,
+    );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderWidth).toBe(3);
   });
 
   it('cellBorderColor sets itemStyle borderColor', () => {
-    render(<HeatmapWidget {...makeProps({
-      config: { xField: 'day', yField: 'hour', valueField: 'val', cellBorderColor: '#000' },
-      data: sampleHeatmapData,
-    })} />);
+    render(
+      <HeatmapWidget
+        {...makeProps({
+          config: { xField: 'day', yField: 'hour', valueField: 'val', cellBorderColor: '#000' },
+          data: sampleHeatmapData,
+        })}
+      />,
+    );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderColor).toBe('#000');
   });
 
   it('defaults produce borderWidth=1, borderColor=#fff', () => {
-    render(<HeatmapWidget {...makeProps({
-      config: { xField: 'day', yField: 'hour', valueField: 'val' },
-      data: sampleHeatmapData,
-    })} />);
+    render(
+      <HeatmapWidget
+        {...makeProps({
+          config: { xField: 'day', yField: 'hour', valueField: 'val' },
+          data: sampleHeatmapData,
+        })}
+      />,
+    );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderWidth).toBe(1);
     expect(style.borderColor).toBe('#fff');
@@ -590,41 +840,67 @@ describe('HeatmapWidget — per-chart properties', () => {
 // ─── RADAR CHART ─────────────────────────────────────────────
 
 describe('RadarChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('shape=circle sets radar shape', () => {
-    render(<RadarChartWidget {...makeProps({
-      config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name', shape: 'circle' },
-      data: sampleRadarData,
-    })} />);
+    render(
+      <RadarChartWidget
+        {...makeProps({
+          config: {
+            valueFields: ['speed', 'quality', 'price'],
+            nameField: 'name',
+            shape: 'circle',
+          },
+          data: sampleRadarData,
+        })}
+      />,
+    );
     const opt = getOption();
     expect((opt.radar as Record<string, unknown>).shape).toBe('circle');
   });
 
   it('shape defaults to polygon', () => {
-    render(<RadarChartWidget {...makeProps({
-      config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name' },
-      data: sampleRadarData,
-    })} />);
+    render(
+      <RadarChartWidget
+        {...makeProps({
+          config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name' },
+          data: sampleRadarData,
+        })}
+      />,
+    );
     const opt = getOption();
     expect((opt.radar as Record<string, unknown>).shape).toBe('polygon');
   });
 
   it('areaFill=true adds areaStyle to series data', () => {
-    render(<RadarChartWidget {...makeProps({
-      config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name', areaFill: true },
-      data: sampleRadarData,
-    })} />);
+    render(
+      <RadarChartWidget
+        {...makeProps({
+          config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name', areaFill: true },
+          data: sampleRadarData,
+        })}
+      />,
+    );
     const seriesData = getSeries().data as Array<Record<string, unknown>>;
     expect(seriesData[0].areaStyle).toBeDefined();
     expect((seriesData[0].areaStyle as Record<string, unknown>).opacity).toBe(0.3);
   });
 
   it('areaFill=false removes areaStyle from series data', () => {
-    render(<RadarChartWidget {...makeProps({
-      config: { valueFields: ['speed', 'quality', 'price'], nameField: 'name', areaFill: false },
-      data: sampleRadarData,
-    })} />);
+    render(
+      <RadarChartWidget
+        {...makeProps({
+          config: {
+            valueFields: ['speed', 'quality', 'price'],
+            nameField: 'name',
+            areaFill: false,
+          },
+          data: sampleRadarData,
+        })}
+      />,
+    );
     const seriesData = getSeries().data as Array<Record<string, unknown>>;
     expect(seriesData[0].areaStyle).toBeUndefined();
   });
@@ -633,46 +909,68 @@ describe('RadarChartWidget — per-chart properties', () => {
 // ─── FUNNEL CHART ────────────────────────────────────────────
 
 describe('FunnelChartWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('sort=ascending sets sort direction', () => {
-    render(<FunnelChartWidget {...makeProps({
-      config: { nameField: 'stage', valueField: 'value', sort: 'ascending' },
-      data: sampleFunnelData,
-    })} />);
+    render(
+      <FunnelChartWidget
+        {...makeProps({
+          config: { nameField: 'stage', valueField: 'value', sort: 'ascending' },
+          data: sampleFunnelData,
+        })}
+      />,
+    );
     expect(getSeries().sort).toBe('ascending');
   });
 
   it('funnelAlign=left sets alignment', () => {
-    render(<FunnelChartWidget {...makeProps({
-      config: { nameField: 'stage', valueField: 'value', funnelAlign: 'left' },
-      data: sampleFunnelData,
-    })} />);
+    render(
+      <FunnelChartWidget
+        {...makeProps({
+          config: { nameField: 'stage', valueField: 'value', funnelAlign: 'left' },
+          data: sampleFunnelData,
+        })}
+      />,
+    );
     expect(getSeries().funnelAlign).toBe('left');
   });
 
   it('gap sets spacing between funnel sections', () => {
-    render(<FunnelChartWidget {...makeProps({
-      config: { nameField: 'stage', valueField: 'value', gap: 5 },
-      data: sampleFunnelData,
-    })} />);
+    render(
+      <FunnelChartWidget
+        {...makeProps({
+          config: { nameField: 'stage', valueField: 'value', gap: 5 },
+          data: sampleFunnelData,
+        })}
+      />,
+    );
     expect(getSeries().gap).toBe(5);
   });
 
   it('labelPosition=outside moves labels outside', () => {
-    render(<FunnelChartWidget {...makeProps({
-      config: { nameField: 'stage', valueField: 'value', labelPosition: 'outside' },
-      data: sampleFunnelData,
-    })} />);
+    render(
+      <FunnelChartWidget
+        {...makeProps({
+          config: { nameField: 'stage', valueField: 'value', labelPosition: 'outside' },
+          data: sampleFunnelData,
+        })}
+      />,
+    );
     const label = getSeries().label as Record<string, unknown>;
     expect(label.position).toBe('outside');
   });
 
   it('defaults: sort=descending, funnelAlign=center, gap=0, labelPosition=inside', () => {
-    render(<FunnelChartWidget {...makeProps({
-      config: { nameField: 'stage', valueField: 'value' },
-      data: sampleFunnelData,
-    })} />);
+    render(
+      <FunnelChartWidget
+        {...makeProps({
+          config: { nameField: 'stage', valueField: 'value' },
+          data: sampleFunnelData,
+        })}
+      />,
+    );
     expect(getSeries().sort).toBe('descending');
     expect(getSeries().funnelAlign).toBe('center');
     expect(getSeries().gap).toBe(0);
@@ -683,47 +981,69 @@ describe('FunnelChartWidget — per-chart properties', () => {
 // ─── TREEMAP ─────────────────────────────────────────────────
 
 describe('TreemapWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('showUpperLabel=true enables upper labels', () => {
-    render(<TreemapWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', showUpperLabel: true },
-      data: sampleTreemapData,
-    })} />);
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showUpperLabel: true },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
     const upper = getSeries().upperLabel as Record<string, unknown>;
     expect(upper.show).toBe(true);
   });
 
   it('showUpperLabel defaults to false', () => {
-    render(<TreemapWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value' },
-      data: sampleTreemapData,
-    })} />);
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value' },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
     const upper = getSeries().upperLabel as Record<string, unknown>;
     expect(upper.show).toBe(false);
   });
 
   it('maxDepth limits tree depth', () => {
-    render(<TreemapWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', maxDepth: 2 },
-      data: sampleTreemapData,
-    })} />);
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', maxDepth: 2 },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
     expect(getSeries().leafDepth).toBe(2);
   });
 
   it('maxDepth=0 means unlimited (leafDepth undefined)', () => {
-    render(<TreemapWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', maxDepth: 0 },
-      data: sampleTreemapData,
-    })} />);
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', maxDepth: 0 },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
     expect(getSeries().leafDepth).toBeUndefined();
   });
 
   it('borderWidth sets itemStyle borderWidth', () => {
-    render(<TreemapWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', borderWidth: 3 },
-      data: sampleTreemapData,
-    })} />);
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', borderWidth: 3 },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderWidth).toBe(3);
   });
@@ -732,37 +1052,70 @@ describe('TreemapWidget — per-chart properties', () => {
 // ─── SANKEY ──────────────────────────────────────────────────
 
 describe('SankeyWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('nodeWidth sets node width', () => {
-    render(<SankeyWidget {...makeProps({
-      config: { sourceField: 'source', targetField: 'target', valueField: 'value', nodeWidth: 30 },
-      data: sampleSankeyData,
-    })} />);
+    render(
+      <SankeyWidget
+        {...makeProps({
+          config: {
+            sourceField: 'source',
+            targetField: 'target',
+            valueField: 'value',
+            nodeWidth: 30,
+          },
+          data: sampleSankeyData,
+        })}
+      />,
+    );
     expect(getSeries().nodeWidth).toBe(30);
   });
 
   it('nodeGap sets node gap', () => {
-    render(<SankeyWidget {...makeProps({
-      config: { sourceField: 'source', targetField: 'target', valueField: 'value', nodeGap: 15 },
-      data: sampleSankeyData,
-    })} />);
+    render(
+      <SankeyWidget
+        {...makeProps({
+          config: {
+            sourceField: 'source',
+            targetField: 'target',
+            valueField: 'value',
+            nodeGap: 15,
+          },
+          data: sampleSankeyData,
+        })}
+      />,
+    );
     expect(getSeries().nodeGap).toBe(15);
   });
 
   it('orient=vertical sets vertical orientation', () => {
-    render(<SankeyWidget {...makeProps({
-      config: { sourceField: 'source', targetField: 'target', valueField: 'value', orient: 'vertical' },
-      data: sampleSankeyData,
-    })} />);
+    render(
+      <SankeyWidget
+        {...makeProps({
+          config: {
+            sourceField: 'source',
+            targetField: 'target',
+            valueField: 'value',
+            orient: 'vertical',
+          },
+          data: sampleSankeyData,
+        })}
+      />,
+    );
     expect(getSeries().orient).toBe('vertical');
   });
 
   it('defaults: nodeWidth=20, nodeGap=8, orient=horizontal', () => {
-    render(<SankeyWidget {...makeProps({
-      config: { sourceField: 'source', targetField: 'target', valueField: 'value' },
-      data: sampleSankeyData,
-    })} />);
+    render(
+      <SankeyWidget
+        {...makeProps({
+          config: { sourceField: 'source', targetField: 'target', valueField: 'value' },
+          data: sampleSankeyData,
+        })}
+      />,
+    );
     expect(getSeries().nodeWidth).toBe(20);
     expect(getSeries().nodeGap).toBe(8);
     expect(getSeries().orient).toBe('horizontal');
@@ -772,32 +1125,51 @@ describe('SankeyWidget — per-chart properties', () => {
 // ─── WATERFALL ───────────────────────────────────────────────
 
 describe('WaterfallWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('increaseColor sets color of increase bars', () => {
-    render(<WaterfallWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', increaseColor: '#00ff00' },
-      data: sampleWaterfallData,
-    })} />);
-    const increase = getAllSeries().find(s => s.name === 'Increase');
+    render(
+      <WaterfallWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', increaseColor: '#00ff00' },
+          data: sampleWaterfallData,
+        })}
+      />,
+    );
+    const increase = getAllSeries().find((s) => s.name === 'Increase');
     expect((increase?.itemStyle as Record<string, unknown>).color).toBe('#00ff00');
   });
 
   it('decreaseColor sets color of decrease bars', () => {
-    render(<WaterfallWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', decreaseColor: '#ff0000' },
-      data: sampleWaterfallData,
-    })} />);
-    const decrease = getAllSeries().find(s => s.name === 'Decrease');
+    render(
+      <WaterfallWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', decreaseColor: '#ff0000' },
+          data: sampleWaterfallData,
+        })}
+      />,
+    );
+    const decrease = getAllSeries().find((s) => s.name === 'Decrease');
     expect((decrease?.itemStyle as Record<string, unknown>).color).toBe('#ff0000');
   });
 
   it('totalColor colors total bar items', () => {
-    render(<WaterfallWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value', totalLabel: 'Total', totalColor: '#0000ff' },
-      data: sampleWaterfallData,
-    })} />);
-    const increase = getAllSeries().find(s => s.name === 'Increase');
+    render(
+      <WaterfallWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            totalLabel: 'Total',
+            totalColor: '#0000ff',
+          },
+          data: sampleWaterfallData,
+        })}
+      />,
+    );
+    const increase = getAllSeries().find((s) => s.name === 'Increase');
     // Total item should have custom itemStyle with totalColor
     const data = increase?.data as Array<unknown>;
     const totalItem = data[3] as Record<string, unknown>; // 'Total' is last
@@ -805,12 +1177,16 @@ describe('WaterfallWidget — per-chart properties', () => {
   });
 
   it('defaults: green increase, red decrease, blue total', () => {
-    render(<WaterfallWidget {...makeProps({
-      config: { nameField: 'name', valueField: 'value' },
-      data: sampleWaterfallData,
-    })} />);
-    const increase = getAllSeries().find(s => s.name === 'Increase');
-    const decrease = getAllSeries().find(s => s.name === 'Decrease');
+    render(
+      <WaterfallWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value' },
+          data: sampleWaterfallData,
+        })}
+      />,
+    );
+    const increase = getAllSeries().find((s) => s.name === 'Increase');
+    const decrease = getAllSeries().find((s) => s.name === 'Decrease');
     expect((increase?.itemStyle as Record<string, unknown>).color).toBe('#52c41a');
     expect((decrease?.itemStyle as Record<string, unknown>).color).toBe('#f5222d');
   });
@@ -819,107 +1195,155 @@ describe('WaterfallWidget — per-chart properties', () => {
 // ─── BOX PLOT ────────────────────────────────────────────────
 
 describe('BoxPlotWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('boxWidth sets box width range', () => {
-    render(<BoxPlotWidget {...makeProps({
-      config: { categoryField: 'cat', valueField: 'val', boxWidth: '30' },
-      data: sampleBoxData,
-    })} />);
+    render(
+      <BoxPlotWidget
+        {...makeProps({
+          config: { categoryField: 'cat', valueField: 'val', boxWidth: '30' },
+          data: sampleBoxData,
+        })}
+      />,
+    );
     expect(getSeries().boxWidth).toEqual(['30', '30']);
   });
 
   it('default boxWidth is undefined', () => {
-    render(<BoxPlotWidget {...makeProps({
-      config: { categoryField: 'cat', valueField: 'val' },
-      data: sampleBoxData,
-    })} />);
+    render(
+      <BoxPlotWidget
+        {...makeProps({
+          config: { categoryField: 'cat', valueField: 'val' },
+          data: sampleBoxData,
+        })}
+      />,
+    );
     expect(getSeries().boxWidth).toBeUndefined();
   });
 
   it('computes correct box stats from raw data', () => {
-    render(<BoxPlotWidget {...makeProps({
-      config: { categoryField: 'cat', valueField: 'val' },
-      data: sampleBoxData,
-    })} />);
+    render(
+      <BoxPlotWidget
+        {...makeProps({
+          config: { categoryField: 'cat', valueField: 'val' },
+          data: sampleBoxData,
+        })}
+      />,
+    );
     const data = getSeries().data as number[][];
     // Category 'A': [10, 20, 30, 40] => min=10, Q1=17.5, median=25, Q3=32.5, max=40
-    expect(data[0][0]).toBe(10);  // min
-    expect(data[0][4]).toBe(40);  // max
-    expect(data[0][2]).toBe(25);  // median
+    expect(data[0][0]).toBe(10); // min
+    expect(data[0][4]).toBe(40); // max
+    expect(data[0][2]).toBe(25); // median
   });
 });
 
 // ─── GAUGE ───────────────────────────────────────────────────
 
 describe('GaugeWidget — per-chart properties', () => {
-  beforeEach(() => { capturedOption = null; });
+  beforeEach(() => {
+    capturedOption = null;
+  });
 
   it('startAngle sets start angle', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', startAngle: 180 },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', startAngle: 180 },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().startAngle).toBe(180);
   });
 
   it('endAngle sets end angle', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', endAngle: 0 },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', endAngle: 0 },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().endAngle).toBe(0);
   });
 
   it('splitCount sets split number', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', splitCount: 5 },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', splitCount: 5 },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().splitNumber).toBe(5);
   });
 
   it('progressMode=true enables progress', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', progressMode: true },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', progressMode: true },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     const progress = getSeries().progress as Record<string, unknown>;
     expect(progress.show).toBe(true);
   });
 
   it('roundCap=true with progressMode enables round cap', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', progressMode: true, roundCap: true },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', progressMode: true, roundCap: true },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     const progress = getSeries().progress as Record<string, unknown>;
     expect(progress.roundCap).toBe(true);
   });
 
   it('minValue/maxValue sets gauge range', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', minValue: 10, maxValue: 200 },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', minValue: 10, maxValue: 200 },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().min).toBe(10);
     expect(getSeries().max).toBe(200);
   });
 
   it('min/max also work (backward compat)', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', min: 5, max: 500 },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', min: 5, max: 500 },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().min).toBe(5);
     expect(getSeries().max).toBe(500);
   });
 
   it('defaults: startAngle=225, endAngle=-45, splitNumber=10', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val' },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val' },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().startAngle).toBe(225);
     expect(getSeries().endAngle).toBe(-45);
     expect(getSeries().splitNumber).toBe(10);
@@ -927,19 +1351,54 @@ describe('GaugeWidget — per-chart properties', () => {
 
   // Regression: #11 — roundCap must be set at series level (not just inside progress)
   it('roundCap=true sets roundCap on the series itself', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', roundCap: true },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', roundCap: true },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     expect(getSeries().roundCap).toBe(true);
+  });
+
+  // Regression: #11 — roundCap as string 'true' from Puck radio
+  it('roundCap="true" (string) sets roundCap on the series', () => {
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', roundCap: 'true' },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
+    expect(getSeries().roundCap).toBe(true);
+  });
+
+  // Regression: #12 — progressMode as string 'true' from Puck radio
+  it('progressMode="true" (string) enables progress', () => {
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', progressMode: 'true' },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
+    const progress = getSeries().progress as Record<string, unknown>;
+    expect(progress.show).toBe(true);
   });
 
   // Regression: #12 — progressMode must use a neutral track so progress bar is visible
   it('progressMode=true uses neutral axis line color (not same as progress)', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', progressMode: true },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', progressMode: true },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     const axisLine = getSeries().axisLine as Record<string, unknown> | undefined;
     expect(axisLine).toBeDefined();
     const lineStyle = (axisLine as Record<string, unknown>).lineStyle as Record<string, unknown>;
@@ -950,10 +1409,14 @@ describe('GaugeWidget — per-chart properties', () => {
 
   // Regression: #12 — progress bar must have a visible color
   it('progressMode=true sets progress itemStyle color', () => {
-    render(<GaugeWidget {...makeProps({
-      config: { valueField: 'val', progressMode: true },
-      data: [{ val: 50 }],
-    })} />);
+    render(
+      <GaugeWidget
+        {...makeProps({
+          config: { valueField: 'val', progressMode: true },
+          data: [{ val: 50 }],
+        })}
+      />,
+    );
     const progress = getSeries().progress as Record<string, unknown>;
     expect(progress.show).toBe(true);
     const itemStyle = progress.itemStyle as Record<string, unknown>;
@@ -977,11 +1440,13 @@ describe('TableWidget — per-chart properties', () => {
 
   it('showRowNumbers=true renders row number column', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { showRowNumbers: true },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { showRowNumbers: true },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const headerCells = container.querySelectorAll('th');
     expect(headerCells[0].textContent).toBe('#');
@@ -990,11 +1455,13 @@ describe('TableWidget — per-chart properties', () => {
 
   it('showRowNumbers=false (default) omits row number column', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: {},
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: {},
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const headerCells = container.querySelectorAll('th');
     expect(headerCells.length).toBe(3);
@@ -1003,11 +1470,13 @@ describe('TableWidget — per-chart properties', () => {
 
   it('showTotals=true renders totals row for numeric columns', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { showTotals: true },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { showTotals: true },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const rows = container.querySelectorAll('tr');
     const lastRow = rows[rows.length - 1];
@@ -1020,11 +1489,13 @@ describe('TableWidget — per-chart properties', () => {
 
   it('headerAlign=center centers header text', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { headerAlign: 'center' },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { headerAlign: 'center' },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const th = container.querySelector('th');
     expect(th?.style.textAlign).toBe('center');
@@ -1032,11 +1503,13 @@ describe('TableWidget — per-chart properties', () => {
 
   it('cellAlign=right aligns cell text right', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { cellAlign: 'right' },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { cellAlign: 'right' },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const td = container.querySelector('tbody td');
     expect(td?.style.textAlign).toBe('right');
@@ -1045,11 +1518,13 @@ describe('TableWidget — per-chart properties', () => {
   // Regression: #15 — striped=true renders alternating row backgrounds
   it('striped=true (default) renders alternating row backgrounds', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { striped: true },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { striped: true },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const rows = container.querySelectorAll('tbody tr');
     // Odd rows (index 1, 3, ...) should have non-transparent background
@@ -1060,11 +1535,13 @@ describe('TableWidget — per-chart properties', () => {
   // Regression: #15 — striped=false must NOT render alternating backgrounds
   it('striped=false disables alternating row backgrounds', () => {
     const { container } = render(
-      <TableWidget {...makeProps({
-        config: { striped: false },
-        data: tableData,
-        columns: tableCols,
-      })} />
+      <TableWidget
+        {...makeProps({
+          config: { striped: false },
+          data: tableData,
+          columns: tableCols,
+        })}
+      />,
     );
     const rows = container.querySelectorAll('tbody tr');
     // ALL rows should have transparent background
@@ -1079,10 +1556,12 @@ describe('TableWidget — per-chart properties', () => {
 describe('KPICardWidget — per-chart properties', () => {
   it('fontSize=lg renders large font', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: { valueField: 'val', fontSize: 'lg' },
-        data: [{ val: 42 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: { valueField: 'val', fontSize: 'lg' },
+          data: [{ val: 42 }],
+        })}
+      />,
     );
     const valueEl = container.querySelector('.ss-kpi')?.children[1] as HTMLElement;
     expect(valueEl.style.fontSize).toBe('48px');
@@ -1090,10 +1569,12 @@ describe('KPICardWidget — per-chart properties', () => {
 
   it('fontSize=sm renders small font', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: { valueField: 'val', fontSize: 'sm' },
-        data: [{ val: 42 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: { valueField: 'val', fontSize: 'sm' },
+          data: [{ val: 42 }],
+        })}
+      />,
     );
     const valueEl = container.querySelector('.ss-kpi')?.children[1] as HTMLElement;
     expect(valueEl.style.fontSize).toBe('24px');
@@ -1101,10 +1582,12 @@ describe('KPICardWidget — per-chart properties', () => {
 
   it('default fontSize is md (32px)', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: { valueField: 'val' },
-        data: [{ val: 42 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: { valueField: 'val' },
+          data: [{ val: 42 }],
+        })}
+      />,
     );
     const valueEl = container.querySelector('.ss-kpi')?.children[1] as HTMLElement;
     expect(valueEl.style.fontSize).toBe('32px');
@@ -1112,25 +1595,29 @@ describe('KPICardWidget — per-chart properties', () => {
 
   it('subtitleField renders subtitle text', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        title: 'Revenue',
-        config: { valueField: 'val', subtitleField: 'note' },
-        data: [{ val: 1000, note: 'YoY growth' }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          title: 'Revenue',
+          config: { valueField: 'val', subtitleField: 'note' },
+          data: [{ val: 1000, note: 'YoY growth' }],
+        })}
+      />,
     );
     expect(container.textContent).toContain('YoY growth');
   });
 
   it('trendDirection=down-good reverses color polarity', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: {
-          valueField: 'current',
-          comparisonField: 'previous',
-          trendDirection: 'down-good',
-        },
-        data: [{ current: 120, previous: 100 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: {
+            valueField: 'current',
+            comparisonField: 'previous',
+            trendDirection: 'down-good',
+          },
+          data: [{ current: 120, previous: 100 }],
+        })}
+      />,
     );
     // Up delta with down-good should be RED (#f5222d)
     const deltaEl = container.querySelector('.ss-kpi')?.lastChild as HTMLElement;
@@ -1139,13 +1626,15 @@ describe('KPICardWidget — per-chart properties', () => {
 
   it('trendDirection=up-good (default) shows green for up', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: {
-          valueField: 'current',
-          comparisonField: 'previous',
-        },
-        data: [{ current: 120, previous: 100 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: {
+            valueField: 'current',
+            comparisonField: 'previous',
+          },
+          data: [{ current: 120, previous: 100 }],
+        })}
+      />,
     );
     const deltaEl = container.querySelector('.ss-kpi')?.lastChild as HTMLElement;
     expect(deltaEl.style.color).toBe('rgb(82, 196, 26)'); // #52c41a
@@ -1154,14 +1643,16 @@ describe('KPICardWidget — per-chart properties', () => {
   // Regression: #16 — trendDirection=down-good must show visible indicator text
   it('trendDirection=down-good shows direction indicator label', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: {
-          valueField: 'current',
-          comparisonField: 'previous',
-          trendDirection: 'down-good',
-        },
-        data: [{ current: 120, previous: 100 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: {
+            valueField: 'current',
+            comparisonField: 'previous',
+            trendDirection: 'down-good',
+          },
+          data: [{ current: 120, previous: 100 }],
+        })}
+      />,
     );
     // Should contain the visual indicator
     expect(container.textContent).toContain('↓ is good');
@@ -1170,13 +1661,15 @@ describe('KPICardWidget — per-chart properties', () => {
   // Regression: #16 — trendDirection=up-good must NOT show direction indicator label
   it('trendDirection=up-good (default) does not show direction indicator label', () => {
     const { container } = render(
-      <KPICardWidget {...makeProps({
-        config: {
-          valueField: 'current',
-          comparisonField: 'previous',
-        },
-        data: [{ current: 120, previous: 100 }],
-      })} />
+      <KPICardWidget
+        {...makeProps({
+          config: {
+            valueField: 'current',
+            comparisonField: 'previous',
+          },
+          data: [{ current: 120, previous: 100 }],
+        })}
+      />,
     );
     expect(container.textContent).not.toContain('↓ is good');
   });
@@ -1350,7 +1843,7 @@ describe('Title rendering', () => {
           config: { xField: 'month', yFields: ['revenue'] },
           data: sampleTimeData,
         })}
-      />
+      />,
     );
     expect(capturedOption).not.toBeNull();
     expect(capturedOption!.title).toBeUndefined();
