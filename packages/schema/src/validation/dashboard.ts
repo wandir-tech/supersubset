@@ -45,6 +45,8 @@ const layoutMetaSchema = z.object({
   columns: z.number().int().positive().optional(),
   minHeight: z.string().optional(),
   widgetRef: z.string().optional(),
+  padding: z.string().optional(),
+  verticalAlign: z.enum(['top', 'center', 'bottom']).optional(),
   text: z.string().optional(),
   headerSize: z.enum(['small', 'medium', 'large']).optional(),
   background: z.string().optional(),

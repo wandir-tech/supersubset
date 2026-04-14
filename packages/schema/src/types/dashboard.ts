@@ -81,6 +81,10 @@ export interface LayoutMeta {
   text?: string;
   /** Header size variant */
   headerSize?: 'small' | 'medium' | 'large';
+  /** CSS padding */
+  padding?: string;
+  /** Vertical alignment for column children */
+  verticalAlign?: 'top' | 'center' | 'bottom';
   /** Background style */
   background?: 'transparent' | 'white' | string;
   /** Responsive breakpoint overrides */
@@ -110,16 +114,16 @@ export interface BreakpointOverride {
  * Tabs and tab don't increase depth (like Superset).
  */
 export const VALID_CHILDREN: Record<LayoutComponentType, LayoutComponentType[]> = {
-  root:    ['grid', 'tabs'],
-  grid:    ['row', 'tabs', 'widget', 'header', 'divider', 'spacer'],
-  row:     ['column', 'widget', 'header', 'divider', 'spacer'],
-  column:  ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
-  tabs:    ['tab'],
-  tab:     ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
-  widget:  [],
-  header:  [],
+  root: ['grid', 'tabs'],
+  grid: ['row', 'tabs', 'widget', 'header', 'divider', 'spacer'],
+  row: ['column', 'widget', 'header', 'divider', 'spacer'],
+  column: ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
+  tabs: ['tab'],
+  tab: ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
+  widget: [],
+  header: [],
   divider: [],
-  spacer:  [],
+  spacer: [],
 };
 
 export const MAX_NESTING_DEPTH = 5;
