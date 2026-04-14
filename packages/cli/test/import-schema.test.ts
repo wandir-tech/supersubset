@@ -82,7 +82,12 @@ const SQL_CATALOG = {
     },
   ],
   foreignKeys: [
-    { sourceTable: 'invoices', sourceColumn: 'customer_id', targetTable: 'customers', targetColumn: 'id' },
+    {
+      sourceTable: 'invoices',
+      sourceColumn: 'customer_id',
+      targetTable: 'customers',
+      targetColumn: 'id',
+    },
   ],
 };
 
@@ -274,9 +279,7 @@ describe('importSchema', () => {
           {
             id: 'metrics',
             label: 'Metrics',
-            fields: [
-              { id: 'total_revenue', dataType: 'number' },
-            ],
+            fields: [{ id: 'total_revenue', dataType: 'number' }],
           },
         ],
       });
@@ -295,9 +298,7 @@ describe('importSchema', () => {
           {
             id: 'basic',
             label: 'Basic',
-            fields: [
-              { id: 'name', dataType: 'string' },
-            ],
+            fields: [{ id: 'name', dataType: 'string' }],
           },
         ],
       });
@@ -377,15 +378,39 @@ describe('importSchema', () => {
       const widgetIds = page.widgets.map((w) => w.id);
       expect(page.layout['grid-main'].children).toEqual(widgetIds);
     });
+
+    it('should create widget layout nodes for each widget (#36)', async () => {
+      const result = await importSchema({
+        sourceType: 'json',
+        source: [
+          {
+            id: 'test',
+            label: 'Test',
+            fields: [
+              { id: 'date', dataType: 'date' },
+              { id: 'value', dataType: 'number' },
+              { id: 'label', dataType: 'string' },
+            ],
+          },
+        ],
+      });
+
+      const page = result.dashboard.pages[0];
+      for (const widget of page.widgets) {
+        const node = page.layout[widget.id];
+        expect(node).toBeDefined();
+        expect(node.type).toBe('widget');
+        expect(node.parentId).toBe('grid-main');
+        expect(node.meta.widgetRef).toBe(widget.id);
+      }
+    });
   });
 
   describe('defaults and IDs', () => {
     it('should use default title when not provided', async () => {
       const result = await importSchema({
         sourceType: 'json',
-        source: [
-          { id: 'x', label: 'X', fields: [{ id: 'a', dataType: 'string' }] },
-        ],
+        source: [{ id: 'x', label: 'X', fields: [{ id: 'a', dataType: 'string' }] }],
       });
 
       expect(result.dashboard.title).toBe('Imported Dashboard');
