@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { dashboardDefinitionSchema, validateNesting } from '../src/validation';
+import {
+  dashboardDefinitionSchema,
+  widgetDefinitionSchema,
+  validateNesting,
+} from '../src/validation';
 import { serializeToJSON, parseFromJSON } from '../src/serializers';
 import type { DashboardDefinition } from '../src/types';
 
@@ -92,7 +96,7 @@ describe('layout nesting validation', () => {
 
   it('rejects widget as child of widget', () => {
     const layout = {
-      'root': { type: 'root', children: ['grid-1'] },
+      root: { type: 'root', children: ['grid-1'] },
       'grid-1': { type: 'grid', children: ['w-1'] },
       'w-1': { type: 'widget', children: ['w-2'] },
       'w-2': { type: 'widget', children: [] },
@@ -104,7 +108,7 @@ describe('layout nesting validation', () => {
 
   it('rejects row as child of root', () => {
     const layout = {
-      'root': { type: 'root', children: ['row-1'] },
+      root: { type: 'root', children: ['row-1'] },
       'row-1': { type: 'row', children: [] },
     };
     const errors = validateNesting(layout);
@@ -114,7 +118,7 @@ describe('layout nesting validation', () => {
 
   it('accepts tabs inside grid', () => {
     const layout = {
-      'root': { type: 'root', children: ['grid-1'] },
+      root: { type: 'root', children: ['grid-1'] },
       'grid-1': { type: 'grid', children: ['tabs-1'] },
       'tabs-1': { type: 'tabs', children: ['tab-1'] },
       'tab-1': { type: 'tab', children: ['row-1'] },
@@ -126,7 +130,7 @@ describe('layout nesting validation', () => {
 
   it('reports missing child references', () => {
     const layout = {
-      'root': { type: 'root', children: ['nonexistent'] },
+      root: { type: 'root', children: ['nonexistent'] },
     };
     const errors = validateNesting(layout);
     expect(errors.length).toBeGreaterThan(0);
@@ -186,17 +190,116 @@ describe('minimal valid dashboard', () => {
           title: 'Page 1',
           rootNodeId: 'root',
           layout: {
-            'root': { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
-            'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: { columns: 12 } },
-            'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'kpi-1', width: 4, height: 20 } },
+            root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
+            'grid-1': {
+              id: 'grid-1',
+              type: 'grid',
+              children: ['w-1'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'w-1': {
+              id: 'w-1',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-1',
+              meta: { widgetRef: 'kpi-1', width: 4, height: 20 },
+            },
           },
-          widgets: [
-            { id: 'kpi-1', type: 'kpi-card', config: {} },
-          ],
+          widgets: [{ id: 'kpi-1', type: 'kpi-card', config: {} }],
         },
       ],
     };
     const result = dashboardDefinitionSchema.safeParse(minimal);
     expect(result.success).toBe(true);
+  });
+});
+
+describe('prototype pollution prevention (#39)', () => {
+  it('strips __proto__ from widget config', () => {
+    const result = widgetDefinitionSchema.safeParse({
+      id: 'w1',
+      type: 'kpi-card',
+      config: { value: 42, __proto__: { polluted: true } },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect('__proto__' in result.data.config).toBe(false);
+      expect(result.data.config.value).toBe(42);
+    }
+  });
+
+  it('strips constructor and prototype keys from widget config', () => {
+    const result = widgetDefinitionSchema.safeParse({
+      id: 'w1',
+      type: 'kpi-card',
+      config: { ok: 1, constructor: 'bad', prototype: 'bad' },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect('constructor' in result.data.config).toBe(false);
+      expect('prototype' in result.data.config).toBe(false);
+      expect(result.data.config.ok).toBe(1);
+    }
+  });
+
+  it('strips dangerous keys from dashboard defaults filterValues', () => {
+    const minimal: DashboardDefinition = {
+      schemaVersion: '0.2.0',
+      id: 'test-proto',
+      title: 'Proto Test',
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          rootNodeId: 'root',
+          layout: {
+            root: { id: 'root', type: 'root', children: [], meta: {} },
+          },
+          widgets: [],
+        },
+      ],
+      defaults: {
+        filterValues: { safe: 'ok', __proto__: { polluted: true } } as Record<string, unknown>,
+      },
+    };
+    const result = dashboardDefinitionSchema.safeParse(minimal);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect('__proto__' in (result.data.defaults?.filterValues ?? {})).toBe(false);
+    }
+  });
+
+  it('theme no longer passes through unknown properties', () => {
+    const minimal: DashboardDefinition = {
+      schemaVersion: '0.2.0',
+      id: 'test-theme',
+      title: 'Theme Test',
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          rootNodeId: 'root',
+          layout: {
+            root: { id: 'root', type: 'root', children: [], meta: {} },
+          },
+          widgets: [],
+        },
+      ],
+      theme: {
+        type: 'inline',
+        colors: { primary: '#000', unknownExtraProp: 'should-be-stripped' } as Record<
+          string,
+          unknown
+        >,
+      } as DashboardDefinition['theme'],
+    };
+    const result = dashboardDefinitionSchema.safeParse(minimal);
+    expect(result.success).toBe(true);
+    if (result.success && result.data.theme?.type === 'inline') {
+      expect(
+        (result.data.theme.colors as Record<string, unknown>)?.unknownExtraProp,
+      ).toBeUndefined();
+    }
   });
 });

@@ -2,6 +2,20 @@ import { z } from 'zod';
 import { VALID_CHILDREN } from '../types/dashboard';
 import type { LayoutComponentType } from '../types/dashboard';
 
+const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function safeRecord<V extends z.ZodTypeAny>(valueSchema: V) {
+  return z.record(z.string(), valueSchema).transform((obj) => {
+    const result: Record<string, z.output<V>> = Object.create(null);
+    for (const [key, value] of Object.entries(obj)) {
+      if (!DANGEROUS_KEYS.has(key)) {
+        result[key] = value;
+      }
+    }
+    return result;
+  });
+}
+
 // ─── Layout (flat normalized map) ────────────────────────────
 
 const breakpointOverrideSchema = z.object({
@@ -12,7 +26,16 @@ const breakpointOverrideSchema = z.object({
 });
 
 const layoutComponentTypeSchema = z.enum([
-  'root', 'grid', 'row', 'column', 'widget', 'tabs', 'tab', 'spacer', 'header', 'divider',
+  'root',
+  'grid',
+  'row',
+  'column',
+  'widget',
+  'tabs',
+  'tab',
+  'spacer',
+  'header',
+  'divider',
 ]);
 
 const layoutMetaSchema = z.object({
@@ -42,7 +65,9 @@ const layoutMapSchema = z.record(z.string(), layoutComponentSchema);
  * Validate nesting rules: check that every child type is valid for its parent type.
  * Returns an array of error messages (empty = valid).
  */
-export function validateNesting(layout: Record<string, { type: string; children: string[] }>): string[] {
+export function validateNesting(
+  layout: Record<string, { type: string; children: string[] }>,
+): string[] {
   const errors: string[] = [];
   for (const [id, component] of Object.entries(layout)) {
     const parentType = component.type as LayoutComponentType;
@@ -57,7 +82,7 @@ export function validateNesting(layout: Record<string, { type: string; children:
       const childType = child.type as LayoutComponentType;
       if (!allowedChildren.includes(childType)) {
         errors.push(
-          `Invalid nesting: "${childType}" cannot be a child of "${parentType}" (component "${id}" → "${childId}")`
+          `Invalid nesting: "${childType}" cannot be a child of "${parentType}" (component "${id}" → "${childId}")`,
         );
       }
     }
@@ -145,7 +170,7 @@ const interactionActionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('external'),
     callbackKey: z.string().min(1),
-    payload: z.record(z.unknown()).optional(),
+    payload: safeRecord(z.unknown()).optional(),
   }),
   z.object({
     type: z.literal('drill'),
@@ -170,7 +195,7 @@ const widgetDefinitionSchema = z.object({
   id: z.string().min(1),
   type: z.string().min(1),
   title: z.string().optional(),
-  config: z.record(z.unknown()),
+  config: safeRecord(z.unknown()),
   dataBinding: dataBindingSchema.optional(),
   filters: z.array(filterRefSchema).optional(),
   interactions: z.array(interactionRefSchema).optional(),
@@ -190,19 +215,19 @@ const themeColorsSchema = z.object({
   danger: z.string().optional(),
   info: z.string().optional(),
   border: z.string().optional(),
-}).passthrough();
+});
 
 const themeTypographySchema = z.object({
   fontFamily: z.string().optional(),
   fontSize: z.string().optional(),
   headingFontFamily: z.string().optional(),
-}).passthrough();
+});
 
 const themeSpacingSchema = z.object({
   unit: z.number().optional(),
   widgetPadding: z.string().optional(),
   gridGap: z.string().optional(),
-}).passthrough();
+});
 
 const themeRefSchema = z.object({
   type: z.literal('ref'),
@@ -214,7 +239,7 @@ const inlineThemeSchema = z.object({
   colors: themeColorsSchema.optional(),
   typography: themeTypographySchema.optional(),
   spacing: themeSpacingSchema.optional(),
-  custom: z.record(z.unknown()).optional(),
+  custom: safeRecord(z.unknown()).optional(),
 });
 
 const themeSchema = z.discriminatedUnion('type', [themeRefSchema, inlineThemeSchema]);
@@ -253,7 +278,7 @@ const timeRangeSchema = z.object({
 
 const dashboardDefaultsSchema = z.object({
   activePage: z.string().optional(),
-  filterValues: z.record(z.unknown()).optional(),
+  filterValues: safeRecord(z.unknown()).optional(),
   timeRange: timeRangeSchema.optional(),
 });
 
@@ -262,7 +287,7 @@ const dashboardDefaultsSchema = z.object({
 const visibilityRuleSchema = z.object({
   targetId: z.string().min(1),
   targetType: z.enum(['page', 'widget', 'filter']),
-  condition: z.record(z.unknown()),
+  condition: safeRecord(z.unknown()),
 });
 
 // ─── Page ────────────────────────────────────────────────────
