@@ -2,10 +2,10 @@
 # Supersubset — CI Pipeline
 # Runs on every PR targeting develop, staging, or main.
 # Each job reports independently so PRs show granular status.
-# Uses Nx affected to only lint/test/build changed packages.
 #
-# Build runs first because lint (eslint), typecheck, and tests
-# all need compiled inter-package dependencies (.d.ts / dist).
+# Every job does its own checkout + install + build because
+# inter-package deps need compiled .d.ts / dist output.
+# pnpm caching keeps installs fast across parallel jobs.
 # ──────────────────────────────────────────────────────────────
 name: CI
 
@@ -25,7 +25,7 @@ permissions:
   contents: read
 
 jobs:
-  # ── Build (runs first — other jobs need compiled output) ──
+  # ── Build ──────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -42,24 +42,11 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - uses: nrwl/nx-set-shas@v4
-
       - run: pnpm build
-
-      - name: Upload build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: |
-            packages/*/dist
-            packages/*/build
-          retention-days: 1
 
   # ── Lint ───────────────────────────────────────────────────
   lint:
     name: Lint
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,11 +61,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .
+      - run: pnpm build
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -87,7 +70,6 @@ jobs:
   # ── Typecheck ──────────────────────────────────────────────
   typecheck:
     name: Typecheck
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,11 +84,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .
+      - run: pnpm build
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -115,7 +93,6 @@ jobs:
   # ── Unit Tests ─────────────────────────────────────────────
   unit-tests:
     name: Unit Tests
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -130,11 +107,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .
+      - run: pnpm build
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -143,7 +116,6 @@ jobs:
   # ── E2E (Playwright) ──────────────────────────────────────
   e2e:
     name: E2E Tests
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,11 +130,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .
+      - run: pnpm build
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
