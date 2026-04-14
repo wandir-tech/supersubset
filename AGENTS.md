@@ -15,6 +15,7 @@ You are the **orchestrator agent** for the Supersubset project. Your job is to:
 ## Decision Authority
 
 The orchestrator has **sole authority** over:
+
 - Package boundary changes
 - Schema contract changes
 - New dependency additions
@@ -60,29 +61,28 @@ Before advancing to the next phase:
 
 See `.github/agents/` for specialized agent definitions:
 
-| Agent | Domain |
-|-------|--------|
+| Agent          | Domain                                                             |
+| -------------- | ------------------------------------------------------------------ |
 | `orchestrator` | Task decomposition, subagent delegation, verification, master plan |
-| `architecture` | Schema, packages, ADRs |
-| `designer` | Puck editor, drag/drop UX, property panels |
-| `runtime` | Renderer, layout, widget registry, filters |
-| `charts` | ECharts wrappers, chart config, themes |
-| `metadata` | Adapters, Prisma/SQL/JSON, normalized model |
-| `testing` | Browser automation, Chrome MCP, regression |
-| `research` | Code archaeology, reuse analysis, landscape |
+| `architecture` | Schema, packages, ADRs                                             |
+| `designer`     | Puck editor, drag/drop UX, property panels                         |
+| `runtime`      | Renderer, layout, widget registry, filters                         |
+| `charts`       | ECharts wrappers, chart config, themes                             |
+| `metadata`     | Adapters, Prisma/SQL/JSON, normalized model                        |
+| `testing`      | Browser automation, Chrome MCP, regression                         |
+| `research`     | Code archaeology, reuse analysis, landscape                        |
 
 The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It decomposes complex requests, delegates to specialized agents, parallelizes independent work, and verifies results. Use it for any task that spans multiple packages or domains. See `.github/skills/orchestration/SKILL.md` for the delegation methodology.
 
 ### Planning, CI, and AI context skills
 
-| Skill | Use when |
-| ----- | -------- |
-| `github-cli` | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser |
-| `work-kickoff` | Turning an idea into a reviewed GitHub issue + implementation plan |
-| `branch-ci-promotion` | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations |
-| `maintaining-ai-context` | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions` |
-
-Parallel dev servers / multiple agents on one machine: **`docs/dev/parallel-agent-environments.md`** (port `SUPERSUBSET_DEV_APP_PORT` for dev-app + Playwright).
+| Skill                         | Use when                                                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `github-cli`                  | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser                                 |
+| `work-kickoff`                | Turning an idea into a reviewed GitHub issue + implementation plan                                        |
+| `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
+| `maintaining-ai-context`      | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions`                          |
+| `parallel-agent-environments` | Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing |
 
 ## Context Reset Recovery
 
