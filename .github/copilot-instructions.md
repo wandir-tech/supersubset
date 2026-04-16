@@ -69,3 +69,4 @@ It is NOT a full BI platform. It is a library-first, schema-first toolkit.
 - **`branch-ci-promotion`** — Branch model (feature→develop→staging→main), CI checks, merge gates
 - **`maintaining-ai-context`** — Keep skills, agents, and entry points lean and cross-linked
 - **`parallel-agent-environments`** — Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing
+- **`qa-testing`** — Exploratory QA, bug-filing protocol, fix verification, coverage assessment

@@ -110,6 +110,7 @@ For domain-specific knowledge, read the relevant skill file:
 - **Document a feature**: `.github/skills/document-feature/SKILL.md`
 - **AI context maintenance**: `.github/skills/maintaining-ai-context/SKILL.md`
 - **Parallel agent work**: `.github/skills/parallel-agent-environments/SKILL.md`
+- **QA testing**: `.github/skills/qa-testing/SKILL.md`
 
 ## Agent Roles (for multi-agent coordination)
 

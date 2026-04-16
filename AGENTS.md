@@ -69,7 +69,7 @@ See `.github/agents/` for specialized agent definitions:
 | `runtime`      | Renderer, layout, widget registry, filters                         |
 | `charts`       | ECharts wrappers, chart config, themes                             |
 | `metadata`     | Adapters, Prisma/SQL/JSON, normalized model                        |
-| `testing`      | Browser automation, Chrome MCP, regression                         |
+| `testing`      | Browser automation, Chrome MCP, regression, QA passes              |
 | `research`     | Code archaeology, reuse analysis, landscape                        |
 
 The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It decomposes complex requests, delegates to specialized agents, parallelizes independent work, and verifies results. Use it for any task that spans multiple packages or domains. See `.github/skills/orchestration/SKILL.md` for the delegation methodology.
