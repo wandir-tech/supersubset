@@ -80,7 +80,7 @@ function buildBoxplotOption(
   categories: string[],
   boxData: number[][],
   shared: import('../base/shared-options').SharedConfig,
-  boxWidth?: string
+  boxWidth?: string,
 ) {
   return {
     color: buildColorOption(shared),
@@ -92,7 +92,7 @@ function buildBoxplotOption(
       {
         type: 'boxplot' as const,
         data: boxData,
-        boxWidth: boxWidth ? [boxWidth, boxWidth] : undefined,
+        ...(boxWidth ? { boxWidth: [boxWidth, boxWidth] } : {}),
       },
     ],
   };

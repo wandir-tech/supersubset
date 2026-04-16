@@ -48,9 +48,9 @@ export function ComboChartWidget({ config, data, columns, title, height }: Widge
       name: field,
       type: 'bar' as const,
       data: data.map((row) => row[field]),
-      stack: stacked ? 'bars' : undefined,
+      ...(stacked ? { stack: 'bars' } : {}),
       yAxisIndex: 0,
-      itemStyle: barBorderRadius > 0 ? { borderRadius: barBorderRadius } : undefined,
+      ...(barBorderRadius > 0 ? { itemStyle: { borderRadius: barBorderRadius } } : {}),
       ...(label ? { label } : {}),
     }));
 
@@ -76,9 +76,7 @@ export function ComboChartWidget({ config, data, columns, title, height }: Widge
       xAxis: buildCategoryAxisOption(shared, categoryData),
       yAxis: [
         { ...buildValueAxisOption(shared, 'y'), position: 'left' as const },
-        ...(lineFields.length > 0
-          ? [{ type: 'value' as const, position: 'right' as const }]
-          : []),
+        ...(lineFields.length > 0 ? [{ type: 'value' as const, position: 'right' as const }] : []),
       ],
       dataZoom: buildDataZoomOption(shared),
       series: [...barSeries, ...lineSeries],

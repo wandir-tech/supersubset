@@ -61,11 +61,11 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
           endAngle,
           roundCap,
           splitNumber: splitCount,
-          progress: progressMode
-            ? { show: true, roundCap, itemStyle: { color: progressColor } }
-            : undefined,
+          ...(progressMode
+            ? { progress: { show: true, roundCap, itemStyle: { color: progressColor } } }
+            : {}),
           data: [{ value, name: title ?? '' }],
-          axisLine: thresholds || colors.length >= 1 ? axisLine : undefined,
+          ...(thresholds || colors.length >= 1 ? { axisLine } : {}),
           detail: {
             formatter: fmt ? (v: number) => formatNumber(v, fmt) : '{value}',
             fontSize: 24,

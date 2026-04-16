@@ -33,11 +33,18 @@ export function TreemapWidget({ config, data, columns, title, height }: WidgetPr
     const shared = extractSharedConfig(config);
     const fmt = shared.numberFormat;
 
-    let treeData: Array<{ name: string; value: number; children?: Array<{ name: string; value: number }> }>;
+    let treeData: Array<{
+      name: string;
+      value: number;
+      children?: Array<{ name: string; value: number }>;
+    }>;
 
     if (parentField) {
       // Build hierarchy from parent field
-      const nodeMap = new Map<string, { name: string; value: number; children: Array<{ name: string; value: number }> }>();
+      const nodeMap = new Map<
+        string,
+        { name: string; value: number; children: Array<{ name: string; value: number }> }
+      >();
       const roots: typeof treeData = [];
 
       for (const row of data) {
@@ -85,9 +92,9 @@ export function TreemapWidget({ config, data, columns, title, height }: WidgetPr
           type: 'treemap' as const,
           data: treeData,
           roam: false,
-          leafDepth: maxDepth > 0 ? maxDepth : undefined,
+          ...(maxDepth > 0 ? { leafDepth: maxDepth } : {}),
           upperLabel: { show: showUpperLabel },
-          itemStyle: borderWidth > 0 ? { borderWidth, borderColor: '#fff' } : undefined,
+          ...(borderWidth > 0 ? { itemStyle: { borderWidth, borderColor: '#fff' } } : {}),
           label: {
             show: shared.showValues !== false,
             formatter: fmt

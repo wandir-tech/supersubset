@@ -20,7 +20,15 @@ import {
 
 echarts.use([EChartsLine]);
 
-export function LineChartWidget({ config, data, columns, title, height, widgetId, onEvent }: WidgetProps) {
+export function LineChartWidget({
+  config,
+  data,
+  columns,
+  title,
+  height,
+  widgetId,
+  onEvent,
+}: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -44,7 +52,10 @@ export function LineChartWidget({ config, data, columns, title, height, widgetId
       tooltip: buildTooltipOption(shared, 'axis'),
       legend,
       grid: buildGridOption(shared, { hasTitle, hasLegend: Boolean(legend) }),
-      xAxis: buildCategoryAxisOption(shared, data.map((row) => String(row[xField ?? ''] ?? ''))),
+      xAxis: buildCategoryAxisOption(
+        shared,
+        data.map((row) => String(row[xField ?? ''] ?? '')),
+      ),
       yAxis: buildValueAxisOption(shared, 'y'),
       dataZoom: buildDataZoomOption(shared),
       series: yFields.map((field) => ({
@@ -59,11 +70,11 @@ export function LineChartWidget({ config, data, columns, title, height, widgetId
           },
         })),
         smooth: config.smooth === true,
-        step: step || undefined,
+        ...(step ? { step } : {}),
         connectNulls,
         showSymbol: showMarkers,
         symbolSize: markerSize,
-        areaStyle: showArea ? {} : undefined,
+        ...(showArea ? { areaStyle: {} } : {}),
         ...(label ? { label } : {}),
       })),
     };
