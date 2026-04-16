@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useMemo, useState } from 'react';
 import { SupersubsetRenderer, createWidgetRegistry, type WidgetProps } from '@supersubset/runtime';
 import { registerEssentialWidgets } from '@supersubset/charts-echarts/essentials';
@@ -69,17 +67,31 @@ export function EcommerceHost() {
           boxShadow: '0 24px 60px rgba(83, 52, 24, 0.08)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, alignItems: 'flex-start' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 24,
+            alignItems: 'flex-start',
+          }}
+        >
           <div style={{ maxWidth: 760 }}>
-            <div style={{ fontSize: 13, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#8f6f59' }}>
+            <div
+              style={{
+                fontSize: 13,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: '#8f6f59',
+              }}
+            >
               Next.js Runtime Host
             </div>
             <h1 style={{ margin: '12px 0 10px', fontSize: 48, lineHeight: 1.05 }}>
               Supersubset inside a storefront operations shell.
             </h1>
             <p style={{ margin: 0, fontSize: 18, lineHeight: 1.6, color: '#5b4637' }}>
-              This example shows the runtime package embedded in a Next.js app with host-owned theme propagation,
-              host-supplied data, and no backend dependency on Supersubset itself.
+              This example shows the runtime package embedded in a Next.js app with host-owned theme
+              propagation, host-supplied data, and no backend dependency on Supersubset itself.
             </p>
           </div>
           <button
