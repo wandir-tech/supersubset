@@ -45,6 +45,7 @@ import {
   boxplotData,
 } from './demo-dashboard';
 import { dashboardSwitchingDemo, pageNavigationDemoDashboard } from './navigation-demo';
+import { ProbeWorkspace } from './probe/ProbeWorkspace';
 
 /**
  * Data-injecting widget wrapper — in a real app, the runtime would
@@ -100,7 +101,7 @@ const FILTER_OPTIONS = {
 type ViewerScenario = 'live' | 'pages' | 'dashboards';
 
 function App() {
-  const [mode, setMode] = useState<'viewer' | 'designer' | 'preview'>('viewer');
+  const [mode, setMode] = useState<'viewer' | 'designer' | 'preview' | 'probe'>('viewer');
   const [viewerScenario, setViewerScenario] = useState<ViewerScenario>('live');
   const [activeDashboardId, setActiveDashboardId] = useState(
     dashboardSwitchingDemo.initialDashboardId,
@@ -473,6 +474,20 @@ function App() {
         >
           👁 Preview
         </button>
+        <button
+          onClick={() => setMode('probe')}
+          style={{
+            padding: '6px 14px',
+            borderRadius: 4,
+            border: 'none',
+            cursor: 'pointer',
+            background: mode === 'probe' ? '#3b82f6' : '#333',
+            color: '#fff',
+            fontWeight: mode === 'probe' ? 700 : 400,
+          }}
+        >
+          🔌 Probe
+        </button>
         {savedDashboard && (
           <span style={{ marginLeft: 'auto', fontSize: 12, color: '#aaa' }}>
             Last saved: {savedDashboard.title} ({savedDashboard.pages[0]?.widgets?.length ?? 0}{' '}
@@ -481,7 +496,9 @@ function App() {
         )}
       </div>
 
-      {mode === 'designer' ? (
+      {mode === 'probe' ? (
+        <ProbeWorkspace />
+      ) : mode === 'designer' ? (
         <div style={{ display: 'flex', height: 'calc(100vh - 44px)' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div
