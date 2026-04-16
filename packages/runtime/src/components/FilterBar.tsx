@@ -2,7 +2,7 @@
  * FilterBar — renders dashboard-level filter controls from FilterDefinition[].
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
-import { createElement, useCallback, type ReactNode } from 'react';
+import { createElement, type ReactNode } from 'react';
 import type { FilterDefinition, DatasetDefinition } from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
 
@@ -18,7 +18,8 @@ const BAR_STYLE: React.CSSProperties = {
   borderRadius: '8px',
   border: '1px solid var(--ss-filter-bar-border, #e4e7eb)',
   marginBottom: '16px',
-  fontFamily: 'var(--ss-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
+  fontFamily:
+    'var(--ss-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)',
   fontSize: '13px',
 };
 
@@ -191,9 +192,7 @@ function renderSelect(
       },
     },
     createElement('option', { value: '' }, 'All'),
-    ...options.map((opt) =>
-      createElement('option', { key: opt, value: opt }, opt),
-    ),
+    ...options.map((opt) => createElement('option', { key: opt, value: opt }, opt)),
   );
 }
 
@@ -282,7 +281,10 @@ export const DATE_PRESETS: { value: string; label: string }[] = [
  * Resolve a relative date preset to a concrete { start, end } range (ISO strings).
  * Returns undefined for empty/unknown presets.
  */
-export function resolveRelativeDate(preset: string, now = new Date()): { start: string; end: string } | undefined {
+export function resolveRelativeDate(
+  preset: string,
+  now = new Date(),
+): { start: string; end: string } | undefined {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -290,16 +292,20 @@ export function resolveRelativeDate(preset: string, now = new Date()): { start: 
     case 'today':
       return { start: iso(today), end: iso(today) };
     case 'yesterday': {
-      const d = new Date(today); d.setDate(d.getDate() - 1);
+      const d = new Date(today);
+      d.setDate(d.getDate() - 1);
       return { start: iso(d), end: iso(d) };
     }
     case 'this_week': {
-      const d = new Date(today); d.setDate(d.getDate() - d.getDay());
+      const d = new Date(today);
+      d.setDate(d.getDate() - d.getDay());
       return { start: iso(d), end: iso(today) };
     }
     case 'last_week': {
-      const end = new Date(today); end.setDate(end.getDate() - end.getDay() - 1);
-      const start = new Date(end); start.setDate(start.getDate() - 6);
+      const end = new Date(today);
+      end.setDate(end.getDate() - end.getDay() - 1);
+      const start = new Date(end);
+      start.setDate(start.getDate() - 6);
       return { start: iso(start), end: iso(end) };
     }
     case 'this_month':
@@ -322,21 +328,28 @@ export function resolveRelativeDate(preset: string, now = new Date()): { start: 
     case 'this_year':
       return { start: iso(new Date(today.getFullYear(), 0, 1)), end: iso(today) };
     case 'last_year':
-      return { start: iso(new Date(today.getFullYear() - 1, 0, 1)), end: iso(new Date(today.getFullYear() - 1, 11, 31)) };
+      return {
+        start: iso(new Date(today.getFullYear() - 1, 0, 1)),
+        end: iso(new Date(today.getFullYear() - 1, 11, 31)),
+      };
     case 'last_7_days': {
-      const d = new Date(today); d.setDate(d.getDate() - 6);
+      const d = new Date(today);
+      d.setDate(d.getDate() - 6);
       return { start: iso(d), end: iso(today) };
     }
     case 'last_30_days': {
-      const d = new Date(today); d.setDate(d.getDate() - 29);
+      const d = new Date(today);
+      d.setDate(d.getDate() - 29);
       return { start: iso(d), end: iso(today) };
     }
     case 'last_90_days': {
-      const d = new Date(today); d.setDate(d.getDate() - 89);
+      const d = new Date(today);
+      d.setDate(d.getDate() - 89);
       return { start: iso(d), end: iso(today) };
     }
     case 'last_365_days': {
-      const d = new Date(today); d.setDate(d.getDate() - 364);
+      const d = new Date(today);
+      d.setDate(d.getDate() - 364);
       return { start: iso(d), end: iso(today) };
     }
     default:
@@ -351,10 +364,14 @@ function renderDate(
 ): ReactNode {
   const dateVal = value as { preset?: string; start?: string; end?: string } | string | undefined;
   const isObj = typeof dateVal === 'object' && dateVal !== null;
-  const preset = isObj ? (dateVal as { preset?: string }).preset ?? '' : '';
+  const preset = isObj ? ((dateVal as { preset?: string }).preset ?? '') : '';
   const isCustom = preset === 'custom';
-  const customStart = isObj ? (dateVal as { start?: string }).start ?? '' : (typeof dateVal === 'string' ? dateVal : '');
-  const customEnd = isObj ? (dateVal as { end?: string }).end ?? '' : '';
+  const customStart = isObj
+    ? ((dateVal as { start?: string }).start ?? '')
+    : typeof dateVal === 'string'
+      ? dateVal
+      : '';
+  const customEnd = isObj ? ((dateVal as { end?: string }).end ?? '') : '';
 
   return createElement(
     'div',
@@ -422,10 +439,7 @@ function renderDate(
  * In a real scenario, options come from query results. For now we return
  * an empty array when datasets provide no enum values.
  */
-function getFieldOptions(
-  filter: FilterDefinition,
-  datasets?: DatasetDefinition[],
-): string[] {
+function getFieldOptions(filter: FilterDefinition, datasets?: DatasetDefinition[]): string[] {
   if (!datasets) return [];
   const ds = datasets.find((d) => d.id === filter.datasetRef);
   if (!ds) return [];

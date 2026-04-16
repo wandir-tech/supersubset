@@ -40,7 +40,8 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
         values: { ...state.values, [action.filterId]: action.value },
       };
     case 'RESET_FILTER': {
-      const { [action.filterId]: _, ...rest } = state.values;
+      const { [action.filterId]: __removed, ...rest } = state.values;
+      void __removed;
       return { ...state, values: rest };
     }
     case 'RESET_ALL':
@@ -59,7 +60,7 @@ export interface FilterContextValue {
   setFilter: (filterId: string, value: unknown) => void;
   resetFilter: (filterId: string) => void;
   resetAll: () => void;
-  getFiltersForWidget: (widgetId: string, filters: FilterDefinition[]) => FilterValue[];
+  getFiltersForWidget: (widgetId: string, _filters: FilterDefinition[]) => FilterValue[];
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null);
@@ -75,7 +76,7 @@ export interface FilterProviderProps {
 
 export function FilterProvider({
   initialValues,
-  filters,
+  filters: _filters,
   onFilterChange,
   children,
 }: FilterProviderProps) {
@@ -98,7 +99,8 @@ export function FilterProvider({
   const resetFilter = useCallback(
     (filterId: string) => {
       dispatch({ type: 'RESET_FILTER', filterId });
-      const { [filterId]: _, ...rest } = stateRef.current.values;
+      const { [filterId]: __removed, ...rest } = stateRef.current.values;
+      void __removed;
       onFilterChange?.({ values: rest });
     },
     [onFilterChange],

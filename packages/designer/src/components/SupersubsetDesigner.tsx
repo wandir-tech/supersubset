@@ -6,7 +6,7 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Puck, blocksPlugin, outlinePlugin } from '@puckeditor/core';
-import type { Data, PuckAction } from '@puckeditor/core';
+import type { Data } from '@puckeditor/core';
 import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
 import type { NormalizedDataset } from '@supersubset/data-model';
 import { createPuckConfig } from '../config/puck-config';
@@ -48,7 +48,7 @@ let nextDesignerA11yInstanceId = 1;
 
 function decorateViewportZoomSelects(root: ParentNode, instanceId: number) {
   const zoomSelects = root.querySelectorAll<HTMLSelectElement>(
-    'select[class*="ViewportControls-zoomSelect"]'
+    'select[class*="ViewportControls-zoomSelect"]',
   );
 
   zoomSelects.forEach((select, index) => {
@@ -117,11 +117,13 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   } = props;
 
   const isControlled = value !== undefined;
-  const [uncontrolledDashboard, setUncontrolledDashboard] = useState<DashboardDefinition | undefined>(defaultValue);
-  const sourceDashboard = isControlled ? value : uncontrolledDashboard ?? defaultValue;
+  const [uncontrolledDashboard, setUncontrolledDashboard] = useState<
+    DashboardDefinition | undefined
+  >(defaultValue);
+  const sourceDashboard = isControlled ? value : (uncontrolledDashboard ?? defaultValue);
   const pages = sourceDashboard?.pages ?? [];
   const [activePageId, setActivePageId] = useState<string | undefined>(
-    sourceDashboard?.defaults?.activePage ?? sourceDashboard?.pages[0]?.id
+    sourceDashboard?.defaults?.activePage ?? sourceDashboard?.pages[0]?.id,
   );
   const activePage =
     pages.find((page) => page.id === activePageId) ??
@@ -129,7 +131,9 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     pages[0];
   const activePageIndex = activePage ? pages.findIndex((page) => page.id === activePage.id) : 0;
   const [pageTitleDraft, setPageTitleDraft] = useState(activePage?.title ?? '');
-  const [dashboardTitleDraft, setDashboardTitleDraft] = useState(sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE);
+  const [dashboardTitleDraft, setDashboardTitleDraft] = useState(
+    sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE,
+  );
   const [pendingDeletePageId, setPendingDeletePageId] = useState<string | undefined>();
   const canMutateDashboard = !isControlled || !!onChange;
   const pendingDeletePage = pages.find((page) => page.id === pendingDeletePageId);
@@ -146,7 +150,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       { ...blocksPlugin(), label: 'Components' },
       { ...outlinePlugin(), label: 'Layers' },
     ],
-    []
+    [],
   );
 
   // Use ref for headerActions to keep overrides stable across renders
@@ -177,7 +181,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       }
       onChange?.(dashboard);
     },
-    [isControlled, onChange]
+    [isControlled, onChange],
   );
 
   const handleAddPage = useCallback(() => {
@@ -193,7 +197,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         ...baseDashboard,
         pages: [...baseDashboard.pages, nextPage],
       },
-      nextPage.id
+      nextPage.id,
     );
 
     setActivePageId(nextPage.id);
@@ -214,7 +218,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
 
       setPendingDeletePageId(pageId);
     },
-    [canMutateDashboard, pages.length]
+    [canMutateDashboard, pages.length],
   );
 
   const handleCancelDeletePage = useCallback(() => {
@@ -235,20 +239,27 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     const nextPages = pages.filter((page) => page.id !== pendingDeletePageId);
     const nextActivePage =
       activePage?.id === pendingDeletePageId
-        ? nextPages[Math.max(0, pageIndexToDelete - 1)] ?? nextPages[0]
-        : nextPages.find((page) => page.id === activePage?.id) ?? nextPages[0];
+        ? (nextPages[Math.max(0, pageIndexToDelete - 1)] ?? nextPages[0])
+        : (nextPages.find((page) => page.id === activePage?.id) ?? nextPages[0]);
     const nextDashboard = withActivePageDefault(
       {
         ...sourceDashboard,
         pages: nextPages,
       },
-      nextActivePage?.id
+      nextActivePage?.id,
     );
 
     setActivePageId(nextActivePage?.id);
     setPendingDeletePageId(undefined);
     emitDashboardChange(nextDashboard);
-  }, [activePage?.id, canMutateDashboard, emitDashboardChange, pages, pendingDeletePageId, sourceDashboard]);
+  }, [
+    activePage?.id,
+    canMutateDashboard,
+    emitDashboardChange,
+    pages,
+    pendingDeletePageId,
+    sourceDashboard,
+  ]);
 
   const commitPageTitle = useCallback(() => {
     if (!canMutateDashboard || !sourceDashboard || !activePage) {
@@ -269,7 +280,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               ...page,
               title: nextTitle,
             }
-          : page
+          : page,
       ),
     };
 
@@ -329,13 +340,9 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                 color: '#64748b',
               },
             },
-            icon
+            icon,
           ),
-          React.createElement(
-            'div',
-            { style: { flex: 1, minWidth: 0 } },
-            children
-          )
+          React.createElement('div', { style: { flex: 1, minWidth: 0 } }, children),
         );
       },
       headerActions: ({ children }: { children: React.ReactNode }) => {
@@ -386,7 +393,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                     whiteSpace: 'nowrap',
                   },
                 },
-                page.title
+                page.title,
               ),
               pages.length > 1
                 ? React.createElement(
@@ -412,9 +419,9 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                         opacity: canMutateDashboard ? 1 : 0.5,
                       },
                     },
-                    '×'
+                    '×',
                   )
-                : null
+                : null,
             );
           }),
           React.createElement(
@@ -437,8 +444,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                 whiteSpace: 'nowrap',
               },
             },
-            'Add Page'
-          )
+            'Add Page',
+          ),
         );
 
         const deletePrompt = pendingDeletePage
@@ -467,7 +474,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                     whiteSpace: 'nowrap',
                   },
                 },
-                `Delete ${pendingDeletePage.title}?`
+                `Delete ${pendingDeletePage.title}?`,
               ),
               React.createElement(
                 'button',
@@ -477,7 +484,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   'data-testid': 'designer-page-delete-cancel',
                   style: actionButtonStyle('#fff', '#be123c', '#fecaca'),
                 },
-                'Cancel'
+                'Cancel',
               ),
               React.createElement(
                 'button',
@@ -487,8 +494,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   'data-testid': 'designer-page-delete-confirm',
                   style: actionButtonStyle('#be123c', '#fff', '#be123c'),
                 },
-                'Delete'
-              )
+                'Delete',
+              ),
             )
           : null;
 
@@ -514,11 +521,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                     gap: 6,
                   },
                 },
-                React.createElement(
-                  'span',
-                  { style: smallSectionLabelStyle() },
-                  'Page Title'
-                ),
+                React.createElement('span', { style: smallSectionLabelStyle() }, 'Page Title'),
                 React.createElement('input', {
                   type: 'text',
                   value: pageTitleDraft,
@@ -541,7 +544,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   'data-testid': 'designer-page-title-input',
                   disabled: !canMutateDashboard,
                   style: headerInputStyle(canMutateDashboard, 180),
-                })
+                }),
               )
             : null,
           React.createElement(
@@ -553,11 +556,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                 gap: 6,
               },
             },
-            React.createElement(
-              'span',
-              { style: smallSectionLabelStyle() },
-              'Dashboard Title'
-            ),
+            React.createElement('span', { style: smallSectionLabelStyle() }, 'Dashboard Title'),
             React.createElement('input', {
               type: 'text',
               value: dashboardTitleDraft,
@@ -580,8 +579,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               'data-testid': 'designer-dashboard-title-input',
               disabled: !canMutateDashboard,
               style: headerInputStyle(canMutateDashboard, 220),
-            })
-          )
+            }),
+          ),
         );
 
         const headerControlLayout =
@@ -627,10 +626,10 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                         letterSpacing: '0.04em',
                       },
                     },
-                    'Pages'
+                    'Pages',
                   ),
                   pageChips,
-                  deletePrompt
+                  deletePrompt,
                 ),
                 metadataControls,
                 headerActionsRef.current
@@ -646,18 +645,13 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                           overflow: 'hidden',
                         },
                       },
-                      headerActionsRef.current
+                      headerActionsRef.current,
                     )
-                  : null
+                  : null,
               )
             : headerActionsRef.current;
 
-        return React.createElement(
-          React.Fragment,
-          null,
-          headerControlLayout,
-          children
-        );
+        return React.createElement(React.Fragment, null, headerControlLayout, children);
       },
     }),
     [
@@ -675,7 +669,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       pages,
       pendingDeletePage,
       sourceDashboard?.title,
-    ]
+    ],
   );
 
   // Convert canonical → Puck data for initial state
@@ -708,7 +702,14 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       });
       emitDashboardChange(dashboard);
     },
-    [activePage?.id, activePage?.title, activePageIndex, dashboardTitleDraft, emitDashboardChange, sourceDashboard]
+    [
+      activePage?.id,
+      activePage?.title,
+      activePageIndex,
+      dashboardTitleDraft,
+      emitDashboardChange,
+      sourceDashboard,
+    ],
   );
 
   const handlePublish = useCallback(
@@ -725,7 +726,14 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         onPublish(dashboard);
       }
     },
-    [activePage?.id, activePage?.title, activePageIndex, dashboardTitleDraft, onPublish, sourceDashboard]
+    [
+      activePage?.id,
+      activePage?.title,
+      activePageIndex,
+      dashboardTitleDraft,
+      onPublish,
+      sourceDashboard,
+    ],
   );
 
   const editorKey = `${sourceDashboard?.id ?? 'new-dashboard'}:${activePage?.id ?? 'page-0'}`;
@@ -784,7 +792,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               metadata: metadata ?? {},
               plugins,
               overrides: overrides as never,
-            })
+            }),
           )
         : React.createElement(Puck, {
             key: editorKey,
@@ -798,8 +806,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
             metadata: metadata ?? {},
             plugins,
             overrides: overrides as never,
-          })
-    )
+          }),
+    ),
   );
 }
 
@@ -861,7 +869,7 @@ function normalizePageTitle(nextTitle: string, fallbackTitle: string): string {
 
 function withActivePageDefault(
   dashboard: DashboardDefinition,
-  activePageId: string | undefined
+  activePageId: string | undefined,
 ): DashboardDefinition {
   if (!activePageId) {
     return dashboard;
@@ -911,7 +919,11 @@ function headerInputStyle(canEdit: boolean, minWidth = 180): React.CSSProperties
   };
 }
 
-function actionButtonStyle(background: string, color: string, borderColor: string): React.CSSProperties {
+function actionButtonStyle(
+  background: string,
+  color: string,
+  borderColor: string,
+): React.CSSProperties {
   return {
     padding: '6px 10px',
     borderRadius: 999,

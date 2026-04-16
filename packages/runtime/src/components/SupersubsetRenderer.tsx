@@ -2,8 +2,8 @@
  * SupersubsetRenderer — the main entry point for rendering dashboards.
  * Host apps mount this component with a DashboardDefinition and widget registry.
  */
-import { createElement, useMemo, type ReactNode } from 'react';
-import type { DashboardDefinition, InlineThemeDefinition, PageDefinition } from '@supersubset/schema';
+import { createElement, useMemo } from 'react';
+import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetEvent } from '../widgets/registry';
 import { LayoutRenderer } from '../layout/LayoutRenderer';
 import { FilterProvider, useFilters, type FilterState } from '../filters/FilterEngine';
