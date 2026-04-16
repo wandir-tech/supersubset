@@ -4,18 +4,8 @@
  *
  * Nests inside FilterProvider so it can call useFilters() for cross-filtering.
  */
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
-import type {
-  InteractionDefinition,
-  InteractionAction,
-  NavigateTarget,
-} from '@supersubset/schema';
+import { createContext, useContext, useCallback, useMemo, type ReactNode } from 'react';
+import type { InteractionDefinition, InteractionAction, NavigateTarget } from '@supersubset/schema';
 import type { WidgetEvent } from '../widgets/registry';
 import { useFilters } from '../filters/FilterEngine';
 import { useDrill } from './DrillManager';
@@ -72,9 +62,7 @@ export function InteractionProvider({
   const handleWidgetEvent = useCallback(
     (event: WidgetEvent) => {
       const matching = interactions.filter(
-        (i) =>
-          i.trigger.sourceWidgetId === event.widgetId &&
-          i.trigger.type === event.type,
+        (i) => i.trigger.sourceWidgetId === event.widgetId && i.trigger.type === event.type,
       );
 
       if (matching.length === 0) {
@@ -83,9 +71,7 @@ export function InteractionProvider({
         return;
       }
 
-      let handled = false;
       for (const interaction of matching) {
-        handled = true;
         executeAction(interaction.action, event, {
           setFilter,
           resetFilter,
@@ -106,11 +92,7 @@ export function InteractionProvider({
     [handleWidgetEvent, getInteractionsForWidget],
   );
 
-  return (
-    <InteractionContext.Provider value={value}>
-      {children}
-    </InteractionContext.Provider>
-  );
+  return <InteractionContext.Provider value={value}>{children}</InteractionContext.Provider>;
 }
 
 // ─── Hook ────────────────────────────────────────────────────
@@ -133,11 +115,7 @@ interface ActionContext {
   drillDown: (sourceWidgetId: string, fieldRef: string, value: unknown) => void;
 }
 
-function executeAction(
-  action: InteractionAction,
-  event: WidgetEvent,
-  ctx: ActionContext,
-): void {
+function executeAction(action: InteractionAction, event: WidgetEvent, ctx: ActionContext): void {
   switch (action.type) {
     case 'filter':
       executeCrossFilter(action, event, ctx);
@@ -178,7 +156,8 @@ function executeCrossFilter(
 
   // Toggle behavior: if same value is already set, clear it
   const currentValue = ctx.filterValues[filterId];
-  const isEqual = currentValue !== undefined &&
+  const isEqual =
+    currentValue !== undefined &&
     (currentValue === value || JSON.stringify(currentValue) === JSON.stringify(value));
   if (isEqual) {
     ctx.resetFilter(filterId);

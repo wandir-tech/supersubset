@@ -9,8 +9,8 @@
  *
  * Emits FilterDefinition[] changes to the host.
  */
-import React, { useState, useCallback, useMemo } from 'react';
-import type { NormalizedDataset, NormalizedField } from '@supersubset/data-model';
+import React, { useCallback, useMemo } from 'react';
+import type { NormalizedDataset } from '@supersubset/data-model';
 
 // Re-declare filter types inline to avoid hard dep on schema at runtime.
 // These match the canonical FilterDefinition/FilterScope exactly.
@@ -33,20 +33,40 @@ export type FilterScope =
 // ─── Constants ───────────────────────────────────────────────
 
 export const FILTER_OPERATORS: { value: string; label: string; types: string[] }[] = [
-  { value: 'equals', label: 'Equals', types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime'] },
-  { value: 'not_equals', label: 'Not equals', types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime'] },
+  {
+    value: 'equals',
+    label: 'Equals',
+    types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime'],
+  },
+  {
+    value: 'not_equals',
+    label: 'Not equals',
+    types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime'],
+  },
   { value: 'in', label: 'In list', types: ['string', 'number', 'integer'] },
   { value: 'not_in', label: 'Not in list', types: ['string', 'number', 'integer'] },
   { value: 'contains', label: 'Contains', types: ['string'] },
   { value: 'not_contains', label: 'Does not contain', types: ['string'] },
   { value: 'starts_with', label: 'Starts with', types: ['string'] },
   { value: 'gt', label: 'Greater than', types: ['number', 'integer', 'date', 'datetime'] },
-  { value: 'gte', label: 'Greater than or equal', types: ['number', 'integer', 'date', 'datetime'] },
+  {
+    value: 'gte',
+    label: 'Greater than or equal',
+    types: ['number', 'integer', 'date', 'datetime'],
+  },
   { value: 'lt', label: 'Less than', types: ['number', 'integer', 'date', 'datetime'] },
   { value: 'lte', label: 'Less than or equal', types: ['number', 'integer', 'date', 'datetime'] },
   { value: 'between', label: 'Between', types: ['number', 'integer', 'date', 'datetime'] },
-  { value: 'is_null', label: 'Is null', types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime', 'json', 'unknown'] },
-  { value: 'is_not_null', label: 'Is not null', types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime', 'json', 'unknown'] },
+  {
+    value: 'is_null',
+    label: 'Is null',
+    types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime', 'json', 'unknown'],
+  },
+  {
+    value: 'is_not_null',
+    label: 'Is not null',
+    types: ['string', 'number', 'integer', 'boolean', 'date', 'datetime', 'json', 'unknown'],
+  },
 ];
 
 // ─── Props ────────────────────────────────────────────────────
@@ -87,12 +107,12 @@ function FilterEditor({
 }: FilterEditorProps) {
   const dataset = useMemo(
     () => datasets.find((d) => d.id === filter.datasetRef),
-    [datasets, filter.datasetRef]
+    [datasets, filter.datasetRef],
   );
 
   const field = useMemo(
     () => dataset?.fields.find((f) => f.id === filter.fieldRef),
-    [dataset, filter.fieldRef]
+    [dataset, filter.fieldRef],
   );
 
   const applicableOperators = useMemo(() => {
@@ -104,7 +124,7 @@ function FilterEditor({
     (patch: Partial<FilterDefinition>) => {
       onUpdate({ ...filter, ...patch });
     },
-    [filter, onUpdate]
+    [filter, onUpdate],
   );
 
   const handleScopeChange = useCallback(
@@ -122,7 +142,7 @@ function FilterEditor({
       }
       handleChange({ scope });
     },
-    [handleChange, pageIds]
+    [handleChange, pageIds],
   );
 
   const selectStyle: React.CSSProperties = {
@@ -194,7 +214,9 @@ function FilterEditor({
       {/* Dataset + Field */}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={datasetSelectId} style={labelStyle}>Dataset</label>
+          <label htmlFor={datasetSelectId} style={labelStyle}>
+            Dataset
+          </label>
           <select
             id={datasetSelectId}
             name={`filter-dataset-${filter.id}`}
@@ -218,7 +240,9 @@ function FilterEditor({
           </select>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={fieldSelectId} style={labelStyle}>Field</label>
+          <label htmlFor={fieldSelectId} style={labelStyle}>
+            Field
+          </label>
           <select
             id={fieldSelectId}
             name={`filter-field-${filter.id}`}
@@ -241,7 +265,9 @@ function FilterEditor({
       {/* Operator + Default value */}
       <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={operatorSelectId} style={labelStyle}>Operator</label>
+          <label htmlFor={operatorSelectId} style={labelStyle}>
+            Operator
+          </label>
           <select
             id={operatorSelectId}
             name={`filter-operator-${filter.id}`}
@@ -258,7 +284,9 @@ function FilterEditor({
           </select>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={defaultInputId} style={labelStyle}>Default value</label>
+          <label htmlFor={defaultInputId} style={labelStyle}>
+            Default value
+          </label>
           <input
             id={defaultInputId}
             name={`filter-default-${filter.id}`}
@@ -278,7 +306,9 @@ function FilterEditor({
 
       {/* Filter type */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <label htmlFor={typeSelectId} style={labelStyle}>Control type</label>
+        <label htmlFor={typeSelectId} style={labelStyle}>
+          Control type
+        </label>
         <select
           id={typeSelectId}
           name={`filter-type-${filter.id}`}
@@ -300,10 +330,7 @@ function FilterEditor({
         <label style={labelStyle}>Scope</label>
         <div style={{ display: 'flex', gap: 8 }}>
           {(['global', 'page', 'widgets'] as const).map((st) => (
-            <label
-              key={st}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
-            >
+            <label key={st} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
               <input
                 id={`ss-filter-scope-${st}-${filter.id}`}
                 type="radio"
@@ -326,9 +353,7 @@ function FilterEditor({
             name={`filter-scope-page-${filter.id}`}
             aria-label="Filter scope page"
             value={(filter.scope as { type: 'page'; pageId: string }).pageId}
-            onChange={(e) =>
-              handleChange({ scope: { type: 'page', pageId: e.target.value } })
-            }
+            onChange={(e) => handleChange({ scope: { type: 'page', pageId: e.target.value } })}
             data-testid={`filter-scope-page-select-${filter.id}`}
             style={selectStyle}
           >
@@ -359,9 +384,8 @@ function FilterEditor({
                     type="checkbox"
                     checked={selected}
                     onChange={() => {
-                      const current = (
-                        filter.scope as { type: 'widgets'; widgetIds: string[] }
-                      ).widgetIds;
+                      const current = (filter.scope as { type: 'widgets'; widgetIds: string[] })
+                        .widgetIds;
                       const next = selected
                         ? current.filter((id) => id !== wid)
                         : [...current, wid];
@@ -416,14 +440,14 @@ export function FilterBuilderPanel({
       next[index] = updated;
       onChange(next);
     },
-    [filters, onChange]
+    [filters, onChange],
   );
 
   const handleDelete = useCallback(
     (index: number) => {
       onChange(filters.filter((_, i) => i !== index));
     },
-    [filters, onChange]
+    [filters, onChange],
   );
 
   return (
@@ -439,9 +463,7 @@ export function FilterBuilderPanel({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>
-          Filters ({filters.length})
-        </span>
+        <span style={{ fontWeight: 700, fontSize: 14 }}>Filters ({filters.length})</span>
         <button
           onClick={handleAdd}
           data-testid="add-filter"

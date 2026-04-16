@@ -4,7 +4,6 @@ import { resolve } from 'path';
 import { generateDashboardJsonSchema } from '../src/json-schema';
 import { serializeToYAML, parseFromYAML } from '../src/serializers/yaml';
 import { parseFromJSON } from '../src/serializers';
-import type { DashboardDefinition } from '../src/types';
 
 const fixturePath = resolve(__dirname, 'fixtures/sales-dashboard.json');
 const fixtureJSON = readFileSync(fixturePath, 'utf-8');
