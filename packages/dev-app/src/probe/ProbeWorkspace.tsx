@@ -64,6 +64,12 @@ function triggerJsonDownload(filename: string, content: string): void {
 }
 
 export function ProbeWorkspace(): ReactElement {
+  const urlInputId = 'probe-backend-url';
+  const authModeId = 'probe-auth-mode-select';
+  const jwtInputId = 'probe-jwt-token';
+  const customHeaderNameId = 'probe-custom-header-name';
+  const customHeaderValueId = 'probe-custom-header-value';
+
   const session = loadProbeSession();
 
   const [authMode, setAuthMode] = useState<ProbeAuthMode>(session?.authMode ?? 'bearer');
@@ -77,13 +83,12 @@ export function ProbeWorkspace(): ReactElement {
   const [probeError, setProbeError] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const isConnected = datasets.length > 0 && probeUrl.length > 0;
 
   const undoRedo = useUndoRedo(createBlankDashboardDefinition(), { debounceMs: 500 });
-  useUndoRedoKeyboard(undoRedo.undo, undoRedo.redo, true);
+  useUndoRedoKeyboard(undoRedo.undo, undoRedo.redo, isConnected);
 
   const currentDashboard = undoRedo.current;
-
-  const isConnected = datasets.length > 0 && probeUrl.length > 0;
 
   const authHeader = useMemo(
     () => toAuthHeader(authMode, jwtInput, customHeaderName, customHeaderValue),
@@ -189,10 +194,14 @@ export function ProbeWorkspace(): ReactElement {
             Point Supersubset at a compatible backend, scan datasets, and open a blank designer.
           </p>
 
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}>
+          <label
+            htmlFor={urlInputId}
+            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
+          >
             Backend URL
           </label>
           <input
+            id={urlInputId}
             data-testid="probe-url-input"
             value={baseUrlInput}
             onChange={(event) => setBaseUrlInput(event.target.value)}
@@ -207,10 +216,14 @@ export function ProbeWorkspace(): ReactElement {
             }}
           />
 
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}>
+          <label
+            htmlFor={authModeId}
+            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
+          >
             Auth mode
           </label>
           <select
+            id={authModeId}
             data-testid="probe-auth-mode"
             value={authMode}
             onChange={(event) => setAuthMode(event.target.value as ProbeAuthMode)}
@@ -230,11 +243,13 @@ export function ProbeWorkspace(): ReactElement {
           {authMode === 'bearer' ? (
             <>
               <label
+                htmlFor={jwtInputId}
                 style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
               >
                 JWT token (optional)
               </label>
               <textarea
+                id={jwtInputId}
                 data-testid="probe-jwt-input"
                 value={jwtInput}
                 onChange={(event) => setJwtInput(event.target.value)}
@@ -252,36 +267,66 @@ export function ProbeWorkspace(): ReactElement {
               />
             </>
           ) : (
-            <div
-              style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginBottom: 14 }}
-            >
-              <input
-                data-testid="probe-header-name"
-                value={customHeaderName}
-                onChange={(event) => setCustomHeaderName(event.target.value)}
-                placeholder="X-API-Key"
+            <>
+              <div
                 style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 14,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 2fr',
+                  gap: 10,
+                  marginBottom: 6,
                 }}
-              />
-              <input
-                data-testid="probe-header-value"
-                value={customHeaderValue}
-                onChange={(event) => setCustomHeaderValue(event.target.value)}
-                placeholder="my-dev-key"
+              >
+                <label
+                  htmlFor={customHeaderNameId}
+                  style={{ display: 'block', fontWeight: 600, color: '#0f172a' }}
+                >
+                  Header name
+                </label>
+                <label
+                  htmlFor={customHeaderValueId}
+                  style={{ display: 'block', fontWeight: 600, color: '#0f172a' }}
+                >
+                  Header value
+                </label>
+              </div>
+              <div
                 style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 14,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 2fr',
+                  gap: 10,
+                  marginBottom: 14,
                 }}
-              />
-            </div>
+              >
+                <input
+                  id={customHeaderNameId}
+                  data-testid="probe-header-name"
+                  value={customHeaderName}
+                  onChange={(event) => setCustomHeaderName(event.target.value)}
+                  placeholder="X-API-Key"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    fontSize: 14,
+                  }}
+                />
+                <input
+                  id={customHeaderValueId}
+                  data-testid="probe-header-value"
+                  value={customHeaderValue}
+                  onChange={(event) => setCustomHeaderValue(event.target.value)}
+                  placeholder="my-dev-key"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    fontSize: 14,
+                  }}
+                />
+              </div>
+            </>
           )}
 
           <label
