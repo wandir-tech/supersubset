@@ -4,9 +4,13 @@ export interface AuthHeader {
 }
 
 export type ProbeAuthMode = 'bearer' | 'custom';
+export type ProbeMetadataSourceMode = 'discovery-url' | 'paste-json';
 
 export interface ProbeSessionConfig {
-  baseUrl: string;
+  metadataSourceMode: ProbeMetadataSourceMode;
+  discoveryUrl: string;
+  metadataJson: string;
+  queryUrl: string;
   authMode: ProbeAuthMode;
   jwt: string;
   customHeaderName: string;
@@ -66,13 +70,20 @@ export function loadProbeSession(): ProbeSessionConfig | null {
   }
 
   try {
-    const parsed = JSON.parse(raw) as ProbeSessionConfig;
-    if (!parsed?.baseUrl || !parsed?.authMode) {
+    const parsed = JSON.parse(raw) as Partial<ProbeSessionConfig> & { baseUrl?: string };
+    if (!parsed?.authMode) {
       return null;
     }
 
+    const legacyBaseUrl = typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '';
+    const metadataSourceMode: ProbeMetadataSourceMode =
+      parsed.metadataSourceMode === 'paste-json' ? 'paste-json' : 'discovery-url';
+
     return {
-      baseUrl: parsed.baseUrl,
+      metadataSourceMode,
+      discoveryUrl: parsed.discoveryUrl ?? legacyBaseUrl,
+      metadataJson: parsed.metadataJson ?? '',
+      queryUrl: parsed.queryUrl ?? legacyBaseUrl,
       authMode: parsed.authMode,
       jwt: parsed.jwt ?? '',
       customHeaderName: parsed.customHeaderName ?? '',

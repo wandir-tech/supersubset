@@ -89,4 +89,20 @@ describe('http adapters', () => {
     expect(headers.get('Content-Type')).toBe('application/json');
     expect(init.body).toContain('"datasetId":"orders"');
   });
+
+  it('accepts direct discovery endpoint URLs without appending another suffix', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+
+    const adapter = new HttpMetadataAdapter({ fetcher });
+    await adapter.getDatasets('https://example.com/supersubset/datasets');
+
+    const [url] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://example.com/supersubset/datasets');
+  });
 });

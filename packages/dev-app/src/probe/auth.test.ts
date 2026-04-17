@@ -48,7 +48,10 @@ describe('probe auth helpers', () => {
 
   it('persists and restores session config', () => {
     saveProbeSession({
-      baseUrl: 'https://api.example.com',
+      metadataSourceMode: 'discovery-url',
+      discoveryUrl: 'https://api.example.com/supersubset/datasets',
+      metadataJson: '',
+      queryUrl: 'https://api.example.com/supersubset/query',
       authMode: 'custom',
       jwt: '',
       customHeaderName: 'X-Token',
@@ -56,7 +59,10 @@ describe('probe auth helpers', () => {
     });
 
     expect(loadProbeSession()).toEqual({
-      baseUrl: 'https://api.example.com',
+      metadataSourceMode: 'discovery-url',
+      discoveryUrl: 'https://api.example.com/supersubset/datasets',
+      metadataJson: '',
+      queryUrl: 'https://api.example.com/supersubset/query',
       authMode: 'custom',
       jwt: '',
       customHeaderName: 'X-Token',
@@ -66,7 +72,10 @@ describe('probe auth helpers', () => {
 
   it('clears session config', () => {
     saveProbeSession({
-      baseUrl: 'https://api.example.com',
+      metadataSourceMode: 'paste-json',
+      discoveryUrl: '',
+      metadataJson: '{"datasets":[]}',
+      queryUrl: '',
       authMode: 'bearer',
       jwt: 'jwt',
       customHeaderName: '',
@@ -81,6 +90,28 @@ describe('probe auth helpers', () => {
     window.sessionStorage.setItem('supersubset.dev.probe.session', 'invalid-json');
 
     expect(loadProbeSession()).toBeNull();
+  });
+
+  it('supports legacy session payloads that stored a single baseUrl', () => {
+    window.sessionStorage.setItem(
+      'supersubset.dev.probe.session',
+      JSON.stringify({
+        baseUrl: 'https://api.example.com',
+        authMode: 'bearer',
+        jwt: 'jwt',
+      }),
+    );
+
+    expect(loadProbeSession()).toEqual({
+      metadataSourceMode: 'discovery-url',
+      discoveryUrl: 'https://api.example.com',
+      metadataJson: '',
+      queryUrl: 'https://api.example.com',
+      authMode: 'bearer',
+      jwt: 'jwt',
+      customHeaderName: '',
+      customHeaderValue: '',
+    });
   });
 
   it('returns undefined when credentials are not provided', () => {

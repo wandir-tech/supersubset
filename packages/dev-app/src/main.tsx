@@ -475,6 +475,7 @@ function App() {
           👁 Preview
         </button>
         <button
+          data-testid="mode-probe"
           onClick={() => setMode('probe')}
           style={{
             padding: '6px 14px',

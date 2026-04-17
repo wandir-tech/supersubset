@@ -56,13 +56,44 @@ What to look for:
 - host-owned SQL execution via `sql.js`
 - filter state translated into host-side queries
 
+## Getting Started With Your Data
+
+Supersubset needs:
+
+1. metadata describing datasets and fields
+2. a query endpoint for live preview or runtime execution
+
+The metadata step does not require a live discovery endpoint. You can now onboard data in three ways:
+
+- use a discovery URL that returns normalized metadata
+- generate a metadata snapshot with `npx supersubset export-metadata`
+- paste metadata JSON directly into Probe mode in the dev app
+
+Example CLI export:
+
+```bash
+npx supersubset export-metadata \
+  --source-type json \
+  --source ./metadata.json \
+  --out ./supersubset-metadata.json
+```
+
+Then either:
+
+1. serve that JSON from a discovery endpoint later, or
+2. paste it directly into Probe mode and point previews at a query endpoint
+
 ## Minimal Runtime Host
 
 Use the runtime when the host app already owns routing, persistence, and data delivery.
 
 ```tsx
 import { useMemo } from 'react';
-import { SupersubsetRenderer, createWidgetRegistry, type NavigateRequest } from '@supersubset/runtime';
+import {
+  SupersubsetRenderer,
+  createWidgetRegistry,
+  type NavigateRequest,
+} from '@supersubset/runtime';
 import { registerAllCharts } from '@supersubset/charts-echarts';
 import { resolveTheme, themeToCssVariables } from '@supersubset/theme';
 

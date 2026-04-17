@@ -4,6 +4,7 @@ import {
   SupersubsetDesigner,
   ImportExportPanel,
   CodeViewPanel,
+  type FetchPreviewData,
   useUndoRedo,
   UndoRedoToolbar,
   useUndoRedoKeyboard,
@@ -18,9 +19,11 @@ import {
   saveProbeSession,
   toAuthHeader,
   type ProbeAuthMode,
+  type ProbeMetadataSourceMode,
 } from './auth';
 import { toProbeErrorMessage } from './errors';
-import { HttpMetadataAdapter } from './http-adapters';
+import { HttpMetadataAdapter, HttpQueryAdapter } from './http-adapters';
+import { buildPreviewQuery, deriveQueryEndpointInput, parseProbeMetadataJson } from './metadata';
 
 function createBlankDashboardDefinition(): DashboardDefinition {
   return {
@@ -64,7 +67,10 @@ function triggerJsonDownload(filename: string, content: string): void {
 }
 
 export function ProbeWorkspace(): ReactElement {
-  const urlInputId = 'probe-backend-url';
+  const metadataModeId = 'probe-metadata-mode';
+  const discoveryUrlInputId = 'probe-discovery-url';
+  const metadataJsonInputId = 'probe-metadata-json';
+  const queryUrlInputId = 'probe-query-url';
   const authModeId = 'probe-auth-mode-select';
   const jwtInputId = 'probe-jwt-token';
   const customHeaderNameId = 'probe-custom-header-name';
@@ -72,18 +78,22 @@ export function ProbeWorkspace(): ReactElement {
 
   const session = loadProbeSession();
 
+  const [metadataSourceMode, setMetadataSourceMode] = useState<ProbeMetadataSourceMode>(
+    session?.metadataSourceMode ?? 'discovery-url',
+  );
   const [authMode, setAuthMode] = useState<ProbeAuthMode>(session?.authMode ?? 'bearer');
-  const [baseUrlInput, setBaseUrlInput] = useState(session?.baseUrl ?? '');
+  const [discoveryUrlInput, setDiscoveryUrlInput] = useState(session?.discoveryUrl ?? '');
+  const [metadataJsonInput, setMetadataJsonInput] = useState(session?.metadataJson ?? '');
+  const [queryUrlInput, setQueryUrlInput] = useState(session?.queryUrl ?? '');
   const [jwtInput, setJwtInput] = useState(session?.jwt ?? '');
   const [customHeaderName, setCustomHeaderName] = useState(session?.customHeaderName ?? '');
   const [customHeaderValue, setCustomHeaderValue] = useState(session?.customHeaderValue ?? '');
   const [rememberSession, setRememberSession] = useState(Boolean(session));
   const [datasets, setDatasets] = useState<NormalizedDataset[]>([]);
-  const [probeUrl, setProbeUrl] = useState<string>('');
   const [probeError, setProbeError] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [showCode, setShowCode] = useState(false);
-  const isConnected = datasets.length > 0 && probeUrl.length > 0;
+  const isConnected = datasets.length > 0;
 
   const undoRedo = useUndoRedo(createBlankDashboardDefinition(), { debounceMs: 500 });
   useUndoRedoKeyboard(undoRedo.undo, undoRedo.redo, isConnected);
@@ -95,10 +105,62 @@ export function ProbeWorkspace(): ReactElement {
     [authMode, jwtInput, customHeaderName, customHeaderValue],
   );
 
+  const effectiveQueryEndpoint = useMemo(() => {
+    const normalizedQueryUrl = normalizeBaseUrl(queryUrlInput);
+    if (normalizedQueryUrl) {
+      return normalizedQueryUrl;
+    }
+
+    if (metadataSourceMode === 'discovery-url') {
+      return deriveQueryEndpointInput(discoveryUrlInput);
+    }
+
+    return '';
+  }, [discoveryUrlInput, metadataSourceMode, queryUrlInput]);
+
+  const fetchPreviewData = useMemo<FetchPreviewData | undefined>(() => {
+    if (!isConnected || !effectiveQueryEndpoint) {
+      return undefined;
+    }
+
+    const queryAdapter = new HttpQueryAdapter(effectiveQueryEndpoint, { authHeader });
+    return async (request) => {
+      const query = buildPreviewQuery(datasets, request.datasetRef, request.fields);
+      if (!query) {
+        return [];
+      }
+
+      try {
+        const result = await queryAdapter.execute(query);
+        return result.rows;
+      } catch (error) {
+        console.warn('[Supersubset Probe] Preview query failed', error);
+        return [];
+      }
+    };
+  }, [authHeader, datasets, effectiveQueryEndpoint, isConnected]);
+
   async function handleProbeConnect(): Promise<void> {
-    const normalizedUrl = normalizeBaseUrl(baseUrlInput);
-    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
-      setProbeError('Enter a full backend URL starting with http:// or https://');
+    const normalizedDiscoveryUrl = normalizeBaseUrl(discoveryUrlInput);
+    const normalizedQueryUrl = normalizeBaseUrl(queryUrlInput);
+
+    if (
+      metadataSourceMode === 'discovery-url' &&
+      !normalizedDiscoveryUrl.startsWith('http://') &&
+      !normalizedDiscoveryUrl.startsWith('https://')
+    ) {
+      setProbeError(
+        'Enter a full discovery URL or backend base URL starting with http:// or https://',
+      );
+      return;
+    }
+
+    if (
+      normalizedQueryUrl.length > 0 &&
+      !normalizedQueryUrl.startsWith('http://') &&
+      !normalizedQueryUrl.startsWith('https://')
+    ) {
+      setProbeError('Enter a full query URL or backend base URL starting with http:// or https://');
       return;
     }
 
@@ -106,20 +168,24 @@ export function ProbeWorkspace(): ReactElement {
     setProbeError('');
 
     try {
-      const metadataAdapter = new HttpMetadataAdapter({ authHeader });
-      const nextDatasets = await metadataAdapter.getDatasets(normalizedUrl);
+      const nextDatasets =
+        metadataSourceMode === 'discovery-url'
+          ? await new HttpMetadataAdapter({ authHeader }).getDatasets(normalizedDiscoveryUrl)
+          : await parseProbeMetadataJson(metadataJsonInput);
 
       if (nextDatasets.length === 0) {
-        throw new Error('Backend responded, but no datasets were discovered.');
+        throw new Error('Metadata loaded successfully, but no datasets were discovered.');
       }
 
-      setProbeUrl(normalizedUrl);
       setDatasets(nextDatasets);
       undoRedo.reset(createBlankDashboardDefinition());
 
       if (rememberSession) {
         saveProbeSession({
-          baseUrl: normalizedUrl,
+          metadataSourceMode,
+          discoveryUrl: normalizedDiscoveryUrl,
+          metadataJson: metadataJsonInput,
+          queryUrl: normalizedQueryUrl,
           authMode,
           jwt: jwtInput,
           customHeaderName,
@@ -130,7 +196,6 @@ export function ProbeWorkspace(): ReactElement {
       }
     } catch (error) {
       setDatasets([]);
-      setProbeUrl('');
       setProbeError(toProbeErrorMessage(error));
     } finally {
       setIsConnecting(false);
@@ -157,9 +222,13 @@ export function ProbeWorkspace(): ReactElement {
 
   function handleDisconnect(): void {
     setDatasets([]);
-    setProbeUrl('');
     setProbeError('');
   }
+
+  const metadataSourceSummary =
+    metadataSourceMode === 'discovery-url'
+      ? normalizeBaseUrl(discoveryUrlInput)
+      : 'Pasted metadata JSON';
 
   return (
     <div style={{ maxWidth: 1320, margin: '0 auto', padding: '20px 24px' }}>
@@ -191,21 +260,23 @@ export function ProbeWorkspace(): ReactElement {
         >
           <h2 style={{ marginTop: 0, marginBottom: 10, color: '#0f172a' }}>Backend Probe</h2>
           <p style={{ margin: '0 0 18px', color: '#475569' }}>
-            Point Supersubset at a compatible backend, scan datasets, and open a blank designer.
+            Load metadata from a discovery endpoint or pasted JSON, then optionally use a live query
+            endpoint for preview data while building charts.
           </p>
 
           <label
-            htmlFor={urlInputId}
+            htmlFor={metadataModeId}
             style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
           >
-            Backend URL
+            Metadata source
           </label>
-          <input
-            id={urlInputId}
-            data-testid="probe-url-input"
-            value={baseUrlInput}
-            onChange={(event) => setBaseUrlInput(event.target.value)}
-            placeholder="https://api.example.com"
+          <select
+            id={metadataModeId}
+            data-testid="probe-metadata-mode"
+            value={metadataSourceMode}
+            onChange={(event) =>
+              setMetadataSourceMode(event.target.value as ProbeMetadataSourceMode)
+            }
             style={{
               width: '100%',
               padding: '10px 12px',
@@ -214,7 +285,88 @@ export function ProbeWorkspace(): ReactElement {
               border: '1px solid #cbd5e1',
               fontSize: 14,
             }}
+          >
+            <option value="discovery-url">Discovery URL</option>
+            <option value="paste-json">Paste metadata JSON</option>
+          </select>
+
+          {metadataSourceMode === 'discovery-url' ? (
+            <>
+              <label
+                htmlFor={discoveryUrlInputId}
+                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
+              >
+                Discovery URL or backend base URL
+              </label>
+              <input
+                id={discoveryUrlInputId}
+                data-testid="probe-url-input"
+                value={discoveryUrlInput}
+                onChange={(event) => setDiscoveryUrlInput(event.target.value)}
+                placeholder="https://api.example.com"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  marginBottom: 14,
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  fontSize: 14,
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <label
+                htmlFor={metadataJsonInputId}
+                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
+              >
+                Metadata JSON
+              </label>
+              <textarea
+                id={metadataJsonInputId}
+                data-testid="probe-metadata-json-input"
+                value={metadataJsonInput}
+                onChange={(event) => setMetadataJsonInput(event.target.value)}
+                placeholder='{"datasets":[{"id":"orders","label":"Orders","fields":[...]}]}'
+                rows={8}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  marginBottom: 14,
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  fontSize: 13,
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                }}
+              />
+            </>
+          )}
+
+          <label
+            htmlFor={queryUrlInputId}
+            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
+          >
+            Query endpoint URL or backend base URL (optional)
+          </label>
+          <input
+            id={queryUrlInputId}
+            data-testid="probe-query-url-input"
+            value={queryUrlInput}
+            onChange={(event) => setQueryUrlInput(event.target.value)}
+            placeholder="https://api.example.com"
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              marginBottom: 8,
+              borderRadius: 8,
+              border: '1px solid #cbd5e1',
+              fontSize: 14,
+            }}
           />
+          <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
+            Leave this blank to reuse the discovery URL for live preview when possible. When using
+            pasted metadata, you can still provide a query endpoint for chart preview data.
+          </p>
 
           <label
             htmlFor={authModeId}
@@ -380,7 +532,7 @@ export function ProbeWorkspace(): ReactElement {
               fontWeight: 700,
             }}
           >
-            {isConnecting ? 'Connecting...' : 'Scan backend and open designer'}
+            {isConnecting ? 'Connecting...' : 'Load metadata and open designer'}
           </button>
         </section>
       ) : (
@@ -395,6 +547,7 @@ export function ProbeWorkspace(): ReactElement {
             }}
           >
             <span
+              data-testid="probe-metadata-source-summary"
               style={{
                 borderRadius: 999,
                 background: '#dcfce7',
@@ -404,10 +557,25 @@ export function ProbeWorkspace(): ReactElement {
                 fontWeight: 700,
               }}
             >
-              Connected: {probeUrl}
+              Metadata: {metadataSourceSummary}
             </span>
-            <span style={{ color: '#334155', fontSize: 13 }}>
+            <span data-testid="probe-dataset-count" style={{ color: '#334155', fontSize: 13 }}>
               {datasets.length} dataset(s) discovered
+            </span>
+            <span
+              data-testid="probe-preview-status"
+              style={{
+                borderRadius: 999,
+                background: fetchPreviewData ? '#dbeafe' : '#fef3c7',
+                color: fetchPreviewData ? '#1d4ed8' : '#92400e',
+                padding: '4px 10px',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              {fetchPreviewData
+                ? `Preview: ${effectiveQueryEndpoint}`
+                : 'Preview: disabled (metadata only)'}
             </span>
             <button
               onClick={() => setShowCode((value) => !value)}
@@ -468,6 +636,7 @@ export function ProbeWorkspace(): ReactElement {
                   headerTitle="Supersubset Probe Designer"
                   height="100%"
                   datasets={datasets}
+                  fetchPreviewData={fetchPreviewData}
                   headerActions={
                     <div
                       style={{

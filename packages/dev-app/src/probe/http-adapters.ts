@@ -29,12 +29,17 @@ function createHeaders(authHeader?: AuthHeader, includeJsonContentType?: boolean
   return headers;
 }
 
+function resolveEndpointUrl(input: string, suffix: string): string {
+  const normalized = normalizeBaseUrl(input);
+  return normalized.endsWith(suffix) ? normalized : `${normalized}${suffix}`;
+}
+
 function resolveDatasetsUrl(baseUrl: string): string {
-  return `${normalizeBaseUrl(baseUrl)}/supersubset/datasets`;
+  return resolveEndpointUrl(baseUrl, '/supersubset/datasets');
 }
 
 function resolveQueryUrl(baseUrl: string): string {
-  return `${normalizeBaseUrl(baseUrl)}/supersubset/query`;
+  return resolveEndpointUrl(baseUrl, '/supersubset/query');
 }
 
 function isDatasetArray(value: unknown): value is NormalizedDataset[] {
