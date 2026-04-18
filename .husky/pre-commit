@@ -1,1 +1,25 @@
-npx lint-staged
+#!/bin/sh
+set -e
+
+if ! command -v node >/dev/null 2>&1; then
+	if [ -s "$HOME/.nvm/nvm.sh" ]; then
+		. "$HOME/.nvm/nvm.sh"
+		nvm use --silent default >/dev/null 2>&1 || nvm use --silent >/dev/null 2>&1 || true
+	fi
+
+	if ! command -v node >/dev/null 2>&1; then
+		for dir in /opt/homebrew/bin /usr/local/bin "$HOME"/.nvm/versions/node/*/bin; do
+			if [ -d "$dir" ]; then
+				PATH="$dir:$PATH"
+			fi
+		done
+		export PATH
+	fi
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+	echo "husky - pre-commit requires node in PATH" >&2
+	exit 127
+fi
+
+exec node node_modules/lint-staged/bin/lint-staged.js
