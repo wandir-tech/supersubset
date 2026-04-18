@@ -49,6 +49,48 @@ describe('probe metadata helpers', () => {
     });
   });
 
+  it('uses explicit aggregation hints for metric slots', () => {
+    const query = buildPreviewQuery(
+      [
+        {
+          id: 'fact_match_events',
+          label: 'Match Events',
+          fields: [
+            { id: 'event_type', label: 'Event Type', dataType: 'string', role: 'dimension' },
+            { id: 'event_id', label: 'Event Id', dataType: 'string', role: 'key' },
+          ],
+        },
+      ],
+      'fact_match_events',
+      {
+        xField: 'event_type',
+        yField: 'event_id',
+        metricFields: ['event_id'],
+        aggregation: 'count',
+      },
+    );
+
+    expect(query).toEqual({
+      datasetId: 'fact_match_events',
+      limit: 200,
+      fields: [{ fieldId: 'event_type' }, { fieldId: 'event_id', aggregation: 'count' }],
+    });
+  });
+
+  it('lets explicit aggregation none override measure defaults', () => {
+    const query = buildPreviewQuery(DATASETS, 'orders', {
+      yField: 'revenue',
+      metricFields: ['revenue'],
+      aggregation: 'none',
+    });
+
+    expect(query).toEqual({
+      datasetId: 'orders',
+      limit: 200,
+      fields: [{ fieldId: 'revenue' }],
+    });
+  });
+
   it('derives query endpoint from discovery endpoint input', () => {
     expect(deriveQueryEndpointInput('https://api.example.com/supersubset/datasets')).toBe(
       'https://api.example.com/supersubset/query',

@@ -1,5 +1,5 @@
 import { JsonAdapter } from '@supersubset/adapter-json';
-import type { LogicalQuery, NormalizedDataset } from '@supersubset/data-model';
+import type { AggregationType, LogicalQuery, NormalizedDataset } from '@supersubset/data-model';
 
 const jsonAdapter = new JsonAdapter();
 const DEFAULT_PREVIEW_LIMIT = 200;
@@ -12,24 +12,51 @@ export interface ProbeMetadataEnvelope {
   datasets: unknown;
 }
 
+const METADATA_BINDING_KEYS = new Set(['aggregation', 'metricFields']);
+const VALID_AGGREGATIONS: ReadonlySet<AggregationType> = new Set([
+  'sum',
+  'avg',
+  'count',
+  'count_distinct',
+  'min',
+  'max',
+  'none',
+]);
+
 function isEnvelope(value: unknown): value is ProbeMetadataEnvelope {
   return typeof value === 'object' && value !== null && 'datasets' in value;
 }
 
+function toFieldIdList(value: string | string[] | undefined): string[] {
+  if (typeof value === 'string') {
+    return value.length > 0 ? [value] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+  }
+
+  return [];
+}
+
 function flattenFieldBindings(fields: ProbeFieldBindings): string[] {
-  const values = Object.values(fields).flatMap((value) => {
-    if (typeof value === 'string') {
-      return value.length > 0 ? [value] : [];
+  const values = Object.entries(fields).flatMap(([key, value]) => {
+    if (METADATA_BINDING_KEYS.has(key)) {
+      return [];
     }
 
-    if (Array.isArray(value)) {
-      return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
-    }
-
-    return [];
+    return toFieldIdList(value);
   });
 
   return Array.from(new Set(values));
+}
+
+function toAggregationType(value: string | undefined): AggregationType | undefined {
+  if (!value || !VALID_AGGREGATIONS.has(value as AggregationType)) {
+    return undefined;
+  }
+
+  return value as AggregationType;
 }
 
 export async function normalizeProbeMetadataPayload(
@@ -80,11 +107,36 @@ export function buildPreviewQuery(
     return null;
   }
 
+  const metricFieldIds = new Set(toFieldIdList(fields.metricFields));
+  const rawAggregationHint =
+    typeof fields.aggregation === 'string' ? fields.aggregation : undefined;
+  const hasAggregationHint = Boolean(rawAggregationHint && rawAggregationHint.length > 0);
+  const aggregationHint = toAggregationType(rawAggregationHint);
+
   return {
     datasetId: datasetRef,
     limit,
     fields: fieldIds.map((fieldId) => {
       const field = dataset.fields.find((item) => item.id === fieldId);
+
+      const isMetricField =
+        metricFieldIds.size === 0 ? field?.role === 'measure' : metricFieldIds.has(fieldId);
+
+      if (!isMetricField) {
+        return { fieldId };
+      }
+
+      if (hasAggregationHint) {
+        if (aggregationHint && aggregationHint !== 'none') {
+          return {
+            fieldId,
+            aggregation: aggregationHint,
+          };
+        }
+
+        return { fieldId };
+      }
+
       if (field?.role === 'measure') {
         return {
           fieldId,

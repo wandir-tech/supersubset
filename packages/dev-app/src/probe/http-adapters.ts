@@ -54,7 +54,7 @@ export class HttpMetadataAdapter implements MetadataAdapter<string> {
 
   constructor(options: HttpAdapterOptions = {}) {
     this.authHeader = options.authHeader;
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher = options.fetcher ?? globalThis.fetch.bind(globalThis);
   }
 
   async getDatasets(source: string): Promise<NormalizedDataset[]> {
@@ -98,7 +98,7 @@ export class HttpQueryAdapter implements QueryAdapter {
   constructor(baseUrl: string, options: HttpAdapterOptions = {}) {
     this.baseUrl = normalizeBaseUrl(baseUrl);
     this.authHeader = options.authHeader;
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher = options.fetcher ?? globalThis.fetch.bind(globalThis);
   }
 
   async execute(query: LogicalQuery): Promise<QueryResult> {

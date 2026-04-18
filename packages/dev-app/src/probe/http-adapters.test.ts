@@ -4,6 +4,35 @@ import { HttpMetadataAdapter, HttpQueryAdapter } from './http-adapters';
 import { toAuthHeader } from './auth';
 
 describe('http adapters', () => {
+  it('binds the default global fetch implementation', async () => {
+    const originalFetch = globalThis.fetch;
+    const calls: string[] = [];
+
+    function sensitiveFetch(this: typeof globalThis, input: RequestInfo | URL): Promise<Response> {
+      if (this !== globalThis) {
+        throw new TypeError('Illegal invocation');
+      }
+
+      calls.push(String(input));
+      return Promise.resolve(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    }
+
+    globalThis.fetch = sensitiveFetch as typeof fetch;
+
+    try {
+      const adapter = new HttpMetadataAdapter();
+      await adapter.getDatasets('https://example.com');
+      expect(calls).toEqual(['https://example.com/supersubset/datasets']);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('injects bearer auth header for metadata probe', async () => {
     const fetcher = vi.fn(
       async () =>
