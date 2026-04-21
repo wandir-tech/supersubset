@@ -567,66 +567,110 @@ function remapSampleData(
 // ─── Chart Preview Component ─────────────────────────────────
 
 /**
- * Extract a flat map of field roles → field ids from the widget config.
- * This tells the host app which columns are needed for the preview query.
+ * Extract a flat map of field roles → field ids **from user-bound puckProps only**.
+ *
+ * Critical: this MUST NOT pull in values from DEFAULT_CONFIGS, because those
+ * defaults are placeholder names from sample data (e.g. `comparisonField:
+ * 'comparison'`, `yFields: ['revenue', 'orders']`) that do not exist in the
+ * host's actual datasets. Including them makes the preview POST fields the
+ * backend doesn't recognize, which yields 400s and silent fallback to sample.
+ *
+ * When the user hasn't bound any field yet, this returns `{}` and the caller
+ * skips the fetch entirely — the chart then renders static sample data, which
+ * is the intended "placeholder" state until real bindings exist.
  */
-function extractFieldsFromConfig(
-  config: Record<string, unknown>,
+function extractFieldsFromUserProps(
+  puckProps: Record<string, unknown>,
 ): Record<string, string | string[] | undefined> {
-  const fields: Record<string, string | string[] | undefined> = {};
   const str = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : undefined);
-  const strArr = (v: unknown) =>
-    Array.isArray(v)
-      ? v.filter((s): s is string => typeof s === 'string' && s.length > 0)
-      : undefined;
+  const fields: Record<string, string | string[] | undefined> = {};
   const metricFieldIds = new Set<string>();
 
-  const addMetricField = (value: unknown) => {
-    const fieldId = str(value);
-    if (fieldId) {
-      metricFieldIds.add(fieldId);
-    }
-  };
+  const xAxisField = str(puckProps.xAxisField);
+  if (xAxisField) fields.xField = xAxisField;
 
-  const addMetricFields = (value: unknown) => {
-    for (const fieldId of strArr(value) ?? []) {
-      metricFieldIds.add(fieldId);
-    }
-  };
+  const yAxisField = str(puckProps.yAxisField);
+  if (yAxisField) {
+    fields.yFields = [yAxisField];
+    fields.yField = yAxisField;
+    metricFieldIds.add(yAxisField);
+  }
 
-  fields.xField = str(config.xField);
-  fields.yFields = strArr(config.yFields);
-  fields.yField = str(config.yField);
-  fields.nameField = str(config.nameField);
-  fields.valueField = str(config.valueField);
-  fields.categoryField = str(config.categoryField);
-  fields.sizeField = str(config.sizeField);
-  fields.sourceField = str(config.sourceField);
-  fields.targetField = str(config.targetField);
-  fields.seriesField = str(config.seriesField);
-  fields.colorGroupField = str(config.colorGroupField);
-  fields.barFields = strArr(config.barFields);
-  fields.lineFields = strArr(config.lineFields);
-  fields.comparisonField = str(config.comparisonField);
-  fields.aggregation = str(config.aggregation);
+  const nameField = str(puckProps.nameField);
+  if (nameField) fields.nameField = nameField;
 
-  addMetricField(config.yField);
-  addMetricFields(config.yFields);
-  addMetricField(config.valueField);
-  addMetricField(config.comparisonField);
-  addMetricField(config.sizeField);
-  addMetricFields(config.barFields);
-  addMetricFields(config.lineFields);
+  const valueField = str(puckProps.valueField);
+  if (valueField) {
+    fields.valueField = valueField;
+    metricFieldIds.add(valueField);
+  }
+
+  const categoryField = str(puckProps.categoryField);
+  if (categoryField) {
+    fields.categoryField = categoryField;
+    if (!fields.nameField) fields.nameField = categoryField;
+  }
+
+  const sizeField = str(puckProps.sizeField);
+  if (sizeField) {
+    fields.sizeField = sizeField;
+    metricFieldIds.add(sizeField);
+  }
+
+  const sourceField = str(puckProps.sourceField);
+  if (sourceField) fields.sourceField = sourceField;
+
+  const targetField = str(puckProps.targetField);
+  if (targetField) fields.targetField = targetField;
+
+  const seriesField = str(puckProps.seriesField);
+  if (seriesField) fields.seriesField = seriesField;
+
+  const colorGroupField = str(puckProps.colorGroupField);
+  if (colorGroupField) fields.colorGroupField = colorGroupField;
+
+  const barField = str(puckProps.barField);
+  if (barField) {
+    fields.barFields = [barField];
+    metricFieldIds.add(barField);
+  }
+
+  const lineField = str(puckProps.lineField);
+  if (lineField) {
+    fields.lineFields = [lineField];
+    metricFieldIds.add(lineField);
+  }
+
+  const comparisonField = str(puckProps.comparisonField);
+  if (comparisonField) {
+    fields.comparisonField = comparisonField;
+    metricFieldIds.add(comparisonField);
+  }
+
+  const parentField = str(puckProps.parentField);
+  if (parentField) fields.parentField = parentField;
+
+  const aggregation = str(puckProps.aggregation);
+  if (aggregation) fields.aggregation = aggregation;
 
   if (metricFieldIds.size > 0) {
     fields.metricFields = Array.from(metricFieldIds);
   }
 
-  // Remove undefined entries
-  for (const key of Object.keys(fields)) {
-    if (fields[key] === undefined) delete fields[key];
-  }
   return fields;
+}
+
+const NON_BINDING_KEYS = new Set(['aggregation', 'metricFields']);
+
+function hasUserBoundAnyField(fields: Record<string, string | string[] | undefined>): boolean {
+  for (const [key, value] of Object.entries(fields)) {
+    if (NON_BINDING_KEYS.has(key)) continue;
+    if (value === undefined) continue;
+    if (Array.isArray(value) ? value.length > 0 : value.length > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 interface ChartPreviewProps {
@@ -645,15 +689,17 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
   const fetchPreviewData = usePreviewData();
   const config = useMemo(() => buildWidgetConfig(widgetType, puckProps), [widgetType, puckProps]);
 
-  // Build the data request from current field config
+  // Build the data request from the user's explicit bindings only.
+  // IMPORTANT: we read from `puckProps` (user input) not `config` (merged with
+  // sample-data defaults) so we never POST field names that don't exist in
+  // the host's dataset.
   const datasetRef = (puckProps.datasetRef as string) || '';
   const dataRequest = useMemo<PreviewDataRequest | null>(() => {
     if (!fetchPreviewData || !datasetRef) return null;
-    return {
-      datasetRef,
-      fields: extractFieldsFromConfig(config),
-    };
-  }, [fetchPreviewData, datasetRef, config]);
+    const userFields = extractFieldsFromUserProps(puckProps);
+    if (!hasUserBoundAnyField(userFields)) return null;
+    return { datasetRef, fields: userFields };
+  }, [fetchPreviewData, datasetRef, puckProps]);
 
   // Fetch real data from host when available
   const [hostData, setHostData] = useState<Record<string, unknown>[] | null>(null);

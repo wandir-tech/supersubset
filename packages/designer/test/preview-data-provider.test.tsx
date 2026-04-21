@@ -355,4 +355,100 @@ describe('ChartPreview — real data from host', () => {
       expect(request.fields.seriesField).toBe('category');
     });
   });
+
+  describe('no sample-data field leaks (regression)', () => {
+    // Historical bug: DEFAULT_CONFIGS assigns sample-data placeholder names
+    // (e.g. KPI card's `comparisonField: 'comparison'`, line chart's
+    // `yFields: ['revenue','orders']`). When these leaked into the preview
+    // fetch, the backend 400'd on unknown fields and the chart silently
+    // fell back to sample data. The fix: extract only puckProps, never defaults.
+
+    it('KPI card does NOT leak `comparison` when user has not bound comparisonField', () => {
+      const { fetchSpy } = renderWithProvider(
+        'kpi-card',
+        {
+          valueField: 'read_count',
+          aggregation: 'sum',
+        },
+        mockFetchPreviewData,
+      );
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
+      expect(request.fields.valueField).toBe('read_count');
+      // The sample-data placeholder must NOT be in the fetch payload.
+      expect(request.fields.comparisonField).toBeUndefined();
+      expect(request.fields.metricFields).toEqual(['read_count']);
+    });
+
+    it('line chart does NOT leak sample `xField=month` / `yFields=[revenue,orders]` when user has not bound them', () => {
+      // User has set ONLY the dataset, no X/Y fields yet.
+      // In this state, there should be NO fetch — the chart should fall back
+      // to sample data as a placeholder.
+      mockChartWidget.mockClear();
+      const fetchSpy = vi.fn(mockFetchPreviewData);
+
+      act(() => {
+        render(
+          React.createElement(
+            PreviewDataProvider,
+            { fetchPreviewData: fetchSpy },
+            React.createElement(ChartPreview, {
+              widgetType: 'line-chart',
+              puckProps: { title: 'Test', datasetRef: 'test-orders' },
+              fallbackIcon: '📊',
+            }),
+          ),
+        );
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('KPI card skips fetch when neither valueField nor any other binding is set', () => {
+      mockChartWidget.mockClear();
+      const fetchSpy = vi.fn(mockFetchPreviewData);
+
+      act(() => {
+        render(
+          React.createElement(
+            PreviewDataProvider,
+            { fetchPreviewData: fetchSpy },
+            React.createElement(ChartPreview, {
+              widgetType: 'kpi-card',
+              puckProps: { title: 'Test', datasetRef: 'test-orders', aggregation: 'sum' },
+              fallbackIcon: '📊',
+            }),
+          ),
+        );
+      });
+
+      // `aggregation` alone is not a field binding; it must not trigger a fetch.
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('bar chart with user-bound x and y fields does NOT carry extra sample-data fields', () => {
+      const { fetchSpy } = renderWithProvider(
+        'bar-chart',
+        {
+          xAxisField: 'sent_date',
+          yAxisField: 'read_count',
+          aggregation: 'count',
+        },
+        mockFetchPreviewData,
+      );
+
+      const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
+      expect(request.fields.xField).toBe('sent_date');
+      expect(request.fields.yFields).toEqual(['read_count']);
+      // The default-config leak used to include extras like `nameField`
+      // or `valueField`; none should be present now.
+      expect(request.fields.nameField).toBeUndefined();
+      expect(request.fields.valueField).toBeUndefined();
+      expect(request.fields.comparisonField).toBeUndefined();
+      expect(request.fields.sizeField).toBeUndefined();
+      expect(request.fields.barFields).toBeUndefined();
+      expect(request.fields.lineFields).toBeUndefined();
+    });
+  });
 });
