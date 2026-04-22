@@ -6,6 +6,15 @@ import type {
   QueryAdapter,
   LogicalQuery,
   QueryResult,
+  ProbeCapabilities,
+  ProbeDatasetsResponse,
+  ProbeQueryResponse,
+} from '../src';
+import {
+  PROBE_PROTOCOL_VERSION,
+  PROBE_STANDARD_AGGREGATIONS,
+  PROBE_STANDARD_FILTER_OPERATORS,
+  PROBE_STANDARD_SOURCE_TYPES,
 } from '../src';
 
 describe('NormalizedDataset type', () => {
@@ -15,7 +24,13 @@ describe('NormalizedDataset type', () => {
       label: 'Orders',
       fields: [
         { id: 'id', label: 'Order ID', dataType: 'integer', role: 'key' },
-        { id: 'total', label: 'Total', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
+        {
+          id: 'total',
+          label: 'Total',
+          dataType: 'number',
+          role: 'measure',
+          defaultAggregation: 'sum',
+        },
         { id: 'date', label: 'Order Date', dataType: 'date', role: 'time' },
         { id: 'status', label: 'Status', dataType: 'string', role: 'dimension' },
       ],
@@ -106,5 +121,63 @@ describe('QueryAdapter interface', () => {
     });
     expect(result.rows).toHaveLength(1);
     expect(result.columns[0].fieldId).toBe('status');
+  });
+});
+
+describe('probe contract', () => {
+  const capabilities: ProbeCapabilities = {
+    supportedAggregations: [...PROBE_STANDARD_AGGREGATIONS],
+    supportedFilterOperators: [...PROBE_STANDARD_FILTER_OPERATORS],
+    supportedSourceTypes: [...PROBE_STANDARD_SOURCE_TYPES],
+    supportsMetadataDiscovery: true,
+    supportsQueryExecution: true,
+    maxLimit: 5000,
+  };
+
+  it('exposes a stable protocol version', () => {
+    expect(PROBE_PROTOCOL_VERSION).toBe('v1');
+  });
+
+  it('can construct a datasets response envelope', () => {
+    const response: ProbeDatasetsResponse = {
+      protocolVersion: PROBE_PROTOCOL_VERSION,
+      capabilities,
+      datasets: [
+        {
+          id: 'orders',
+          label: 'Orders',
+          source: { type: 'table', ref: 'public.orders' },
+          fields: [
+            { id: 'region', label: 'Region', dataType: 'string', role: 'dimension' },
+            {
+              id: 'revenue',
+              label: 'Revenue',
+              dataType: 'number',
+              role: 'measure',
+              defaultAggregation: 'sum',
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(response.capabilities.supportedFilterOperators).toContain('between');
+    expect(response.datasets[0].source?.type).toBe('table');
+  });
+
+  it('can construct a query response envelope', () => {
+    const response: ProbeQueryResponse = {
+      protocolVersion: PROBE_PROTOCOL_VERSION,
+      capabilities,
+      columns: [
+        { fieldId: 'region', label: 'Region', dataType: 'string' },
+        { fieldId: 'revenue', label: 'Revenue', dataType: 'number' },
+      ],
+      rows: [{ region: 'North', revenue: 12_500 }],
+      totalRows: 1,
+    };
+
+    expect(response.capabilities.supportedAggregations).toContain('count_distinct');
+    expect(response.rows[0].region).toBe('North');
   });
 });

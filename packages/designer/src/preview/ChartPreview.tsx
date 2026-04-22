@@ -41,15 +41,15 @@ const WIDGET_COMPONENTS: Record<string, ComponentType<WidgetProps>> = {
   'scatter-chart': ScatterChartWidget,
   'area-chart': AreaChartWidget,
   'combo-chart': ComboChartWidget,
-  'heatmap': HeatmapWidget,
+  heatmap: HeatmapWidget,
   'radar-chart': RadarChartWidget,
   'funnel-chart': FunnelChartWidget,
-  'treemap': TreemapWidget,
-  'sankey': SankeyWidget,
-  'waterfall': WaterfallWidget,
+  treemap: TreemapWidget,
+  sankey: SankeyWidget,
+  waterfall: WaterfallWidget,
   'box-plot': BoxPlotWidget,
-  'gauge': GaugeWidget,
-  'table': TableWidget,
+  gauge: GaugeWidget,
+  table: TableWidget,
   'kpi-card': KPICardWidget,
 };
 
@@ -63,17 +63,20 @@ const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   'scatter-chart': { xField: 'x', yField: 'y', sizeField: 'size' },
   'area-chart': { xField: 'month', yFields: ['revenue', 'orders'], area: true, smooth: true },
   'combo-chart': { xField: 'month', barFields: ['bar'], lineFields: ['line'] },
-  'heatmap': { xField: 'x', yField: 'y', valueField: 'value' },
-  'radar-chart': { nameField: 'name', valueFields: ['Speed', 'Strength', 'Defense', 'Magic', 'Agility', 'Luck'] },
+  heatmap: { xField: 'x', yField: 'y', valueField: 'value' },
+  'radar-chart': {
+    nameField: 'name',
+    valueFields: ['Speed', 'Strength', 'Defense', 'Magic', 'Agility', 'Luck'],
+  },
   'funnel-chart': { nameField: 'stage', valueField: 'value' },
-  'treemap': { nameField: 'name', valueField: 'value', parentField: 'parent' },
-  'sankey': { sourceField: 'source', targetField: 'target', valueField: 'value' },
-  'waterfall': { categoryField: 'category', valueField: 'value' },
+  treemap: { nameField: 'name', valueField: 'value', parentField: 'parent' },
+  sankey: { sourceField: 'source', targetField: 'target', valueField: 'value' },
+  waterfall: { categoryField: 'category', valueField: 'value' },
   'box-plot': { categoryField: 'category' },
-  'gauge': { valueField: 'value', min: 0, max: 100 },
-  'table': {},
+  gauge: { valueField: 'value', min: 0, max: 100 },
+  table: {},
   'kpi-card': { valueField: 'value', comparisonField: 'comparison' },
-  'alerts': {
+  alerts: {
     titleField: 'alert_title',
     messageField: 'alert_message',
     severityField: 'severity',
@@ -109,7 +112,10 @@ const ALERT_LAYOUT_STYLES: Record<AlertLayout, React.CSSProperties> = {
   },
 };
 
-const ALERT_SEVERITY_STYLES: Record<AlertSeverity, { accent: string; background: string; border: string }> = {
+const ALERT_SEVERITY_STYLES: Record<
+  AlertSeverity,
+  { accent: string; background: string; border: string }
+> = {
   info: {
     accent: '#1d4ed8',
     background: '#eff6ff',
@@ -158,13 +164,15 @@ interface AlertsPreviewProps {
 
 function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps) {
   const titleField = typeof config.titleField === 'string' ? config.titleField : 'alert_title';
-  const messageField = typeof config.messageField === 'string' ? config.messageField : 'alert_message';
-  const severityField = typeof config.severityField === 'string' ? config.severityField : 'severity';
-  const timestampField = typeof config.timestampField === 'string' ? config.timestampField : 'detected_at';
+  const messageField =
+    typeof config.messageField === 'string' ? config.messageField : 'alert_message';
+  const severityField =
+    typeof config.severityField === 'string' ? config.severityField : 'severity';
+  const timestampField =
+    typeof config.timestampField === 'string' ? config.timestampField : 'detected_at';
   const layout = config.layout === 'wrap' || config.layout === 'inline' ? config.layout : 'stack';
-  const maxItems = typeof config.maxItems === 'number' && config.maxItems > 0
-    ? config.maxItems
-    : data.length;
+  const maxItems =
+    typeof config.maxItems === 'number' && config.maxItems > 0 ? config.maxItems : data.length;
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
   const showTimestamp = config.showTimestamp !== false;
   const defaultSeverity = normalizeAlertSeverity(config.defaultSeverity, 'info');
@@ -188,7 +196,9 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
         fontFamily: 'sans-serif',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
+      >
         <strong style={{ color: '#0f172a', fontSize: 15 }}>{title}</strong>
         <span style={{ color: '#64748b', fontSize: 12 }}>
           {visibleAlerts.length}
@@ -238,10 +248,19 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
                   gap: 8,
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    alignItems: 'flex-start',
+                  }}
+                >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <strong style={{ color: '#0f172a', fontSize: 14 }}>{alertTitle}</strong>
-                    <span style={{ color: '#334155', fontSize: 12, lineHeight: 1.45 }}>{alertMessage}</span>
+                    <span style={{ color: '#334155', fontSize: 12, lineHeight: 1.45 }}>
+                      {alertMessage}
+                    </span>
                   </div>
                   <span
                     style={{
@@ -278,7 +297,7 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
  */
 function buildWidgetConfig(
   widgetType: string,
-  puckProps: Record<string, unknown>
+  puckProps: Record<string, unknown>,
 ): Record<string, unknown> {
   const defaults = DEFAULT_CONFIGS[widgetType] ?? {};
 
@@ -298,7 +317,7 @@ function buildWidgetConfig(
   }
 
   // Override defaults if user has set actual field references (non-empty strings)
-  const s = (v: unknown) => typeof v === 'string' && v.length > 0 ? v : undefined;
+  const s = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : undefined);
   if (s(puckProps.xAxisField)) config.xField = puckProps.xAxisField;
   if (s(puckProps.yAxisField)) {
     config.yFields = [puckProps.yAxisField as string];
@@ -312,6 +331,7 @@ function buildWidgetConfig(
   if (s(puckProps.valueField)) config.valueField = puckProps.valueField;
   if (s(puckProps.sizeField)) config.sizeField = puckProps.sizeField;
   if (s(puckProps.colorGroupField)) config.colorGroupField = puckProps.colorGroupField;
+  if (s(puckProps.aggregation)) config.aggregation = puckProps.aggregation;
   if (s(puckProps.nameField)) config.nameField = puckProps.nameField;
   if (s(puckProps.parentField)) config.parentField = puckProps.parentField;
   if (s(puckProps.sourceField)) config.sourceField = puckProps.sourceField;
@@ -324,7 +344,8 @@ function buildWidgetConfig(
   if (s(puckProps.severityField)) config.severityField = puckProps.severityField;
   if (s(puckProps.timestampField)) config.timestampField = puckProps.timestampField;
   if (s(puckProps.layout)) config.layout = puckProps.layout;
-  if (puckProps.maxItems != null && puckProps.maxItems !== '') config.maxItems = Number(puckProps.maxItems);
+  if (puckProps.maxItems != null && puckProps.maxItems !== '')
+    config.maxItems = Number(puckProps.maxItems);
   if (s(puckProps.emptyState)) config.emptyState = puckProps.emptyState;
   if (puckProps.showTimestamp === 'true') config.showTimestamp = true;
   else if (puckProps.showTimestamp === 'false') config.showTimestamp = false;
@@ -349,8 +370,10 @@ function buildWidgetConfig(
   if (s(puckProps.xAxisLabelRotate) && puckProps.xAxisLabelRotate !== '0') {
     config.xAxisLabelRotate = Number(puckProps.xAxisLabelRotate);
   }
-  if (puckProps.yAxisMin != null && puckProps.yAxisMin !== '') config.yAxisMin = Number(puckProps.yAxisMin);
-  if (puckProps.yAxisMax != null && puckProps.yAxisMax !== '') config.yAxisMax = Number(puckProps.yAxisMax);
+  if (puckProps.yAxisMin != null && puckProps.yAxisMin !== '')
+    config.yAxisMin = Number(puckProps.yAxisMin);
+  if (puckProps.yAxisMax != null && puckProps.yAxisMax !== '')
+    config.yAxisMax = Number(puckProps.yAxisMax);
   if (puckProps.logAxis === 'true') config.logAxis = true;
   else if (puckProps.logAxis === 'false') config.logAxis = false;
   if (puckProps.zoomable === 'true') config.zoomable = true;
@@ -360,7 +383,8 @@ function buildWidgetConfig(
   // Line / Area
   if (puckProps.showMarkers === 'true') config.showMarkers = true;
   else if (puckProps.showMarkers === 'false') config.showMarkers = false;
-  if (puckProps.markerSize != null && puckProps.markerSize !== '') config.markerSize = Number(puckProps.markerSize);
+  if (puckProps.markerSize != null && puckProps.markerSize !== '')
+    config.markerSize = Number(puckProps.markerSize);
   if (s(puckProps.step)) config.step = puckProps.step;
   if (puckProps.connectNulls === 'true') config.connectNulls = true;
   else if (puckProps.connectNulls === 'false') config.connectNulls = false;
@@ -368,24 +392,36 @@ function buildWidgetConfig(
   // Bar
   if (s(puckProps.barWidth)) config.barWidth = puckProps.barWidth;
   if (s(puckProps.barGap)) config.barGap = puckProps.barGap;
-  if (puckProps.borderRadius != null && puckProps.borderRadius !== '' && Number(puckProps.borderRadius) > 0) config.borderRadius = Number(puckProps.borderRadius);
-  if (puckProps.barMinHeight != null && Number(puckProps.barMinHeight) > 0) config.barMinHeight = Number(puckProps.barMinHeight);
+  if (
+    puckProps.borderRadius != null &&
+    puckProps.borderRadius !== '' &&
+    Number(puckProps.borderRadius) > 0
+  )
+    config.borderRadius = Number(puckProps.borderRadius);
+  if (puckProps.barMinHeight != null && Number(puckProps.barMinHeight) > 0)
+    config.barMinHeight = Number(puckProps.barMinHeight);
   // Pie
-  if (puckProps.innerRadius != null && puckProps.innerRadius !== '') config.innerRadius = Number(puckProps.innerRadius);
-  if (puckProps.outerRadius != null && puckProps.outerRadius !== '') config.outerRadius = Number(puckProps.outerRadius);
+  if (puckProps.innerRadius != null && puckProps.innerRadius !== '')
+    config.innerRadius = Number(puckProps.innerRadius);
+  if (puckProps.outerRadius != null && puckProps.outerRadius !== '')
+    config.outerRadius = Number(puckProps.outerRadius);
   if (s(puckProps.labelPosition)) config.labelPosition = puckProps.labelPosition;
-  if (puckProps.padAngle != null && Number(puckProps.padAngle) > 0) config.padAngle = Number(puckProps.padAngle);
+  if (puckProps.padAngle != null && Number(puckProps.padAngle) > 0)
+    config.padAngle = Number(puckProps.padAngle);
   if (puckProps.variant === 'donut') config.donut = true;
   else if (puckProps.variant === 'pie') config.donut = false;
   if (puckProps.variant === 'rose') config.roseType = 'radius';
   // Scatter
-  if (puckProps.symbolSize != null && puckProps.symbolSize !== '') config.symbolSize = Number(puckProps.symbolSize);
+  if (puckProps.symbolSize != null && puckProps.symbolSize !== '')
+    config.symbolSize = Number(puckProps.symbolSize);
   if (s(puckProps.opacity)) config.opacity = Number(puckProps.opacity);
   // Combo
   if (puckProps.lineSmooth === 'false') config.lineSmooth = false;
-  if (puckProps.barBorderRadius != null && Number(puckProps.barBorderRadius) > 0) config.barBorderRadius = Number(puckProps.barBorderRadius);
+  if (puckProps.barBorderRadius != null && Number(puckProps.barBorderRadius) > 0)
+    config.barBorderRadius = Number(puckProps.barBorderRadius);
   // Heatmap
-  if (puckProps.cellBorderWidth != null && puckProps.cellBorderWidth !== '') config.cellBorderWidth = Number(puckProps.cellBorderWidth);
+  if (puckProps.cellBorderWidth != null && puckProps.cellBorderWidth !== '')
+    config.cellBorderWidth = Number(puckProps.cellBorderWidth);
   if (s(puckProps.cellBorderColor)) config.cellBorderColor = puckProps.cellBorderColor;
   // Radar
   if (s(puckProps.shape)) config.shape = puckProps.shape;
@@ -397,11 +433,15 @@ function buildWidgetConfig(
   // Treemap
   if (puckProps.showUpperLabel === 'true') config.showUpperLabel = true;
   else if (puckProps.showUpperLabel === 'false') config.showUpperLabel = false;
-  if (puckProps.maxDepth != null && Number(puckProps.maxDepth) > 0) config.maxDepth = Number(puckProps.maxDepth);
-  if (puckProps.borderWidth != null && Number(puckProps.borderWidth) > 0) config.borderWidth = Number(puckProps.borderWidth);
+  if (puckProps.maxDepth != null && Number(puckProps.maxDepth) > 0)
+    config.maxDepth = Number(puckProps.maxDepth);
+  if (puckProps.borderWidth != null && Number(puckProps.borderWidth) > 0)
+    config.borderWidth = Number(puckProps.borderWidth);
   // Sankey
-  if (puckProps.nodeWidth != null && puckProps.nodeWidth !== '') config.nodeWidth = Number(puckProps.nodeWidth);
-  if (puckProps.nodeGap != null && puckProps.nodeGap !== '') config.nodeGap = Number(puckProps.nodeGap);
+  if (puckProps.nodeWidth != null && puckProps.nodeWidth !== '')
+    config.nodeWidth = Number(puckProps.nodeWidth);
+  if (puckProps.nodeGap != null && puckProps.nodeGap !== '')
+    config.nodeGap = Number(puckProps.nodeGap);
   if (s(puckProps.orient)) config.orient = puckProps.orient;
   // Waterfall
   if (s(puckProps.totalLabel)) config.totalLabel = puckProps.totalLabel;
@@ -411,11 +451,14 @@ function buildWidgetConfig(
   // BoxPlot
   if (s(puckProps.boxWidth)) config.boxWidth = puckProps.boxWidth;
   // Gauge
-  if (puckProps.startAngle != null && puckProps.startAngle !== '') config.startAngle = Number(puckProps.startAngle);
-  if (puckProps.endAngle != null && puckProps.endAngle !== '') config.endAngle = Number(puckProps.endAngle);
+  if (puckProps.startAngle != null && puckProps.startAngle !== '')
+    config.startAngle = Number(puckProps.startAngle);
+  if (puckProps.endAngle != null && puckProps.endAngle !== '')
+    config.endAngle = Number(puckProps.endAngle);
   if (puckProps.roundCap === 'true') config.roundCap = true;
   else if (puckProps.roundCap === 'false') config.roundCap = false;
-  if (puckProps.splitCount != null && puckProps.splitCount !== '') config.splitCount = Number(puckProps.splitCount);
+  if (puckProps.splitCount != null && puckProps.splitCount !== '')
+    config.splitCount = Number(puckProps.splitCount);
   if (puckProps.progressMode === 'true') config.progressMode = true;
   else if (puckProps.progressMode === 'false') config.progressMode = false;
   // Table
@@ -449,14 +492,19 @@ function buildWidgetConfig(
  */
 function buildFieldRemap(
   widgetType: string,
-  config: Record<string, unknown>
+  config: Record<string, unknown>,
 ): Record<string, string> {
   const defaults = DEFAULT_CONFIGS[widgetType] ?? {};
   const remap: Record<string, string> = {};
 
   const addRemap = (configKey: string, defaultKey: string | undefined) => {
     const userVal = config[configKey];
-    if (typeof userVal === 'string' && userVal.length > 0 && typeof defaultKey === 'string' && defaultKey !== userVal) {
+    if (
+      typeof userVal === 'string' &&
+      userVal.length > 0 &&
+      typeof defaultKey === 'string' &&
+      defaultKey !== userVal
+    ) {
       remap[defaultKey] = userVal;
     }
   };
@@ -501,7 +549,7 @@ function buildFieldRemap(
  */
 function remapSampleData(
   data: Record<string, unknown>[],
-  fieldRemap: Record<string, string>
+  fieldRemap: Record<string, string>,
 ): Record<string, unknown>[] {
   const entries = Object.entries(fieldRemap);
   if (entries.length === 0) return data;
@@ -519,36 +567,110 @@ function remapSampleData(
 // ─── Chart Preview Component ─────────────────────────────────
 
 /**
- * Extract a flat map of field roles → field ids from the widget config.
- * This tells the host app which columns are needed for the preview query.
+ * Extract a flat map of field roles → field ids **from user-bound puckProps only**.
+ *
+ * Critical: this MUST NOT pull in values from DEFAULT_CONFIGS, because those
+ * defaults are placeholder names from sample data (e.g. `comparisonField:
+ * 'comparison'`, `yFields: ['revenue', 'orders']`) that do not exist in the
+ * host's actual datasets. Including them makes the preview POST fields the
+ * backend doesn't recognize, which yields 400s and silent fallback to sample.
+ *
+ * When the user hasn't bound any field yet, this returns `{}` and the caller
+ * skips the fetch entirely — the chart then renders static sample data, which
+ * is the intended "placeholder" state until real bindings exist.
  */
-function extractFieldsFromConfig(
-  config: Record<string, unknown>
+function extractFieldsFromUserProps(
+  puckProps: Record<string, unknown>,
 ): Record<string, string | string[] | undefined> {
+  const str = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : undefined);
   const fields: Record<string, string | string[] | undefined> = {};
-  const str = (v: unknown) => typeof v === 'string' && v.length > 0 ? v : undefined;
-  const strArr = (v: unknown) => Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string' && s.length > 0) : undefined;
+  const metricFieldIds = new Set<string>();
 
-  fields.xField = str(config.xField);
-  fields.yFields = strArr(config.yFields);
-  fields.yField = str(config.yField);
-  fields.nameField = str(config.nameField);
-  fields.valueField = str(config.valueField);
-  fields.categoryField = str(config.categoryField);
-  fields.sizeField = str(config.sizeField);
-  fields.sourceField = str(config.sourceField);
-  fields.targetField = str(config.targetField);
-  fields.seriesField = str(config.seriesField);
-  fields.colorGroupField = str(config.colorGroupField);
-  fields.barFields = strArr(config.barFields);
-  fields.lineFields = strArr(config.lineFields);
-  fields.comparisonField = str(config.comparisonField);
+  const xAxisField = str(puckProps.xAxisField);
+  if (xAxisField) fields.xField = xAxisField;
 
-  // Remove undefined entries
-  for (const key of Object.keys(fields)) {
-    if (fields[key] === undefined) delete fields[key];
+  const yAxisField = str(puckProps.yAxisField);
+  if (yAxisField) {
+    fields.yFields = [yAxisField];
+    fields.yField = yAxisField;
+    metricFieldIds.add(yAxisField);
   }
+
+  const nameField = str(puckProps.nameField);
+  if (nameField) fields.nameField = nameField;
+
+  const valueField = str(puckProps.valueField);
+  if (valueField) {
+    fields.valueField = valueField;
+    metricFieldIds.add(valueField);
+  }
+
+  const categoryField = str(puckProps.categoryField);
+  if (categoryField) {
+    fields.categoryField = categoryField;
+    if (!fields.nameField) fields.nameField = categoryField;
+  }
+
+  const sizeField = str(puckProps.sizeField);
+  if (sizeField) {
+    fields.sizeField = sizeField;
+    metricFieldIds.add(sizeField);
+  }
+
+  const sourceField = str(puckProps.sourceField);
+  if (sourceField) fields.sourceField = sourceField;
+
+  const targetField = str(puckProps.targetField);
+  if (targetField) fields.targetField = targetField;
+
+  const seriesField = str(puckProps.seriesField);
+  if (seriesField) fields.seriesField = seriesField;
+
+  const colorGroupField = str(puckProps.colorGroupField);
+  if (colorGroupField) fields.colorGroupField = colorGroupField;
+
+  const barField = str(puckProps.barField);
+  if (barField) {
+    fields.barFields = [barField];
+    metricFieldIds.add(barField);
+  }
+
+  const lineField = str(puckProps.lineField);
+  if (lineField) {
+    fields.lineFields = [lineField];
+    metricFieldIds.add(lineField);
+  }
+
+  const comparisonField = str(puckProps.comparisonField);
+  if (comparisonField) {
+    fields.comparisonField = comparisonField;
+    metricFieldIds.add(comparisonField);
+  }
+
+  const parentField = str(puckProps.parentField);
+  if (parentField) fields.parentField = parentField;
+
+  const aggregation = str(puckProps.aggregation);
+  if (aggregation) fields.aggregation = aggregation;
+
+  if (metricFieldIds.size > 0) {
+    fields.metricFields = Array.from(metricFieldIds);
+  }
+
   return fields;
+}
+
+const NON_BINDING_KEYS = new Set(['aggregation', 'metricFields']);
+
+function hasUserBoundAnyField(fields: Record<string, string | string[] | undefined>): boolean {
+  for (const [key, value] of Object.entries(fields)) {
+    if (NON_BINDING_KEYS.has(key)) continue;
+    if (value === undefined) continue;
+    if (Array.isArray(value) ? value.length > 0 : value.length > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 interface ChartPreviewProps {
@@ -565,20 +687,19 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
   const Component = WIDGET_COMPONENTS[widgetType];
   const sampleData = useMemo(() => getSampleData(widgetType), [widgetType]);
   const fetchPreviewData = usePreviewData();
-  const config = useMemo(
-    () => buildWidgetConfig(widgetType, puckProps),
-    [widgetType, puckProps]
-  );
+  const config = useMemo(() => buildWidgetConfig(widgetType, puckProps), [widgetType, puckProps]);
 
-  // Build the data request from current field config
+  // Build the data request from the user's explicit bindings only.
+  // IMPORTANT: we read from `puckProps` (user input) not `config` (merged with
+  // sample-data defaults) so we never POST field names that don't exist in
+  // the host's dataset.
   const datasetRef = (puckProps.datasetRef as string) || '';
   const dataRequest = useMemo<PreviewDataRequest | null>(() => {
     if (!fetchPreviewData || !datasetRef) return null;
-    return {
-      datasetRef,
-      fields: extractFieldsFromConfig(config),
-    };
-  }, [fetchPreviewData, datasetRef, config]);
+    const userFields = extractFieldsFromUserProps(puckProps);
+    if (!hasUserBoundAnyField(userFields)) return null;
+    return { datasetRef, fields: userFields };
+  }, [fetchPreviewData, datasetRef, puckProps]);
 
   // Fetch real data from host when available
   const [hostData, setHostData] = useState<Record<string, unknown>[] | null>(null);
@@ -590,24 +711,28 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
     let cancelled = false;
     const result = fetchPreviewData(dataRequest);
     if (result instanceof Promise) {
-      result.then((rows) => {
-        if (!cancelled) setHostData(rows);
-      }).catch(() => {
-        if (!cancelled) setHostData(null);
-      });
+      result
+        .then((rows) => {
+          if (!cancelled) setHostData(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setHostData(null);
+        });
     } else {
       setHostData(result);
     }
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [dataRequest, fetchPreviewData]);
 
   // Use host data when available, otherwise fall back to remapped sample data
   const fieldRemap = useMemo(() => buildFieldRemap(widgetType, config), [widgetType, config]);
   const fallbackData = useMemo(
-    () => sampleData ? remapSampleData(sampleData.data, fieldRemap) : [],
-    [sampleData, fieldRemap]
+    () => (sampleData ? remapSampleData(sampleData.data, fieldRemap) : []),
+    [sampleData, fieldRemap],
   );
-  const previewData = (hostData && hostData.length > 0) ? hostData : fallbackData;
+  const previewData = hostData && hostData.length > 0 ? hostData : fallbackData;
 
   const displayTitle = (puckProps.title as string) || widgetType;
 
@@ -642,7 +767,7 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
       },
       React.createElement('span', { style: { fontSize: 32 } }, fallbackIcon),
       React.createElement('span', { style: { fontWeight: 600, fontSize: 14 } }, displayTitle),
-      React.createElement('span', { style: { fontSize: 12, color: '#999' } }, widgetType)
+      React.createElement('span', { style: { fontSize: 12, color: '#999' } }, widgetType),
     );
   }
 
@@ -677,11 +802,15 @@ export function ChartPreview({ widgetType, puckProps, fallbackIcon }: ChartPrevi
           'div',
           { style: { padding: 16, color: '#999', textAlign: 'center' as const } },
           React.createElement('span', { style: { fontSize: 24 } }, fallbackIcon),
-          React.createElement('div', { style: { fontSize: 12, marginTop: 4 } }, 'Preview unavailable')
+          React.createElement(
+            'div',
+            { style: { fontSize: 12, marginTop: 4 } },
+            'Preview unavailable',
+          ),
         ),
       },
-      React.createElement(Component, widgetProps)
-    )
+      React.createElement(Component, widgetProps),
+    ),
   );
 }
 

@@ -1,7 +1,27 @@
 {
   "name": "@supersubset/schema",
-  "version": "0.1.0",
-  "description": "Canonical dashboard schema types, validation, and serializers for Supersubset",
+  "version": "0.1.0-alpha.0",
+  "description": "Canonical dashboard schema types, Zod validation, and JSON/YAML serializers for Supersubset",
+  "license": "Apache-2.0",
+  "author": "Wandir Technologies Inc.",
+  "homepage": "https://github.com/wandir-tech/supersubset/tree/main/packages/schema#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wandir-tech/supersubset.git",
+    "directory": "packages/schema"
+  },
+  "bugs": {
+    "url": "https://github.com/wandir-tech/supersubset/issues"
+  },
+  "keywords": [
+    "schema",
+    "zod",
+    "validation",
+    "analytics",
+    "dashboard",
+    "react",
+    "supersubset"
+  ],
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -14,7 +34,10 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
@@ -33,5 +56,7 @@
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   },
-  "license": "MIT"
+  "publishConfig": {
+    "access": "public"
+  }
 }
