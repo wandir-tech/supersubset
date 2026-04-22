@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "wandir-tech/supersubset" }],
+  "commit": false,
+  "fixed": [
+    [
+      "@supersubset/schema",
+      "@supersubset/runtime",
+      "@supersubset/designer",
+      "@supersubset/charts-echarts",
+      "@supersubset/theme",
+      "@supersubset/data-model",
+      "@supersubset/query-client",
+      "@supersubset/cli",
+      "@supersubset/adapter-prisma",
+      "@supersubset/adapter-sql",
+      "@supersubset/adapter-json",
+      "@supersubset/adapter-dbt"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@supersubset/dev-app", "@supersubset/docs"]
+}

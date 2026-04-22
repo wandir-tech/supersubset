@@ -14,26 +14,42 @@ import { render, act } from '@testing-library/react';
 const mockChartWidget = vi.fn((props: Record<string, unknown>) =>
   React.createElement('div', {
     'data-testid': `chart-${props.widgetType}`,
-  })
+  }),
 );
 
 vi.mock('@supersubset/charts-echarts', () => ({
-  LineChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'line-chart' }),
-  BarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'bar-chart' }),
-  PieChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'pie-chart' }),
-  ScatterChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
-  AreaChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'area-chart' }),
-  ComboChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'combo-chart' }),
-  HeatmapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'heatmap' }),
-  RadarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'radar-chart' }),
-  FunnelChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
-  TreemapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'treemap' }),
-  SankeyWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'sankey' }),
-  WaterfallWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'waterfall' }),
-  BoxPlotWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'box-plot' }),
-  GaugeWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'gauge' }),
-  TableWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'table' }),
-  KPICardWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'kpi-card' }),
+  LineChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'line-chart' }),
+  BarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'bar-chart' }),
+  PieChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'pie-chart' }),
+  ScatterChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
+  AreaChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'area-chart' }),
+  ComboChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'combo-chart' }),
+  HeatmapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'heatmap' }),
+  RadarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'radar-chart' }),
+  FunnelChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
+  TreemapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'treemap' }),
+  SankeyWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'sankey' }),
+  WaterfallWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'waterfall' }),
+  BoxPlotWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'box-plot' }),
+  GaugeWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'gauge' }),
+  TableWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'table' }),
+  KPICardWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'kpi-card' }),
 }));
 
 vi.mock('@supersubset/runtime', () => ({}));
@@ -47,7 +63,7 @@ import { PreviewDataProvider, type PreviewDataRequest } from '../src/context/Pre
 const DATABASE_ROWS = [
   { month: 'Jan', revenue: 8500, orders: 42, units: 120, category: 'Apparel' },
   { month: 'Feb', revenue: 9200, orders: 48, units: 135, category: 'Footwear' },
-  { month: 'Mar', revenue: 7800, orders: 38, units: 98,  category: 'Accessories' },
+  { month: 'Mar', revenue: 7800, orders: 38, units: 98, category: 'Accessories' },
   { month: 'Apr', revenue: 11000, orders: 55, units: 160, category: 'Apparel' },
   { month: 'May', revenue: 10500, orders: 52, units: 145, category: 'Footwear' },
   { month: 'Jun', revenue: 12300, orders: 61, units: 178, category: 'Accessories' },
@@ -84,7 +100,7 @@ function mockFetchPreviewData(request: PreviewDataRequest): Record<string, unkno
 function renderWithProvider(
   widgetType: string,
   puckProps: Record<string, unknown>,
-  fetcher: (req: PreviewDataRequest) => Record<string, unknown>[]
+  fetcher: (req: PreviewDataRequest) => Record<string, unknown>[],
 ) {
   mockChartWidget.mockClear();
   const fetchSpy = vi.fn(fetcher);
@@ -99,8 +115,8 @@ function renderWithProvider(
           widgetType,
           puckProps: { title: 'Test', datasetRef: 'test-orders', ...puckProps },
           fallbackIcon: '📊',
-        })
-      )
+        }),
+      ),
     );
   });
 
@@ -118,7 +134,7 @@ function renderWithoutProvider(widgetType: string, puckProps: Record<string, unk
       widgetType,
       puckProps: { title: 'Test', ...puckProps },
       fallbackIcon: '📊',
-    })
+    }),
   );
   const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1];
   return lastCall?.[0]?.data as Record<string, unknown>[];
@@ -129,23 +145,34 @@ function renderWithoutProvider(widgetType: string, puckProps: Record<string, unk
 describe('ChartPreview — real data from host', () => {
   describe('data provider integration', () => {
     it('calls fetchPreviewData with the correct dataset ref and fields', () => {
-      const { fetchSpy } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { fetchSpy } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+          aggregation: 'avg',
+        },
+        mockFetchPreviewData,
+      );
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
       expect(request.datasetRef).toBe('test-orders');
       expect(request.fields.xField).toBe('month');
       expect(request.fields.yFields).toEqual(['revenue']);
+      expect(request.fields.metricFields).toEqual(['revenue']);
+      expect(request.fields.aggregation).toBe('avg');
     });
 
     it('passes host data to chart widget instead of sample data', () => {
-      const { widgetData } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { widgetData } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       // Host returns our DATABASE_ROWS projected to month + revenue
       expect(widgetData).toBeDefined();
@@ -182,8 +209,8 @@ describe('ChartPreview — real data from host', () => {
               widgetType: 'line-chart',
               puckProps: { title: 'Test', xAxisField: 'month', yAxisField: 'revenue' },
               fallbackIcon: '📊',
-            })
-          )
+            }),
+          ),
         );
       });
 
@@ -201,19 +228,27 @@ describe('ChartPreview — real data from host', () => {
   describe('line chart — changing Y axis shows different data', () => {
     it('revenue data values differ from units data values', () => {
       // Step 1: Render with yAxisField = revenue
-      const { widgetData: revenueData } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { widgetData: revenueData } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       const revenueValues = revenueData!.map((r) => r.revenue);
       expect(revenueValues).toEqual([8500, 9200, 7800, 11000, 10500, 12300]);
 
       // Step 2: Render with yAxisField = units
-      const { widgetData: unitsData } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'units',
-      }, mockFetchPreviewData);
+      const { widgetData: unitsData } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'units',
+        },
+        mockFetchPreviewData,
+      );
 
       const unitsValues = unitsData!.map((r) => r.units);
       expect(unitsValues).toEqual([120, 135, 98, 160, 145, 178]);
@@ -223,18 +258,26 @@ describe('ChartPreview — real data from host', () => {
     });
 
     it('the data rows contain the correct field key for the selected Y axis', () => {
-      const { widgetData: revenueData, widgetConfig: revenueConfig } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { widgetData: revenueData, widgetConfig: revenueConfig } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       expect(revenueConfig!.yFields).toEqual(['revenue']);
       expect(revenueData![0]).toHaveProperty('revenue');
 
-      const { widgetData: unitsData, widgetConfig: unitsConfig } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'units',
-      }, mockFetchPreviewData);
+      const { widgetData: unitsData, widgetConfig: unitsConfig } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'units',
+        },
+        mockFetchPreviewData,
+      );
 
       expect(unitsConfig!.yFields).toEqual(['units']);
       expect(unitsData![0]).toHaveProperty('units');
@@ -243,23 +286,38 @@ describe('ChartPreview — real data from host', () => {
 
   describe('line chart — changing X axis shows different data', () => {
     it('changing xAxisField from month to category returns category data', () => {
-      const { widgetData: monthData, widgetConfig: monthConfig } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { widgetData: monthData, widgetConfig: monthConfig } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       expect(monthConfig!.xField).toBe('month');
       const months = monthData!.map((r) => r.month);
       expect(months).toEqual(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']);
 
-      const { widgetData: catData, widgetConfig: catConfig } = renderWithProvider('line-chart', {
-        xAxisField: 'category',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { widgetData: catData, widgetConfig: catConfig } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'category',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       expect(catConfig!.xField).toBe('category');
       const categories = catData!.map((r) => r.category);
-      expect(categories).toEqual(['Apparel', 'Footwear', 'Accessories', 'Apparel', 'Footwear', 'Accessories']);
+      expect(categories).toEqual([
+        'Apparel',
+        'Footwear',
+        'Accessories',
+        'Apparel',
+        'Footwear',
+        'Accessories',
+      ]);
 
       // Months and categories must be different
       expect(months).not.toEqual(categories);
@@ -268,10 +326,14 @@ describe('ChartPreview — real data from host', () => {
 
   describe('field request correctness', () => {
     it('requests the right fields for a bar chart', () => {
-      const { fetchSpy } = renderWithProvider('bar-chart', {
-        xAxisField: 'category',
-        yAxisField: 'revenue',
-      }, mockFetchPreviewData);
+      const { fetchSpy } = renderWithProvider(
+        'bar-chart',
+        {
+          xAxisField: 'category',
+          yAxisField: 'revenue',
+        },
+        mockFetchPreviewData,
+      );
 
       const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
       expect(request.fields.xField).toBe('category');
@@ -279,14 +341,114 @@ describe('ChartPreview — real data from host', () => {
     });
 
     it('includes seriesField when specified', () => {
-      const { fetchSpy } = renderWithProvider('line-chart', {
-        xAxisField: 'month',
-        yAxisField: 'revenue',
-        seriesField: 'category',
-      }, mockFetchPreviewData);
+      const { fetchSpy } = renderWithProvider(
+        'line-chart',
+        {
+          xAxisField: 'month',
+          yAxisField: 'revenue',
+          seriesField: 'category',
+        },
+        mockFetchPreviewData,
+      );
 
       const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
       expect(request.fields.seriesField).toBe('category');
+    });
+  });
+
+  describe('no sample-data field leaks (regression)', () => {
+    // Historical bug: DEFAULT_CONFIGS assigns sample-data placeholder names
+    // (e.g. KPI card's `comparisonField: 'comparison'`, line chart's
+    // `yFields: ['revenue','orders']`). When these leaked into the preview
+    // fetch, the backend 400'd on unknown fields and the chart silently
+    // fell back to sample data. The fix: extract only puckProps, never defaults.
+
+    it('KPI card does NOT leak `comparison` when user has not bound comparisonField', () => {
+      const { fetchSpy } = renderWithProvider(
+        'kpi-card',
+        {
+          valueField: 'read_count',
+          aggregation: 'sum',
+        },
+        mockFetchPreviewData,
+      );
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
+      expect(request.fields.valueField).toBe('read_count');
+      // The sample-data placeholder must NOT be in the fetch payload.
+      expect(request.fields.comparisonField).toBeUndefined();
+      expect(request.fields.metricFields).toEqual(['read_count']);
+    });
+
+    it('line chart does NOT leak sample `xField=month` / `yFields=[revenue,orders]` when user has not bound them', () => {
+      // User has set ONLY the dataset, no X/Y fields yet.
+      // In this state, there should be NO fetch — the chart should fall back
+      // to sample data as a placeholder.
+      mockChartWidget.mockClear();
+      const fetchSpy = vi.fn(mockFetchPreviewData);
+
+      act(() => {
+        render(
+          React.createElement(
+            PreviewDataProvider,
+            { fetchPreviewData: fetchSpy },
+            React.createElement(ChartPreview, {
+              widgetType: 'line-chart',
+              puckProps: { title: 'Test', datasetRef: 'test-orders' },
+              fallbackIcon: '📊',
+            }),
+          ),
+        );
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('KPI card skips fetch when neither valueField nor any other binding is set', () => {
+      mockChartWidget.mockClear();
+      const fetchSpy = vi.fn(mockFetchPreviewData);
+
+      act(() => {
+        render(
+          React.createElement(
+            PreviewDataProvider,
+            { fetchPreviewData: fetchSpy },
+            React.createElement(ChartPreview, {
+              widgetType: 'kpi-card',
+              puckProps: { title: 'Test', datasetRef: 'test-orders', aggregation: 'sum' },
+              fallbackIcon: '📊',
+            }),
+          ),
+        );
+      });
+
+      // `aggregation` alone is not a field binding; it must not trigger a fetch.
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('bar chart with user-bound x and y fields does NOT carry extra sample-data fields', () => {
+      const { fetchSpy } = renderWithProvider(
+        'bar-chart',
+        {
+          xAxisField: 'sent_date',
+          yAxisField: 'read_count',
+          aggregation: 'count',
+        },
+        mockFetchPreviewData,
+      );
+
+      const request = fetchSpy.mock.calls[0][0] as PreviewDataRequest;
+      expect(request.fields.xField).toBe('sent_date');
+      expect(request.fields.yFields).toEqual(['read_count']);
+      // The default-config leak used to include extras like `nameField`
+      // or `valueField`; none should be present now.
+      expect(request.fields.nameField).toBeUndefined();
+      expect(request.fields.valueField).toBeUndefined();
+      expect(request.fields.comparisonField).toBeUndefined();
+      expect(request.fields.sizeField).toBeUndefined();
+      expect(request.fields.barFields).toBeUndefined();
+      expect(request.fields.lineFields).toBeUndefined();
     });
   });
 });

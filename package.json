@@ -22,9 +22,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "prepare": "husky"
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "node scripts/sync-package-docs.mjs && pnpm -r --filter='./packages/*' --filter='!@supersubset/dev-app' --filter='!@supersubset/docs' build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.31.0",
     "@eslint/js": "^10.0.1",
     "@nx/js": "^22.6.4",
     "@playwright/test": "^1.45.0",

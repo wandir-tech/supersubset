@@ -1,13 +1,38 @@
 {
   "name": "@supersubset/cli",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.0",
+  "description": "Supersubset CLI — `npx supersubset import-schema` for Prisma/SQL/dbt/JSON metadata introspection",
+  "license": "Apache-2.0",
+  "author": "Wandir Technologies Inc.",
+  "homepage": "https://github.com/wandir-tech/supersubset/tree/main/packages/cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wandir-tech/supersubset.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/wandir-tech/supersubset/issues"
+  },
+  "keywords": [
+    "cli",
+    "introspection",
+    "analytics",
+    "dashboard",
+    "react",
+    "supersubset"
+  ],
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "supersubset": "./dist/index.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts",
     "test": "vitest run",
@@ -23,9 +48,12 @@
     "@supersubset/adapter-dbt": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^22.13.14",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   },
-  "license": "MIT"
+  "publishConfig": {
+    "access": "public"
+  }
 }
