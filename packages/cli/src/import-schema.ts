@@ -14,10 +14,7 @@ import type {
 import { CURRENT_SCHEMA_VERSION } from '@supersubset/schema';
 import type { NormalizedDataset, NormalizedField } from '@supersubset/data-model';
 import { humanizeFieldName } from '@supersubset/data-model';
-import { PrismaAdapter } from '@supersubset/adapter-prisma';
-import { SqlAdapter } from '@supersubset/adapter-sql';
-import { JsonAdapter } from '@supersubset/adapter-json';
-import { DbtAdapter } from '@supersubset/adapter-dbt';
+import { getDatasetsFromSource } from './metadata-source.js';
 
 // ─── Public Types ────────────────────────────────────────────
 
@@ -52,10 +49,6 @@ function slugify(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
-}
-
-function hasFieldWithRole(fields: NormalizedField[], role: string): boolean {
-  return fields.some((f) => f.role === role);
 }
 
 function getFieldsWithRole(fields: NormalizedField[], role: string): NormalizedField[] {
@@ -176,37 +169,8 @@ function generatePage(dataset: NormalizedDataset): PageDefinition {
 
 // ─── Main Import Function ────────────────────────────────────
 
-async function getDatasets(options: ImportSchemaOptions): Promise<NormalizedDataset[]> {
-  switch (options.sourceType) {
-    case 'prisma': {
-      const adapter = new PrismaAdapter();
-      return adapter.getDatasets(options.source as string);
-    }
-    case 'sql': {
-      const adapter = new SqlAdapter();
-      const source =
-        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
-      return adapter.getDatasets(source);
-    }
-    case 'json': {
-      const adapter = new JsonAdapter();
-      const source =
-        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
-      return adapter.getDatasets(source);
-    }
-    case 'dbt': {
-      const adapter = new DbtAdapter();
-      const source =
-        typeof options.source === 'string' ? JSON.parse(options.source) : options.source;
-      return adapter.getDatasets(source);
-    }
-    default:
-      throw new Error(`Unsupported source type: ${options.sourceType as string}`);
-  }
-}
-
 export async function importSchema(options: ImportSchemaOptions): Promise<ImportSchemaResult> {
-  const datasets = await getDatasets(options);
+  const datasets = await getDatasetsFromSource(options);
 
   const pages = datasets.map(generatePage);
   const totalWidgets = pages.reduce((sum, p) => sum + p.widgets.length, 0);

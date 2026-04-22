@@ -106,6 +106,72 @@ pnpm test:e2e
 pnpm typecheck
 ```
 
+## Getting Started with Your Data
+
+Supersubset needs two kinds of information before it can build charts against your backend:
+
+1. **Metadata**: datasets, fields, types, and semantic roles like dimension, measure, and time.
+2. **Query execution**: a backend endpoint that can answer logical chart-preview queries.
+
+The discovery endpoint is optional. You can onboard your data model in three ways:
+
+### 1. Discovery URL
+
+If your backend can expose normalized metadata directly, point Probe mode at a discovery URL or backend base URL and Supersubset will fetch datasets automatically.
+
+### 2. CLI-generated metadata snapshot
+
+If you already have Prisma, SQL catalog, dbt, or JSON metadata, generate a normalized snapshot with the CLI:
+
+```bash
+npx supersubset export-metadata \
+  --source-type prisma \
+  --source ./prisma/schema.prisma \
+  --out ./supersubset-metadata.json
+```
+
+The output is an envelope shaped like:
+
+```json
+{
+  "datasets": [
+    {
+      "id": "orders",
+      "label": "Orders",
+      "fields": [
+        { "id": "region", "label": "Region", "dataType": "string", "role": "dimension" },
+        {
+          "id": "revenue",
+          "label": "Revenue",
+          "dataType": "number",
+          "role": "measure",
+          "defaultAggregation": "sum"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 3. Paste metadata JSON into Probe mode
+
+For the fastest proof of concept, open the dev app, switch to `Probe`, choose `Paste metadata JSON`, and paste either:
+
+- a raw `NormalizedDataset[]`
+- or an object with a `datasets` array
+
+### Probe mode workflow
+
+1. Run the dev app: `pnpm dev`
+2. Open http://localhost:3000
+3. Switch to `Probe`
+4. Choose a metadata source: `Discovery URL` or `Paste metadata JSON`
+5. Optionally provide a separate query endpoint URL for live chart preview
+6. Add auth as either Bearer JWT or custom header
+7. Load metadata and start building charts
+
+If you provide metadata but no query endpoint, you can still design the dashboard and export JSON, but chart previews will fall back to sample data.
+
 ## Embedding in Your App
 
 ### Runtime Only

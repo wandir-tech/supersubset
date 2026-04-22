@@ -21,7 +21,6 @@
     "docs:screenshots": "npx playwright test --config packages/docs/playwright.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky",
     "prepare": "husky"
   },
   "devDependencies": {

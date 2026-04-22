@@ -7,7 +7,9 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts",
     "test": "vitest run",
@@ -23,6 +25,7 @@
     "@supersubset/adapter-dbt": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^22.13.14",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
