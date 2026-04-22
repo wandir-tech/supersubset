@@ -7,7 +7,7 @@ test.describe('Chart Header Layout Visual Regression', () => {
     await page.waitForTimeout(1200);
   });
 
-  test('line chart title and legend do not collide', async ({ page }) => {
+  test('line chart header layout remains stable', async ({ page }) => {
     const chartCard = page.locator('[data-ss-node="w-line"]');
     await expect(chartCard).toBeVisible();
     await expect(chartCard).toHaveScreenshot('line-chart-header-layout.png', {

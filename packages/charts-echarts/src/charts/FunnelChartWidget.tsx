@@ -19,7 +19,7 @@ import {
 
 echarts.use([EChartsFunnel]);
 
-export function FunnelChartWidget({ config, data, columns, title, height }: WidgetProps) {
+export function FunnelChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -30,7 +30,8 @@ export function FunnelChartWidget({ config, data, columns, title, height }: Widg
     const sort = (config.sort as string) ?? 'descending';
     const funnelAlign = (config.funnelAlign as 'center' | 'left' | 'right') ?? 'center';
     const gap = (config.gap as number) ?? 0;
-    const labelPosition = (config.labelPosition as 'inside' | 'outside' | 'left' | 'right') ?? 'inside';
+    const labelPosition =
+      (config.labelPosition as 'inside' | 'outside' | 'left' | 'right') ?? 'inside';
     const shared = extractSharedConfig(config);
     const fmt = shared.numberFormat;
 
@@ -52,7 +53,10 @@ export function FunnelChartWidget({ config, data, columns, title, height }: Widg
               `${params.name}: ${formatNumber(params.value, fmt)}`
           : '{b}: {c}',
       },
-      legend: buildLegendOption(shared, stageNames, hasTitle) ?? { orient: 'vertical' as const, left: 'left' },
+      legend: buildLegendOption(shared, stageNames, hasTitle) ?? {
+        orient: 'vertical' as const,
+        left: 'left',
+      },
       series: [
         {
           type: 'funnel' as const,
@@ -80,7 +84,7 @@ export function FunnelChartWidget({ config, data, columns, title, height }: Widg
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

@@ -82,6 +82,15 @@ export function SupersubsetRenderer({
     const style: Record<string, string> = {};
     if (cssVariables) {
       Object.assign(style, cssVariables);
+      if (cssVariables['--ss-color-background']) {
+        style.backgroundColor = cssVariables['--ss-color-background'];
+      }
+      if (cssVariables['--ss-color-text']) {
+        style.color = cssVariables['--ss-color-text'];
+      }
+      if (cssVariables['--ss-font-family']) {
+        style.fontFamily = cssVariables['--ss-font-family'];
+      }
     }
     return style;
   }, [cssVariables]);

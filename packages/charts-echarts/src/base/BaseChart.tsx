@@ -2,10 +2,11 @@
  * BaseChart — shared ECharts wrapper used by all chart type components.
  * Handles initialization, resize, dispose lifecycle.
  */
-import { useRef, useEffect, type CSSProperties } from 'react';
+import { useRef, useEffect, useMemo, type CSSProperties } from 'react';
 import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { WidgetEvent } from '@supersubset/runtime';
+import { themeToEChartsTheme, type ResolvedTheme } from '@supersubset/theme';
 import {
   DataZoomComponent,
   GridComponent,
@@ -51,12 +52,13 @@ export function BaseChart({
 }: BaseChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
+  const echartsTheme = useMemo(() => toEChartsTheme(theme), [theme]);
 
   // Initialize chart
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const chart = echarts.init(containerRef.current, theme ?? undefined, {
+    const chart = echarts.init(containerRef.current, echartsTheme ?? undefined, {
       renderer: 'canvas',
     });
     chartRef.current = chart;
@@ -72,7 +74,7 @@ export function BaseChart({
       chart.dispose();
       chartRef.current = null;
     };
-  }, [theme]);
+  }, [echartsTheme]);
 
   // Update options
   useEffect(() => {
@@ -96,7 +98,7 @@ export function BaseChart({
     return () => {
       chart.off('click', handleClick);
     };
-  }, [buildClickPayload, onEvent, theme, widgetId]);
+  }, [buildClickPayload, echartsTheme, onEvent, widgetId]);
 
   const containerStyle: CSSProperties = {
     width: width ? `${width}px` : '100%',
@@ -150,6 +152,30 @@ function extractClickPayload(params: unknown): Record<string, unknown> | undefin
   }
 
   return Object.keys(payload).length > 0 ? payload : undefined;
+}
+
+function toEChartsTheme(theme: string | Record<string, unknown> | undefined) {
+  if (!theme) {
+    return undefined;
+  }
+
+  if (typeof theme === 'string') {
+    return theme;
+  }
+
+  return isResolvedTheme(theme) ? themeToEChartsTheme(theme) : theme;
+}
+
+function isResolvedTheme(theme: unknown): theme is ResolvedTheme {
+  if (!isRecord(theme)) {
+    return false;
+  }
+
+  return isRecord(theme.colors) && isRecord(theme.typography) && isRecord(theme.spacing);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 // Re-export echarts for use/register calls in chart modules

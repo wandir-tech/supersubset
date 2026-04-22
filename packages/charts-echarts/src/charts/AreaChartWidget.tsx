@@ -26,7 +26,7 @@ import {
 
 echarts.use([EChartsLine]);
 
-export function AreaChartWidget({ config, data, columns, title, height }: WidgetProps) {
+export function AreaChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -76,7 +76,7 @@ export function AreaChartWidget({ config, data, columns, title, height }: Widget
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

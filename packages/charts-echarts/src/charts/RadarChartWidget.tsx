@@ -18,14 +18,13 @@ import {
 
 echarts.use([EChartsRadar]);
 
-export function RadarChartWidget({ config, data, columns, title, height }: WidgetProps) {
+export function RadarChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
     }
 
-    const valueFields = (config.valueFields as string[]) ??
-      columns?.map((c) => c.fieldId) ?? [];
+    const valueFields = (config.valueFields as string[]) ?? columns?.map((c) => c.fieldId) ?? [];
     const nameField = config.nameField as string | undefined;
     const shape = (config.shape as 'polygon' | 'circle') ?? 'polygon';
     const areaFill = config.areaFill !== false;
@@ -33,11 +32,13 @@ export function RadarChartWidget({ config, data, columns, title, height }: Widge
 
     // Build indicators from field names or explicit config
     const configIndicators = config.indicators as Array<{ name: string; max?: number }> | undefined;
-    const indicators = configIndicators ?? valueFields.map((f) => {
-      // Auto-detect max from data
-      const maxVal = Math.max(...data.map((row) => Number(row[f] ?? 0)));
-      return { name: f, max: Math.ceil(maxVal * 1.2) || 100 };
-    });
+    const indicators =
+      configIndicators ??
+      valueFields.map((f) => {
+        // Auto-detect max from data
+        const maxVal = Math.max(...data.map((row) => Number(row[f] ?? 0)));
+        return { name: f, max: Math.ceil(maxVal * 1.2) || 100 };
+      });
 
     // Build series data — one series per row (or grouped by nameField)
     const seriesData = data.map((row) => ({
@@ -66,7 +67,7 @@ export function RadarChartWidget({ config, data, columns, title, height }: Widge
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

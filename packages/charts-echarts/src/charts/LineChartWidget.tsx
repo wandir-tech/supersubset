@@ -26,6 +26,7 @@ export function LineChartWidget({
   columns,
   title,
   height,
+  theme,
   widgetId,
   onEvent,
 }: WidgetProps) {
@@ -80,7 +81,15 @@ export function LineChartWidget({
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} widgetId={widgetId} onEvent={onEvent} />;
+  return (
+    <BaseChart
+      option={option}
+      height={height}
+      theme={theme}
+      widgetId={widgetId}
+      onEvent={onEvent}
+    />
+  );
 }
 
 function buildEmptyOption(title?: string) {

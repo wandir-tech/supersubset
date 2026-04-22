@@ -32,14 +32,35 @@ test.describe('Host Integration Workflow', () => {
     await expect(page.getByText('Supersubset inside a storefront operations shell.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Designer' })).toHaveCount(0);
 
+    const renderer = page.locator('[data-ss-dashboard="nextjs-ecommerce-dashboard"]');
+    const shell = page.locator('main');
+    const warmRendererBackground = await renderer.evaluate(
+      (element) => window.getComputedStyle(element).backgroundColor,
+    );
+    const warmShellBackground = await shell.evaluate(
+      (element) => window.getComputedStyle(element).backgroundImage,
+    );
+
     await page.getByRole('button', { name: /Switch to cool theme/i }).click();
     await expect(page.getByRole('button', { name: /Switch to warm theme/i })).toBeVisible();
+
+    const coolRendererBackground = await renderer.evaluate(
+      (element) => window.getComputedStyle(element).backgroundColor,
+    );
+    const coolShellBackground = await shell.evaluate(
+      (element) => window.getComputedStyle(element).backgroundImage,
+    );
+
+    expect(coolRendererBackground).not.toBe(warmRendererBackground);
+    expect(coolShellBackground).not.toBe(warmShellBackground);
 
     expect(requestUrls.some((url) => /superset|lightdash|rill/i.test(url))).toBe(false);
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('Vite host persists imported schema through host-owned localStorage and reload', async ({ page }) => {
+  test('Vite host persists imported schema through host-owned localStorage and reload', async ({
+    page,
+  }) => {
     const requestUrls: string[] = [];
     const consoleErrors: string[] = [];
     const importedDashboard = buildImportedHostDashboard();
@@ -62,13 +83,10 @@ test.describe('Host Integration Workflow', () => {
 
     const initialQueryLog = await page.locator('.query-panel pre').innerText();
     await page.getByLabel('Region').selectOption({ label: 'APAC' });
-    await page.waitForFunction(
-      (previousLog) => {
-        const pre = document.querySelector('.query-panel pre');
-        return !!pre && pre.textContent !== previousLog && pre.textContent?.includes('["APAC"]');
-      },
-      initialQueryLog,
-    );
+    await page.waitForFunction((previousLog) => {
+      const pre = document.querySelector('.query-panel pre');
+      return !!pre && pre.textContent !== previousLog && pre.textContent?.includes('["APAC"]');
+    }, initialQueryLog);
 
     await page.getByRole('button', { name: 'Designer' }).click();
     await expect(page.getByTestId('sqlite-code-toggle')).toBeVisible();
@@ -79,7 +97,8 @@ test.describe('Host Integration Workflow', () => {
     await page.getByTestId('import-submit-btn').click();
 
     await page.waitForFunction(
-      (storageKey) => window.localStorage.getItem(storageKey)?.includes('Persisted Host Dashboard') ?? false,
+      (storageKey) =>
+        window.localStorage.getItem(storageKey)?.includes('Persisted Host Dashboard') ?? false,
       SQLITE_STORAGE_KEY,
     );
 

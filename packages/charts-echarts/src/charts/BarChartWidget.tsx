@@ -27,6 +27,7 @@ export function BarChartWidget({
   columns,
   title,
   height,
+  theme,
   widgetId,
   onEvent,
 }: WidgetProps) {
@@ -82,7 +83,15 @@ export function BarChartWidget({
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} widgetId={widgetId} onEvent={onEvent} />;
+  return (
+    <BaseChart
+      option={option}
+      height={height}
+      theme={theme}
+      widgetId={widgetId}
+      onEvent={onEvent}
+    />
+  );
 }
 
 function buildEmptyOption(title?: string) {
