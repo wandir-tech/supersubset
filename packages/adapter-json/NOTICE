@@ -1,0 +1,64 @@
+Supersubset
+Copyright 2026 Wandir Technologies Inc.
+
+This product is licensed under the Apache License 2.0 (the "License").
+See the LICENSE file for the full license text.
+
+=========================================================================
+
+This project contains code inspired by and, in some areas, adapted from
+the following open-source projects:
+
+-------------------------------------------------------------------------
+Apache Superset
+  https://superset.apache.org/
+  Copyright The Apache Software Foundation
+  Licensed under the Apache License 2.0
+
+  Supersubset's layout model (row → column → chart nesting with depth
+  limits) was inspired by Superset's dashboard layout architecture.
+  The default "supersetColors" color palette values are adapted from
+  Superset's default categorical color scheme.
+
+  Relevant files:
+  - packages/schema/src/types/dashboard.ts (layout model inspiration)
+  - packages/charts-echarts/src/base/shared-options.ts (color palette)
+  - packages/designer/src/blocks/layout/index.ts (layout blocks)
+  - packages/designer/src/blocks/charts/index.ts (chart config patterns)
+
+-------------------------------------------------------------------------
+Puck
+  https://github.com/puckeditor/puck
+  Copyright Measured Corporation Ltd and contributors
+  Licensed under the MIT License
+
+  Supersubset uses Puck as its visual editor shell. Puck is consumed
+  as a dependency (@puckeditor/core), not vendored or modified.
+
+-------------------------------------------------------------------------
+Apache ECharts
+  https://echarts.apache.org/
+  Copyright The Apache Software Foundation
+  Licensed under the Apache License 2.0
+
+  Supersubset uses ECharts as its chart rendering engine. ECharts is
+  consumed as a dependency (echarts), not vendored or modified.
+
+-------------------------------------------------------------------------
+Rill
+  https://github.com/rilldata/rill
+  Copyright Rill Data, Inc.
+  Licensed under the Apache License 2.0
+
+  Supersubset's adapter-first metadata normalization approach was
+  inspired by Rill's local-first analytics architecture. No code was
+  copied from Rill.
+
+-------------------------------------------------------------------------
+Perspective
+  https://perspective.finos.org/
+  Copyright The FINOS Foundation
+  Licensed under the Apache License 2.0
+
+  Perspective's streaming analytics model influenced Supersubset's
+  future design direction. No code was copied from Perspective.

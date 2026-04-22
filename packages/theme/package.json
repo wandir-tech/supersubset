@@ -1,6 +1,26 @@
 {
   "name": "@supersubset/theme",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.0",
+  "description": "Theme tokens, CSS variable bridge, and ECharts theme integration for Supersubset",
+  "license": "Apache-2.0",
+  "author": "Wandir Technologies Inc.",
+  "homepage": "https://github.com/wandir-tech/supersubset/tree/main/packages/theme#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wandir-tech/supersubset.git",
+    "directory": "packages/theme"
+  },
+  "bugs": {
+    "url": "https://github.com/wandir-tech/supersubset/issues"
+  },
+  "keywords": [
+    "theme",
+    "tokens",
+    "analytics",
+    "dashboard",
+    "react",
+    "supersubset"
+  ],
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -12,7 +32,12 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "test": "vitest run",
@@ -28,5 +53,7 @@
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   },
-  "license": "MIT"
+  "publishConfig": {
+    "access": "public"
+  }
 }
