@@ -417,7 +417,7 @@ function App() {
   );
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Mode toggle bar */}
       <div
         style={{
@@ -497,377 +497,385 @@ function App() {
         )}
       </div>
 
-      {mode === 'probe' ? (
-        <ProbeWorkspace />
-      ) : mode === 'designer' ? (
-        <div style={{ display: 'flex', height: 'calc(100vh - 44px)' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div
-              style={{ flex: showCode ? '1 1 60%' : '1 1 100%', overflow: 'hidden', minHeight: 0 }}
+      <main style={{ flex: 1 }}>
+        {mode === 'probe' ? (
+          <ProbeWorkspace />
+        ) : mode === 'designer' ? (
+          <div style={{ display: 'flex', height: 'calc(100vh - 44px)' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div
+                style={{
+                  flex: showCode ? '1 1 60%' : '1 1 100%',
+                  overflow: 'hidden',
+                  minHeight: 0,
+                }}
+              >
+                <SupersubsetDesigner
+                  value={currentDashboard}
+                  onChange={undoRedo.push}
+                  onPublish={handlePublish}
+                  headerTitle="Supersubset Designer"
+                  height="100%"
+                  datasets={demoDatasets}
+                  headerActions={
+                    <div
+                      data-testid="dev-app-designer-actions"
+                      data-supersubset-scroll-inline="true"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        flexWrap: 'nowrap',
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        minWidth: 0,
+                      }}
+                    >
+                      <UndoRedoToolbar
+                        canUndo={undoRedo.canUndo}
+                        canRedo={undoRedo.canRedo}
+                        onUndo={undoRedo.undo}
+                        onRedo={undoRedo.redo}
+                        undoCount={undoRedo.undoCount}
+                        redoCount={undoRedo.redoCount}
+                      />
+                      <ImportExportPanel
+                        dashboard={currentDashboard}
+                        onImport={(d) => {
+                          undoRedo.reset(d);
+                          setSavedDashboard(d);
+                        }}
+                      />
+                      <button
+                        onClick={() => setShowCode(!showCode)}
+                        data-testid="code-toggle"
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 4,
+                          border: '1px solid #ccc',
+                          background: showCode ? '#e0edff' : '#fff',
+                          color: '#333',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                          fontWeight: showCode ? 600 : 400,
+                        }}
+                      >
+                        {'</>'} Code
+                      </button>
+                      {/* Separator */}
+                      <span
+                        style={{ width: 1, height: 20, background: '#d1d5db', margin: '0 4px' }}
+                      />
+                      {/* Dashboard Config Group */}
+                      <button
+                        onClick={() => {
+                          setShowFilters(!showFilters);
+                          setShowInteractions(false);
+                        }}
+                        data-testid="filters-toggle"
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 4,
+                          border: '1px solid #ccc',
+                          background: showFilters ? '#e0edff' : '#fff',
+                          color: '#333',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                          fontWeight: showFilters ? 600 : 400,
+                        }}
+                      >
+                        ⛶ Filters{demoFilters.length > 0 ? ` (${demoFilters.length})` : ''}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowInteractions(!showInteractions);
+                          setShowFilters(false);
+                        }}
+                        data-testid="interactions-toggle"
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 4,
+                          border: '1px solid #ccc',
+                          background: showInteractions ? '#e0edff' : '#fff',
+                          color: '#333',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                          fontWeight: showInteractions ? 600 : 400,
+                        }}
+                      >
+                        ⚡ Interactions
+                        {demoInteractions.length > 0 ? ` (${demoInteractions.length})` : ''}
+                      </button>
+                    </div>
+                  }
+                />
+              </div>
+              {showCode && (
+                <div style={{ flex: '0 0 300px', borderTop: '2px solid #e0e0e0' }}>
+                  <CodeViewPanel dashboard={currentDashboard} height="300px" />
+                </div>
+              )}
+            </div>
+            {/* Slide-over: Filters */}
+            <SlideOverPanel
+              open={showFilters}
+              onClose={() => setShowFilters(false)}
+              title="Dashboard Filters"
+              subtitle="Define filters that users can interact with at runtime"
+              width={420}
             >
-              <SupersubsetDesigner
-                value={currentDashboard}
-                onChange={undoRedo.push}
-                onPublish={handlePublish}
-                headerTitle="Supersubset Designer"
-                height="100%"
+              <FilterBuilderPanel
+                filters={demoFilters}
+                onChange={setDemoFilters}
                 datasets={demoDatasets}
-                headerActions={
-                  <div
-                    data-testid="dev-app-designer-actions"
-                    data-supersubset-scroll-inline="true"
+                pageIds={currentPages.map((p) => p.id)}
+                widgetIds={currentPages.flatMap((p) => p.widgets?.map((w) => w.id) ?? [])}
+              />
+            </SlideOverPanel>
+            {/* Slide-over: Interactions */}
+            <SlideOverPanel
+              open={showInteractions}
+              onClose={() => setShowInteractions(false)}
+              title="Widget Interactions"
+              subtitle="Configure how widgets respond to user events"
+              width={420}
+            >
+              <InteractionEditorPanel
+                interactions={demoInteractions}
+                onChange={setDemoInteractions}
+                widgetIds={currentPages.flatMap((p) => p.widgets?.map((w) => w.id) ?? [])}
+                pageIds={currentPages.map((p) => p.id)}
+                fieldIds={demoDatasets.flatMap((ds) => ds.fields.map((f) => f.id))}
+              />
+            </SlideOverPanel>
+          </div>
+        ) : mode === 'preview' ? (
+          <LivePreviewPane
+            dashboard={currentDashboard}
+            registry={registry}
+            theme={designerResolvedTheme as unknown as Record<string, unknown>}
+            cssVariables={designerCssVars}
+            RendererComponent={SupersubsetRenderer as never}
+            height="calc(100vh - 44px)"
+          />
+        ) : (
+          <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
+            <section
+              style={{
+                marginBottom: '20px',
+                border: '1px solid #d9e2f2',
+                borderRadius: 16,
+                padding: '18px 20px',
+                background: 'linear-gradient(135deg, #f8fbff 0%, #fff7ed 100%)',
+                boxShadow: '0 14px 32px rgba(15, 23, 42, 0.08)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 16,
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ maxWidth: 760 }}>
+                  <h2 style={{ margin: 0, fontSize: 24, color: '#0f172a' }}>Pages vs dashboards</h2>
+                  <p style={{ margin: '10px 0 8px', color: '#334155', lineHeight: 1.55 }}>
+                    A page is another canvas inside the same dashboard document. Pages share the
+                    dashboard id, filter contract, theme, and saved state. A separate dashboard is a
+                    different document with its own identity, route, defaults, and ownership
+                    boundary.
+                  </p>
+                  <p style={{ margin: 0, color: '#475569', lineHeight: 1.55 }}>
+                    Use pages when you are staying inside one analytical workbook. Use separate
+                    dashboards when the user is moving into a different analytical product surface.
+                    The demos below show both patterns with the current runtime.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    data-testid="viewer-scenario-live"
+                    onClick={() => setViewerScenario('live')}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      flexWrap: 'nowrap',
-                      overflowX: 'auto',
-                      overflowY: 'hidden',
-                      minWidth: 0,
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: '1px solid #cbd5e1',
+                      background: viewerScenario === 'live' ? '#0f172a' : '#fff',
+                      color: viewerScenario === 'live' ? '#fff' : '#0f172a',
+                      fontWeight: 600,
+                      cursor: 'pointer',
                     }}
                   >
-                    <UndoRedoToolbar
-                      canUndo={undoRedo.canUndo}
-                      canRedo={undoRedo.canRedo}
-                      onUndo={undoRedo.undo}
-                      onRedo={undoRedo.redo}
-                      undoCount={undoRedo.undoCount}
-                      redoCount={undoRedo.redoCount}
-                    />
-                    <ImportExportPanel
-                      dashboard={currentDashboard}
-                      onImport={(d) => {
-                        undoRedo.reset(d);
-                        setSavedDashboard(d);
-                      }}
-                    />
-                    <button
-                      onClick={() => setShowCode(!showCode)}
-                      data-testid="code-toggle"
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: 4,
-                        border: '1px solid #ccc',
-                        background: showCode ? '#e0edff' : '#fff',
-                        color: '#333',
-                        cursor: 'pointer',
-                        fontSize: 13,
-                        fontWeight: showCode ? 600 : 400,
-                      }}
-                    >
-                      {'</>'} Code
-                    </button>
-                    {/* Separator */}
-                    <span
-                      style={{ width: 1, height: 20, background: '#d1d5db', margin: '0 4px' }}
-                    />
-                    {/* Dashboard Config Group */}
-                    <button
-                      onClick={() => {
-                        setShowFilters(!showFilters);
-                        setShowInteractions(false);
-                      }}
-                      data-testid="filters-toggle"
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: 4,
-                        border: '1px solid #ccc',
-                        background: showFilters ? '#e0edff' : '#fff',
-                        color: '#333',
-                        cursor: 'pointer',
-                        fontSize: 13,
-                        fontWeight: showFilters ? 600 : 400,
-                      }}
-                    >
-                      ⛶ Filters{demoFilters.length > 0 ? ` (${demoFilters.length})` : ''}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowInteractions(!showInteractions);
-                        setShowFilters(false);
-                      }}
-                      data-testid="interactions-toggle"
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: 4,
-                        border: '1px solid #ccc',
-                        background: showInteractions ? '#e0edff' : '#fff',
-                        color: '#333',
-                        cursor: 'pointer',
-                        fontSize: 13,
-                        fontWeight: showInteractions ? 600 : 400,
-                      }}
-                    >
-                      ⚡ Interactions
-                      {demoInteractions.length > 0 ? ` (${demoInteractions.length})` : ''}
-                    </button>
-                  </div>
-                }
-              />
-            </div>
-            {showCode && (
-              <div style={{ flex: '0 0 300px', borderTop: '2px solid #e0e0e0' }}>
-                <CodeViewPanel dashboard={currentDashboard} height="300px" />
-              </div>
-            )}
-          </div>
-          {/* Slide-over: Filters */}
-          <SlideOverPanel
-            open={showFilters}
-            onClose={() => setShowFilters(false)}
-            title="Dashboard Filters"
-            subtitle="Define filters that users can interact with at runtime"
-            width={420}
-          >
-            <FilterBuilderPanel
-              filters={demoFilters}
-              onChange={setDemoFilters}
-              datasets={demoDatasets}
-              pageIds={currentPages.map((p) => p.id)}
-              widgetIds={currentPages.flatMap((p) => p.widgets?.map((w) => w.id) ?? [])}
-            />
-          </SlideOverPanel>
-          {/* Slide-over: Interactions */}
-          <SlideOverPanel
-            open={showInteractions}
-            onClose={() => setShowInteractions(false)}
-            title="Widget Interactions"
-            subtitle="Configure how widgets respond to user events"
-            width={420}
-          >
-            <InteractionEditorPanel
-              interactions={demoInteractions}
-              onChange={setDemoInteractions}
-              widgetIds={currentPages.flatMap((p) => p.widgets?.map((w) => w.id) ?? [])}
-              pageIds={currentPages.map((p) => p.id)}
-              fieldIds={demoDatasets.flatMap((ds) => ds.fields.map((f) => f.id))}
-            />
-          </SlideOverPanel>
-        </div>
-      ) : mode === 'preview' ? (
-        <LivePreviewPane
-          dashboard={currentDashboard}
-          registry={registry}
-          theme={designerResolvedTheme as unknown as Record<string, unknown>}
-          cssVariables={designerCssVars}
-          RendererComponent={SupersubsetRenderer as never}
-          height="calc(100vh - 44px)"
-        />
-      ) : (
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px' }}>
-          <section
-            style={{
-              marginBottom: '20px',
-              border: '1px solid #d9e2f2',
-              borderRadius: 16,
-              padding: '18px 20px',
-              background: 'linear-gradient(135deg, #f8fbff 0%, #fff7ed 100%)',
-              boxShadow: '0 14px 32px rgba(15, 23, 42, 0.08)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                gap: 16,
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ maxWidth: 760 }}>
-                <h2 style={{ margin: 0, fontSize: 24, color: '#0f172a' }}>Pages vs dashboards</h2>
-                <p style={{ margin: '10px 0 8px', color: '#334155', lineHeight: 1.55 }}>
-                  A page is another canvas inside the same dashboard document. Pages share the
-                  dashboard id, filter contract, theme, and saved state. A separate dashboard is a
-                  different document with its own identity, route, defaults, and ownership boundary.
-                </p>
-                <p style={{ margin: 0, color: '#475569', lineHeight: 1.55 }}>
-                  Use pages when you are staying inside one analytical workbook. Use separate
-                  dashboards when the user is moving into a different analytical product surface.
-                  The demos below show both patterns with the current runtime.
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button
-                  data-testid="viewer-scenario-live"
-                  onClick={() => setViewerScenario('live')}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 999,
-                    border: '1px solid #cbd5e1',
-                    background: viewerScenario === 'live' ? '#0f172a' : '#fff',
-                    color: viewerScenario === 'live' ? '#fff' : '#0f172a',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Live dashboard
-                </button>
-                <button
-                  data-testid="viewer-scenario-pages"
-                  onClick={() => setViewerScenario('pages')}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 999,
-                    border: '1px solid #cbd5e1',
-                    background: viewerScenario === 'pages' ? '#0f172a' : '#fff',
-                    color: viewerScenario === 'pages' ? '#fff' : '#0f172a',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  One dashboard, two pages
-                </button>
-                <button
-                  data-testid="viewer-scenario-dashboards"
-                  onClick={() => setViewerScenario('dashboards')}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 999,
-                    border: '1px solid #cbd5e1',
-                    background: viewerScenario === 'dashboards' ? '#0f172a' : '#fff',
-                    color: viewerScenario === 'dashboards' ? '#fff' : '#0f172a',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Two separate dashboards
-                </button>
-              </div>
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: 12,
-                marginTop: 16,
-              }}
-            >
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.84)',
-                  borderRadius: 12,
-                  padding: 14,
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
-                }}
-              >
-                <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
-                  Page
-                </strong>
-                <span style={{ color: '#475569', lineHeight: 1.5 }}>
-                  An alternate view inside one dashboard document. Same id, same filter bar, same
-                  interaction set, same persistence envelope.
-                </span>
+                    Live dashboard
+                  </button>
+                  <button
+                    data-testid="viewer-scenario-pages"
+                    onClick={() => setViewerScenario('pages')}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: '1px solid #cbd5e1',
+                      background: viewerScenario === 'pages' ? '#0f172a' : '#fff',
+                      color: viewerScenario === 'pages' ? '#fff' : '#0f172a',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    One dashboard, two pages
+                  </button>
+                  <button
+                    data-testid="viewer-scenario-dashboards"
+                    onClick={() => setViewerScenario('dashboards')}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: '1px solid #cbd5e1',
+                      background: viewerScenario === 'dashboards' ? '#0f172a' : '#fff',
+                      color: viewerScenario === 'dashboards' ? '#fff' : '#0f172a',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Two separate dashboards
+                  </button>
+                </div>
               </div>
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.84)',
-                  borderRadius: 12,
-                  padding: 14,
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: 12,
+                  marginTop: 16,
                 }}
               >
-                <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
-                  Separate dashboard
-                </strong>
-                <span style={{ color: '#475569', lineHeight: 1.5 }}>
-                  A different document. It can have a different title, route, layout, theme, owner,
-                  defaults, and filter contract.
-                </span>
-              </div>
-              <div
-                style={{
-                  background: 'rgba(255, 255, 255, 0.84)',
-                  borderRadius: 12,
-                  padding: 14,
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
-                }}
-              >
-                <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
-                  What to try
-                </strong>
-                <span style={{ color: '#475569', lineHeight: 1.5 }}>
-                  In the page demo, click the region chart to navigate to another page. In the
-                  dashboard demo, use the host buttons to switch documents and notice the separate
-                  titles and themes.
-                </span>
-              </div>
-            </div>
-          </section>
-
-          {viewerScenario === 'dashboards' && (
-            <section
-              style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}
-            >
-              {dashboardSwitchingDemo.dashboards.map((dashboard) => (
-                <button
-                  key={dashboard.id}
-                  data-testid={`dashboard-switch-${dashboard.id}`}
-                  onClick={() => setActiveDashboardId(dashboard.id)}
+                <div
                   style={{
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    border: '1px solid #d6d3d1',
-                    background: activeDashboardId === dashboard.id ? '#fff7ed' : '#fff',
-                    color: '#7c2d12',
-                    fontWeight: activeDashboardId === dashboard.id ? 700 : 500,
-                    cursor: 'pointer',
+                    background: 'rgba(255, 255, 255, 0.84)',
+                    borderRadius: 12,
+                    padding: 14,
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
                   }}
                 >
-                  {dashboard.title}
-                </button>
-              ))}
+                  <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
+                    Page
+                  </strong>
+                  <span style={{ color: '#475569', lineHeight: 1.5 }}>
+                    An alternate view inside one dashboard document. Same id, same filter bar, same
+                    interaction set, same persistence envelope.
+                  </span>
+                </div>
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.84)',
+                    borderRadius: 12,
+                    padding: 14,
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                  }}
+                >
+                  <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
+                    Separate dashboard
+                  </strong>
+                  <span style={{ color: '#475569', lineHeight: 1.5 }}>
+                    A different document. It can have a different title, route, layout, theme,
+                    owner, defaults, and filter contract.
+                  </span>
+                </div>
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.84)',
+                    borderRadius: 12,
+                    padding: 14,
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                  }}
+                >
+                  <strong style={{ display: 'block', marginBottom: 6, color: '#0f172a' }}>
+                    What to try
+                  </strong>
+                  <span style={{ color: '#475569', lineHeight: 1.5 }}>
+                    In the page demo, click the region chart to navigate to another page. In the
+                    dashboard demo, use the host buttons to switch documents and notice the separate
+                    titles and themes.
+                  </span>
+                </div>
+              </div>
             </section>
-          )}
 
-          {viewerPages.length > 1 && (
-            <nav
-              style={{
-                display: 'flex',
-                gap: '8px',
-                marginBottom: '16px',
-                borderBottom: '2px solid #e0e0e0',
-                paddingBottom: '8px',
-              }}
-            >
-              {viewerPages.map((page) => (
-                <button
-                  key={page.id}
-                  onClick={() => setViewerActivePage(page.id)}
-                  style={{
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderRadius: '4px 4px 0 0',
-                    cursor: 'pointer',
-                    fontWeight: viewerActivePage === page.id ? 700 : 400,
-                    background:
-                      viewerActivePage === page.id
-                        ? 'var(--ss-color-primary, #1677ff)'
-                        : 'transparent',
-                    color: viewerActivePage === page.id ? '#fff' : 'var(--ss-color-text, #1f1f1f)',
-                    fontSize: '14px',
-                  }}
-                >
-                  {page.title}
-                </button>
-              ))}
-            </nav>
-          )}
-          <SupersubsetRenderer
-            key={viewerRendererKey}
-            definition={viewerDashboard}
-            registry={registry}
-            theme={viewerResolvedTheme as unknown as Record<string, unknown>}
-            cssVariables={viewerCssVars}
-            activePage={viewerActivePage}
-            initialFilterValues={viewerInitialFilterValues}
-            filterOptions={FILTER_OPTIONS}
-            onNavigate={handleViewerNavigate}
-            onFilterChange={(state) => console.log('[Supersubset] Filter state:', state)}
-            onWidgetEvent={(event) => console.log('[Supersubset] Widget event:', event)}
-          />
-        </div>
-      )}
+            {viewerScenario === 'dashboards' && (
+              <section
+                style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}
+              >
+                {dashboardSwitchingDemo.dashboards.map((dashboard) => (
+                  <button
+                    key={dashboard.id}
+                    data-testid={`dashboard-switch-${dashboard.id}`}
+                    onClick={() => setActiveDashboardId(dashboard.id)}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                      border: '1px solid #d6d3d1',
+                      background: activeDashboardId === dashboard.id ? '#fff7ed' : '#fff',
+                      color: '#7c2d12',
+                      fontWeight: activeDashboardId === dashboard.id ? 700 : 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {dashboard.title}
+                  </button>
+                ))}
+              </section>
+            )}
+
+            {viewerPages.length > 1 && (
+              <nav
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  marginBottom: '16px',
+                  borderBottom: '2px solid #e0e0e0',
+                  paddingBottom: '8px',
+                }}
+              >
+                {viewerPages.map((page) => (
+                  <button
+                    key={page.id}
+                    onClick={() => setViewerActivePage(page.id)}
+                    style={{
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '4px 4px 0 0',
+                      cursor: 'pointer',
+                      fontWeight: viewerActivePage === page.id ? 700 : 400,
+                      background:
+                        viewerActivePage === page.id
+                          ? 'var(--ss-color-primary, #1677ff)'
+                          : 'transparent',
+                      color:
+                        viewerActivePage === page.id ? '#fff' : 'var(--ss-color-text, #1f1f1f)',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {page.title}
+                  </button>
+                ))}
+              </nav>
+            )}
+            <SupersubsetRenderer
+              key={viewerRendererKey}
+              definition={viewerDashboard}
+              registry={registry}
+              theme={viewerResolvedTheme as unknown as Record<string, unknown>}
+              cssVariables={viewerCssVars}
+              activePage={viewerActivePage}
+              initialFilterValues={viewerInitialFilterValues}
+              filterOptions={FILTER_OPTIONS}
+              onNavigate={handleViewerNavigate}
+              onFilterChange={(state) => console.log('[Supersubset] Filter state:', state)}
+              onWidgetEvent={(event) => console.log('[Supersubset] Widget event:', event)}
+            />
+          </div>
+        )}
+      </main>
     </div>
   );
 }
