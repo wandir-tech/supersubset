@@ -68,9 +68,9 @@ describe('DbtAdapter', () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       expect(datasets).toHaveLength(3);
       const names = datasets.map((d) => d.id);
-      expect(names).toContain('users');
-      expect(names).toContain('orders');
-      expect(names).toContain('raw_events');
+      expect(names).toContain('model.project.users');
+      expect(names).toContain('model.project.orders');
+      expect(names).toContain('source.project.raw_events');
     });
 
     it('skips test and seed nodes', async () => {
@@ -82,19 +82,25 @@ describe('DbtAdapter', () => {
 
     it('preserves descriptions', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const users = datasets.find((d) => d.id === 'users')!;
+      const users = datasets.find((d) => d.id === 'model.project.users')!;
       expect(users.description).toBe('All application users');
     });
 
     it('sets source ref to node id', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const users = datasets.find((d) => d.id === 'users')!;
+      const users = datasets.find((d) => d.id === 'model.project.users')!;
       expect(users.source).toEqual({ type: 'model', ref: 'model.project.users' });
+    });
+
+    it('maps dbt sources to table source types', async () => {
+      const datasets = await adapter.getDatasets(FIXTURE);
+      const rawEvents = datasets.find((d) => d.id === 'source.project.raw_events')!;
+      expect(rawEvents.source).toEqual({ type: 'table', ref: 'source.project.raw_events' });
     });
 
     it('maps dbt column types correctly', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const users = datasets.find((d) => d.id === 'users')!;
+      const users = datasets.find((d) => d.id === 'model.project.users')!;
 
       expect(users.fields.find((f) => f.id === 'id')?.dataType).toBe('integer');
       expect(users.fields.find((f) => f.id === 'email')?.dataType).toBe('string');
@@ -104,7 +110,7 @@ describe('DbtAdapter', () => {
 
     it('infers field roles', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const orders = datasets.find((d) => d.id === 'orders')!;
+      const orders = datasets.find((d) => d.id === 'model.project.orders')!;
 
       expect(orders.fields.find((f) => f.id === 'id')?.role).toBe('key');
       expect(orders.fields.find((f) => f.id === 'total_amount')?.role).toBe('measure');
@@ -114,20 +120,20 @@ describe('DbtAdapter', () => {
 
     it('infers aggregation for measures', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const orders = datasets.find((d) => d.id === 'orders')!;
+      const orders = datasets.find((d) => d.id === 'model.project.orders')!;
       expect(orders.fields.find((f) => f.id === 'total_amount')?.defaultAggregation).toBe('sum');
     });
 
     it('humanizes field names', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const users = datasets.find((d) => d.id === 'users')!;
+      const users = datasets.find((d) => d.id === 'model.project.users')!;
       expect(users.fields.find((f) => f.id === 'created_at')?.label).toBe('Created At');
       expect(users.fields.find((f) => f.id === 'is_active')?.label).toBe('Is Active');
     });
 
     it('preserves column descriptions', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const users = datasets.find((d) => d.id === 'users')!;
+      const users = datasets.find((d) => d.id === 'model.project.users')!;
       expect(users.fields.find((f) => f.id === 'id')?.description).toBe('Primary key');
     });
 
@@ -149,15 +155,144 @@ describe('DbtAdapter', () => {
 
     it('handles JSON column type', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
-      const events = datasets.find((d) => d.id === 'raw_events')!;
+      const events = datasets.find((d) => d.id === 'source.project.raw_events')!;
       expect(events.fields.find((f) => f.id === 'payload')?.dataType).toBe('json');
+    });
+
+    it('uses stable dbt node ids instead of display names', async () => {
+      const source: DbtManifestSource = {
+        nodes: {
+          'model.project.orders': {
+            resource_type: 'model',
+            name: 'orders',
+            description: 'Core orders',
+          },
+          'model.analytics.orders': {
+            resource_type: 'model',
+            name: 'orders',
+            description: 'Analytics orders',
+          },
+        },
+      };
+
+      const datasets = await adapter.getDatasets(source);
+
+      expect(datasets.map((dataset) => dataset.id)).toEqual([
+        'model.project.orders',
+        'model.analytics.orders',
+      ]);
+      expect(datasets.map((dataset) => dataset.label)).toEqual(['orders', 'orders']);
+    });
+
+    it('applies supersubset dataset and field overrides from dbt meta', async () => {
+      const source: DbtManifestSource = {
+        nodes: {
+          'model.project.override_demo': {
+            resource_type: 'model',
+            name: 'override_demo',
+            description: 'Original description',
+            meta: {
+              supersubset: {
+                label: 'Revenue Overrides',
+                description: 'Dataset description override',
+                sourceType: 'view',
+              },
+            },
+            columns: {
+              amount: {
+                name: 'amount',
+                data_type: 'INTEGER',
+                description: 'Original amount description',
+                meta: {
+                  supersubset: {
+                    label: 'Gross Revenue',
+                    description: 'Recognized revenue',
+                    dataType: 'number',
+                    role: 'measure',
+                    defaultAggregation: 'avg',
+                    format: '$0,0.00',
+                    sourceExpression: 'sum(raw.amount)',
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const datasets = await adapter.getDatasets(source);
+      const dataset = datasets[0];
+      const amount = dataset.fields[0];
+
+      expect(dataset.label).toBe('Revenue Overrides');
+      expect(dataset.description).toBe('Dataset description override');
+      expect(dataset.source).toEqual({
+        type: 'view',
+        ref: 'model.project.override_demo',
+      });
+      expect(amount).toEqual(
+        expect.objectContaining({
+          label: 'Gross Revenue',
+          description: 'Recognized revenue',
+          dataType: 'number',
+          role: 'measure',
+          defaultAggregation: 'avg',
+          format: '$0,0.00',
+          sourceExpression: 'sum(raw.amount)',
+        }),
+      );
+    });
+
+    it('ignores invalid supersubset meta overrides', async () => {
+      const source: DbtManifestSource = {
+        nodes: {
+          'model.project.invalid_meta': {
+            resource_type: 'model',
+            name: 'invalid_meta',
+            meta: {
+              supersubset: {
+                sourceType: 'warehouse',
+              },
+            },
+            columns: {
+              order_date: {
+                name: 'order_date',
+                data_type: 'DATE',
+                meta: {
+                  supersubset: {
+                    dataType: 'currency',
+                    role: 'axis',
+                    defaultAggregation: 'median',
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      const datasets = await adapter.getDatasets(source);
+      const dataset = datasets[0];
+      const field = dataset.fields[0];
+
+      expect(dataset.source).toEqual({
+        type: 'model',
+        ref: 'model.project.invalid_meta',
+      });
+      expect(field).toEqual(
+        expect.objectContaining({
+          dataType: 'date',
+          role: 'time',
+        }),
+      );
+      expect(field.defaultAggregation).toBe('none');
     });
   });
 
   describe('getDataset', () => {
     it('returns a single dataset by id', async () => {
-      const ds = await adapter.getDataset(FIXTURE, 'users');
-      expect(ds?.id).toBe('users');
+      const ds = await adapter.getDataset(FIXTURE, 'model.project.users');
+      expect(ds?.id).toBe('model.project.users');
     });
 
     it('returns undefined for missing dataset', async () => {
