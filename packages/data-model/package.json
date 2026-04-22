@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/data-model",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0",
   "description": "Normalized analytical metadata model (entities, fields, measures, relationships) for Supersubset",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
