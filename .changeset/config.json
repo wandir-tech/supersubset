@@ -22,5 +22,10 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@supersubset/dev-app", "@supersubset/docs"]
+  "ignore": [
+    "@supersubset/dev-app",
+    "@supersubset/docs",
+    "@supersubset/example-nextjs-ecommerce",
+    "@supersubset/example-vite-sqlite"
+  ]
 }
