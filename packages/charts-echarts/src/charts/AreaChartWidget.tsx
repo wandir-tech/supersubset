@@ -26,7 +26,7 @@ import {
 
 echarts.use([EChartsLine]);
 
-export function AreaChartWidget({ config, data, columns, title, height }: WidgetProps) {
+export function AreaChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -52,7 +52,10 @@ export function AreaChartWidget({ config, data, columns, title, height }: Widget
       legend,
       grid: buildGridOption(shared, { hasTitle, hasLegend: Boolean(legend) }),
       xAxis: {
-        ...buildCategoryAxisOption(shared, data.map((row) => String(row[xField] ?? ''))),
+        ...buildCategoryAxisOption(
+          shared,
+          data.map((row) => String(row[xField] ?? '')),
+        ),
         boundaryGap: false,
       },
       yAxis: buildValueAxisOption(shared, 'y'),
@@ -62,10 +65,10 @@ export function AreaChartWidget({ config, data, columns, title, height }: Widget
         type: 'line' as const,
         data: data.map((row) => row[field]),
         smooth,
-        step: step || undefined,
+        ...(step ? { step } : {}),
         connectNulls,
         showSymbol: showMarkers,
-        stack: stacked ? 'total' : undefined,
+        ...(stacked ? { stack: 'total' } : {}),
         areaStyle: { opacity: areaOpacity },
         emphasis: { focus: 'series' as const },
         ...(label ? { label } : {}),
@@ -73,7 +76,7 @@ export function AreaChartWidget({ config, data, columns, title, height }: Widget
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

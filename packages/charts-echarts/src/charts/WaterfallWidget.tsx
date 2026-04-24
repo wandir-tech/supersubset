@@ -21,7 +21,7 @@ import {
 
 echarts.use([EChartsBar]);
 
-export function WaterfallWidget({ config, data, columns, title, height }: WidgetProps) {
+export function WaterfallWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -88,9 +88,7 @@ export function WaterfallWidget({ config, data, columns, title, height }: Widget
           type: 'bar' as const,
           stack: 'waterfall',
           data: increaseValues.map((v, i) =>
-            totalIndices.includes(i)
-              ? { value: v, itemStyle: { color: totalColor } }
-              : v
+            totalIndices.includes(i) ? { value: v, itemStyle: { color: totalColor } } : v,
           ),
           itemStyle: { color: increaseColor },
           ...(label ? { label } : {}),
@@ -107,7 +105,7 @@ export function WaterfallWidget({ config, data, columns, title, height }: Widget
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

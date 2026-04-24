@@ -40,7 +40,7 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
         values: { ...state.values, [action.filterId]: action.value },
       };
     case 'RESET_FILTER': {
-      const { [action.filterId]: _, ...rest } = state.values;
+      const { [action.filterId]: _removed, ...rest } = state.values;
       return { ...state, values: rest };
     }
     case 'RESET_ALL':
@@ -75,7 +75,7 @@ export interface FilterProviderProps {
 
 export function FilterProvider({
   initialValues,
-  filters,
+  filters: _filters, // accepted for API symmetry; resolution happens via getFiltersForWidget
   onFilterChange,
   children,
 }: FilterProviderProps) {
@@ -98,7 +98,7 @@ export function FilterProvider({
   const resetFilter = useCallback(
     (filterId: string) => {
       dispatch({ type: 'RESET_FILTER', filterId });
-      const { [filterId]: _, ...rest } = stateRef.current.values;
+      const { [filterId]: _removed, ...rest } = stateRef.current.values;
       onFilterChange?.({ values: rest });
     },
     [onFilterChange],
