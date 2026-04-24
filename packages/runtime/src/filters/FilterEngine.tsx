@@ -40,8 +40,7 @@ function filterReducer(state: FilterState, action: FilterAction): FilterState {
         values: { ...state.values, [action.filterId]: action.value },
       };
     case 'RESET_FILTER': {
-      const { [action.filterId]: __removed, ...rest } = state.values;
-      void __removed;
+      const { [action.filterId]: _removed, ...rest } = state.values;
       return { ...state, values: rest };
     }
     case 'RESET_ALL':
@@ -60,7 +59,7 @@ export interface FilterContextValue {
   setFilter: (filterId: string, value: unknown) => void;
   resetFilter: (filterId: string) => void;
   resetAll: () => void;
-  getFiltersForWidget: (widgetId: string, _filters: FilterDefinition[]) => FilterValue[];
+  getFiltersForWidget: (widgetId: string, filters: FilterDefinition[]) => FilterValue[];
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null);
@@ -76,7 +75,7 @@ export interface FilterProviderProps {
 
 export function FilterProvider({
   initialValues,
-  filters: _filters,
+  filters: _filters, // accepted for API symmetry; resolution happens via getFiltersForWidget
   onFilterChange,
   children,
 }: FilterProviderProps) {
@@ -99,8 +98,7 @@ export function FilterProvider({
   const resetFilter = useCallback(
     (filterId: string) => {
       dispatch({ type: 'RESET_FILTER', filterId });
-      const { [filterId]: __removed, ...rest } = stateRef.current.values;
-      void __removed;
+      const { [filterId]: _removed, ...rest } = stateRef.current.values;
       onFilterChange?.({ values: rest });
     },
     [onFilterChange],

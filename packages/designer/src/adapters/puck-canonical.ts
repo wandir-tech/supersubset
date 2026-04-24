@@ -208,8 +208,7 @@ function processContentItems(
     const isWidget = !!PUCK_NAME_TO_WIDGET_TYPE[puckType] || !!CONTROL_PUCK_NAME_TO_TYPE[puckType];
 
     if (isWidget) {
-      const { id: _omitId, ...widgetProps } = props;
-      void _omitId;
+      const { id: _id, ...widgetProps } = props;
       const widget = buildWidgetDefinition(itemId, widgetType, widgetProps);
       widgets.push(widget);
 
@@ -228,8 +227,7 @@ function processContentItems(
     } else {
       const layoutType = CONTENT_PUCK_NAME_TO_TYPE[puckType] as LayoutComponent['type'];
       const layoutId = `layout-${itemId}`;
-      const { id: _omitId2, ...contentProps } = props;
-      void _omitId2;
+      const { id: _id, ...contentProps } = props;
 
       layout[layoutId] = {
         id: layoutId,

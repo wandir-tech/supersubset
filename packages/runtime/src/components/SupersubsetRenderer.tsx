@@ -48,6 +48,14 @@ export interface SupersubsetRendererProps {
   filterOptions?: Record<string, string[]>;
   /** Additional CSS class on the container */
   className?: string;
+  /**
+   * When true (default), the renderer container is painted with the resolved
+   * theme's background, text color, and font family — derived from any
+   * `--ss-color-background`, `--ss-color-text`, and `--ss-font-family` entries
+   * in `cssVariables`. Set to `false` if the host wants the container to stay
+   * transparent and inherit those styles from its own CSS instead.
+   */
+  paintContainer?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────
@@ -66,39 +74,42 @@ export function SupersubsetRenderer({
   onDrill,
   filterOptions,
   className,
+  paintContainer = true,
 }: SupersubsetRendererProps) {
-  // Resolve which page to show
+  // All hooks must run on every render in the same order — keep them above the
+  // early return for the empty-pages case below.
   const page = useMemo(() => {
     const pageId = activePage ?? definition.defaults?.activePage ?? definition.pages[0]?.id;
     return definition.pages.find((p) => p.id === pageId) ?? definition.pages[0];
   }, [definition, activePage]);
 
-  if (!page) {
-    return createElement('div', { className: 'ss-renderer ss-error' }, 'No pages in dashboard');
-  }
-
-  // Build container style from CSS variables
   const containerStyle = useMemo(() => {
     const style: Record<string, string> = {};
     if (cssVariables) {
       Object.assign(style, cssVariables);
-      if (cssVariables['--ss-color-background']) {
-        style.backgroundColor = cssVariables['--ss-color-background'];
-      }
-      if (cssVariables['--ss-color-text']) {
-        style.color = cssVariables['--ss-color-text'];
-      }
-      if (cssVariables['--ss-font-family']) {
-        style.fontFamily = cssVariables['--ss-font-family'];
+      if (paintContainer) {
+        if (cssVariables['--ss-color-background']) {
+          style.backgroundColor = cssVariables['--ss-color-background'];
+        }
+        if (cssVariables['--ss-color-text']) {
+          style.color = cssVariables['--ss-color-text'];
+        }
+        if (cssVariables['--ss-font-family']) {
+          style.fontFamily = cssVariables['--ss-font-family'];
+        }
       }
     }
     return style;
-  }, [cssVariables]);
+  }, [cssVariables, paintContainer]);
 
   const interactionCallbacks: InteractionCallbacks = useMemo(
     () => ({ onNavigate, onExternalAction, onDrill, onWidgetEvent }),
     [onNavigate, onExternalAction, onDrill, onWidgetEvent],
   );
+
+  if (!page) {
+    return createElement('div', { className: 'ss-renderer ss-error' }, 'No pages in dashboard');
+  }
 
   return createElement(
     'div',
