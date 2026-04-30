@@ -92,9 +92,7 @@ export function TreemapWidget({ config, data, columns, title, height, theme }: W
           type: 'treemap' as const,
           data: treeData,
           roam: false,
-          ...(maxDepth > 0 ? { leafDepth: maxDepth } : {}),
           upperLabel: { show: showUpperLabel },
-          ...(borderWidth > 0 ? { itemStyle: { borderWidth, borderColor: '#fff' } } : {}),
           label: {
             show: shared.showValues !== false,
             formatter: fmt
@@ -103,6 +101,8 @@ export function TreemapWidget({ config, data, columns, title, height, theme }: W
               : '{b}',
           },
           breadcrumb: { show: true },
+          ...(maxDepth > 0 ? { leafDepth: maxDepth } : {}),
+          ...(borderWidth > 0 ? { itemStyle: { borderWidth, borderColor: '#fff' } } : {}),
         },
       ],
     };

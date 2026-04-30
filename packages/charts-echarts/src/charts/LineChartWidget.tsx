@@ -71,12 +71,12 @@ export function LineChartWidget({
           },
         })),
         smooth: config.smooth === true,
-        ...(step ? { step } : {}),
         connectNulls,
         showSymbol: showMarkers,
         symbolSize: markerSize,
-        ...(showArea ? { areaStyle: {} } : {}),
         ...(label ? { label } : {}),
+        ...(step ? { step } : {}),
+        ...(showArea ? { areaStyle: {} } : {}),
       })),
     };
   }, [config, data, columns, title]);
