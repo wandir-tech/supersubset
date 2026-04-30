@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/charts-echarts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ECharts-based widget pack for Supersubset (line, bar, pie, scatter, heatmap, sankey, KPI, and more)",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
