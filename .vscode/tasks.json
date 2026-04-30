@@ -1,0 +1,180 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Workspace",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Preflight",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "preflight"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Configure Defaults",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "prepare", "--profile", "default"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Lease Ports",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "prepare", "--profile", "leased"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Status",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "status"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Print URLs",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "print-urls"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Clear State",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "clear"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv: Dev App",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "run", "dev-app"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "devenv"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv: Next.js Example",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "run", "nextjs-example"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "devenv"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv: Vite SQLite Example",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "run", "vite-sqlite-example"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "devenv"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv: Docs",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/devenv.mjs", "run", "docs"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "devenv"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv Services",
+      "dependsOn": ["DevEnv: Dev App", "DevEnv: Next.js Example", "DevEnv: Vite SQLite Example"],
+      "dependsOrder": "parallel",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ExamplesDevEnv",
+      "dependsOn": [
+        "DevEnv Preflight",
+        "DevEnv Configure Defaults",
+        "DevEnv: Next.js Example",
+        "DevEnv: Vite SQLite Example"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DocsDevEnv",
+      "dependsOn": ["DevEnv: Docs"],
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "DevEnv",
+      "dependsOn": ["DevEnv Preflight", "DevEnv Configure Defaults", "DevEnv Services"],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "WorktreeDevEnv",
+      "dependsOn": ["DevEnv Preflight", "DevEnv Lease Ports", "DevEnv Services"],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

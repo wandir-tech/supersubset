@@ -25,6 +25,27 @@ pnpm build        # ← required before running examples
 
 That builds the workspace packages into `dist/`, which is what the host examples consume. **If you skip `pnpm build`, the examples will fail** with "Failed to resolve entry for package" errors because the `dist/` directories won't exist.
 
+## VS Code Dev Environments
+
+If you are working in VS Code, the workspace now exposes a small set of local environment tasks in `.vscode/tasks.json`.
+
+- `Build Workspace` — runs `pnpm build`
+- `DevEnv` — starts the dev app plus both example hosts on the shared default ports
+- `WorktreeDevEnv` — leases a fresh local port tuple and starts the same stack for an isolated checkout
+- `ExamplesDevEnv` — starts only the two example hosts
+- `DocsDevEnv` — starts the docs site only
+- `DevEnv Status` — prints the currently selected URLs and state metadata
+- `DevEnv Print URLs` — prints only the current local URLs for copy/paste into browser tools or test handoff notes
+- `DevEnv Clear State` — removes the saved DevEnv lease metadata from `tmp/devenv-state.json`
+
+Recommended flow:
+
+1. Run `Build Workspace` once after dependency or package changes.
+2. Run `DevEnv` for the shared defaults or `WorktreeDevEnv` for an isolated local tuple.
+3. Run `DevEnv Print URLs` for a compact handoff list or `DevEnv Status` for the fuller state output.
+
+`WorktreeDevEnv` writes the leased ports to `tmp/devenv-state.json`. Stop the running servers with VS Code's task termination commands, then run `DevEnv Clear State` if you want to discard the saved lease.
+
 ## Run The Examples
 
 ### Next.js runtime host

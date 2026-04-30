@@ -1,13 +1,16 @@
 import net from 'node:net';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+
+const DEFAULT_OPTIONS = {
+  start: 3010,
+  end: 3199,
+  count: 1,
+  host: '127.0.0.1',
+};
 
 function parseArgs(argv) {
-  const options = {
-    start: 3010,
-    end: 3199,
-    count: 1,
-    host: '127.0.0.1',
-  };
+  const options = { ...DEFAULT_OPTIONS };
 
   for (let index = 0; index < argv.length; index += 1) {
     const key = argv[index];
@@ -77,8 +80,8 @@ function canListen(port, host) {
   });
 }
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
+export async function findFreePorts(overrides = {}) {
+  const options = { ...DEFAULT_OPTIONS, ...overrides };
   validateOptions(options);
 
   const freePorts = [];
@@ -100,10 +103,18 @@ async function main() {
     );
   }
 
+  return freePorts;
+}
+
+async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const freePorts = await findFreePorts(options);
   process.stdout.write(`${freePorts.join('\n')}\n`);
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  });
+}

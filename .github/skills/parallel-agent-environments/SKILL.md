@@ -173,6 +173,15 @@ export SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT="${LEASED_PORTS[2]}"
 pnpm exec playwright test e2e/workflows/host-integration.spec.ts --project=chromium
 ```
 
+If you are working from VS Code, the workspace also exposes task wrappers for this:
+
+- `DevEnv` prepares the shared defaults and starts the dev app plus both example hosts.
+- `WorktreeDevEnv` leases a fresh tuple into `tmp/devenv-state.json` and starts the same stack.
+- `DevEnv Print URLs` prints only the current URLs for browser handoff or MCP setup.
+- `DevEnv Status` prints the current URLs and state metadata.
+
+Terminate the running tasks from VS Code when you are done, then run `DevEnv Clear State` if you want to discard the saved lease metadata.
+
 **Full Playwright stack**: The default `webServer` block still tries to stand up the whole stack, but it can now do so on a leased port tuple. Two agents can run in parallel if they use disjoint tuples.
 
 ### Strategy D — Independent PR mode
