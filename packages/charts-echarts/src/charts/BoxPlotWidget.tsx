@@ -23,7 +23,7 @@ import {
 
 echarts.use([EChartsBoxplot]);
 
-export function BoxPlotWidget({ config, data, columns, title, height }: WidgetProps) {
+export function BoxPlotWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -73,14 +73,14 @@ export function BoxPlotWidget({ config, data, columns, title, height }: WidgetPr
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildBoxplotOption(
   categories: string[],
   boxData: number[][],
   shared: import('../base/shared-options').SharedConfig,
-  boxWidth?: string
+  boxWidth?: string,
 ) {
   return {
     color: buildColorOption(shared),
@@ -92,7 +92,7 @@ function buildBoxplotOption(
       {
         type: 'boxplot' as const,
         data: boxData,
-        boxWidth: boxWidth ? [boxWidth, boxWidth] : undefined,
+        ...(boxWidth ? { boxWidth: [boxWidth, boxWidth] } : {}),
       },
     ],
   };

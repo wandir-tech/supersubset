@@ -19,7 +19,7 @@ import {
 
 echarts.use([EChartsGauge]);
 
-export function GaugeWidget({ config, data, title, height }: WidgetProps) {
+export function GaugeWidget({ config, data, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     const valueField = (config.valueField as string) ?? '';
     const row = data?.[0];
@@ -61,11 +61,11 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
           endAngle,
           roundCap,
           splitNumber: splitCount,
-          progress: progressMode
-            ? { show: true, roundCap, itemStyle: { color: progressColor } }
-            : undefined,
+          ...(progressMode
+            ? { progress: { show: true, roundCap, itemStyle: { color: progressColor } } }
+            : {}),
           data: [{ value, name: title ?? '' }],
-          axisLine: thresholds || colors.length >= 1 ? axisLine : undefined,
+          ...(thresholds || colors.length >= 1 ? { axisLine } : {}),
           detail: {
             formatter: fmt ? (v: number) => formatNumber(v, fmt) : '{value}',
             fontSize: 24,
@@ -80,5 +80,5 @@ export function GaugeWidget({ config, data, title, height }: WidgetProps) {
     };
   }, [config, data, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }

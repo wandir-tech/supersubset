@@ -9,16 +9,6 @@ import React from 'react';
 import type { FieldRole } from '@supersubset/data-model';
 import { useDatasets } from '../context/DatasetContext';
 
-// ─── Role styling (compact, for sidebar) ─────────────────────
-
-const ROLE_BADGE_COLORS: Record<FieldRole, string> = {
-  dimension: '#1677ff',
-  measure: '#52c41a',
-  time: '#fa8c16',
-  key: '#722ed1',
-  unknown: '#999',
-};
-
 // ─── Field selector component used inside Puck custom fields ─
 
 const FIELD_LABEL_STYLE: React.CSSProperties = {
@@ -125,9 +115,9 @@ function FieldRefSelect({
         React.createElement(
           'option',
           { key: `${opt.dataset}-${opt.value}`, value: opt.value },
-          showDatasetPrefix ? `${opt.dataset} › ${opt.label}` : opt.label
-        )
-      )
+          showDatasetPrefix ? `${opt.dataset} › ${opt.label}` : opt.label,
+        ),
+      ),
     ),
   );
 }
@@ -201,12 +191,8 @@ function DatasetRefSelect({
       },
       React.createElement('option', { value: '' }, 'Select dataset…'),
       ...datasets.map((ds) =>
-        React.createElement(
-          'option',
-          { key: ds.id, value: ds.id },
-          ds.label
-        )
-      )
+        React.createElement('option', { key: ds.id, value: ds.id }, ds.label),
+      ),
     ),
   );
 }
@@ -217,14 +203,17 @@ function DatasetRefSelect({
  * Create a Puck custom field that renders a dropdown of available fields.
  * Falls back to a plain text input when no datasets are provided.
  */
-export function createFieldRefField(
-  label: string,
-  acceptRoles?: FieldRole[],
-) {
+export function createFieldRefField(label: string, acceptRoles?: FieldRole[]) {
   return {
     type: 'custom' as const,
     label,
-    render: ({ value, onChange, id, name, readOnly }: {
+    render: ({
+      value,
+      onChange,
+      id,
+      name,
+      readOnly,
+    }: {
       value: string;
       onChange: (val: string) => void;
       id: string;
@@ -250,7 +239,13 @@ export function createDatasetRefField() {
   return {
     type: 'custom' as const,
     label: 'Dataset Reference',
-    render: ({ value, onChange, id, name, readOnly }: {
+    render: ({
+      value,
+      onChange,
+      id,
+      name,
+      readOnly,
+    }: {
       value: string;
       onChange: (val: string) => void;
       id: string;

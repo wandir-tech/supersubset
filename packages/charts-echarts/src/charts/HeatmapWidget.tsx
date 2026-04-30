@@ -20,7 +20,7 @@ import {
 
 echarts.use([EChartsHeatmap, VisualMapComponent]);
 
-export function HeatmapWidget({ config, data, columns, title, height }: WidgetProps) {
+export function HeatmapWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -83,7 +83,7 @@ export function HeatmapWidget({ config, data, columns, title, height }: WidgetPr
         orient: 'horizontal' as const,
         left: 'center',
         bottom: '0%',
-        inRange: colors.length >= 2 ? { color: [colors[0], colors[1]] } : undefined,
+        ...(colors.length >= 2 ? { inRange: { color: [colors[0], colors[1]] } } : {}),
       },
       series: [
         {
@@ -91,9 +91,9 @@ export function HeatmapWidget({ config, data, columns, title, height }: WidgetPr
           data: heatmapData,
           label: {
             show: shared.showValues !== false,
-            formatter: fmt
-              ? (params: { data: number[] }) => formatNumber(params.data[2], fmt)
-              : undefined,
+            ...(fmt
+              ? { formatter: (params: { data: number[] }) => formatNumber(params.data[2], fmt) }
+              : {}),
           },
           itemStyle: {
             borderWidth: cellBorderWidth,
@@ -107,7 +107,7 @@ export function HeatmapWidget({ config, data, columns, title, height }: WidgetPr
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} />;
+  return <BaseChart option={option} height={height} theme={theme} />;
 }
 
 function buildEmptyOption(title?: string) {

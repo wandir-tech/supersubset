@@ -11,7 +11,6 @@ import type {
   LayoutMap,
   LayoutComponent,
   WidgetDefinition,
-  DataBinding,
   FieldBinding,
 } from '@supersubset/schema';
 import { PUCK_NAME_TO_WIDGET_TYPE, WIDGET_TYPE_TO_PUCK_NAME } from '../blocks/charts';

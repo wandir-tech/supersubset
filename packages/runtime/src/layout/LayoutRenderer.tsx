@@ -18,7 +18,6 @@ import type {
   WidgetDefinition,
   FilterDefinition,
 } from '@supersubset/schema';
-import { GRID_COLUMN_COUNT } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetProps, WidgetEvent } from '../widgets/registry';
 import type { FilterValue } from '../filters/FilterEngine';
 
