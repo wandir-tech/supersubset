@@ -18,6 +18,12 @@ pnpm dev:vite-sqlite-example
 
 Then open `http://localhost:3002`.
 
+To run this example in parallel with another checkout, lease a port first:
+
+```bash
+SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT=3112 pnpm dev:vite-sqlite-example
+```
+
 ## Notes
 
 - Supersubset does not talk to SQLite directly here.

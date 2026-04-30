@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 const devAppPort = process.env.SUPERSUBSET_DEV_APP_PORT ?? '3000';
 const devAppOrigin = `http://localhost:${devAppPort}`;
+const nextjsExamplePort = process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT ?? '3001';
+const nextjsExampleOrigin = `http://localhost:${nextjsExamplePort}`;
+const viteSqliteExamplePort = process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT ?? '3002';
+const viteSqliteExampleOrigin = `http://localhost:${viteSqliteExamplePort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -35,13 +39,21 @@ export default defineConfig({
     },
     {
       command: 'pnpm --filter @supersubset/example-nextjs-ecommerce dev',
-      url: 'http://localhost:3001',
+      url: nextjsExampleOrigin,
+      env: {
+        ...process.env,
+        SUPERSUBSET_EXAMPLE_NEXTJS_PORT: nextjsExamplePort,
+      },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
     {
       command: 'pnpm --filter @supersubset/example-vite-sqlite dev',
-      url: 'http://localhost:3002',
+      url: viteSqliteExampleOrigin,
+      env: {
+        ...process.env,
+        SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT: viteSqliteExamplePort,
+      },
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

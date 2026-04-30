@@ -35,11 +35,18 @@ pnpm dev:nextjs-example
 
 Open `http://localhost:3001`.
 
+For an isolated parallel run, override the default port:
+
+```bash
+SUPERSUBSET_EXAMPLE_NEXTJS_PORT=3111 pnpm dev:nextjs-example
+```
+
+Also available: `http://localhost:3001/workbench`.
+
 What to look for:
 
-- runtime-only embedding
-- host-owned theme switching
-- host-supplied fixture data injected through the widget registry
+- `/` — runtime-only embedding, host-owned theme switching, and fixture-driven widget injection
+- `/workbench` — local login, secured metadata discovery, live preview queries, publish/persist, and runtime re-querying through a real host shell
 
 ### Vite + SQLite host
 
@@ -48,6 +55,12 @@ pnpm dev:vite-sqlite-example
 ```
 
 Open `http://localhost:3002`.
+
+For an isolated parallel run, override the default port:
+
+```bash
+SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT=3112 pnpm dev:vite-sqlite-example
+```
 
 What to look for:
 

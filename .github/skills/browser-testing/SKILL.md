@@ -1,11 +1,12 @@
 ---
 name: browser-testing
-description: "Run browser tests against Supersubset using Chrome MCP. Use when verifying designer UI interactions, renderer output, drag-and-drop behavior, filter propagation, responsive modes, or visual regression. Covers Chrome DevTools MCP integration, test plan execution, screenshot capture, and console error detection."
+description: 'Run browser tests against Supersubset using Chrome MCP. Use when verifying designer UI interactions, renderer output, drag-and-drop behavior, filter propagation, responsive modes, or visual regression. Covers Chrome DevTools MCP integration, test plan execution, screenshot capture, and console error detection.'
 ---
 
 # Browser Testing with Chrome MCP
 
 ## When to Use
+
 - Verifying the designer loads and functions correctly
 - Testing drag-and-drop widget interactions
 - Verifying property edits update rendered widgets
@@ -18,6 +19,7 @@ description: "Run browser tests against Supersubset using Chrome MCP. Use when v
 ## Chrome MCP Setup
 
 The workspace has Chrome MCP configured in `.vscode/mcp.json`:
+
 ```json
 {
   "io.github.ChromeDevTools/chrome-devtools-mcp": {
@@ -30,6 +32,7 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 ## Test Plans
 
 ### Plan A — Designer Happy Path
+
 1. Open local dev app (`http://localhost:5173` or configured port)
 2. Load sample metadata model
 3. Create new dashboard
@@ -41,12 +44,14 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 9. Reload and verify semantic equivalence
 
 ### Plan B — Renderer Happy Path
+
 1. Load saved dashboard definition
 2. Execute through mock adapter and real adapter fixture
 3. Verify charts/tables/cards appear correctly
 4. Verify cross-filtering and drill actions
 
 ### Plan C — Regression and Robustness
+
 1. Malformed schema import
 2. Missing field bindings
 3. Unsupported chart config
@@ -57,6 +62,7 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 8. Theme switch
 
 ### Plan D — Host Integration
+
 1. Mount designer inside host shell
 2. Persist schema via host callback
 3. Mount renderer in separate route/component tree
@@ -64,10 +70,14 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 
 ## Procedure
 
-1. Start the dev app: `cd packages/dev-app && pnpm dev`
-2. Use Chrome MCP to navigate to the app URL
-3. Take initial screenshot for baseline
-4. Execute test plan steps using Chrome MCP tools:
+1. If multiple agents or checkouts share the machine, lease ports first:
+   `mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)`
+2. Export explicit origins before starting servers or Playwright-backed flows:
+   `SUPERSUBSET_DEV_APP_PORT`, `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`, `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`
+3. Start the target app or stack on the leased ports.
+4. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default.
+5. Take an initial screenshot for baseline.
+6. Execute test plan steps using Chrome MCP tools:
    - `chr_navigate_page` — navigate to URLs
    - `chr_click` — click elements
    - `chr_fill` — fill input fields
@@ -75,10 +85,11 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
    - `chr_take_snapshot` — capture DOM state
    - `chr_list_console_messages` — check for errors
    - `chr_evaluate_script` — run assertions in browser
-5. Compare screenshots and DOM state to expected outcomes
-6. Report results with evidence
+7. Compare screenshots and DOM state to expected outcomes.
+8. Report results with evidence, including the leased local origin that was tested.
 
 ## Verification Checklist
+
 - [ ] No console errors during test
 - [ ] All widgets render without visual defects
 - [ ] Drag-and-drop produces correct layout changes

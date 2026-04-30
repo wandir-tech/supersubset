@@ -68,6 +68,12 @@ importers:
       '@supersubset/charts-echarts':
         specifier: workspace:*
         version: link:../../packages/charts-echarts
+      '@supersubset/data-model':
+        specifier: workspace:*
+        version: link:../../packages/data-model
+      '@supersubset/designer':
+        specifier: workspace:*
+        version: link:../../packages/designer
       '@supersubset/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
