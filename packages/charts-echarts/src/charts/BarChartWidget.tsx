@@ -21,7 +21,16 @@ import {
 
 echarts.use([EChartsBar]);
 
-export function BarChartWidget({ config, data, columns, title, height, widgetId, onEvent }: WidgetProps) {
+export function BarChartWidget({
+  config,
+  data,
+  columns,
+  title,
+  height,
+  theme,
+  widgetId,
+  onEvent,
+}: WidgetProps) {
   const option = useMemo(() => {
     if (!data || data.length === 0) {
       return buildEmptyOption(title);
@@ -64,17 +73,25 @@ export function BarChartWidget({ config, data, columns, title, height, widgetId,
             [field]: row[field],
           },
         })),
-        stack: stacked ? 'total' : undefined,
-        barWidth: barWidth || undefined,
-        barGap: barGap || undefined,
-        barMinHeight: barMinHeight || undefined,
-        itemStyle: borderRadius > 0 ? { borderRadius } : undefined,
+        ...(stacked ? { stack: 'total' } : {}),
+        ...(barWidth ? { barWidth } : {}),
+        ...(barGap ? { barGap } : {}),
+        ...(barMinHeight ? { barMinHeight } : {}),
+        ...(borderRadius > 0 ? { itemStyle: { borderRadius } } : {}),
         ...(label ? { label } : {}),
       })),
     };
   }, [config, data, columns, title]);
 
-  return <BaseChart option={option} height={height} widgetId={widgetId} onEvent={onEvent} />;
+  return (
+    <BaseChart
+      option={option}
+      height={height}
+      theme={theme}
+      widgetId={widgetId}
+      onEvent={onEvent}
+    />
+  );
 }
 
 function buildEmptyOption(title?: string) {

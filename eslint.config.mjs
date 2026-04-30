@@ -19,7 +19,16 @@ export default tseslint.config(
     rules: {
       // Relax for existing codebase — tighten over time
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          // Allows `const { id: _id, ...rest } = obj` without flagging `_id`.
+          ignoreRestSiblings: true,
+        },
+      ],
     },
   },
 );
