@@ -65,21 +65,25 @@ export function BaseChart({
 
     // ResizeObserver for responsive sizing
     const observer = new ResizeObserver(() => {
+      if (chartRef.current !== chart || isChartDisposed(chart)) {
+        return;
+      }
       chart.resize();
     });
     observer.observe(containerRef.current);
 
     return () => {
       observer.disconnect();
-      chart.dispose();
       chartRef.current = null;
+      chart.dispose();
     };
   }, [echartsTheme]);
 
   // Update options
   useEffect(() => {
-    if (!chartRef.current) return;
-    chartRef.current.setOption(option, { notMerge: true });
+    const chart = chartRef.current;
+    if (!chart || isChartDisposed(chart)) return;
+    chart.setOption(option, { notMerge: true });
   }, [option]);
 
   useEffect(() => {
@@ -180,3 +184,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 // Re-export echarts for use/register calls in chart modules
 export { echarts };
+
+function isChartDisposed(chart: echarts.ECharts | null): boolean {
+  if (!chart) {
+    return true;
+  }
+
+  const maybeChart = chart as echarts.ECharts & { isDisposed?: () => boolean };
+  return typeof maybeChart.isDisposed === 'function' ? maybeChart.isDisposed() : false;
+}

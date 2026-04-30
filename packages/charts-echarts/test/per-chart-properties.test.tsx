@@ -484,6 +484,7 @@ describe('PieChartWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().padAngle).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'padAngle')).toBe(false);
   });
 
   it('roseType=radius produces rose chart', () => {
@@ -546,6 +547,19 @@ describe('PieChartWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().roseType).toBe('radius');
+  });
+
+  it('omits roseType when no rose variant is configured', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value' },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().roseType).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'roseType')).toBe(false);
   });
 
   // Regression: #10 — showValues=false must not hide labels when labelPosition is set
@@ -1033,6 +1047,7 @@ describe('TreemapWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().leafDepth).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'leafDepth')).toBe(false);
   });
 
   it('borderWidth sets itemStyle borderWidth', () => {
@@ -1046,6 +1061,19 @@ describe('TreemapWidget — per-chart properties', () => {
     );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderWidth).toBe(3);
+  });
+
+  it('omits itemStyle when no treemap border is configured', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', borderWidth: 0 },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+    expect(getSeries().itemStyle).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'itemStyle')).toBe(false);
   });
 });
 

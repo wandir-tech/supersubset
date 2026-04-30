@@ -51,6 +51,17 @@ export function HeatmapWidget({ config, data, columns, title, height, theme }: W
     });
 
     const fmt = shared.numberFormat;
+    const heatmapLabel =
+      shared.showValues !== false
+        ? {
+            show: true,
+            ...(fmt
+              ? {
+                  formatter: (params: { data: number[] }) => formatNumber(params.data[2], fmt),
+                }
+              : {}),
+          }
+        : { show: false };
 
     return {
       ...(buildTitleOption(title) ? { title: buildTitleOption(title) } : {}),
@@ -89,12 +100,7 @@ export function HeatmapWidget({ config, data, columns, title, height, theme }: W
         {
           type: 'heatmap' as const,
           data: heatmapData,
-          label: {
-            show: shared.showValues !== false,
-            ...(fmt
-              ? { formatter: (params: { data: number[] }) => formatNumber(params.data[2], fmt) }
-              : {}),
-          },
+          label: heatmapLabel,
           itemStyle: {
             borderWidth: cellBorderWidth,
             borderColor: cellBorderColor,

@@ -81,12 +81,12 @@ export function PieChartWidget({ config, data, columns, title, height, theme }: 
           type: 'pie' as const,
           data: seriesData,
           radius: [`${innerRadius}%`, `${outerRadius}%`],
-          ...(roseType ? { roseType } : {}),
-          ...(padAngle > 0 ? { padAngle } : {}),
           emphasis: {
             itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' },
           },
           label: labelConfig,
+          ...(roseType ? { roseType } : {}),
+          ...(padAngle > 0 ? { padAngle } : {}),
         },
       ],
     };

@@ -49,6 +49,10 @@ export function GaugeWidget({ config, data, title, height, theme }: WidgetProps)
     }
 
     const progressColor = colors.length >= 1 ? colors[0] : '#1FA8C9';
+    const progress = progressMode
+      ? { show: true, roundCap, itemStyle: { color: progressColor } }
+      : undefined;
+    const axisLineOption = thresholds || colors.length >= 1 ? axisLine : undefined;
 
     return {
       ...(buildTitleOption(title) ? { title: buildTitleOption(title) } : {}),
@@ -61,11 +65,7 @@ export function GaugeWidget({ config, data, title, height, theme }: WidgetProps)
           endAngle,
           roundCap,
           splitNumber: splitCount,
-          ...(progressMode
-            ? { progress: { show: true, roundCap, itemStyle: { color: progressColor } } }
-            : {}),
           data: [{ value, name: title ?? '' }],
-          ...(thresholds || colors.length >= 1 ? { axisLine } : {}),
           detail: {
             formatter: fmt ? (v: number) => formatNumber(v, fmt) : '{value}',
             fontSize: 24,
@@ -75,6 +75,8 @@ export function GaugeWidget({ config, data, title, height, theme }: WidgetProps)
             fontSize: 13,
             offsetCenter: [0, '70%'],
           },
+          ...(progress ? { progress } : {}),
+          ...(axisLineOption ? { axisLine: axisLineOption } : {}),
         },
       ],
     };

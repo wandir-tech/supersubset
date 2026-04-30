@@ -73,12 +73,12 @@ export function BarChartWidget({
             [field]: row[field],
           },
         })),
+        ...(label ? { label } : {}),
         ...(stacked ? { stack: 'total' } : {}),
         ...(barWidth ? { barWidth } : {}),
         ...(barGap ? { barGap } : {}),
-        ...(barMinHeight ? { barMinHeight } : {}),
+        ...(barMinHeight > 0 ? { barMinHeight } : {}),
         ...(borderRadius > 0 ? { itemStyle: { borderRadius } } : {}),
-        ...(label ? { label } : {}),
       })),
     };
   }, [config, data, columns, title]);
