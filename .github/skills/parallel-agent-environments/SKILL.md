@@ -1,6 +1,6 @@
 ---
 name: parallel-agent-environments
-description: "Coordinate parallel agent work on unrelated tasks. Use when multiple agents need to run concurrently — covers branch isolation, file-scope ownership, port assignment, merge sequencing, and worktree setup."
+description: 'Coordinate parallel agent work on unrelated tasks. Use when multiple agents need to run concurrently — covers branch isolation, file-scope ownership, port assignment, merge sequencing, and worktree setup.'
 ---
 
 # Parallel Agent Environments
@@ -26,10 +26,12 @@ The orchestrator's brief **must** list which packages/files each agent may write
 
 ```markdown
 ## Brief for Agent 1
+
 **May modify**: packages/charts-echarts/, e2e/visual/
 **Must NOT modify**: packages/designer/, packages/runtime/, packages/schema/
 
 ## Brief for Agent 2
+
 **May modify**: packages/runtime/src/filters/, e2e/interactions/
 **Must NOT modify**: packages/charts-echarts/, packages/designer/
 ```
@@ -40,26 +42,27 @@ If two tasks need the same file, the orchestrator **sequences** those edits (one
 
 These files are touched by many tasks and must never be edited in parallel:
 
-| File | Why |
-| ---- | --- |
-| `package.json` (root) | Workspace deps, scripts |
-| `tsconfig.json` (root) | Path aliases |
-| `packages/schema/src/**` | Canonical types consumed everywhere |
-| `pnpm-lock.yaml` | Auto-generated; two branches adding deps will conflict |
-| `docs/status/master-plan.md` | Single-writer: the orchestrator |
+| File                         | Why                                                    |
+| ---------------------------- | ------------------------------------------------------ |
+| `package.json` (root)        | Workspace deps, scripts                                |
+| `tsconfig.json` (root)       | Path aliases                                           |
+| `packages/schema/src/**`     | Canonical types consumed everywhere                    |
+| `pnpm-lock.yaml`             | Auto-generated; two branches adding deps will conflict |
+| `docs/status/master-plan.md` | Single-writer: the orchestrator                        |
 
 If an agent needs a hot file, the orchestrator either: (a) does that edit itself before dispatching, or (b) assigns it to **one** agent and makes others wait.
 
 ### 4. Merge order
 
 - First agent to complete merges first.
-- Second agent rebases onto updated `main` before merging.
+- Second agent rebases onto the updated target branch before merging, usually `develop` for normal feature/fix work.
 - If both touch a hot file despite precautions, the orchestrator resolves the conflict manually before the second merge.
 - Always run `pnpm typecheck && pnpm test` after rebase.
 
 ### 5. Status signaling
 
 Agents report completion to the orchestrator (via subagent return or PR). The orchestrator:
+
 1. Verifies the output matches the brief
 2. Merges (or asks the human to merge)
 3. Updates `docs/status/master-plan.md`
@@ -71,13 +74,13 @@ Agents report completion to the orchestrator (via subagent return or PR). The or
 
 ### Default ports
 
-| Port | Consumer | Notes |
-| ---- | -------- | ----- |
+| Port     | Consumer                      | Notes                                                      |
+| -------- | ----------------------------- | ---------------------------------------------------------- |
 | **3000** | `@supersubset/dev-app` (Vite) | `playwright.config.ts` `baseURL` + first `webServer` entry |
-| **3001** | Next.js ecommerce example | Playwright `webServer` second entry |
-| **3002** | Vite + SQLite example | Playwright `webServer` third entry |
-| **6006** | Storybook | Optional; separate from Playwright |
-| **4321** | Astro docs | Fixed in `packages/docs/package.json` |
+| **3001** | Next.js ecommerce example     | Playwright `webServer` second entry                        |
+| **3002** | Vite + SQLite example         | Playwright `webServer` third entry                         |
+| **6006** | Storybook                     | Optional; separate from Playwright                         |
+| **4321** | Astro docs                    | Fixed in `packages/docs/package.json`                      |
 
 ### Failure modes
 
@@ -96,9 +99,15 @@ Agents report completion to the orchestrator (via subagent return or PR). The or
 Separate `git worktree add` per active issue when agents need parallel git state:
 
 ```bash
-git worktree add ../supersubset-issue-NNN -b issue/NNN-slug origin/main
+git fetch origin
+git worktree add ../supersubset-issue-NNN -b issue/NNN-slug origin/develop
 cd ../supersubset-issue-NNN && pnpm install
 ```
+
+Base worktrees from the remote target branch, not a stale local branch.
+
+- Normal feature/fix work: `origin/develop`
+- Hotfix/release work only: `origin/main` or the explicit promotion branch
 
 Worktrees solve **branch + dependency + build artifact** isolation — not ports.
 
@@ -136,6 +145,7 @@ pnpm exec playwright test
 Before dispatching parallel agents:
 
 - [ ] Each agent has its own branch name
+- [ ] Each worktree/branch is created from the current remote target base (`origin/develop` for normal work)
 - [ ] File scopes are disjoint (no overlapping packages)
 - [ ] Hot files are pre-edited or assigned to one agent only
 - [ ] Ports assigned if agents need dev servers
