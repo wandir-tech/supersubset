@@ -61,7 +61,7 @@ export const RowBlock: ComponentConfig = {
 
 export const ColumnBlock: ComponentConfig = {
   label: 'Column',
-  inline: true,
+  inline: false,
   fields: {
     span: { type: 'number' as const, label: 'Column Span (1–12)' },
     content: { type: 'slot' as const },
@@ -124,10 +124,10 @@ export const ColumnBlock: ComponentConfig = {
                 zIndex: 1,
               },
             },
-            `${span}/12`
+            `${span}/12`,
           )
         : null,
-      React.createElement(Content)
+      React.createElement(Content),
     );
   },
 };

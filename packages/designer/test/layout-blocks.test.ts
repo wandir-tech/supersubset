@@ -3,7 +3,12 @@
  */
 import { describe, it, expect } from 'vitest';
 import React from 'react';
-import { RowBlock, ColumnBlock, LAYOUT_BLOCK_NAMES, LAYOUT_PUCK_NAME_TO_TYPE } from '../src/blocks/layout';
+import {
+  RowBlock,
+  ColumnBlock,
+  LAYOUT_BLOCK_NAMES,
+  LAYOUT_PUCK_NAME_TO_TYPE,
+} from '../src/blocks/layout';
 
 describe('RowBlock', () => {
   it('has label', () => {
@@ -50,8 +55,8 @@ describe('ColumnBlock', () => {
     expect(ColumnBlock.label).toBe('Column');
   });
 
-  it('is inline', () => {
-    expect(ColumnBlock.inline).toBe(true);
+  it('is not inline so nested widgets can own canvas selection', () => {
+    expect(ColumnBlock.inline).toBe(false);
   });
 
   it('has content slot field', () => {
