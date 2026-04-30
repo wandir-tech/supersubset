@@ -74,13 +74,15 @@ Agents report completion to the orchestrator (via subagent return or PR). The or
 
 ### Default ports
 
-| Port     | Consumer                      | Notes                                                      |
-| -------- | ----------------------------- | ---------------------------------------------------------- |
-| **3000** | `@supersubset/dev-app` (Vite) | `playwright.config.ts` `baseURL` + first `webServer` entry |
-| **3001** | Next.js ecommerce example     | Playwright `webServer` second entry                        |
-| **3002** | Vite + SQLite example         | Playwright `webServer` third entry                         |
-| **6006** | Storybook                     | Optional; separate from Playwright                         |
-| **4321** | Astro docs                    | Fixed in `packages/docs/package.json`                      |
+| Port     | Consumer                      | Notes                                                                                                       |
+| -------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **3000** | `@supersubset/dev-app` (Vite) | `playwright.config.ts` `baseURL` + first `webServer` entry; env-configurable via `SUPERSUBSET_DEV_APP_PORT` |
+| **3001** | Next.js ecommerce example     | Default; env-configurable via `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`                                             |
+| **3002** | Vite + SQLite example         | Default; env-configurable via `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`                                        |
+| **6006** | Storybook                     | Optional; separate from Playwright                                                                          |
+| **4321** | Astro docs                    | Fixed in `packages/docs/package.json`                                                                       |
+
+Treat these as **defaults**, not leases. Parallel agents should claim ports explicitly rather than assuming `3000`/`3001`/`3002` are free.
 
 ### Failure modes
 
@@ -88,6 +90,7 @@ Agents report completion to the orchestrator (via subagent return or PR). The or
 2. **Playwright + human dev** — `reuseExistingServer: !CI` may attach to a stale revision.
 3. **Two Playwright runs** — both start the same `webServer` on the same ports.
 4. **Two agents, one checkout** — git conflicts; worktrees fix git but not ports.
+5. **An agent forgets to export the leased example ports** — Playwright or browser tooling attaches to the default examples instead of the branch-local instance.
 
 ### Strategy A — One writer per machine (simplest)
 
@@ -113,6 +116,31 @@ Worktrees solve **branch + dependency + build artifact** isolation — not ports
 
 ### Strategy C — Port lease per server
 
+Use the shared probe script at repo root instead of guessing or copy-pasting one-off shell snippets.
+
+Single port:
+
+```bash
+node scripts/find-free-port.mjs --start 3010 --end 3099
+```
+
+Full browser-validation tuple:
+
+```bash
+mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)
+export SUPERSUBSET_DEV_APP_PORT="${LEASED_PORTS[0]}"
+export SUPERSUBSET_EXAMPLE_NEXTJS_PORT="${LEASED_PORTS[1]}"
+export SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT="${LEASED_PORTS[2]}"
+```
+
+Port lease protocol:
+
+1. Probe a free port from the team's agreed local range.
+2. Claim it in the brief, issue comment, or PR draft.
+3. Start only the servers that branch actually needs.
+4. Pass the leased port explicitly to tests and browser tooling.
+5. Release the port when validation is complete.
+
 Set **`SUPERSUBSET_DEV_APP_PORT`** before starting Vite:
 
 ```bash
@@ -129,14 +157,54 @@ pnpm exec playwright test
 
 `playwright.config.ts` and `packages/dev-app/vite.config.ts` read this env (default **3000**).
 
-**Full Playwright stack**: The `webServer` block also starts examples on 3001/3002. Running two full stacks on one host is usually wrong — serialize E2E runs.
+`playwright.config.ts`, the example host dev servers, `e2e/workflows/host-integration.spec.ts`, and `e2e/workflows/host-workbench.spec.ts` now accept these env vars:
+
+- `SUPERSUBSET_DEV_APP_PORT`
+- `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`
+- `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`
+
+For a full isolated browser stack, lease a **port tuple**, then export all three before running Playwright.
+
+```bash
+mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)
+export SUPERSUBSET_DEV_APP_PORT="${LEASED_PORTS[0]}"
+export SUPERSUBSET_EXAMPLE_NEXTJS_PORT="${LEASED_PORTS[1]}"
+export SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT="${LEASED_PORTS[2]}"
+pnpm exec playwright test e2e/workflows/host-integration.spec.ts --project=chromium
+```
+
+If you are working from VS Code, the workspace also exposes task wrappers for this:
+
+- `DevEnv` prepares the shared defaults and starts the dev app plus both example hosts.
+- `WorktreeDevEnv` leases a fresh tuple into `tmp/devenv-state.json` and starts the same stack.
+- `DevEnv Print URLs` prints only the current URLs for browser handoff or MCP setup.
+- `DevEnv Status` prints the current URLs and state metadata.
+
+Terminate the running tasks from VS Code when you are done, then run `DevEnv Clear State` if you want to discard the saved lease metadata.
+
+**Full Playwright stack**: The default `webServer` block still tries to stand up the whole stack, but it can now do so on a leased port tuple. Two agents can run in parallel if they use disjoint tuples.
+
+### Strategy D — Independent PR mode
+
+This is the target behavior for parallel agents: each agent can get to a PR without relying on another checkout's servers.
+
+Use this stack:
+
+1. Dedicated worktree from the current remote base.
+2. Disjoint file scope.
+3. Leased local ports recorded in the brief as a tuple when full-stack browser validation is needed.
+4. Targeted validation in that worktree (`typecheck`, `build`, focused tests).
+5. Browser validation against the branch's explicit URL, not an assumed shared default.
+
+If a branch adds or edits browser tests, prefer env-aware origins over hardcoded `http://localhost:3001` style URLs.
 
 ### Orchestrator port conventions
 
-1. **Assign a port** in the brief: "Agent 1: `SUPERSUBSET_DEV_APP_PORT=3010`, Agent 2: `3011`".
-2. **Document the port** in the GitHub issue/PR comment.
-3. **Never assume** Playwright picks the right server — be explicit.
-4. **CI**: leave env unset (default 3000).
+1. **Assign or lease a port tuple** in the brief when needed: `SUPERSUBSET_DEV_APP_PORT=3110`, `SUPERSUBSET_EXAMPLE_NEXTJS_PORT=3111`, `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT=3112`.
+2. **Document the full origin** in the GitHub issue/PR comment when browser validation is involved.
+3. **Never assume** Playwright or Chrome MCP picked the right server — be explicit.
+4. **Avoid hardcoded local URLs** in new tests when an env-driven origin is feasible.
+5. **CI**: leave env unset unless the workflow intentionally overrides defaults.
 
 ---
 
@@ -149,6 +217,8 @@ Before dispatching parallel agents:
 - [ ] File scopes are disjoint (no overlapping packages)
 - [ ] Hot files are pre-edited or assigned to one agent only
 - [ ] Ports assigned if agents need dev servers
+- [ ] Ports are probed or leased, not guessed from defaults
+- [ ] Browser validation uses the branch's explicit origin when shared defaults are unsafe
 - [ ] Merge order documented if agents share a target branch
 
 ## See also
