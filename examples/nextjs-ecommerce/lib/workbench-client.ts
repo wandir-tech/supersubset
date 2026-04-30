@@ -16,6 +16,7 @@ import {
 } from './workbench-shared';
 
 const METADATA_BINDING_KEYS = new Set(['aggregation', 'metricFields']);
+const WORKBENCH_UNAUTHORIZED_ERROR = 'WorkbenchUnauthorizedError';
 const VALID_AGGREGATIONS: ReadonlySet<AggregationType> = new Set([
   'sum',
   'avg',
@@ -87,6 +88,16 @@ function createAuthHeaders(token: string, includeJsonContentType = false): Heade
     ...(includeJsonContentType ? { 'Content-Type': 'application/json' } : {}),
     Authorization: `Bearer ${token}`,
   };
+}
+
+function createWorkbenchError(message: string, status: number): Error {
+  if (status === 401) {
+    const unauthorizedError = new Error('Your demo session expired. Log in again.');
+    unauthorizedError.name = WORKBENCH_UNAUTHORIZED_ERROR;
+    return unauthorizedError;
+  }
+
+  return new Error(message);
 }
 
 function readJsonStorageValue<T>(storage: Storage | null, key: string): T | null {
@@ -232,6 +243,10 @@ export function clearStoredWorkbenchToken(): void {
   getBrowserStorage('sessionStorage')?.removeItem(WORKBENCH_TOKEN_STORAGE_KEY);
 }
 
+export function isWorkbenchAuthorizationError(error: unknown): boolean {
+  return error instanceof Error && error.name === WORKBENCH_UNAUTHORIZED_ERROR;
+}
+
 export async function loginToWorkbench(email: string, password: string): Promise<string> {
   const response = await fetch('/api/graphql', {
     method: 'POST',
@@ -267,7 +282,11 @@ export async function fetchWorkbenchDatasets(token: string): Promise<NormalizedD
 
   const payload = (await response.json()) as { datasets?: NormalizedDataset[]; message?: string };
   if (!response.ok) {
-    throw new Error(payload.message ?? 'Dataset discovery failed.');
+    if (response.status === 401) {
+      clearStoredWorkbenchToken();
+    }
+
+    throw createWorkbenchError(payload.message ?? 'Dataset discovery failed.', response.status);
   }
 
   return Array.isArray(payload.datasets) ? payload.datasets : [];
@@ -285,7 +304,11 @@ export async function executeWorkbenchLogicalQuery(
 
   const payload = (await response.json()) as QueryResult & { message?: string };
   if (!response.ok) {
-    throw new Error(payload.message ?? 'Query execution failed.');
+    if (response.status === 401) {
+      clearStoredWorkbenchToken();
+    }
+
+    throw createWorkbenchError(payload.message ?? 'Query execution failed.', response.status);
   }
 
   return payload;

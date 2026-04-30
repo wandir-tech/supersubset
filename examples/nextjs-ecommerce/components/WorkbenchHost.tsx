@@ -22,6 +22,7 @@ import {
   clearStoredWorkbenchToken,
   executeWorkbenchLogicalQuery,
   fetchWorkbenchDatasets,
+  isWorkbenchAuthorizationError,
   loginToWorkbench,
   persistWorkbenchDashboard,
   persistWorkbenchToken,
@@ -52,6 +53,17 @@ export function WorkbenchHost() {
   const [error, setError] = useState('');
   const bundleRef = useRef(bundle);
   bundleRef.current = bundle;
+
+  function resetSession(nextError = '') {
+    clearStoredWorkbenchToken();
+    setToken('');
+    setDatasets([]);
+    setBundle(null);
+    setFilterState({ values: {} });
+    setAuthStatus('logged-out');
+    setViewerStatus('idle');
+    setError(nextError);
+  }
 
   useEffect(() => {
     const storedDashboard = readStoredWorkbenchDashboard();
@@ -85,10 +97,18 @@ export function WorkbenchHost() {
       })
       .catch((nextError: unknown) => {
         if (!active) return;
-        clearStoredWorkbenchToken();
-        setToken('');
-        setDatasets([]);
-        setAuthStatus('logged-out');
+        if (isWorkbenchAuthorizationError(nextError)) {
+          resetSession(
+            nextError instanceof Error
+              ? nextError.message
+              : 'Your demo session expired. Log in again.',
+          );
+          return;
+        }
+
+        resetSession(
+          nextError instanceof Error ? nextError.message : 'Failed to load local datasets.',
+        );
         setError(nextError instanceof Error ? nextError.message : 'Failed to load local datasets.');
       });
 
@@ -117,6 +137,15 @@ export function WorkbenchHost() {
       })
       .catch((nextError: unknown) => {
         if (!active) return;
+        if (isWorkbenchAuthorizationError(nextError)) {
+          resetSession(
+            nextError instanceof Error
+              ? nextError.message
+              : 'Your demo session expired. Log in again.',
+          );
+          return;
+        }
+
         setViewerStatus('error');
         setError(nextError instanceof Error ? nextError.message : 'Failed to run viewer queries.');
       });
@@ -177,8 +206,21 @@ export function WorkbenchHost() {
         return [];
       }
 
-      const result = await executeWorkbenchLogicalQuery(token, query);
-      return result.rows;
+      try {
+        const result = await executeWorkbenchLogicalQuery(token, query);
+        return result.rows;
+      } catch (nextError) {
+        if (isWorkbenchAuthorizationError(nextError)) {
+          resetSession(
+            nextError instanceof Error
+              ? nextError.message
+              : 'Your demo session expired. Log in again.',
+          );
+          return [];
+        }
+
+        throw nextError;
+      }
     };
   }, [datasets, token]);
 
@@ -213,14 +255,7 @@ export function WorkbenchHost() {
   }
 
   function handleLogout() {
-    clearStoredWorkbenchToken();
-    setToken('');
-    setDatasets([]);
-    setBundle(null);
-    setFilterState({ values: {} });
-    setAuthStatus('logged-out');
-    setViewerStatus('idle');
-    setError('');
+    resetSession('');
   }
 
   if (authStatus !== 'ready') {

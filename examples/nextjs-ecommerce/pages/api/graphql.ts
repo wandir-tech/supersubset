@@ -5,6 +5,10 @@ import {
   WORKBENCH_LOGIN_MUTATION,
 } from '../../lib/workbench-auth';
 
+function normalizeGraphqlDocument(document: string): string {
+  return document.replace(/\s+/g, ' ').trim();
+}
+
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -16,7 +20,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const password =
     typeof req.body?.variables?.password === 'string' ? req.body.variables.password : '';
 
-  if (!query.includes('login')) {
+  if (normalizeGraphqlDocument(query) !== normalizeGraphqlDocument(WORKBENCH_LOGIN_MUTATION)) {
     return res
       .status(400)
       .json({ errors: [{ message: 'Only the login mutation is supported in local mode.' }] });

@@ -1,3 +1,5 @@
+// Demo-only credentials and token for the local workbench example.
+// Do not copy this pattern into production hosts.
 export const WORKBENCH_LOGIN_EMAIL = 'operator@northstar.test';
 export const WORKBENCH_LOGIN_PASSWORD = 'supersubset-demo';
 export const WORKBENCH_ACCESS_TOKEN = 'northstar-local-demo-token';
