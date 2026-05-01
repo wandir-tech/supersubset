@@ -17,6 +17,7 @@
 7. **`docs/testing/verification-strategy.md`** — When/where Playwright and Chrome MCP tests happen
 8. **`.github/skills/parallel-agent-environments/SKILL.md`** — Parallel work: branch isolation, file-scope ownership, ports, merge sequencing
 9. **`.github/skills/github-cli/SKILL.md`** — Use `gh` for GitHub (issues, PRs, Actions, API); avoid slow browser-first flows
+10. **`.github/skills/release-runbook/SKILL.md`** — End-to-end release path: candidate validation, changesets, promotion, publish, downstream upgrade
 
 ### Where Things Are
 
