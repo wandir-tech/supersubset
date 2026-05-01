@@ -1025,6 +1025,70 @@ describe('TreemapWidget — per-chart properties', () => {
     expect(upper.show).toBe(false);
   });
 
+  it('showValues=true formats treemap labels with raw values when no number format is set', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: true },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as {
+      show: boolean;
+      formatter: (params: { name: string; value: number }) => string;
+    };
+    expect(label.show).toBe(true);
+    expect(label.formatter({ name: 'A', value: 100 })).toBe('A\n100');
+  });
+
+  it('showValues="true" from the designer still enables treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: 'true' },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as {
+      show: boolean;
+      formatter: (params: { name: string; value: number }) => string;
+    };
+    expect(label.show).toBe(true);
+    expect(label.formatter({ name: 'A', value: 100 })).toBe('A\n100');
+  });
+
+  it('showValues=false hides treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: false },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(false);
+  });
+
+  it('showValues="false" from the designer hides treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: 'false' },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(false);
+  });
+
   it('maxDepth limits tree depth', () => {
     render(
       <TreemapWidget

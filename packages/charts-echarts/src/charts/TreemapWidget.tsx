@@ -32,6 +32,10 @@ export function TreemapWidget({ config, data, columns, title, height, theme }: W
     const borderWidth = (config.borderWidth as number) ?? 0;
     const shared = extractSharedConfig(config);
     const fmt = shared.numberFormat;
+    const labelFormatter = (params: { name: string; value: number }) => {
+      const formattedValue = fmt ? formatNumber(params.value, fmt) : String(params.value);
+      return `${params.name}\n${formattedValue}`;
+    };
 
     let treeData: Array<{
       name: string;
@@ -95,10 +99,7 @@ export function TreemapWidget({ config, data, columns, title, height, theme }: W
           upperLabel: { show: showUpperLabel },
           label: {
             show: shared.showValues !== false,
-            formatter: fmt
-              ? (params: { name: string; value: number }) =>
-                  `${params.name}\n${formatNumber(params.value, fmt)}`
-              : '{b}',
+            formatter: labelFormatter,
           },
           breadcrumb: { show: true },
           ...(maxDepth > 0 ? { leafDepth: maxDepth } : {}),
