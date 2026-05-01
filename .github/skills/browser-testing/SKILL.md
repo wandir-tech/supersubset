@@ -11,6 +11,7 @@ description: 'Run browser tests against Supersubset using Chrome MCP. Use when v
 - Testing drag-and-drop widget interactions
 - Verifying property edits update rendered widgets
 - Testing JSON/YAML import/export round-trips
+- Validating Probe mode against pasted metadata or controlled live discovery/query backends
 - Verifying renderer output against saved definitions
 - Checking filter propagation across widgets
 - Detecting console errors and rendering regressions
@@ -68,16 +69,23 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 3. Mount renderer in separate route/component tree
 4. Verify no hidden backend dependency
 
+### Probe Workflows
+
+1. Use `e2e/workflows/probe-metadata-paste.spec.ts` for deterministic paste-JSON onboarding coverage
+2. Use a sibling workflow in `e2e/workflows/` for live backend discovery/query/auth validation when the branch includes one
+3. Anchor live backend assertions to the probe contract documented in `docs/api/metadata-and-cli.md`
+
 ## Procedure
 
-1. If multiple agents or checkouts share the machine, lease ports first:
+1. Decide first whether browser automation is the right layer by reading `.github/skills/testing-strategy/SKILL.md`
+2. If multiple agents or checkouts share the machine, lease ports first:
    `mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)`
-2. Export explicit origins before starting servers or Playwright-backed flows:
+3. Export explicit origins before starting servers or Playwright-backed flows:
    `SUPERSUBSET_DEV_APP_PORT`, `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`, `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`
-3. Start the target app or stack on the leased ports.
-4. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default.
-5. Take an initial screenshot for baseline.
-6. Execute test plan steps using Chrome MCP tools:
+4. Start the target app or stack on the leased ports, or reuse the configured Playwright web server
+5. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default
+6. Take an initial screenshot for baseline
+7. Execute test plan steps using Chrome MCP tools:
    - `chr_navigate_page` — navigate to URLs
    - `chr_click` — click elements
    - `chr_fill` — fill input fields
@@ -85,8 +93,8 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
    - `chr_take_snapshot` — capture DOM state
    - `chr_list_console_messages` — check for errors
    - `chr_evaluate_script` — run assertions in browser
-7. Compare screenshots and DOM state to expected outcomes.
-8. Report results with evidence, including the leased local origin that was tested.
+8. Compare screenshots and DOM state to expected outcomes
+9. Report results with evidence, including the leased local origin that was tested
 
 ## Verification Checklist
 
@@ -97,3 +105,8 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 - [ ] Filter changes propagate to all bound widgets
 - [ ] Export/import produces semantically identical schema
 - [ ] Responsive resize works without layout breaks
+
+## See Also
+
+- `.github/skills/testing-strategy/SKILL.md`
+- `docs/testing/verification-strategy.md`
