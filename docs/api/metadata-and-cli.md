@@ -133,5 +133,7 @@ console.log(result.dashboard);
 
 - [schema.md](./schema.md)
 - [Schema Import Tutorial](../guides/schema-import.md)
+- [Backend Probe Guide](../guides/backend-probe.md)
 - [Custom Adapter Authoring Guide](../guides/custom-adapter.md)
+- [ADR-008: Supersubset HTTP Probe Contract](../adr/008-supersubset-http-probe-contract.md)
 - [Getting Started](../getting-started.md)
