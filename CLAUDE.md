@@ -99,8 +99,10 @@ For domain-specific knowledge, read the relevant skill file:
 
 - **Schema design**: `.github/skills/schema-design/SKILL.md`
 - **ECharts widgets**: `.github/skills/echarts-widgets/SKILL.md`
+- **Designer shell design**: `.github/skills/designer-design/SKILL.md`
 - **Puck integration**: `.github/skills/puck-integration/SKILL.md`
 - **Adapter development**: `.github/skills/adapter-development/SKILL.md`
+- **Testing strategy**: `.github/skills/testing-strategy/SKILL.md`
 - **Browser testing**: `.github/skills/browser-testing/SKILL.md`
 - **OSS archaeology**: `.github/skills/oss-archaeology/SKILL.md`
 - **Orchestration**: `.github/skills/orchestration/SKILL.md`

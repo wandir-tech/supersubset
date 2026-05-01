@@ -18,6 +18,8 @@
 8. **`.github/skills/parallel-agent-environments/SKILL.md`** — Parallel work: branch isolation, file-scope ownership, ports, merge sequencing
 9. **`.github/skills/github-cli/SKILL.md`** — Use `gh` for GitHub (issues, PRs, Actions, API); avoid slow browser-first flows
 10. **`.github/skills/release-runbook/SKILL.md`** — End-to-end release path: candidate validation, changesets, promotion, publish, downstream upgrade
+11. **`.github/skills/designer-design/SKILL.md`** — Designer-shell UX, theme usage, Storybook expectations, and visual QA guidance
+12. **`.github/skills/testing-strategy/SKILL.md`** — Test layer selection, live-backend probe validation, and evidence expectations
 
 ### Where Things Are
 
