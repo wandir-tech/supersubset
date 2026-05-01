@@ -15,6 +15,8 @@ import filter_scope_multiple_viewer from '../../../assets/screenshots/filters/fi
 
 Filter scope determines which widgets are affected when a viewer changes a filter value. By default, filters are **global** — they affect all widgets. You can narrow the scope to target specific widgets or pages.
 
+Scope is separate from Filter Bar composition. Scope controls which widgets update; the Filter Bar widget's `Shown Filters` setting controls which authored filters a specific bar displays.
+
 <ExpandAll />
 
 ## Scope Types
@@ -39,10 +41,17 @@ Limit a filter to affect only specific widgets. Useful when different sections o
   caption="Multiple filters active — each filter's scope determines which widgets update"
 />
 
+## Scope vs. Shown Filters
+
+- **Scope** decides which widgets respond when a filter value changes.
+- **Shown Filters** on a Filter Bar widget decides which authored filters are visible in that bar.
+- These settings combine cleanly: one page can have an all-filters bar and a smaller subset bar, while each authored filter still targets only the widgets in its scope.
+
 ## Tips
 
 - Start with **global scope** — it works for most dashboards
 - Use **widget-specific scope** when you have widgets from different datasets on the same page
+- Use a second Filter Bar widget when you want viewers to see only a focused subset of the authored filters
 - Cross-filtering (click-based filtering) has its own scope rules — see [Cross-Filtering](/filters/cross-filtering/)
 
 ## Related Features

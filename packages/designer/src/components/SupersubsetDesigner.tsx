@@ -149,7 +149,10 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const canMutateDashboard = !isControlled || !!onChange;
   const pendingDeletePage = pages.find((page) => page.id === pendingDeletePageId);
 
-  const config = useMemo(() => createPuckConfig(), []);
+  const config = useMemo(
+    () => createPuckConfig({ filterDefinitions: sourceDashboard?.filters ?? [] }),
+    [sourceDashboard?.filters],
+  );
 
   // Inject sidebar CSS overrides once
   useMemo(() => injectSidebarStyles(), []);

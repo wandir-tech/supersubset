@@ -12,10 +12,7 @@ import type { NormalizedDataset, NormalizedField } from '@supersubset/data-model
 
 vi.mock('@supersubset/data-model', () => ({}));
 
-import {
-  ChartTypePicker,
-  CHART_TYPE_OPTIONS,
-} from '../src/components/ChartTypePicker';
+import { ChartTypePicker, CHART_TYPE_OPTIONS } from '../src/components/ChartTypePicker';
 import {
   FieldBindingPicker,
   type BindingSlot,
@@ -33,8 +30,20 @@ const MOCK_FIELDS: NormalizedField[] = [
   { id: 'order_date', label: 'Order Date', dataType: 'date', role: 'time' },
   { id: 'category', label: 'Category', dataType: 'string', role: 'dimension' },
   { id: 'region', label: 'Region', dataType: 'string', role: 'dimension' },
-  { id: 'revenue', label: 'Revenue', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
-  { id: 'quantity', label: 'Quantity', dataType: 'integer', role: 'measure', defaultAggregation: 'sum' },
+  {
+    id: 'revenue',
+    label: 'Revenue',
+    dataType: 'number',
+    role: 'measure',
+    defaultAggregation: 'sum',
+  },
+  {
+    id: 'quantity',
+    label: 'Quantity',
+    dataType: 'integer',
+    role: 'measure',
+    defaultAggregation: 'sum',
+  },
   { id: 'customer_id', label: 'Customer ID', dataType: 'string', role: 'key' },
 ];
 
@@ -78,9 +87,7 @@ describe('ChartTypePicker', () => {
   });
 
   it('highlights the selected chart type', () => {
-    render(
-      <ChartTypePicker onChange={vi.fn()} value="bar-chart" />
-    );
+    render(<ChartTypePicker onChange={vi.fn()} value="bar-chart" />);
     const barBtn = screen.getByTestId('chart-type-bar-chart');
     expect(barBtn.dataset.selected).toBe('true');
   });
@@ -131,12 +138,7 @@ describe('FieldBindingPicker', () => {
   afterEach(cleanup);
 
   it('renders fields grouped by role', () => {
-    render(
-      <FieldBindingPicker
-        datasets={[MOCK_DATASET]}
-        selectedDatasetId="ds-orders"
-      />
-    );
+    render(<FieldBindingPicker datasets={[MOCK_DATASET]} selectedDatasetId="ds-orders" />);
     expect(screen.getByTestId('field-binding-picker')).toBeTruthy();
     // Should see role groups
     expect(screen.getByText(/Times \(1\)/)).toBeTruthy();
@@ -146,12 +148,7 @@ describe('FieldBindingPicker', () => {
   });
 
   it('shows all field labels', () => {
-    render(
-      <FieldBindingPicker
-        datasets={[MOCK_DATASET]}
-        selectedDatasetId="ds-orders"
-      />
-    );
+    render(<FieldBindingPicker datasets={[MOCK_DATASET]} selectedDatasetId="ds-orders" />);
     expect(screen.getByText('Order Date')).toBeTruthy();
     expect(screen.getByText('Category')).toBeTruthy();
     expect(screen.getByText('Revenue')).toBeTruthy();
@@ -165,22 +162,17 @@ describe('FieldBindingPicker', () => {
         datasets={[MOCK_DATASET]}
         selectedDatasetId="ds-orders"
         onFieldSelect={onFieldSelect}
-      />
+      />,
     );
     fireEvent.click(screen.getByTestId('field-revenue'));
     expect(onFieldSelect).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'revenue', role: 'measure' }),
-      'ds-orders'
+      'ds-orders',
     );
   });
 
   it('filters fields by search', () => {
-    render(
-      <FieldBindingPicker
-        datasets={[MOCK_DATASET]}
-        selectedDatasetId="ds-orders"
-      />
-    );
+    render(<FieldBindingPicker datasets={[MOCK_DATASET]} selectedDatasetId="ds-orders" />);
     fireEvent.change(screen.getByTestId('field-search'), {
       target: { value: 'rev' },
     });
@@ -195,7 +187,7 @@ describe('FieldBindingPicker', () => {
         datasets={[MOCK_DATASET, MOCK_DATASET_2]}
         selectedDatasetId="ds-orders"
         onDatasetChange={onDatasetChange}
-      />
+      />,
     );
     const select = screen.getByTestId('dataset-select');
     expect(select).toBeTruthy();
@@ -208,7 +200,7 @@ describe('FieldBindingPicker', () => {
       <FieldBindingPicker
         datasets={[MOCK_DATASET, MOCK_DATASET_2]}
         selectedDatasetId="ds-orders"
-      />
+      />,
     );
 
     const datasetSelect = screen.getByTestId('dataset-select');
@@ -223,22 +215,12 @@ describe('FieldBindingPicker', () => {
   });
 
   it('does not show dataset selector for single dataset', () => {
-    render(
-      <FieldBindingPicker
-        datasets={[MOCK_DATASET]}
-        selectedDatasetId="ds-orders"
-      />
-    );
+    render(<FieldBindingPicker datasets={[MOCK_DATASET]} selectedDatasetId="ds-orders" />);
     expect(screen.queryByTestId('dataset-select')).toBeNull();
   });
 
   it('toggles role group expand/collapse', () => {
-    render(
-      <FieldBindingPicker
-        datasets={[MOCK_DATASET]}
-        selectedDatasetId="ds-orders"
-      />
-    );
+    render(<FieldBindingPicker datasets={[MOCK_DATASET]} selectedDatasetId="ds-orders" />);
     // Initially expanded — field visible
     expect(screen.getByText('Revenue')).toBeTruthy();
     // Collapse measures
@@ -261,7 +243,7 @@ describe('FieldBindingPicker', () => {
         slots={slots}
         bindings={[]}
         onBindingsChange={vi.fn()}
-      />
+      />,
     );
     expect(screen.getByTestId('binding-slots')).toBeTruthy();
     // Dimension fields should show X Axis bind button (not Y Axis)
@@ -284,7 +266,7 @@ describe('FieldBindingPicker', () => {
         slots={slots}
         bindings={[]}
         onBindingsChange={onBindingsChange}
-      />
+      />,
     );
     // Bind category to x-axis
     fireEvent.click(screen.getByTestId('bind-category-x-axis'));
@@ -303,7 +285,7 @@ describe('FieldBindingPicker', () => {
         slots={slots}
         bindings={bindings}
         onBindingsChange={onBindingsChange}
-      />
+      />,
     );
     fireEvent.click(screen.getByTestId('unbind-x-axis-category'));
     expect(onBindingsChange).toHaveBeenLastCalledWith([]);
@@ -323,26 +305,14 @@ describe('FilterBuilderPanel', () => {
   afterEach(cleanup);
 
   it('renders empty state', () => {
-    render(
-      <FilterBuilderPanel
-        filters={[]}
-        onChange={vi.fn()}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[]} onChange={vi.fn()} datasets={[MOCK_DATASET]} />);
     expect(screen.getByTestId('no-filters')).toBeTruthy();
     expect(screen.getByText('Filters (0)')).toBeTruthy();
   });
 
   it('adds a new filter', () => {
     const onChange = vi.fn();
-    render(
-      <FilterBuilderPanel
-        filters={[]}
-        onChange={onChange}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[]} onChange={onChange} datasets={[MOCK_DATASET]} />);
     fireEvent.click(screen.getByTestId('add-filter'));
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -364,13 +334,7 @@ describe('FilterBuilderPanel', () => {
       operator: 'equals',
       scope: { type: 'global' },
     };
-    render(
-      <FilterBuilderPanel
-        filters={[filter]}
-        onChange={vi.fn()}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[filter]} onChange={vi.fn()} datasets={[MOCK_DATASET]} />);
     expect(screen.getByTestId('filter-editor-f1')).toBeTruthy();
     expect(screen.getByTestId('filter-title-f1')).toBeTruthy();
     expect(screen.getByTestId('filter-dataset-f1')).toBeTruthy();
@@ -395,7 +359,7 @@ describe('FilterBuilderPanel', () => {
         onChange={vi.fn()}
         datasets={[MOCK_DATASET]}
         pageIds={['page-1', 'page-2']}
-      />
+      />,
     );
 
     const datasetLabel = screen.getByText('Dataset');
@@ -420,13 +384,7 @@ describe('FilterBuilderPanel', () => {
       operator: 'equals',
       scope: { type: 'global' },
     };
-    render(
-      <FilterBuilderPanel
-        filters={[filter]}
-        onChange={onChange}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
     fireEvent.change(screen.getByTestId('filter-title-f1'), {
       target: { value: 'My Filter' },
     });
@@ -450,7 +408,7 @@ describe('FilterBuilderPanel', () => {
         filters={[filter]}
         onChange={onChange}
         datasets={[MOCK_DATASET, MOCK_DATASET_2]}
-      />
+      />,
     );
     fireEvent.change(screen.getByTestId('filter-dataset-f1'), {
       target: { value: 'ds-products' },
@@ -474,19 +432,11 @@ describe('FilterBuilderPanel', () => {
       operator: 'equals',
       scope: { type: 'global' },
     };
-    render(
-      <FilterBuilderPanel
-        filters={[filter]}
-        onChange={onChange}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
     fireEvent.change(screen.getByTestId('filter-operator-f1'), {
       target: { value: 'contains' },
     });
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ operator: 'contains' }),
-    ]);
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ operator: 'contains' })]);
   });
 
   it('deletes a filter', () => {
@@ -509,17 +459,9 @@ describe('FilterBuilderPanel', () => {
         scope: { type: 'global' },
       },
     ];
-    render(
-      <FilterBuilderPanel
-        filters={filters}
-        onChange={onChange}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={filters} onChange={onChange} datasets={[MOCK_DATASET]} />);
     fireEvent.click(screen.getByTestId('filter-delete-f1'));
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'f2' }),
-    ]);
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ id: 'f2' })]);
   });
 
   it('changes scope to page', () => {
@@ -538,7 +480,7 @@ describe('FilterBuilderPanel', () => {
         onChange={onChange}
         datasets={[MOCK_DATASET]}
         pageIds={['page-1', 'page-2']}
-      />
+      />,
     );
     fireEvent.click(screen.getByTestId('filter-scope-page-f1'));
     expect(onChange).toHaveBeenCalledWith([
@@ -564,7 +506,7 @@ describe('FilterBuilderPanel', () => {
         onChange={onChange}
         datasets={[MOCK_DATASET]}
         widgetIds={['w1', 'w2', 'w3']}
-      />
+      />,
     );
     // Widget checkboxes should be visible
     fireEvent.click(screen.getByTestId('filter-scope-widget-w1-f1'));
@@ -585,19 +527,11 @@ describe('FilterBuilderPanel', () => {
       operator: 'equals',
       scope: { type: 'global' },
     };
-    render(
-      <FilterBuilderPanel
-        filters={[filter]}
-        onChange={onChange}
-        datasets={[MOCK_DATASET]}
-      />
-    );
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
     fireEvent.change(screen.getByTestId('filter-default-f1'), {
       target: { value: 'West' },
     });
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ defaultValue: 'West' }),
-    ]);
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ defaultValue: 'West' })]);
   });
 
   it('changes control type', () => {
@@ -610,19 +544,109 @@ describe('FilterBuilderPanel', () => {
       operator: 'equals',
       scope: { type: 'global' },
     };
-    render(
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+    fireEvent.change(screen.getByTestId('filter-type-f1'), {
+      target: { value: 'date' },
+    });
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ type: 'date' })]);
+  });
+
+  it('normalizes legacy unsupported control types on mount', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'multi-select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ type: 'select' })]);
+    expect((screen.getByTestId('filter-type-f1') as HTMLSelectElement).value).toBe('select');
+  });
+
+  it('does not renormalize equivalent legacy filters when props churn', () => {
+    const initialOnChange = vi.fn();
+    const rerenderOnChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'multi-select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    const { rerender } = render(
       <FilterBuilderPanel
         filters={[filter]}
-        onChange={onChange}
+        onChange={initialOnChange}
         datasets={[MOCK_DATASET]}
-      />
+      />,
     );
-    fireEvent.change(screen.getByTestId('filter-type-f1'), {
-      target: { value: 'multi-select' },
-    });
-    expect(onChange).toHaveBeenCalledWith([
-      expect.objectContaining({ type: 'multi-select' }),
-    ]);
+
+    expect(initialOnChange).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <FilterBuilderPanel
+        filters={[{ ...filter }]}
+        onChange={rerenderOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(rerenderOnChange).not.toHaveBeenCalled();
+  });
+
+  it('does not emit onChange for supported filters when props churn', () => {
+    const initialOnChange = vi.fn();
+    const rerenderOnChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    const { rerender } = render(
+      <FilterBuilderPanel
+        filters={[filter]}
+        onChange={initialOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(initialOnChange).not.toHaveBeenCalled();
+
+    rerender(
+      <FilterBuilderPanel
+        filters={[{ ...filter }]}
+        onChange={rerenderOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(rerenderOnChange).not.toHaveBeenCalled();
+  });
+
+  it('only renders runtime-supported control types', () => {
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    render(<FilterBuilderPanel filters={[filter]} onChange={vi.fn()} datasets={[MOCK_DATASET]} />);
+
+    const optionValues = Array.from(
+      screen.getByTestId('filter-type-f1').querySelectorAll('option'),
+    ).map((option) => option.getAttribute('value'));
+
+    expect(optionValues).toEqual(['select', 'range', 'date', 'text']);
   });
 
   it('has correct operator list', () => {

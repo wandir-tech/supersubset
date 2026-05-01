@@ -17,6 +17,7 @@ import type {
   LayoutComponentType,
   WidgetDefinition,
   FilterDefinition,
+  DatasetDefinition,
 } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetProps, WidgetEvent } from '../widgets/registry';
 import type { FilterValue } from '../filters/FilterEngine';
@@ -33,6 +34,8 @@ export interface LayoutRendererProps {
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
   filters?: FilterDefinition[];
+  datasets?: DatasetDefinition[];
+  filterOptions?: Record<string, string[]>;
   activeFilterValues?: FilterValue[];
   onWidgetEvent?: (event: WidgetEvent) => void;
   className?: string;
@@ -47,6 +50,8 @@ export function LayoutRenderer({
   registry,
   theme,
   filters,
+  datasets,
+  filterOptions,
   activeFilterValues,
   onWidgetEvent,
   className,
@@ -66,6 +71,8 @@ export function LayoutRenderer({
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       new Set([rootNodeId]),
@@ -83,6 +90,8 @@ function renderChildren(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -116,6 +125,8 @@ function renderChildren(
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       nextVisited,
@@ -131,6 +142,8 @@ function renderNode(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -147,6 +160,8 @@ function renderNode(
     registry,
     theme,
     filters,
+    datasets,
+    filterOptions,
     activeFilterValues,
     onWidgetEvent,
     visited,
@@ -163,6 +178,8 @@ type NodeRenderer = (
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -189,6 +206,8 @@ function renderGrid(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -210,6 +229,8 @@ function renderGrid(
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       visited,
@@ -225,6 +246,8 @@ function renderRow(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -246,6 +269,8 @@ function renderRow(
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       visited,
@@ -275,6 +300,8 @@ function renderColumn(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -295,6 +322,8 @@ function renderColumn(
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       visited,
@@ -310,6 +339,8 @@ function renderWidget(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   _visited: Set<string>,
@@ -356,6 +387,9 @@ function renderWidget(
     config: mergedConfig,
     theme,
     activeFilters: widgetActiveFilters.length > 0 ? widgetActiveFilters : undefined,
+    dashboardFilters: filters,
+    datasets,
+    filterOptions,
     onEvent: onWidgetEvent,
   };
 
@@ -406,6 +440,8 @@ function renderTabs(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -419,6 +455,8 @@ function renderTabs(
     registry,
     theme,
     filters,
+    datasets,
+    filterOptions,
     activeFilterValues,
     onWidgetEvent,
     visited,
@@ -436,6 +474,8 @@ function TabsContainer({
   registry,
   theme,
   filters,
+  datasets,
+  filterOptions,
   activeFilterValues,
   onWidgetEvent,
   visited,
@@ -447,6 +487,8 @@ function TabsContainer({
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
   filters?: FilterDefinition[];
+  datasets?: DatasetDefinition[];
+  filterOptions?: Record<string, string[]>;
   activeFilterValues?: FilterValue[];
   onWidgetEvent?: (event: WidgetEvent) => void;
   visited: Set<string>;
@@ -508,6 +550,8 @@ function TabsContainer({
             registry,
             theme,
             filters,
+            datasets,
+            filterOptions,
             activeFilterValues,
             onWidgetEvent,
             visited,
@@ -525,6 +569,8 @@ function renderTab(
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
   filters: FilterDefinition[] | undefined,
+  datasets: DatasetDefinition[] | undefined,
+  filterOptions: Record<string, string[]> | undefined,
   activeFilterValues: FilterValue[] | undefined,
   onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   visited: Set<string>,
@@ -541,6 +587,8 @@ function renderTab(
       registry,
       theme,
       filters,
+      datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent,
       visited,
@@ -556,6 +604,8 @@ function renderSpacer(
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
   _filters: FilterDefinition[] | undefined,
+  _datasets: DatasetDefinition[] | undefined,
+  _filterOptions: Record<string, string[]> | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   _visited: Set<string>,
@@ -579,6 +629,8 @@ function renderHeader(
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
   _filters: FilterDefinition[] | undefined,
+  _datasets: DatasetDefinition[] | undefined,
+  _filterOptions: Record<string, string[]> | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   _visited: Set<string>,
@@ -603,6 +655,8 @@ function renderDivider(
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
   _filters: FilterDefinition[] | undefined,
+  _datasets: DatasetDefinition[] | undefined,
+  _filterOptions: Record<string, string[]> | undefined,
   _activeFilterValues: FilterValue[] | undefined,
   _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
   _visited: Set<string>,

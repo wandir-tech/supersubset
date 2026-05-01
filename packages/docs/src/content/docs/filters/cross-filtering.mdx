@@ -56,8 +56,8 @@ The field that gets filtered when the user clicks a chart element.
 
 <FeatureScreenshot
   src={filter_bar_active_viewer}
-  alt="Filter bar showing active filter state from cross-filtering"
-  caption="Cross-filter updates the filter bar with the selected field value"
+  alt="Placed filter bar widget showing active filter state from cross-filtering"
+  caption="Cross-filtering updates any placed Filter Bar widgets that include the matching authored filter"
 />
 
 ## Tips
@@ -65,6 +65,7 @@ The field that gets filtered when the user clicks a chart element.
 - Cross-filtering is most intuitive on [Bar Charts](/chart-types/bar-chart/) and [Pie Charts](/chart-types/pie-chart/)
 - Users expect to click a bar/slice and see the rest of the dashboard update
 - Combine with explicit [Select Filters](/filters/select-filter/) for a "Reset All" capability
+- If you use multiple Filter Bar widgets, only the bars that include the matching authored filter will show the updated value
 - Keep the interaction intuitive — filter on the same field that labels the clicked element
 
 ## Related Features

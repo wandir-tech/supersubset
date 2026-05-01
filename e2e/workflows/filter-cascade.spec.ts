@@ -27,7 +27,9 @@ test.describe('Filter Cascade Workflow', () => {
   test('filter bar is present when filters are defined', async ({ page }) => {
     const filterBar = page.locator('.ss-filter-bar');
     // The demo dashboard has filters, so filter bar should appear
-    if (await filterBar.isVisible()) {
+    await expect(filterBar.first()).toBeVisible();
+
+    if ((await filterBar.count()) > 0) {
       // Region and Category filters should be present
       const controls = page.locator('.ss-filter-control');
       expect(await controls.count()).toBeGreaterThanOrEqual(1);

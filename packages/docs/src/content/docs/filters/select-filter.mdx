@@ -16,13 +16,13 @@ import select_filter_category_viewer from '../../../assets/screenshots/filters/s
 
 # Select Filter
 
-Select filters present a dropdown list of values from a data field, letting dashboard viewers narrow down data across all (or specific) widgets. The most common filter type for categorical data.
+Select filters present a dropdown list of values from a data field, letting dashboard viewers narrow down data across all (or specific) widgets. Authors place one or more Filter Bar widgets in the layout, and each bar can show all authored filters or only a selected subset.
 
 <ExpandAll />
 
 ## Default Appearance
 
-A select filter with default settings shows a dropdown with all unique values from the bound field.
+A select filter with default settings shows a dropdown with all unique values from the bound field inside a placed Filter Bar widget.
 
 <ScreenshotComparison
   label="Default select filter"
@@ -58,8 +58,8 @@ The comparison operator: `equals` (exact match), `contains`, `in` (multiple valu
 
 <FeatureScreenshot
   src={select_filter_region_viewer}
-  alt="Filter bar with Region set to North"
-  caption="Select filter with 'equals' operator applied to Region"
+  alt="Placed filter bar widget with Region set to North"
+  caption="A placed Filter Bar widget with the Region filter set to North"
 />
 
 ### Scope
@@ -68,13 +68,18 @@ Controls which widgets are affected by this filter. See [Filter Scope](/filters/
 
 <FeatureScreenshot
   src={select_filter_category_viewer}
-  alt="Filter bar with Category filter active"
-  caption="Multiple select filters can target different fields"
+  alt="Placed filter bar widget with Category filter active"
+  caption="Select filters affect only the widgets in their configured scope"
 />
+
+### Filter Bar Placement
+
+Select filters only appear in viewer mode when a dashboard page includes at least one Filter Bar widget. Each Filter Bar can show every authored filter or a selected subset using the widget's `Shown Filters` setting.
 
 ## Tips
 
-- Place filters in a **filter bar** at the top of the dashboard
+- Add one or more **Filter Bar** widgets wherever viewers should interact with filters
+- Use the Filter Bar widget's **Shown Filters** setting to create all-filters and subset bars on the same page
 - Use select filters for fields with **a limited set of values** (regions, categories, statuses)
 - For date ranges, use a [Date Filter](/filters/date-filter/) instead
 - Filters update all widgets in their scope in real time

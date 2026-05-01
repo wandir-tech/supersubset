@@ -148,10 +148,11 @@ describe('FilterBar', () => {
     const { container } = renderFilterBar([selectFilter]);
     const label = container.querySelector('.ss-filter-label');
     const select = container.querySelector('.ss-filter-select');
+    const selectId = select?.getAttribute('id');
     expect(label).toBeTruthy();
     expect(label?.textContent).toBe('Status');
-    expect(label?.getAttribute('for')).toBe('ss-filter-f-status-primary');
-    expect(select?.getAttribute('id')).toBe('ss-filter-f-status-primary');
+    expect(label?.getAttribute('for')).toBe(selectId);
+    expect(selectId).toContain('ss-filter-f-status-primary');
     expect(select?.getAttribute('name')).toBe('f-status');
   });
 
@@ -169,7 +170,7 @@ describe('FilterBar', () => {
   it('adds names to date inputs for form and accessibility tooling', () => {
     const { container } = renderFilterBar([dateFilter]);
     const preset = container.querySelector('.ss-filter-date-preset');
-    expect(preset?.getAttribute('id')).toBe('ss-filter-f-date-primary');
+    expect(preset?.getAttribute('id')).toContain('ss-filter-f-date-primary');
     expect(preset?.getAttribute('name')).toBe('f-date-preset');
   });
 });

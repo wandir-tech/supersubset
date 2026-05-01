@@ -162,6 +162,14 @@ function generateId(): string {
   return `ss-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+}
+
 const layoutTypeToPuckName: Record<string, string> = {
   row: 'RowBlock',
   column: 'ColumnBlock',
@@ -423,6 +431,16 @@ function buildWidgetDefinition(
     'yAxisField',
   ]);
   for (const [key, value] of Object.entries(props)) {
+    if (widgetType === 'filter-bar' && key === 'filterIds') {
+      const filterIds = normalizeStringArray(value);
+
+      if (filterIds.length > 0) {
+        widget.config[key] = filterIds;
+      }
+
+      continue;
+    }
+
     if (!NON_CONFIG_KEYS.has(key) && value !== undefined && value !== '') {
       widget.config[key] = value;
     }
@@ -538,6 +556,16 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
 
   // Spread config props
   for (const [key, value] of Object.entries(widget.config)) {
+    if (key === 'filterIds') {
+      const filterIds = normalizeStringArray(value);
+
+      if (filterIds.length > 0) {
+        props[key] = filterIds;
+      }
+
+      continue;
+    }
+
     props[key] = value;
   }
 

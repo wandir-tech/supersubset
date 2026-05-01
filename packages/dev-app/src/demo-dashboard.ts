@@ -58,6 +58,7 @@ export const demoDashboard: DashboardDefinition = {
           children: [
             'header-title',
             'divider-1',
+            'row-filter-bars',
             'row-alerts',
             'row-kpis',
             'row-charts',
@@ -79,6 +80,27 @@ export const demoDashboard: DashboardDefinition = {
           children: [],
           parentId: 'grid-main',
           meta: {},
+        },
+        'row-filter-bars': {
+          id: 'row-filter-bars',
+          type: 'row',
+          children: ['w-filter-bar-all', 'w-filter-bar-region'],
+          parentId: 'grid-main',
+          meta: {},
+        },
+        'w-filter-bar-all': {
+          id: 'w-filter-bar-all',
+          type: 'widget',
+          children: [],
+          parentId: 'row-filter-bars',
+          meta: { widgetRef: 'filters-all', width: 8, height: 88 },
+        },
+        'w-filter-bar-region': {
+          id: 'w-filter-bar-region',
+          type: 'widget',
+          children: [],
+          parentId: 'row-filter-bars',
+          meta: { widgetRef: 'filters-region', width: 4, height: 88 },
         },
         'row-alerts': {
           id: 'row-alerts',
@@ -159,6 +181,18 @@ export const demoDashboard: DashboardDefinition = {
         },
       },
       widgets: [
+        {
+          id: 'filters-all',
+          type: 'filter-bar',
+          title: 'All Dashboard Filters',
+          config: {},
+        },
+        {
+          id: 'filters-region',
+          type: 'filter-bar',
+          title: 'Region Quick Filter',
+          config: { filterIds: ['filter-region'] },
+        },
         {
           id: 'alerts-overview',
           type: 'alerts',
