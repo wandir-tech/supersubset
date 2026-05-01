@@ -40,6 +40,7 @@ jobs:
           filters: |
             code:
               - 'packages/**'
+              - '!packages/docs/**'
               - 'examples/**'
               - 'e2e/**'
               - 'src/**'
@@ -268,4 +269,4 @@ jobs:
               fi
             done
           fi
-          echo "✅ All required checks passed (or skipped for doc-only changes)"
+          echo "✅ All required checks passed (or the product-code pipeline was skipped)"
