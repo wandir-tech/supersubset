@@ -64,7 +64,14 @@ export const workbenchStarterDashboard: DashboardDefinition = {
           id: 'grid-main',
           type: 'grid',
           parentId: 'root',
-          children: ['header-title', 'divider', 'row-kpis', 'row-charts', 'row-table'],
+          children: [
+            'header-title',
+            'divider',
+            'row-filter-bars',
+            'row-kpis',
+            'row-charts',
+            'row-table',
+          ],
           meta: { columns: 12 },
         },
         'header-title': {
@@ -80,6 +87,20 @@ export const workbenchStarterDashboard: DashboardDefinition = {
           parentId: 'grid-main',
           children: [],
           meta: {},
+        },
+        'row-filter-bars': {
+          id: 'row-filter-bars',
+          type: 'row',
+          parentId: 'grid-main',
+          children: ['w-filter-bar-all'],
+          meta: {},
+        },
+        'w-filter-bar-all': {
+          id: 'w-filter-bar-all',
+          type: 'widget',
+          parentId: 'row-filter-bars',
+          children: [],
+          meta: { widgetRef: 'filters-all', width: 12, height: 88 },
         },
         'row-kpis': {
           id: 'row-kpis',
@@ -146,6 +167,12 @@ export const workbenchStarterDashboard: DashboardDefinition = {
         },
       },
       widgets: [
+        {
+          id: 'filters-all',
+          type: 'filter-bar',
+          title: 'All Dashboard Filters',
+          config: {},
+        },
         {
           id: 'kpi-revenue',
           type: 'kpi-card',

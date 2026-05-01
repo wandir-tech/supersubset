@@ -9,7 +9,7 @@
  *
  * Emits FilterDefinition[] changes to the host.
  */
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { NormalizedDataset } from '@supersubset/data-model';
 
 // Re-declare filter types inline to avoid hard dep on schema at runtime.
@@ -103,6 +103,26 @@ function normalizeFilterDefinition(filter: FilterDefinition): FilterDefinition {
     ...filter,
     type: normalizedType,
   };
+}
+
+function getNormalizedFiltersNeedingMigration(
+  filters: FilterDefinition[],
+): FilterDefinition[] | null {
+  let normalizedFilters: FilterDefinition[] | undefined;
+
+  filters.forEach((filter, index) => {
+    const normalizedFilter = normalizeFilterDefinition(filter);
+
+    if (normalizedFilter === filter) {
+      normalizedFilters?.push(filter);
+      return;
+    }
+
+    normalizedFilters ??= filters.slice(0, index);
+    normalizedFilters.push(normalizedFilter);
+  });
+
+  return normalizedFilters ?? null;
 }
 
 // ─── Props ────────────────────────────────────────────────────
@@ -461,6 +481,32 @@ export function FilterBuilderPanel({
   widgetIds = [],
   className,
 }: FilterBuilderPanelProps) {
+  const normalizedFilters = useMemo(() => getNormalizedFiltersNeedingMigration(filters), [filters]);
+  const normalizedFiltersKey = useMemo(
+    () => (normalizedFilters ? JSON.stringify(normalizedFilters) : null),
+    [normalizedFilters],
+  );
+  const latestOnChangeRef = useRef(onChange);
+  const lastNormalizedFiltersKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    latestOnChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    if (!normalizedFilters || !normalizedFiltersKey) {
+      lastNormalizedFiltersKeyRef.current = null;
+      return;
+    }
+
+    if (lastNormalizedFiltersKeyRef.current === normalizedFiltersKey) {
+      return;
+    }
+
+    lastNormalizedFiltersKeyRef.current = normalizedFiltersKey;
+    latestOnChangeRef.current(normalizedFilters);
+  }, [normalizedFilters, normalizedFiltersKey]);
+
   const handleAdd = useCallback(() => {
     const defaultDataset = datasets[0]?.id ?? '';
     const newFilter: FilterDefinition = {
@@ -489,17 +535,6 @@ export function FilterBuilderPanel({
     },
     [filters, onChange],
   );
-
-  useEffect(() => {
-    const normalizedFilters = filters.map((filter) => normalizeFilterDefinition(filter));
-    const hasUnsupportedFilterTypes = normalizedFilters.some(
-      (filter, index) => filter.type !== filters[index]?.type,
-    );
-
-    if (hasUnsupportedFilterTypes) {
-      onChange(normalizedFilters);
-    }
-  }, [filters, onChange]);
 
   return (
     <div

@@ -567,6 +567,70 @@ describe('FilterBuilderPanel', () => {
     expect((screen.getByTestId('filter-type-f1') as HTMLSelectElement).value).toBe('select');
   });
 
+  it('does not renormalize equivalent legacy filters when props churn', () => {
+    const initialOnChange = vi.fn();
+    const rerenderOnChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'multi-select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    const { rerender } = render(
+      <FilterBuilderPanel
+        filters={[filter]}
+        onChange={initialOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(initialOnChange).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <FilterBuilderPanel
+        filters={[{ ...filter }]}
+        onChange={rerenderOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(rerenderOnChange).not.toHaveBeenCalled();
+  });
+
+  it('does not emit onChange for supported filters when props churn', () => {
+    const initialOnChange = vi.fn();
+    const rerenderOnChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    const { rerender } = render(
+      <FilterBuilderPanel
+        filters={[filter]}
+        onChange={initialOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(initialOnChange).not.toHaveBeenCalled();
+
+    rerender(
+      <FilterBuilderPanel
+        filters={[{ ...filter }]}
+        onChange={rerenderOnChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
+
+    expect(rerenderOnChange).not.toHaveBeenCalled();
+  });
+
   it('only renders runtime-supported control types', () => {
     const filter: FilterDefinition = {
       id: 'f1',
