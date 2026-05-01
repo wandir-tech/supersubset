@@ -334,6 +334,7 @@ function buildWidgetConfig(
   if (s(puckProps.aggregation)) config.aggregation = puckProps.aggregation;
   if (s(puckProps.nameField)) config.nameField = puckProps.nameField;
   if (s(puckProps.parentField)) config.parentField = puckProps.parentField;
+  else if (widgetType === 'treemap') delete config.parentField;
   if (s(puckProps.sourceField)) config.sourceField = puckProps.sourceField;
   if (s(puckProps.targetField)) config.targetField = puckProps.targetField;
   if (s(puckProps.barField)) config.barFields = [puckProps.barField as string];
