@@ -64,6 +64,16 @@ function decorateViewportZoomSelects(root: ParentNode, instanceId: number) {
   });
 }
 
+function decoratePreviewIframes(root: ParentNode) {
+  const previewIframes = root.querySelectorAll<HTMLIFrameElement>('iframe');
+
+  previewIframes.forEach((iframe) => {
+    if (!iframe.getAttribute('title')) {
+      iframe.setAttribute('title', 'Supersubset designer preview');
+    }
+  });
+}
+
 export interface SupersubsetDesignerProps {
   /** Controlled mode: current dashboard definition */
   value?: DashboardDefinition;
@@ -780,6 +790,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
 
     const applyViewportControlA11y = () => {
       decorateViewportZoomSelects(root, a11yInstanceIdRef.current);
+      decoratePreviewIframes(root);
     };
 
     applyViewportControlA11y();

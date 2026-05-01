@@ -17,25 +17,30 @@ vi.mock('@puckeditor/core', () => ({
       | undefined;
     const plugins = props.plugins as Array<{ name: string; label: string }> | undefined;
     const data = props.data as { content?: Array<{ props?: { id?: string } }> } | undefined;
-    return React.createElement('div', {
-      'data-testid': 'puck-editor',
-      'data-header-title': props.headerTitle,
-      'data-has-on-publish': !!props.onPublish,
-      'data-has-on-change': !!props.onChange,
-      'data-plugin-labels': plugins?.map((p) => p.label).join(',') ?? '',
-      'data-content-ids': data?.content?.map((item) => item.props?.id ?? '').join(',') ?? '',
-    },
+    return React.createElement(
+      'div',
+      {
+        'data-testid': 'puck-editor',
+        'data-header-title': props.headerTitle,
+        'data-has-on-publish': !!props.onPublish,
+        'data-has-on-change': !!props.onChange,
+        'data-plugin-labels': plugins?.map((p) => p.label).join(',') ?? '',
+        'data-content-ids': data?.content?.map((item) => item.props?.id ?? '').join(',') ?? '',
+      },
       // Render headerActions override so we can query its content
       headerActionsOverride
-        ? headerActionsOverride({ children: React.createElement('span', { 'data-testid': 'default-actions' }) })
+        ? headerActionsOverride({
+            children: React.createElement('span', { 'data-testid': 'default-actions' }),
+          })
         : null,
+      React.createElement('iframe', { 'data-testid': 'mock-preview-iframe' }),
       React.createElement(
         'select',
         {
           'data-testid': 'mock-viewport-zoom',
           className: '_ViewportControls-zoomSelect_mock',
         },
-        React.createElement('option', { value: '1' }, '100%')
+        React.createElement('option', { value: '1' }, '100%'),
       ),
     );
   },
@@ -55,7 +60,13 @@ const minimalDashboard: DashboardDefinition = {
       title: 'Page 1',
       layout: {
         root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-        'grid-main': { id: 'grid-main', type: 'grid', children: [], parentId: 'root', meta: { columns: 12 } },
+        'grid-main': {
+          id: 'grid-main',
+          type: 'grid',
+          children: [],
+          parentId: 'root',
+          meta: { columns: 12 },
+        },
       },
       rootNodeId: 'root',
       widgets: [],
@@ -73,8 +84,20 @@ const multiPageDashboard: DashboardDefinition = {
       title: 'Overview',
       layout: {
         root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-        'grid-main': { id: 'grid-main', type: 'grid', children: ['header-overview'], parentId: 'root', meta: { columns: 12 } },
-        'header-overview': { id: 'header-overview', type: 'header', children: [], parentId: 'grid-main', meta: { text: 'Overview Header', headerSize: 'large' } },
+        'grid-main': {
+          id: 'grid-main',
+          type: 'grid',
+          children: ['header-overview'],
+          parentId: 'root',
+          meta: { columns: 12 },
+        },
+        'header-overview': {
+          id: 'header-overview',
+          type: 'header',
+          children: [],
+          parentId: 'grid-main',
+          meta: { text: 'Overview Header', headerSize: 'large' },
+        },
       },
       rootNodeId: 'root',
       widgets: [],
@@ -84,8 +107,20 @@ const multiPageDashboard: DashboardDefinition = {
       title: 'Detail',
       layout: {
         root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-        'grid-main': { id: 'grid-main', type: 'grid', children: ['header-detail'], parentId: 'root', meta: { columns: 12 } },
-        'header-detail': { id: 'header-detail', type: 'header', children: [], parentId: 'grid-main', meta: { text: 'Detail Header', headerSize: 'large' } },
+        'grid-main': {
+          id: 'grid-main',
+          type: 'grid',
+          children: ['header-detail'],
+          parentId: 'root',
+          meta: { columns: 12 },
+        },
+        'header-detail': {
+          id: 'header-detail',
+          type: 'header',
+          children: [],
+          parentId: 'grid-main',
+          meta: { text: 'Detail Header', headerSize: 'large' },
+        },
       },
       rootNodeId: 'root',
       widgets: [],
@@ -107,10 +142,12 @@ describe('SupersubsetDesigner', () => {
     const { container } = render(
       React.createElement(SupersubsetDesigner, {
         height: '100%',
-      })
+      }),
     );
 
-    const root = container.querySelector('[data-supersubset-designer-root="true"]') as HTMLDivElement | null;
+    const root = container.querySelector(
+      '[data-supersubset-designer-root="true"]',
+    ) as HTMLDivElement | null;
     expect(root).not.toBeNull();
     expect(root?.style.height).toBe('100%');
     expect(root?.style.overflow).toBe('hidden');
@@ -121,7 +158,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         headerTitle: 'My Editor',
-      })
+      }),
     );
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-header-title')).toBe('My Editor');
@@ -131,7 +168,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         value: minimalDashboard,
-      })
+      }),
     );
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-header-title')).toBe('Test Dashboard');
@@ -139,9 +176,7 @@ describe('SupersubsetDesigner', () => {
 
   it('wires onPublish callback', () => {
     const onPublish = vi.fn();
-    render(
-      React.createElement(SupersubsetDesigner, { onPublish })
-    );
+    render(React.createElement(SupersubsetDesigner, { onPublish }));
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-has-on-publish')).toBe('true');
   });
@@ -152,7 +187,7 @@ describe('SupersubsetDesigner', () => {
       React.createElement(SupersubsetDesigner, {
         value: minimalDashboard,
         onChange,
-      })
+      }),
     );
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-has-on-change')).toBe('true');
@@ -162,7 +197,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         onPublish: vi.fn(),
-      })
+      }),
     );
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-header-title')).toBe('Supersubset Designer');
@@ -172,7 +207,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         defaultValue: { ...minimalDashboard, title: 'Default Title' },
-      })
+      }),
     );
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-header-title')).toBe('Default Title');
@@ -188,7 +223,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         headerActions: React.createElement('button', { 'data-testid': 'custom-action' }, 'Save'),
-      })
+      }),
     );
     expect(screen.getByTestId('custom-action')).toBeDefined();
     expect(screen.getByTestId('custom-action').textContent).toBe('Save');
@@ -214,20 +249,33 @@ describe('SupersubsetDesigner', () => {
     expect(zoomSelect.getAttribute('name')).toMatch(/^viewportZoom-/);
   });
 
+  it('adds a title to preview iframes for accessibility', async () => {
+    render(React.createElement(SupersubsetDesigner, {}));
+
+    const previewIframe = screen.getByTestId('mock-preview-iframe');
+    await waitFor(() => {
+      expect(previewIframe.getAttribute('title')).toBe('Supersubset designer preview');
+    });
+  });
+
   it('renders page tabs for multi-page dashboards and switches the edited page', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         value: multiPageDashboard,
-      })
+      }),
     );
 
     expect(screen.getByTestId('designer-page-tab-page-overview')).toBeDefined();
     expect(screen.getByTestId('designer-page-tab-page-detail')).toBeDefined();
-    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain('header-overview');
+    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain(
+      'header-overview',
+    );
 
     fireEvent.click(screen.getByTestId('designer-page-tab-page-detail'));
 
-    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain('header-detail');
+    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain(
+      'header-detail',
+    );
   });
 
   it('adds a page and emits the next dashboard in controlled mode', () => {
@@ -237,7 +285,7 @@ describe('SupersubsetDesigner', () => {
       React.createElement(SupersubsetDesigner, {
         value: minimalDashboard,
         onChange,
-      })
+      }),
     );
 
     fireEvent.click(screen.getByTestId('designer-page-add'));
@@ -256,7 +304,7 @@ describe('SupersubsetDesigner', () => {
       React.createElement(SupersubsetDesigner, {
         value: minimalDashboard,
         onChange,
-      })
+      }),
     );
 
     const titleInput = screen.getByTestId('designer-dashboard-title-input');
@@ -272,7 +320,7 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         defaultValue: multiPageDashboard,
-      })
+      }),
     );
 
     fireEvent.click(screen.getByTestId('designer-page-add'));
@@ -285,7 +333,9 @@ describe('SupersubsetDesigner', () => {
     expect(screen.getByRole('button', { name: 'Regional Detail' })).toBeDefined();
 
     fireEvent.click(screen.getByTestId('designer-page-delete-trigger-page-3'));
-    expect(screen.getByTestId('designer-page-delete-prompt').textContent).toContain('Regional Detail');
+    expect(screen.getByTestId('designer-page-delete-prompt').textContent).toContain(
+      'Regional Detail',
+    );
     fireEvent.click(screen.getByTestId('designer-page-delete-confirm'));
 
     expect(screen.queryByRole('button', { name: 'Regional Detail' })).toBeNull();
@@ -297,10 +347,12 @@ describe('SupersubsetDesigner', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         defaultValue: multiPageDashboard,
-      })
+      }),
     );
 
-    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain('header-overview');
+    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain(
+      'header-overview',
+    );
 
     fireEvent.click(screen.getByTestId('designer-page-delete-trigger-page-detail'));
     expect(screen.getByTestId('designer-page-delete-prompt').textContent).toContain('Detail');
@@ -308,6 +360,8 @@ describe('SupersubsetDesigner', () => {
 
     expect(screen.queryByRole('button', { name: 'Detail' })).toBeNull();
     expect(screen.getByTestId('designer-page-tab-page-overview')).toBeDefined();
-    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain('header-overview');
+    expect(screen.getByTestId('puck-editor').getAttribute('data-content-ids')).toContain(
+      'header-overview',
+    );
   });
 });
