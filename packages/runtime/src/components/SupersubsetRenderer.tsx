@@ -7,7 +7,6 @@ import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetEvent } from '../widgets/registry';
 import { LayoutRenderer } from '../layout/LayoutRenderer';
 import { FilterProvider, useFilters, type FilterState } from '../filters/FilterEngine';
-import { FilterBar } from './FilterBar';
 import {
   InteractionProvider,
   useInteractions,
@@ -160,7 +159,6 @@ function DashboardContent({
   const { state } = useFilters();
   const { handleWidgetEvent } = useInteractions();
   const filters = definition.filters ?? [];
-  const hasFilters = filters.length > 0;
 
   // Build active filter values list from current state
   const activeFilterValues = useMemo(
@@ -175,13 +173,6 @@ function DashboardContent({
   return createElement(
     'div',
     { className: 'ss-dashboard-content' },
-    hasFilters
-      ? createElement(FilterBar, {
-          filters,
-          datasets: definition.dataModel?.datasets,
-          filterOptions,
-        })
-      : null,
     createElement(DrillBreadcrumbBar),
     createElement(LayoutRenderer, {
       layout: page.layout,
@@ -190,6 +181,8 @@ function DashboardContent({
       registry,
       theme,
       filters,
+      datasets: definition.dataModel?.datasets,
+      filterOptions,
       activeFilterValues,
       onWidgetEvent: handleWidgetEvent,
     }),

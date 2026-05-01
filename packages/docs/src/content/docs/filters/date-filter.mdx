@@ -15,18 +15,18 @@ import date_filter_bar_viewer from '../../../assets/screenshots/filters/date-fil
 
 # Date Filter
 
-Date filters let dashboard viewers select a date range, filtering time-series data across all widgets in scope. Essential for any dashboard with temporal data.
+Date filters let dashboard viewers select a date range, filtering time-series data across all widgets in scope. They appear anywhere you place a Filter Bar widget that includes the authored date filter.
 
 <ExpandAll />
 
 ## Default Appearance
 
-A date filter with default settings shows a date range picker.
+A date filter with default settings shows a date range picker inside a placed Filter Bar widget.
 
 <ScreenshotComparison
   label="Default date filter"
   viewerSrc={date_filter_bar_viewer}
-  viewerAlt="Date filter in the filter bar"
+  viewerAlt="Date filter in a placed filter bar widget"
 />
 
 ## Configuration Options
@@ -57,14 +57,19 @@ Controls which widgets are affected. See [Filter Scope](/filters/filter-scope/).
 
 <FeatureScreenshot
   src={filter_bar_viewer}
-  alt="Filter bar showing all filters including date"
-  caption="Date filter alongside select filters in the filter bar"
+  alt="Placed filter bar widget showing date and select filters"
+  caption="A Filter Bar widget can show the date filter alongside other authored filters"
 />
+
+### Filter Bar Visibility
+
+The authored date filter exists independently from its placement. It will only be visible to viewers in Filter Bar widgets whose `Shown Filters` configuration includes that filter, or in bars configured to show all authored filters.
 
 ## Tips
 
 - Use with [Line Charts](/chart-types/line-chart/) and [Area Charts](/chart-types/area-chart/) for time-series drill-down
 - The `between` operator creates a date range picker — the most common use case
+- Place the date filter in a dedicated Filter Bar widget when you want time controls separated from categorical filters
 - Pair with [Select Filters](/filters/select-filter/) for multi-dimensional filtering
 
 ## Related Features

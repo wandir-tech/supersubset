@@ -505,6 +505,51 @@ describe('Controls integration', () => {
     const el = fb.render({ title: 'Filters', layout: 'vertical' });
     expect(React.isValidElement(el)).toBe(true);
   });
+
+  it('FilterBarBlock preview distinguishes filter subsets', () => {
+    const filterAwareConfig = createPuckConfig({
+      filterDefinitions: [
+        {
+          id: 'region-filter',
+          title: 'Region',
+          type: 'select',
+          fieldRef: 'region',
+          datasetRef: 'orders',
+          operator: 'equals',
+          scope: { type: 'global' },
+        },
+        {
+          id: 'date-filter',
+          title: 'Order Date',
+          type: 'date',
+          fieldRef: 'order_date',
+          datasetRef: 'orders',
+          operator: 'equals',
+          scope: { type: 'global' },
+        },
+      ],
+    });
+    const fb = filterAwareConfig.components['FilterBarBlock'];
+    const allFiltersElement = fb.render({
+      title: 'Filters',
+      layout: 'horizontal',
+    }) as React.ReactElement;
+    const subsetElement = fb.render({
+      title: 'Filters',
+      layout: 'horizontal',
+      filterIds: ['region-filter'],
+    }) as React.ReactElement;
+
+    const allFiltersChildren = React.Children.toArray(
+      allFiltersElement.props.children,
+    ) as React.ReactElement[];
+    const subsetChildren = React.Children.toArray(
+      subsetElement.props.children,
+    ) as React.ReactElement[];
+
+    expect(allFiltersChildren[2].props.children).toBe('Showing all authored filters');
+    expect(subsetChildren[2].props.children).toBe('Showing Region');
+  });
 });
 
 // ─── Root render function ────────────────────────────────────

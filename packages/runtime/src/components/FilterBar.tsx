@@ -2,7 +2,7 @@
  * FilterBar — renders dashboard-level filter controls from FilterDefinition[].
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
-import { createElement, type ReactNode } from 'react';
+import { createElement, useId, type ReactNode } from 'react';
 import type { FilterDefinition, DatasetDefinition } from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
 
@@ -82,6 +82,7 @@ export interface FilterBarProps {
 
 export function FilterBar({ filters, datasets, filterOptions, className }: FilterBarProps) {
   const { state, setFilter, resetAll } = useFilters();
+  const inputIdPrefix = useId();
 
   if (filters.length === 0) return null;
 
@@ -96,6 +97,7 @@ export function FilterBar({ filters, datasets, filterOptions, className }: Filte
         filter: f,
         value: state.values[f.id],
         datasets,
+        inputIdPrefix,
         options: filterOptions?.[f.id],
         onChangeValue: (value: unknown) => setFilter(f.id, value),
       }),
@@ -121,14 +123,22 @@ interface FilterControlProps {
   filter: FilterDefinition;
   value: unknown;
   datasets?: DatasetDefinition[];
+  inputIdPrefix: string;
   options?: string[];
   onChangeValue: (value: unknown) => void;
 }
 
-function FilterControl({ filter, value, datasets, options, onChangeValue }: FilterControlProps) {
+function FilterControl({
+  filter,
+  value,
+  datasets,
+  inputIdPrefix,
+  options,
+  onChangeValue,
+}: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
   const resolvedOptions = options ?? getFieldOptions(filter, datasets);
-  const inputIdBase = `ss-filter-${filter.id}`;
+  const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
     'div',

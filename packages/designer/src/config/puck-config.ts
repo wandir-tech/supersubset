@@ -3,6 +3,7 @@
  * Defines all components and categories for the editor sidebar.
  */
 import type { Config } from '@puckeditor/core';
+import type { FilterDefinition } from '@supersubset/schema';
 import React from 'react';
 
 import * as chartBlocks from '../blocks/charts';
@@ -13,7 +14,11 @@ import * as layoutBlocks from '../blocks/layout';
 /**
  * Build the complete Puck Config with all Supersubset blocks.
  */
-export function createPuckConfig(): Config {
+export interface CreatePuckConfigOptions {
+  filterDefinitions?: readonly FilterDefinition[];
+}
+
+export function createPuckConfig(options: CreatePuckConfigOptions = {}): Config {
   return {
     root: {
       defaultProps: {},
@@ -27,7 +32,7 @@ export function createPuckConfig(): Config {
               minHeight: '100%',
             },
           },
-          children as React.ReactNode
+          children as React.ReactNode,
         );
       },
     },
@@ -56,7 +61,9 @@ export function createPuckConfig(): Config {
       DividerBlock: contentBlocks.DividerBlock,
       SpacerBlock: contentBlocks.SpacerBlock,
       // Controls
-      FilterBarBlock: controlBlocks.FilterBarBlock,
+      FilterBarBlock: controlBlocks.createFilterBarBlock({
+        filterDefinitions: options.filterDefinitions,
+      }),
       // Layout
       RowBlock: layoutBlocks.RowBlock,
       ColumnBlock: layoutBlocks.ColumnBlock,

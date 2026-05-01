@@ -9,7 +9,7 @@
  *
  * Emits FilterDefinition[] changes to the host.
  */
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import type { NormalizedDataset } from '@supersubset/data-model';
 
 // Re-declare filter types inline to avoid hard dep on schema at runtime.
@@ -69,6 +69,42 @@ export const FILTER_OPERATORS: { value: string; label: string; types: string[] }
   },
 ];
 
+const FILTER_CONTROL_OPTIONS = [
+  { value: 'select', label: 'Dropdown' },
+  { value: 'range', label: 'Range slider' },
+  { value: 'date', label: 'Date picker' },
+  { value: 'text', label: 'Text search' },
+] as const;
+
+type SupportedFilterControlType = (typeof FILTER_CONTROL_OPTIONS)[number]['value'];
+
+const LEGACY_FILTER_CONTROL_TYPE_MAP: Record<string, SupportedFilterControlType> = {
+  'multi-select': 'select',
+  'date-range': 'date',
+};
+
+function normalizeFilterControlType(type: string): SupportedFilterControlType {
+  if (type in LEGACY_FILTER_CONTROL_TYPE_MAP) {
+    return LEGACY_FILTER_CONTROL_TYPE_MAP[type];
+  }
+
+  const supportedOption = FILTER_CONTROL_OPTIONS.find((option) => option.value === type);
+  return supportedOption?.value ?? 'select';
+}
+
+function normalizeFilterDefinition(filter: FilterDefinition): FilterDefinition {
+  const normalizedType = normalizeFilterControlType(filter.type);
+
+  if (normalizedType === filter.type) {
+    return filter;
+  }
+
+  return {
+    ...filter,
+    type: normalizedType,
+  };
+}
+
 // ─── Props ────────────────────────────────────────────────────
 
 export interface FilterBuilderPanelProps {
@@ -119,10 +155,14 @@ function FilterEditor({
     const dt = field?.dataType ?? 'string';
     return FILTER_OPERATORS.filter((op) => op.types.includes(dt));
   }, [field]);
+  const normalizedFilterType = useMemo(
+    () => normalizeFilterControlType(filter.type),
+    [filter.type],
+  );
 
   const handleChange = useCallback(
     (patch: Partial<FilterDefinition>) => {
-      onUpdate({ ...filter, ...patch });
+      onUpdate(normalizeFilterDefinition({ ...filter, ...patch }));
     },
     [filter, onUpdate],
   );
@@ -312,16 +352,16 @@ function FilterEditor({
         <select
           id={typeSelectId}
           name={`filter-type-${filter.id}`}
-          value={filter.type}
+          value={normalizedFilterType}
           onChange={(e) => handleChange({ type: e.target.value })}
           data-testid={`filter-type-${filter.id}`}
           style={selectStyle}
         >
-          <option value="select">Dropdown</option>
-          <option value="multi-select">Multi-select</option>
-          <option value="range">Range slider</option>
-          <option value="date-range">Date range</option>
-          <option value="text">Text search</option>
+          {FILTER_CONTROL_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -449,6 +489,17 @@ export function FilterBuilderPanel({
     },
     [filters, onChange],
   );
+
+  useEffect(() => {
+    const normalizedFilters = filters.map((filter) => normalizeFilterDefinition(filter));
+    const hasUnsupportedFilterTypes = normalizedFilters.some(
+      (filter, index) => filter.type !== filters[index]?.type,
+    );
+
+    if (hasUnsupportedFilterTypes) {
+      onChange(normalizedFilters);
+    }
+  }, [filters, onChange]);
 
   return (
     <div

@@ -149,7 +149,7 @@ test.describe('Filter-specific screenshots', () => {
       await waitForChartsReady(page);
     }
     // Capture just the filter bar area with active selection
-    const filterBar = page.locator('.ss-filter-bar');
+    const filterBar = page.locator('.ss-filter-bar').first();
     if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
       await captureElement(filterBar, 'filters', 'select-filter', 'region-north', 'viewer');
     }
@@ -164,7 +164,7 @@ test.describe('Filter-specific screenshots', () => {
       await catSelect.selectOption({ index: 1 }); // Pick first non-empty option
       await waitForChartsReady(page);
     }
-    const filterBar = page.locator('.ss-filter-bar');
+    const filterBar = page.locator('.ss-filter-bar').first();
     if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
       await captureElement(filterBar, 'filters', 'select-filter', 'category-active', 'viewer');
     }
@@ -193,7 +193,7 @@ test.describe('Filter-specific screenshots', () => {
     await switchToViewer(page);
     await waitForChartsReady(page);
     // Capture the filter bar showing the date filter
-    const filterBar = page.locator('.ss-filter-bar');
+    const filterBar = page.locator('.ss-filter-bar').first();
     if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
       await captureElement(filterBar, 'filters', 'date-filter', 'bar', 'viewer');
     }
