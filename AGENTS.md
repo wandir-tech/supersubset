@@ -81,6 +81,7 @@ The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It deco
 | `github-cli`                  | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser                                 |
 | `work-kickoff`                | Turning an idea into a reviewed GitHub issue + implementation plan                                        |
 | `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
+| `release-runbook`             | End-to-end release execution: candidate validation, changesets, branch promotion, publish, downstream PRs |
 | `maintaining-ai-context`      | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions`                          |
 | `parallel-agent-environments` | Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing |
 

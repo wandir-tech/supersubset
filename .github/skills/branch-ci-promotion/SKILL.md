@@ -113,5 +113,6 @@ If **no workflows** yet, this skill still applies: **run the same commands local
 
 - `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
+- `.github/skills/release-runbook/SKILL.md`
 - `.github/skills/browser-testing/SKILL.md`
 - `docs/bootstrap.md`
