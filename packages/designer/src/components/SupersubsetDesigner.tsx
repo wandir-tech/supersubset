@@ -135,6 +135,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE,
   );
   const [pendingDeletePageId, setPendingDeletePageId] = useState<string | undefined>();
+  const [controlledSyncRevision, setControlledSyncRevision] = useState(0);
   const canMutateDashboard = !isControlled || !!onChange;
   const pendingDeletePage = pages.find((page) => page.id === pendingDeletePageId);
 
@@ -158,6 +159,12 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   headerActionsRef.current = headerActions;
   const designerRootRef = useRef<HTMLDivElement | null>(null);
   const a11yInstanceIdRef = useRef(nextDesignerA11yInstanceId++);
+  const lastHandledControlledSignatureRef = useRef<string | undefined>(undefined);
+  const lastEmittedControlledSignatureRef = useRef<string | undefined>(undefined);
+  const controlledValueSignature = useMemo(
+    () => (isControlled ? createDashboardSyncSignature(value) : undefined),
+    [isControlled, value],
+  );
 
   useEffect(() => {
     const nextActivePageId = activePage?.id;
@@ -174,8 +181,37 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     setDashboardTitleDraft(sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE);
   }, [sourceDashboard?.title]);
 
+  useEffect(() => {
+    if (!isControlled) {
+      lastHandledControlledSignatureRef.current = undefined;
+      lastEmittedControlledSignatureRef.current = undefined;
+      return;
+    }
+
+    if (controlledValueSignature === undefined) {
+      lastHandledControlledSignatureRef.current = undefined;
+      return;
+    }
+
+    const lastHandledSignature = lastHandledControlledSignatureRef.current;
+    lastHandledControlledSignatureRef.current = controlledValueSignature;
+
+    if (
+      lastHandledSignature === undefined ||
+      lastHandledSignature === controlledValueSignature ||
+      controlledValueSignature === lastEmittedControlledSignatureRef.current
+    ) {
+      return;
+    }
+
+    setControlledSyncRevision((revision) => revision + 1);
+  }, [controlledValueSignature, isControlled]);
+
   const emitDashboardChange = useCallback(
     (dashboard: DashboardDefinition) => {
+      if (isControlled) {
+        lastEmittedControlledSignatureRef.current = createDashboardSyncSignature(dashboard);
+      }
       if (!isControlled) {
         setUncontrolledDashboard(dashboard);
       }
@@ -736,7 +772,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     ],
   );
 
-  const editorKey = `${sourceDashboard?.id ?? 'new-dashboard'}:${activePage?.id ?? 'page-0'}`;
+  const editorKey = `${sourceDashboard?.id ?? 'new-dashboard'}:${activePage?.id ?? 'page-0'}:${controlledSyncRevision}`;
 
   useEffect(() => {
     const root = designerRootRef.current;
@@ -860,6 +896,12 @@ function createUniquePageId(existingPages: PageDefinition[], title: string): str
   }
 
   return candidateId;
+}
+
+function createDashboardSyncSignature(
+  dashboard: DashboardDefinition | undefined,
+): string | undefined {
+  return dashboard ? JSON.stringify(dashboard) : undefined;
 }
 
 function normalizePageTitle(nextTitle: string, fallbackTitle: string): string {

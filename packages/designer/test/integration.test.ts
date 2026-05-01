@@ -20,7 +20,11 @@ import type { Data } from '@puckeditor/core';
 describe('Config integration — all blocks registered', () => {
   const config = createPuckConfig();
   const allComponentNames = Object.keys(config.components);
-  const totalBlockCount = CHART_BLOCK_NAMES.length + CONTENT_BLOCK_NAMES.length + CONTROL_BLOCK_NAMES.length + LAYOUT_BLOCK_NAMES.length;
+  const totalBlockCount =
+    CHART_BLOCK_NAMES.length +
+    CONTENT_BLOCK_NAMES.length +
+    CONTROL_BLOCK_NAMES.length +
+    LAYOUT_BLOCK_NAMES.length;
 
   it('registers the expected total number of components', () => {
     expect(allComponentNames).toHaveLength(totalBlockCount);
@@ -78,8 +82,9 @@ describe('Category integration', () => {
   const cats = config.categories!;
 
   it('all chart components appear in exactly one category', () => {
-    const allCatComponents = Object.values(cats)
-      .flatMap((cat) => (cat as { components?: string[] }).components ?? []);
+    const allCatComponents = Object.values(cats).flatMap(
+      (cat) => (cat as { components?: string[] }).components ?? [],
+    );
 
     for (const name of CHART_BLOCK_NAMES) {
       const count = allCatComponents.filter((c) => c === name).length;
@@ -88,8 +93,9 @@ describe('Category integration', () => {
   });
 
   it('all content components appear in exactly one category', () => {
-    const allCatComponents = Object.values(cats)
-      .flatMap((cat) => (cat as { components?: string[] }).components ?? []);
+    const allCatComponents = Object.values(cats).flatMap(
+      (cat) => (cat as { components?: string[] }).components ?? [],
+    );
 
     for (const name of CONTENT_BLOCK_NAMES) {
       expect(allCatComponents).toContain(name);
@@ -97,8 +103,9 @@ describe('Category integration', () => {
   });
 
   it('all control components appear in exactly one category', () => {
-    const allCatComponents = Object.values(cats)
-      .flatMap((cat) => (cat as { components?: string[] }).components ?? []);
+    const allCatComponents = Object.values(cats).flatMap(
+      (cat) => (cat as { components?: string[] }).components ?? [],
+    );
 
     for (const name of CONTROL_BLOCK_NAMES) {
       expect(allCatComponents).toContain(name);
@@ -106,8 +113,9 @@ describe('Category integration', () => {
   });
 
   it('all layout components appear in exactly one category', () => {
-    const allCatComponents = Object.values(cats)
-      .flatMap((cat) => (cat as { components?: string[] }).components ?? []);
+    const allCatComponents = Object.values(cats).flatMap(
+      (cat) => (cat as { components?: string[] }).components ?? [],
+    );
 
     for (const name of LAYOUT_BLOCK_NAMES) {
       expect(allCatComponents).toContain(name);
@@ -134,8 +142,9 @@ describe('Category integration', () => {
   });
 
   it('every categorized component is registered in config.components', () => {
-    const allCatComponents = Object.values(cats)
-      .flatMap((cat) => (cat as { components?: string[] }).components ?? []);
+    const allCatComponents = Object.values(cats).flatMap(
+      (cat) => (cat as { components?: string[] }).components ?? [],
+    );
 
     for (const name of allCatComponents) {
       expect(config.components[name], `${name} is categorized but not registered`).toBeDefined();
@@ -258,14 +267,77 @@ describe('Full pipeline — build dashboard → serialize → restore', () => {
     const puckData: Data = {
       root: { props: { title: 'Mixed Dashboard' } },
       content: [
-        { type: 'HeaderBlock', props: { id: 'h1', text: 'Sales Overview', size: 'large', align: 'center' } },
+        {
+          type: 'HeaderBlock',
+          props: { id: 'h1', text: 'Sales Overview', size: 'large', align: 'center' },
+        },
         { type: 'DividerBlock', props: { id: 'd1', color: '#e0e0e0', thickness: 1, margin: 16 } },
-        { type: 'FilterBarBlock', props: { id: 'fb1', title: 'Filters', scope: 'global', layout: 'horizontal' } },
-        { type: 'LineChart', props: { id: 'lc1', title: 'Revenue Trend', datasetRef: 'sales', xAxisField: 'month', yAxisField: 'revenue', seriesField: '', aggregation: 'sum', smooth: 'true' } },
-        { type: 'BarChart', props: { id: 'bc1', title: 'Sales by Category', datasetRef: 'sales', xAxisField: 'category', yAxisField: 'amount', seriesField: '', aggregation: 'none', orientation: 'vertical', stacked: 'false' } },
-        { type: 'PieChart', props: { id: 'pc1', title: 'Market Share', datasetRef: 'sales', categoryField: 'region', valueField: 'share', aggregation: 'none', variant: 'donut' } },
-        { type: 'KPICard', props: { id: 'kpi1', title: 'Total Revenue', datasetRef: 'sales', valueField: 'total', aggregation: 'sum', prefix: '$', suffix: '', comparisonField: 'prev_total' } },
-        { type: 'Table', props: { id: 't1', title: 'Transaction Details', datasetRef: 'transactions', pageSize: 25, striped: 'true' } },
+        {
+          type: 'FilterBarBlock',
+          props: { id: 'fb1', title: 'Filters', scope: 'global', layout: 'horizontal' },
+        },
+        {
+          type: 'LineChart',
+          props: {
+            id: 'lc1',
+            title: 'Revenue Trend',
+            datasetRef: 'sales',
+            xAxisField: 'month',
+            yAxisField: 'revenue',
+            seriesField: '',
+            aggregation: 'sum',
+            smooth: 'true',
+          },
+        },
+        {
+          type: 'BarChart',
+          props: {
+            id: 'bc1',
+            title: 'Sales by Category',
+            datasetRef: 'sales',
+            xAxisField: 'category',
+            yAxisField: 'amount',
+            seriesField: '',
+            aggregation: 'none',
+            orientation: 'vertical',
+            stacked: 'false',
+          },
+        },
+        {
+          type: 'PieChart',
+          props: {
+            id: 'pc1',
+            title: 'Market Share',
+            datasetRef: 'sales',
+            categoryField: 'region',
+            valueField: 'share',
+            aggregation: 'none',
+            variant: 'donut',
+          },
+        },
+        {
+          type: 'KPICard',
+          props: {
+            id: 'kpi1',
+            title: 'Total Revenue',
+            datasetRef: 'sales',
+            valueField: 'total',
+            aggregation: 'sum',
+            prefix: '$',
+            suffix: '',
+            comparisonField: 'prev_total',
+          },
+        },
+        {
+          type: 'Table',
+          props: {
+            id: 't1',
+            title: 'Transaction Details',
+            datasetRef: 'transactions',
+            pageSize: 25,
+            striped: 'true',
+          },
+        },
         { type: 'SpacerBlock', props: { id: 's1', height: 32 } },
         { type: 'MarkdownBlock', props: { id: 'm1', content: '*Data refreshed daily*' } },
       ],
@@ -307,10 +379,10 @@ describe('Layout blocks integration', () => {
     expect((row.fields?.content as { type: string }).type).toBe('slot');
   });
 
-  it('ColumnBlock is inline and has slot field', () => {
+  it('ColumnBlock is not inline and has slot field', () => {
     const col = config.components['ColumnBlock'];
     expect(col).toBeDefined();
-    expect(col.inline).toBe(true);
+    expect(col.inline).toBe(false);
     expect((col.fields?.content as { type: string }).type).toBe('slot');
   });
 
@@ -445,7 +517,9 @@ describe('Root render integration', () => {
   });
 
   it('root does not set dashboard metadata defaults', () => {
-    expect((config.root as { defaultProps?: Record<string, unknown> })?.defaultProps ?? {}).toEqual({});
+    expect((config.root as { defaultProps?: Record<string, unknown> })?.defaultProps ?? {}).toEqual(
+      {},
+    );
   });
 
   it('root render function wraps children', () => {
