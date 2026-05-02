@@ -1049,9 +1049,9 @@ function App() {
                     What to try
                   </strong>
                   <span style={{ color: '#475569', lineHeight: 1.5 }}>
-                    In the page demo, click the region chart to navigate to another page. In the
-                    dashboard demo, use the host buttons to switch documents and notice the separate
-                    titles and themes.
+                    In the page demo, use the shared filter bar and page tabs to confirm one
+                    workbook state across multiple canvases. In the dashboard demo, use the host
+                    buttons to switch documents and notice the separate titles and themes.
                   </span>
                 </div>
               </div>

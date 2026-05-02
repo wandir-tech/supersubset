@@ -74,7 +74,13 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
         'pages-grid': {
           id: 'pages-grid',
           type: 'grid',
-          children: ['pages-header', 'pages-note-row', 'pages-kpi-row', 'pages-chart-row'],
+          children: [
+            'pages-header',
+            'pages-note-row',
+            'pages-filter-row',
+            'pages-kpi-row',
+            'pages-chart-row',
+          ],
           parentId: 'pages-root',
           meta: { columns: 12 },
         },
@@ -98,6 +104,20 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           children: [],
           parentId: 'pages-note-row',
           meta: { widgetRef: 'pages-note', width: 12, height: 96 },
+        },
+        'pages-filter-row': {
+          id: 'pages-filter-row',
+          type: 'row',
+          children: ['pages-filter-bar-host'],
+          parentId: 'pages-grid',
+          meta: {},
+        },
+        'pages-filter-bar-host': {
+          id: 'pages-filter-bar-host',
+          type: 'widget',
+          children: [],
+          parentId: 'pages-filter-row',
+          meta: { widgetRef: 'pages-filter-bar', width: 12, height: 88 },
         },
         'pages-kpi-row': {
           id: 'pages-kpi-row',
@@ -149,14 +169,25 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           title: '',
           config: {
             content:
-              'A page is another canvas inside the same dashboard document. These two pages share the same dashboard id, filters, interactions, theme, and saved state. Click **Sales by Region** to jump to the detail page.',
+              'A page is another canvas inside the same dashboard document. These two pages share the same dashboard id, filters, interactions, theme, and saved state. Use the shared filter bar and page tabs to see one workbook state carried across multiple canvases.',
           },
+        },
+        {
+          id: 'pages-filter-bar',
+          type: 'filter-bar',
+          title: 'Shared Workbook Filters',
+          config: {},
         },
         {
           id: 'pages-kpi-revenue',
           type: 'kpi-card',
           title: 'Revenue',
-          config: { valueField: 'revenue', comparisonField: 'prevRevenue', format: 'compact', prefix: '$' },
+          config: {
+            valueField: 'revenue',
+            comparisonField: 'prevRevenue',
+            format: 'compact',
+            prefix: '$',
+          },
         },
         {
           id: 'pages-kpi-orders',
@@ -183,11 +214,21 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
       title: 'Region Detail',
       rootNodeId: 'page-detail-root',
       layout: {
-        'page-detail-root': { id: 'page-detail-root', type: 'root', children: ['page-detail-grid'], meta: {} },
+        'page-detail-root': {
+          id: 'page-detail-root',
+          type: 'root',
+          children: ['page-detail-grid'],
+          meta: {},
+        },
         'page-detail-grid': {
           id: 'page-detail-grid',
           type: 'grid',
-          children: ['page-detail-header', 'page-detail-note-row', 'page-detail-table-row'],
+          children: [
+            'page-detail-header',
+            'page-detail-note-row',
+            'page-detail-filter-row',
+            'page-detail-table-row',
+          ],
           parentId: 'page-detail-root',
           meta: { columns: 12 },
         },
@@ -219,6 +260,20 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           parentId: 'page-detail-note-row',
           meta: { widgetRef: 'pages-kpi-aov', width: 4, height: 96 },
         },
+        'page-detail-filter-row': {
+          id: 'page-detail-filter-row',
+          type: 'row',
+          children: ['page-detail-filter-bar-host'],
+          parentId: 'page-detail-grid',
+          meta: {},
+        },
+        'page-detail-filter-bar-host': {
+          id: 'page-detail-filter-bar-host',
+          type: 'widget',
+          children: [],
+          parentId: 'page-detail-filter-row',
+          meta: { widgetRef: 'pages-detail-filter-bar', width: 12, height: 88 },
+        },
         'page-detail-table-row': {
           id: 'page-detail-table-row',
           type: 'row',
@@ -241,8 +296,14 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           title: '',
           config: {
             content:
-              'This is still the same dashboard. The filter bar, theme, and persisted state are shared with the overview page. Use pages when you want one analytical workbook with multiple canvases.',
+              'This is still the same dashboard. The shared filter bar, theme, and persisted state carry over from the overview page. Use pages when you want one analytical workbook with multiple canvases.',
           },
+        },
+        {
+          id: 'pages-detail-filter-bar',
+          type: 'filter-bar',
+          title: 'Shared Workbook Filters',
+          config: {},
         },
         {
           id: 'pages-kpi-aov',
@@ -370,7 +431,12 @@ const executiveDashboard: DashboardDefinition = {
           id: 'exec-kpi-revenue',
           type: 'kpi-card',
           title: 'Revenue',
-          config: { valueField: 'revenue', comparisonField: 'prevRevenue', format: 'compact', prefix: '$' },
+          config: {
+            valueField: 'revenue',
+            comparisonField: 'prevRevenue',
+            format: 'compact',
+            prefix: '$',
+          },
         },
         {
           id: 'exec-kpi-orders',

@@ -14,6 +14,13 @@ test.describe('Filter Cascade Workflow', () => {
     }
   });
 
+  async function openPagesWorkbook(page: import('@playwright/test').Page) {
+    const pagesScenarioButton = page.getByTestId('viewer-scenario-pages');
+    await expect(pagesScenarioButton).toBeVisible();
+    await pagesScenarioButton.click();
+    await expect(page.getByRole('button', { name: 'Overview' })).toBeVisible();
+  }
+
   test('dashboard renders with filter bar and all widgets', async ({ page }) => {
     // Verify the dashboard renders
     const dashboard = page.locator('[data-ss-dashboard]');
@@ -64,5 +71,33 @@ test.describe('Filter Cascade Workflow', () => {
       const dashboard = page.locator('[data-ss-dashboard]');
       await expect(dashboard).toBeVisible();
     }
+  });
+
+  test('page demo shows shared filters on both pages and preserves selected values', async ({
+    page,
+  }) => {
+    await openPagesWorkbook(page);
+
+    const overviewFilterBar = page.locator('.ss-filter-bar');
+    await expect(overviewFilterBar).toHaveCount(1);
+
+    const overviewRegionFilter = overviewFilterBar.getByLabel('Region');
+    const overviewCategoryFilter = overviewFilterBar.getByLabel('Category');
+
+    await expect(overviewRegionFilter).toBeVisible();
+    await expect(overviewCategoryFilter).toBeVisible();
+
+    await overviewRegionFilter.selectOption({ label: 'East' });
+    await expect(overviewRegionFilter).toHaveValue('East');
+
+    await page.getByRole('button', { name: 'Region Detail' }).click();
+
+    const detailFilterBar = page.locator('.ss-filter-bar');
+    await expect(detailFilterBar).toHaveCount(1);
+    await expect(detailFilterBar.getByLabel('Region')).toHaveValue('East');
+    await expect(detailFilterBar.getByLabel('Category')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Overview' }).click();
+    await expect(page.locator('.ss-filter-bar').getByLabel('Region')).toHaveValue('East');
   });
 });
