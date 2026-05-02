@@ -14,8 +14,10 @@ description: 'Run browser tests against Supersubset using Chrome MCP. Use when v
 - Validating Probe mode against pasted metadata or controlled live discovery/query backends
 - Verifying renderer output against saved definitions
 - Checking filter propagation across widgets
+- Verifying that host-owned query refresh actually changes visible dashboard output
 - Detecting console errors and rendering regressions
 - Responsive mode testing
+- Running release-oriented blocker discovery sweeps in real host examples
 
 ## Chrome MCP Setup
 
@@ -69,6 +71,15 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 3. Mount renderer in separate route/component tree
 4. Verify no hidden backend dependency
 
+### Plan F — Market-Critical BI Sweep
+
+1. Use the strongest host or authoring surface for the workflow under test
+2. Reproduce the end-user journey that changes analytical meaning
+3. Verify any host query or request payload mutation when the host owns data refresh
+4. Verify the visible dashboard outcome changed in a way a user can perceive
+5. Capture console, network, screenshot, and query-log evidence
+6. Record whether the result is a blocker, a regression gap, or a pass
+
 ### Probe Workflows
 
 1. Use `e2e/workflows/probe-metadata-paste.spec.ts` for deterministic paste-JSON onboarding coverage
@@ -96,6 +107,14 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 8. Compare screenshots and DOM state to expected outcomes
 9. Report results with evidence, including the leased local origin that was tested
 
+For BI workflows, do not stop at screenshots or control values when a stronger proof exists. Prefer evidence like:
+
+- query log changed from the previous value set
+- row count or table contents changed
+- KPI value or delta changed
+- legend, series, or mark count changed in the rendered chart
+- network request payload reflects the expected filter or interaction state
+
 ## Verification Checklist
 
 - [ ] No console errors during test
@@ -103,10 +122,13 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 - [ ] Drag-and-drop produces correct layout changes
 - [ ] Property edits reflect immediately in preview
 - [ ] Filter changes propagate to all bound widgets
+- [ ] When the host owns query refresh, filter changes mutate the expected query or request payload
+- [ ] Filter or interaction changes produce an obvious analytical outcome, not only a control-state update
 - [ ] Export/import produces semantically identical schema
 - [ ] Responsive resize works without layout breaks
 
 ## See Also
 
 - `.github/skills/testing-strategy/SKILL.md`
+- `.github/skills/bi-visualization-quality/SKILL.md`
 - `docs/testing/verification-strategy.md`

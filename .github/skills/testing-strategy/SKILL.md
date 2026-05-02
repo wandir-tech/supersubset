@@ -27,6 +27,8 @@ Instead, it answers four questions first:
 
 Use this skill before writing or expanding tests. Then route into the narrower skill or document that owns the implementation details.
 
+For BI-facing work, use this skill together with `.github/skills/bi-visualization-quality/SKILL.md`. Technical correctness is not enough if the resulting dashboard is misleading, unreadable, or hard to operate.
+
 ## AI Tester Agent Design Principles
 
 Adapted to Supersubset, a strong tester agent should behave like this:
@@ -38,6 +40,7 @@ Adapted to Supersubset, a strong tester agent should behave like this:
 - choose the narrowest layer that can falsify the current hypothesis, then climb only when more confidence is needed
 - treat evaluation as an explicit loop: pick a check, run it, interpret it, then either stop or add the next layer
 - hand product bugs back to the owning domain once the failure is reproduced clearly
+- test the analytical outcome, not just the control state; if a filter changed, prove the query, rows, KPI, or chart changed in a way a user can perceive
 
 This follows the same principle we use elsewhere in the repo: simple, inspectable workflows beat elaborate autonomous wandering.
 
@@ -100,6 +103,7 @@ These are the authority for human-review expectations, screenshot checkpoints, a
 - If the risk is a user journey, authoring interaction, persistence flow, or browser-only regression, use Playwright.
 - If the risk is mostly visual hierarchy, overlap, spacing, or state affordance, add a targeted screenshot assertion or screenshot review artifact instead of only a full-page smoke test.
 - If the risk is documentation fidelity, use the docs screenshot harness rather than general E2E tests.
+- If the risk is a market-critical BI workflow, require semantic proof as high in the stack as needed: query-log change, visible row-count change, KPI/value change, chart-series change, or another user-visible analytical outcome.
 
 ### Push Tests Down
 
@@ -123,6 +127,23 @@ Example:
 - field role inference belongs in `packages/data-model/test/`
 - a field picker showing the inferred result belongs in a designer or workflow test
 - the full dashboard journey should only assert that the user-facing outcome still works
+
+For dashboards and host examples, do not stop at proving that a dropdown, toggle, or click handler changed internal state. Prove that the dashboard meaning changed in the way the user expected.
+
+## Market-Critical Discovery Priorities
+
+When hardening toward release, hunt for blockers in this order:
+
+1. host-owned filtering and query refresh
+2. authoring to publish/import to viewer round-trip
+3. import/export robustness and schema survivability
+4. cross-filter, drill, and page-management flows
+5. probe and live-backend onboarding behavior
+6. multi-instance isolation, theming, and responsive integrity
+7. large-dashboard performance and memory stability
+8. docs-following first-use onboarding
+
+Treat a human-found miss as a tracer bullet, not as proof that only one workflow is weak.
 
 ## Live Backend Probe Validation
 
@@ -196,6 +217,12 @@ Repo-specific notes:
 - the root suite currently targets Chromium and Firefox
 - the dev app origin is controlled by `SUPERSUBSET_DEV_APP_PORT` and defaults to `http://localhost:3000`
 
+For release-oriented BI validation, prefer the strongest host-owned test bed that can prove the behavior:
+
+- `examples/vite-sqlite` for deterministic query-log and rendered-data assertions
+- `examples/nextjs-ecommerce` workbench for auth and host query contract assertions
+- `packages/dev-app` for rich authoring and reproduction of designer-side behavior
+
 ## Evidence Expectations
 
 Before calling testing work done, leave evidence at the right layer:
@@ -210,6 +237,7 @@ For human-found bugs:
 - reproduce the bug cheaply
 - add the regression at the lowest adequate layer
 - add a higher-level test only if the user-facing risk still needs explicit proof
+- if the bug is critical or high severity and survives initial triage, open an issue immediately and treat it as a release blocker until fixed and regressed
 
 ## Anti-Patterns
 
@@ -223,6 +251,7 @@ For human-found bugs:
 ## See Also
 
 - `.github/skills/browser-testing/SKILL.md`
+- `.github/skills/bi-visualization-quality/SKILL.md`
 - `.github/skills/branch-ci-promotion/SKILL.md`
 - `docs/testing/verification-strategy.md`
 - `docs/testing/qa-checklist.md`
