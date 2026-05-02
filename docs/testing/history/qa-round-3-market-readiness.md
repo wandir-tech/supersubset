@@ -366,6 +366,18 @@ The first active work should be:
 - result: `1 passed`
 - scope proven: the remaining visual snapshot check still matches its baseline on the merged base
 
+### PASS — Current `develop` repo-wide release gate
+
+- command: `pnpm lint`
+- result: passed across the workspace packages and examples
+- command: `pnpm typecheck`
+- result: passed across the workspace packages and examples
+- command: `pnpm test`
+- result: passed across the workspace package test suites
+- command: `pnpm test:e2e`
+- result: `92 passed`
+- scope proven: the merged base currently clears the full repo release gate, not only the targeted browser slices used during blocker triage
+
 ## Current Campaign Read
 
 - host-owned filter/query behavior: proven in both real host examples
@@ -377,4 +389,5 @@ The first active work should be:
 - test-infrastructure readiness: repaired on `develop` by issue `#105` / PR `#108`
 - page-demo story health: repaired on `develop` by issue `#106` / PR `#109`
 - current browser-suite health: current `develop` passed `33` workflow tests, `12` smoke/interaction/happy-path tests, and `1` visual snapshot test in Chromium after the blocker merges
-- next discovery class: docs-following onboarding, repo-wide release-gate commands, and deeper performance or memory validation now that the first-party blocker set is merged
+- current repo-wide release gate: `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm test:e2e` all pass on current `develop`
+- next discovery class: docs-following onboarding and deeper performance or memory validation now that the first-party blocker set and repo-wide gates are green
