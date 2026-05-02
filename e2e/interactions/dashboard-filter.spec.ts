@@ -101,6 +101,37 @@ test.describe('Dashboard Filters', () => {
     await expect(regionFiltersBar.getByLabel('Region')).toHaveValue('');
     await expect(allFiltersBar.getByLabel('Region')).toHaveValue('');
   });
+
+  test('live dashboard filters update KPI and table data as well as control state', async ({
+    page,
+  }) => {
+    await openViewerLiveDashboard(page);
+
+    const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
+    const regionFiltersBar = filterBarWidget(page, 'w-filter-bar-region').locator('.ss-filter-bar');
+    const regionFilter = regionFiltersBar.getByLabel('Region');
+    const revenueKpi = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-kpi-revenue"] .ss-kpi',
+    );
+    const ordersTable = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-table"] .ss-table',
+    );
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await expect(revenueKpi).toContainText('$23.0K');
+    await expect(tableRows).toHaveCount(8);
+    await expect(ordersTable).toContainText('Globex Inc');
+
+    await regionFilter.selectOption({ label: 'North' });
+
+    await expect(regionFilter).toHaveValue('North');
+    await expect(allFiltersBar.getByLabel('Region')).toHaveValue('North');
+    await expect(revenueKpi).toContainText('$6.4K');
+    await expect(tableRows).toHaveCount(2);
+    await expect(ordersTable).toContainText('Acme Corp');
+    await expect(ordersTable).toContainText('Waystar');
+    await expect(ordersTable).not.toContainText('Globex Inc');
+  });
 });
 
 test.describe('Cross-Filtering', () => {

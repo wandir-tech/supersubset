@@ -1,4 +1,4 @@
-import { StrictMode, useMemo, useState, useCallback, useEffect } from 'react';
+import { StrictMode, useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   SupersubsetRenderer,
@@ -51,10 +51,14 @@ import { ProbeWorkspace } from './probe/ProbeWorkspace';
  * Data-injecting widget wrapper — in a real app, the runtime would
  * fetch data via QueryAdapter. For the dev app demo, we inject fixture data.
  */
-const DEMO_DATA: Record<
-  string,
-  { data: Record<string, unknown>[]; columns?: WidgetProps['columns'] }
-> = {
+type DemoWidgetData = {
+  data: Record<string, unknown>[];
+  columns?: WidgetProps['columns'];
+};
+
+type DemoWidgetDataMap = Record<string, DemoWidgetData>;
+
+const DEMO_DATA: DemoWidgetDataMap = {
   // Overview page
   'alerts-overview': { data: alertsData },
   'kpi-revenue': { data: kpiData },
@@ -97,6 +101,262 @@ const FILTER_OPTIONS = {
   'filter-region': ['North', 'South', 'East', 'West'],
   'filter-category': ['Electronics', 'Clothing', 'Food', 'Home'],
 };
+
+type LiveDemoOrder = {
+  orderId: string;
+  customer: string;
+  amount: number;
+  prevAmount: number;
+  status: string;
+  date: string;
+  month: string;
+  region: string;
+  category: string;
+};
+
+const LIVE_DEMO_ORDERS: LiveDemoOrder[] = [
+  {
+    orderId: 'ORD-1001',
+    customer: 'Acme Corp',
+    amount: 2400,
+    prevAmount: 2100,
+    status: 'Delivered',
+    date: '2026-03-04',
+    month: 'Mar',
+    region: 'North',
+    category: 'Electronics',
+  },
+  {
+    orderId: 'ORD-1002',
+    customer: 'Globex Inc',
+    amount: 1800,
+    prevAmount: 1600,
+    status: 'Shipped',
+    date: '2026-03-08',
+    month: 'Mar',
+    region: 'South',
+    category: 'Clothing',
+  },
+  {
+    orderId: 'ORD-1003',
+    customer: 'Initech',
+    amount: 3200,
+    prevAmount: 2800,
+    status: 'Delivered',
+    date: '2026-03-14',
+    month: 'Mar',
+    region: 'East',
+    category: 'Electronics',
+  },
+  {
+    orderId: 'ORD-1004',
+    customer: 'Umbrella',
+    amount: 1600,
+    prevAmount: 1500,
+    status: 'Processing',
+    date: '2026-03-19',
+    month: 'Mar',
+    region: 'West',
+    category: 'Home',
+  },
+  {
+    orderId: 'ORD-1005',
+    customer: 'Waystar',
+    amount: 4000,
+    prevAmount: 3600,
+    status: 'Delivered',
+    date: '2026-04-02',
+    month: 'Apr',
+    region: 'North',
+    category: 'Food',
+  },
+  {
+    orderId: 'ORD-1006',
+    customer: 'Stark Ind',
+    amount: 2800,
+    prevAmount: 2500,
+    status: 'Shipped',
+    date: '2026-04-09',
+    month: 'Apr',
+    region: 'South',
+    category: 'Electronics',
+  },
+  {
+    orderId: 'ORD-1007',
+    customer: 'Wayne Ent',
+    amount: 5200,
+    prevAmount: 4700,
+    status: 'Delivered',
+    date: '2026-04-17',
+    month: 'Apr',
+    region: 'East',
+    category: 'Home',
+  },
+  {
+    orderId: 'ORD-1008',
+    customer: 'Cyberdyne',
+    amount: 2000,
+    prevAmount: 1800,
+    status: 'Processing',
+    date: '2026-04-24',
+    month: 'Apr',
+    region: 'West',
+    category: 'Clothing',
+  },
+];
+
+function normalizeSelectFilterValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function normalizeDateFilterValue(value: unknown): { start?: string; end?: string } | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const start =
+    typeof (value as { start?: unknown }).start === 'string'
+      ? ((value as { start?: string }).start ?? '')
+      : '';
+  const end =
+    typeof (value as { end?: unknown }).end === 'string'
+      ? ((value as { end?: string }).end ?? '')
+      : '';
+
+  if (start.length === 0 && end.length === 0) {
+    return undefined;
+  }
+
+  return { start: start || undefined, end: end || undefined };
+}
+
+function orderMatchesDateFilter(
+  order: LiveDemoOrder,
+  dateFilter: { start?: string; end?: string } | undefined,
+): boolean {
+  if (!dateFilter) {
+    return true;
+  }
+
+  if (dateFilter.start && order.date < dateFilter.start) {
+    return false;
+  }
+
+  if (dateFilter.end && order.date > dateFilter.end) {
+    return false;
+  }
+
+  return true;
+}
+
+function filterLiveDemoOrders(filterValues: Record<string, unknown>): LiveDemoOrder[] {
+  const region = normalizeSelectFilterValue(filterValues['filter-region']);
+  const category = normalizeSelectFilterValue(filterValues['filter-category']);
+  const dateFilter = normalizeDateFilterValue(filterValues['filter-date']);
+
+  return LIVE_DEMO_ORDERS.filter(
+    (order) =>
+      (region === undefined || order.region === region) &&
+      (category === undefined || order.category === category) &&
+      orderMatchesDateFilter(order, dateFilter),
+  );
+}
+
+function buildRevenueTrendData(orders: LiveDemoOrder[]): Record<string, unknown>[] {
+  const revenueByMonth = new Map<string, number>();
+
+  for (const order of orders) {
+    revenueByMonth.set(order.month, (revenueByMonth.get(order.month) ?? 0) + order.amount);
+  }
+
+  return Array.from(revenueByMonth.entries()).map(([month, revenue]) => ({
+    month,
+    revenue,
+    cost: Math.round(revenue * 0.58),
+  }));
+}
+
+function buildRegionSalesData(orders: LiveDemoOrder[]): Record<string, unknown>[] {
+  const revenueByRegion = new Map<string, number>();
+
+  for (const region of FILTER_OPTIONS['filter-region']) {
+    revenueByRegion.set(region, 0);
+  }
+
+  for (const order of orders) {
+    revenueByRegion.set(order.region, (revenueByRegion.get(order.region) ?? 0) + order.amount);
+  }
+
+  return Array.from(revenueByRegion.entries())
+    .filter(([, revenue]) => revenue > 0)
+    .map(([region, revenue]) => ({ region, revenue }));
+}
+
+function buildLiveDashboardDemoData(filterValues: Record<string, unknown>): DemoWidgetDataMap {
+  const filteredOrders = filterLiveDemoOrders(filterValues);
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.amount, 0);
+  const previousRevenue = filteredOrders.reduce((sum, order) => sum + order.prevAmount, 0);
+  const totalOrders = filteredOrders.length;
+  const averageOrderValue = totalOrders === 0 ? 0 : totalRevenue / totalOrders;
+  const previousOrders = totalOrders === 0 ? 0 : Math.max(1, totalOrders - 1);
+
+  return {
+    'kpi-revenue': {
+      data: [{ revenue: totalRevenue, prevRevenue: previousRevenue }],
+    },
+    'kpi-orders': {
+      data: [{ orders: totalOrders, prevOrders: previousOrders }],
+    },
+    'kpi-aov': {
+      data: [{ aov: averageOrderValue }],
+    },
+    'chart-revenue-trend': {
+      data: buildRevenueTrendData(filteredOrders),
+    },
+    'chart-region-sales': {
+      data: buildRegionSalesData(filteredOrders),
+    },
+    'table-orders': {
+      data: filteredOrders.map(
+        ({
+          prevAmount: _prevAmount,
+          month: _month,
+          region: _region,
+          category: _category,
+          ...row
+        }) => row,
+      ),
+      columns: ordersTableColumns,
+    },
+  };
+}
+
+function createDemoRegistry(getDemoData: (widgetId: string) => DemoWidgetData | undefined) {
+  const reg = createWidgetRegistry();
+  registerAllCharts(reg);
+
+  const originalGet = reg.get.bind(reg);
+  reg.get = (type: string) => {
+    const Original = originalGet(type);
+    if (!Original) return undefined;
+
+    const Wrapped = (props: WidgetProps) => {
+      const demoData = getDemoData(props.widgetId);
+      return (
+        <Original
+          {...props}
+          data={demoData?.data ?? props.data}
+          columns={demoData?.columns ?? props.columns}
+        />
+      );
+    };
+
+    Wrapped.displayName = `DemoData(${type})`;
+    return Wrapped;
+  };
+
+  return reg;
+}
 
 type ViewerScenario = 'live' | 'pages' | 'dashboards';
 
@@ -303,6 +563,7 @@ function App() {
   const [viewerInitialFilterValues, setViewerInitialFilterValues] = useState<
     Record<string, unknown> | undefined
   >(undefined);
+  const [viewerFilterValues, setViewerFilterValues] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!viewerPages.some((page) => page.id === viewerActivePage)) {
@@ -312,34 +573,24 @@ function App() {
 
   useEffect(() => {
     setViewerInitialFilterValues(undefined);
+    setViewerFilterValues({});
   }, [activeDashboardId, viewerScenario]);
 
-  const registry = useMemo(() => {
-    const reg = createWidgetRegistry();
-    registerAllCharts(reg);
+  const viewerDemoData = useMemo(
+    () =>
+      viewerScenario === 'live'
+        ? { ...DEMO_DATA, ...buildLiveDashboardDemoData(viewerFilterValues) }
+        : DEMO_DATA,
+    [viewerFilterValues, viewerScenario],
+  );
+  const viewerDemoDataRef = useRef<DemoWidgetDataMap>(viewerDemoData);
+  viewerDemoDataRef.current = viewerDemoData;
 
-    // Wrap each widget to inject demo data
-    const originalGet = reg.get.bind(reg);
-    reg.get = (type: string) => {
-      const Original = originalGet(type);
-      if (!Original) return undefined;
-
-      const Wrapped = (props: WidgetProps) => {
-        const demoData = DEMO_DATA[props.widgetId];
-        return (
-          <Original
-            {...props}
-            data={demoData?.data ?? props.data}
-            columns={demoData?.columns ?? props.columns}
-          />
-        );
-      };
-      Wrapped.displayName = `DemoData(${type})`;
-      return Wrapped;
-    };
-
-    return reg;
-  }, []);
+  const staticRegistry = useMemo(() => createDemoRegistry((widgetId) => DEMO_DATA[widgetId]), []);
+  const viewerRegistry = useMemo(
+    () => createDemoRegistry((widgetId) => viewerDemoDataRef.current[widgetId]),
+    [],
+  );
 
   const designerInlineTheme = currentDashboard.theme as InlineThemeDefinition | undefined;
   const designerResolvedTheme = useMemo(
@@ -415,6 +666,11 @@ function App() {
     },
     [undoRedo],
   );
+
+  const handleViewerFilterChange = useCallback((state: { values: Record<string, unknown> }) => {
+    setViewerFilterValues(state.values);
+    console.log('[Supersubset] Filter state:', state);
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -652,7 +908,7 @@ function App() {
         ) : mode === 'preview' ? (
           <LivePreviewPane
             dashboard={currentDashboard}
-            registry={registry}
+            registry={staticRegistry}
             theme={designerResolvedTheme as unknown as Record<string, unknown>}
             cssVariables={designerCssVars}
             RendererComponent={SupersubsetRenderer as never}
@@ -863,14 +1119,14 @@ function App() {
             <SupersubsetRenderer
               key={viewerRendererKey}
               definition={viewerDashboard}
-              registry={registry}
+              registry={viewerRegistry}
               theme={viewerResolvedTheme as unknown as Record<string, unknown>}
               cssVariables={viewerCssVars}
               activePage={viewerActivePage}
               initialFilterValues={viewerInitialFilterValues}
               filterOptions={FILTER_OPTIONS}
               onNavigate={handleViewerNavigate}
-              onFilterChange={(state) => console.log('[Supersubset] Filter state:', state)}
+              onFilterChange={handleViewerFilterChange}
               onWidgetEvent={(event) => console.log('[Supersubset] Widget event:', event)}
             />
           </div>
