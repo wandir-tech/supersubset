@@ -98,6 +98,7 @@ When modifying files in specific packages, read the corresponding instruction fi
 For domain-specific knowledge, read the relevant skill file:
 
 - **Schema design**: `.github/skills/schema-design/SKILL.md`
+- **BI visualization quality**: `.github/skills/bi-visualization-quality/SKILL.md`
 - **ECharts widgets**: `.github/skills/echarts-widgets/SKILL.md`
 - **Designer shell design**: `.github/skills/designer-design/SKILL.md`
 - **Puck integration**: `.github/skills/puck-integration/SKILL.md`
