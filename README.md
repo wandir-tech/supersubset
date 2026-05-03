@@ -55,7 +55,7 @@ Supersubset assumes:
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22.13+
 - pnpm 9+
 
 ### Build

@@ -17,7 +17,7 @@
     "@supersubset/runtime": "workspace:*",
     "@supersubset/schema": "workspace:*",
     "@supersubset/theme": "workspace:*",
-    "next": "^16.1.7",
+    "next": "^16.2.3",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

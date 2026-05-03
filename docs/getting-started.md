@@ -10,7 +10,7 @@ For end-user documentation aimed at dashboard authors (with screenshots of every
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22.13+
 - pnpm 9+
 - macOS, Linux, or Windows with a working browser
 
