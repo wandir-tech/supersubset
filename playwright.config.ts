@@ -8,6 +8,12 @@ type LocalPortSelection = {
   viteSqliteExample: string;
 };
 
+type ReuseExistingServerSelection = {
+  devApp: boolean;
+  nextjsExample: boolean;
+  viteSqliteExample: boolean;
+};
+
 const DEFAULT_PORTS: LocalPortSelection = {
   devApp: '3000',
   nextjsExample: '3001',
@@ -47,10 +53,15 @@ function leaseLocalPorts(): LocalPortSelection {
 }
 
 function resolvePlaywrightPorts() {
-  const explicitPorts = {
+  const explicitPorts: ReuseExistingServerSelection = {
     devApp: Boolean(process.env.SUPERSUBSET_DEV_APP_PORT),
     nextjsExample: Boolean(process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT),
     viteSqliteExample: Boolean(process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT),
+  };
+  const ciPorts: ReuseExistingServerSelection = {
+    devApp: false,
+    nextjsExample: false,
+    viteSqliteExample: false,
   };
 
   // Local Playwright runs should be isolated from long-lived DevEnv tasks unless the caller
@@ -65,7 +76,7 @@ function resolvePlaywrightPorts() {
 
   return {
     ports,
-    reuseExistingServer: !process.env.CI ? explicitPorts : DEFAULT_PORTS,
+    reuseExistingServer: process.env.CI ? ciPorts : explicitPorts,
   };
 }
 
