@@ -100,4 +100,35 @@ test.describe('Filter Cascade Workflow', () => {
     await page.getByRole('button', { name: 'Overview' }).click();
     await expect(page.locator('.ss-filter-bar').getByLabel('Region')).toHaveValue('East');
   });
+
+  test('page-scoped category filter changes overview widgets without leaking into detail widgets', async ({
+    page,
+  }) => {
+    await openPagesWorkbook(page);
+
+    const overviewFilterBar = page.locator('.ss-filter-bar');
+    const categoryFilter = overviewFilterBar.getByLabel('Category');
+    const revenueKpi = page.locator('.ss-kpi').filter({ hasText: 'Revenue' });
+
+    await categoryFilter.selectOption({ label: 'Electronics' });
+
+    await expect(categoryFilter).toHaveValue('Electronics');
+    await expect(revenueKpi).toContainText('$8.4K');
+
+    await page.getByRole('button', { name: 'Region Detail' }).click();
+
+    const detailFilterBar = page.locator('.ss-filter-bar');
+    const detailTable = page.locator('.ss-table').first();
+    const detailRows = detailTable.locator('tbody tr');
+
+    await expect(detailFilterBar.getByLabel('Category')).toHaveValue('Electronics');
+    await expect(detailRows).toHaveCount(8);
+    await expect(detailTable).toContainText('Globex Inc');
+    await expect(detailTable).toContainText('Waystar');
+
+    await page.getByRole('button', { name: 'Overview' }).click();
+
+    await expect(page.locator('.ss-filter-bar').getByLabel('Category')).toHaveValue('Electronics');
+    await expect(page.locator('.ss-kpi').filter({ hasText: 'Revenue' })).toContainText('$8.4K');
+  });
 });

@@ -58,10 +58,14 @@ export function BarChartWidget({
       color: buildColorOption(shared),
       tooltip: buildTooltipOption(shared, 'axis'),
       legend,
-      grid: buildGridOption(shared, { hasTitle, hasLegend: Boolean(legend) }),
+      grid: buildGridOption(shared, {
+        hasTitle,
+        hasLegend: Boolean(legend),
+        zoomAxis: horizontal ? 'y' : 'x',
+      }),
       xAxis: horizontal ? valAxis : catAxis,
       yAxis: horizontal ? catAxis : valAxis,
-      dataZoom: buildDataZoomOption(shared),
+      dataZoom: buildDataZoomOption(shared, horizontal ? 'y' : 'x'),
       series: yFields.map((field) => ({
         name: field,
         type: 'bar' as const,

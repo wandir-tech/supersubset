@@ -29,6 +29,24 @@ export const demoDashboard: DashboardDefinition = {
       scope: { type: 'global' },
     },
     {
+      id: 'filter-search',
+      title: 'Customer Search',
+      type: 'text',
+      fieldRef: 'customer',
+      datasetRef: 'ds-orders',
+      operator: 'contains',
+      scope: { type: 'global' },
+    },
+    {
+      id: 'filter-amount',
+      title: 'Order Amount',
+      type: 'range',
+      fieldRef: 'amount',
+      datasetRef: 'ds-orders',
+      operator: 'between',
+      scope: { type: 'global' },
+    },
+    {
       id: 'filter-date',
       title: 'Order Date',
       type: 'date',
@@ -489,7 +507,7 @@ export const demoDashboard: DashboardDefinition = {
           title: '',
           config: {
             content:
-              'This page showcases **all 17 widget types** available in the Supersubset chart library. Each chart uses inline fixture data.',
+              'This page showcases **all 17 widget types** available in the Supersubset chart library. Review the [chart cookbook](https://example.com/chart-cookbook) for field-mapping examples.',
           },
         },
         {

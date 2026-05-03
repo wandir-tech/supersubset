@@ -136,7 +136,7 @@ describe('shared-options', () => {
       expect(legend!.left).toBe('center');
       expect(legend!.orient).toBe('horizontal');
     });
-    
+
     it('offsets top legend when a title is present', () => {
       const legend = buildLegendOption({ showLegend: true }, ['a', 'b'], true);
       expect(legend!.top).toBe(28);
@@ -199,12 +199,12 @@ describe('shared-options', () => {
       const grid = buildGridOption({ legendPosition: 'top' }, { hasLegend: true });
       expect(grid.top).toBe(40);
     });
-    
+
     it('adds title padding when a title is present without a legend', () => {
       const grid = buildGridOption({}, { hasTitle: true, hasLegend: false });
       expect(grid.top).toBe(36);
     });
-    
+
     it('adds extra top padding when title and legend are both present', () => {
       const grid = buildGridOption({ legendPosition: 'top' }, { hasTitle: true, hasLegend: true });
       expect(grid.top).toBe(68);
@@ -218,6 +218,12 @@ describe('shared-options', () => {
     it('adds extra bottom space for data zoom', () => {
       const grid = buildGridOption({ zoomable: true });
       expect(grid.bottom).toBe('12%');
+    });
+
+    it('adds right-side space for y-axis zoom controls', () => {
+      const grid = buildGridOption({ zoomable: true }, { zoomAxis: 'y' });
+      expect(grid.right).toBe('12%');
+      expect(grid.bottom).toBe('3%');
     });
 
     it('suppresses legend padding when legend hidden', () => {
@@ -244,6 +250,8 @@ describe('shared-options', () => {
     it('adds axis title', () => {
       const axis = buildCategoryAxisOption({ xAxisTitle: 'Month' }, ['Jan']);
       expect(axis.name).toBe('Month');
+      expect(axis.nameLocation).toBe('middle');
+      expect(axis.nameGap).toBe(32);
     });
 
     it('adds label rotation for x-axis', () => {
@@ -259,6 +267,8 @@ describe('shared-options', () => {
     it('uses yAxisTitle when axis=y', () => {
       const axis = buildCategoryAxisOption({ yAxisTitle: 'Category' }, ['A'], 'y');
       expect(axis.name).toBe('Category');
+      expect(axis.nameLocation).toBe('middle');
+      expect(axis.nameGap).toBe(48);
     });
   });
 
@@ -289,6 +299,15 @@ describe('shared-options', () => {
     it('adds axis title', () => {
       const axis = buildValueAxisOption({ yAxisTitle: 'Revenue' }, 'y');
       expect(axis.name).toBe('Revenue');
+      expect(axis.nameLocation).toBe('middle');
+      expect(axis.nameGap).toBe(48);
+    });
+
+    it('uses centered x-axis titles for horizontal value axes', () => {
+      const axis = buildValueAxisOption({ xAxisTitle: 'Revenue' }, 'x');
+      expect(axis.name).toBe('Revenue');
+      expect(axis.nameLocation).toBe('middle');
+      expect(axis.nameGap).toBe(32);
     });
 
     it('adds number format to axis labels', () => {
@@ -311,7 +330,16 @@ describe('shared-options', () => {
       const zoom = buildDataZoomOption({ zoomable: true });
       expect(zoom).toHaveLength(2);
       expect(zoom![0].type).toBe('slider');
+      expect(zoom![0].xAxisIndex).toBe(0);
       expect(zoom![1].type).toBe('inside');
+      expect(zoom![1].xAxisIndex).toBe(0);
+    });
+
+    it('targets the category y-axis for horizontal charts', () => {
+      const zoom = buildDataZoomOption({ zoomable: true }, 'y');
+      expect(zoom).toHaveLength(2);
+      expect(zoom![0]).toMatchObject({ type: 'slider', yAxisIndex: 0, orient: 'vertical' });
+      expect(zoom![1]).toMatchObject({ type: 'inside', yAxisIndex: 0, orient: 'vertical' });
     });
   });
 

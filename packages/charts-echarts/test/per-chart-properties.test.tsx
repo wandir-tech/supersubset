@@ -366,6 +366,24 @@ describe('BarChartWidget — per-chart properties', () => {
     expect((opt.yAxis as Record<string, unknown>).type).toBe('category');
   });
 
+  it('horizontal zoom targets the category y-axis and reserves side space', () => {
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], horizontal: true, zoomable: true },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
+    const opt = getOption();
+    const zoom = opt.dataZoom as Array<Record<string, unknown>>;
+
+    expect(zoom).toHaveLength(2);
+    expect(zoom[0]).toMatchObject({ type: 'slider', yAxisIndex: 0, orient: 'vertical' });
+    expect(zoom[1]).toMatchObject({ type: 'inside', yAxisIndex: 0, orient: 'vertical' });
+    expect((opt.grid as Record<string, unknown>).right).toBe('12%');
+  });
+
   it('stacked=true sets stack on series', () => {
     render(
       <BarChartWidget

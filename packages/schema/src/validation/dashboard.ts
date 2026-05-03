@@ -35,6 +35,7 @@ const layoutComponentTypeSchema = z.enum([
   'tab',
   'spacer',
   'header',
+  'markdown',
   'divider',
 ]);
 

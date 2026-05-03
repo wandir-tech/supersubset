@@ -29,15 +29,42 @@ function resolveWidgetFilters(
 }
 
 export function FilterBarWidget({
+  title,
   config,
   dashboardFilters,
   datasets,
   filterOptions,
 }: WidgetProps) {
-  return createElement(FilterBar, {
-    filters: resolveWidgetFilters(dashboardFilters, config),
-    datasets,
-    filterOptions,
-    className: 'ss-widget-filter-bar',
-  });
+  const filters = resolveWidgetFilters(dashboardFilters, config);
+  if (filters.length === 0) {
+    return null;
+  }
+
+  const layout = config.layout === 'vertical' ? 'vertical' : 'horizontal';
+  const resolvedTitle = typeof title === 'string' ? title.trim() : '';
+
+  return createElement(
+    'div',
+    {
+      className: 'ss-filter-bar-widget',
+      style: { display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' },
+    },
+    resolvedTitle
+      ? createElement(
+          'div',
+          {
+            className: 'ss-filter-bar-widget-title',
+            style: { fontSize: '13px', fontWeight: 600, color: 'var(--ss-color-text, #1f1f1f)' },
+          },
+          resolvedTitle,
+        )
+      : null,
+    createElement(FilterBar, {
+      filters,
+      datasets,
+      filterOptions,
+      className: 'ss-widget-filter-bar',
+      layout,
+    }),
+  );
 }

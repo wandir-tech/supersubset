@@ -6,11 +6,6 @@ import { describe, it, expect } from 'vitest';
 import type { Data } from '@puckeditor/core';
 import type { DashboardDefinition } from '@supersubset/schema';
 import { puckToCanonical, canonicalToPuck } from '../src/adapters/puck-canonical';
-import {
-  PUCK_NAME_TO_WIDGET_TYPE,
-  WIDGET_TYPE_TO_PUCK_NAME,
-  CHART_BLOCK_NAMES,
-} from '../src/blocks/charts';
 
 // ─── Test data for every chart type ──────────────────────────
 
@@ -61,7 +56,7 @@ const CHART_TEST_CASES: ChartTestCase[] = [
       { role: 'x-axis', fieldRef: 'category' },
       { role: 'y-axis', fieldRef: 'amount' },
     ],
-    configKeys: ['orientation', 'stacked'],
+    configKeys: ['horizontal', 'stacked'],
   },
   {
     puckName: 'PieChart',
@@ -79,7 +74,7 @@ const CHART_TEST_CASES: ChartTestCase[] = [
       { role: 'category', fieldRef: 'category' },
       { role: 'value', fieldRef: 'value' },
     ],
-    configKeys: ['variant'],
+    configKeys: ['donut'],
   },
   {
     puckName: 'ScatterChart',

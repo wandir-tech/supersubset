@@ -85,6 +85,21 @@ describe('DashboardDefinition schema', () => {
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(true);
   });
+
+  it('validates markdown layout nodes emitted by the designer', () => {
+    const raw = JSON.parse(fixtureJSON);
+    raw.pages[0].layout['markdown-1'] = {
+      id: 'markdown-1',
+      type: 'markdown',
+      children: [],
+      parentId: 'grid-1',
+      meta: { text: 'Chart gallery help text' },
+    };
+    raw.pages[0].layout['grid-1'].children.push('markdown-1');
+
+    const result = dashboardDefinitionSchema.safeParse(raw);
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('layout nesting validation', () => {
@@ -124,6 +139,17 @@ describe('layout nesting validation', () => {
       'tab-1': { type: 'tab', children: ['row-1'] },
       'row-1': { type: 'row', children: [] },
     };
+    const errors = validateNesting(layout);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('accepts markdown as a leaf content block', () => {
+    const layout = {
+      root: { type: 'root', children: ['grid-1'] },
+      'grid-1': { type: 'grid', children: ['markdown-1'] },
+      'markdown-1': { type: 'markdown', children: [] },
+    };
+
     const errors = validateNesting(layout);
     expect(errors).toHaveLength(0);
   });

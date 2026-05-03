@@ -73,14 +73,6 @@ export function createFilterBarBlock(options: ControlBlockFactoryOptions = {}): 
     label: 'Filter Bar',
     fields: {
       title: { type: 'text' as const, label: 'Title' },
-      scope: {
-        type: 'select' as const,
-        label: 'Scope',
-        options: [
-          { label: 'Global', value: 'global' },
-          { label: 'Page', value: 'page' },
-        ],
-      },
       layout: {
         type: 'radio' as const,
         label: 'Layout',
@@ -93,7 +85,6 @@ export function createFilterBarBlock(options: ControlBlockFactoryOptions = {}): 
     },
     defaultProps: {
       title: 'Filters',
-      scope: 'global',
       layout: 'horizontal',
     },
     render: ({ title, layout, filterIds }: Record<string, unknown>) => {

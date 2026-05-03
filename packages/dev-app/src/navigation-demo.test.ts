@@ -48,6 +48,16 @@ describe('navigation demo definitions', () => {
     });
   });
 
+  it('uses a page-scoped category filter in the workbook demo', () => {
+    const categoryFilter = pageNavigationDemoDashboard.filters?.find(
+      (filter) => filter.id === 'filter-category',
+    );
+
+    expect(categoryFilter).toMatchObject({
+      scope: { type: 'page', pageId: 'page-overview' },
+    });
+  });
+
   it('uses unique dashboard ids for the host-switching demo', () => {
     const ids = dashboardSwitchingDemo.dashboards.map((dashboard) => dashboard.id);
 

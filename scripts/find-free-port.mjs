@@ -67,17 +67,53 @@ function validateOptions(options) {
   }
 }
 
-function canListen(port, host) {
+function isUnsupportedLoopbackError(error) {
+  return error?.code === 'EADDRNOTAVAIL' || error?.code === 'EAFNOSUPPORT';
+}
+
+function getProbeHosts(host) {
+  const normalizedHost = host?.toLowerCase();
+
+  if (
+    !host ||
+    normalizedHost === 'localhost' ||
+    normalizedHost === '127.0.0.1' ||
+    normalizedHost === '::1'
+  ) {
+    return ['127.0.0.1', '::1'];
+  }
+
+  return [host];
+}
+
+function canListenOnHost(port, host) {
   return new Promise((resolve) => {
     const server = net.createServer();
     server.unref();
-    server.once('error', () => {
+    server.once('error', (error) => {
+      if (host === '::1' && isUnsupportedLoopbackError(error)) {
+        resolve(true);
+        return;
+      }
+
       resolve(false);
     });
     server.listen(port, host, () => {
       server.close(() => resolve(true));
     });
   });
+}
+
+async function canListen(port, host) {
+  const probeHosts = getProbeHosts(host);
+
+  for (const probeHost of probeHosts) {
+    if (!(await canListenOnHost(port, probeHost))) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export async function findFreePorts(overrides = {}) {
@@ -91,7 +127,6 @@ export async function findFreePorts(overrides = {}) {
     port <= options.end && freePorts.length < options.count;
     port += 1
   ) {
-     
     if (await canListen(port, options.host)) {
       freePorts.push(port);
     }

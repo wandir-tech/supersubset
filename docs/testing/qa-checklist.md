@@ -89,4 +89,5 @@
 - [ ] Visual regressions for canvas charts use targeted screenshot baselines
 - [ ] Workflow tests fail on unexpected console errors or warnings
 - [ ] Import/export tests assert semantic equivalence, not only that a dialog opens
+- [ ] Widget/control rows touched by the change are updated in `docs/testing/widget-control-regression-matrix.md`
 - [ ] Market-critical host workflows assert query-log, payload, row-count, KPI, or equivalent semantic outcomes when applicable

@@ -121,6 +121,7 @@ export function SupersubsetRenderer({
     createElement(FilterProvider, {
       initialValues: initialFilterValues ?? definition.defaults?.filterValues,
       filters: definition.filters,
+      activePageId: page.id,
       onFilterChange,
       children: createElement(DrillProvider, {
         children: createElement(InteractionProvider, {
@@ -177,6 +178,7 @@ function DashboardContent({
     createElement(LayoutRenderer, {
       layout: page.layout,
       rootNodeId: page.rootNodeId,
+      activePageId: page.id,
       widgets: page.widgets,
       registry,
       theme,

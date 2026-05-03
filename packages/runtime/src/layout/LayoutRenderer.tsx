@@ -20,7 +20,7 @@ import type {
   DatasetDefinition,
 } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetProps, WidgetEvent } from '../widgets/registry';
-import type { FilterValue } from '../filters/FilterEngine';
+import { filterAppliesToWidget, type FilterValue } from '../filters/FilterEngine';
 
 // ─── Layout Renderer Props ───────────────────────────────────
 
@@ -30,6 +30,7 @@ const MAX_LAYOUT_DEPTH = 50;
 export interface LayoutRendererProps {
   layout: LayoutMap;
   rootNodeId: string;
+  activePageId?: string;
   widgets: WidgetDefinition[];
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
@@ -46,6 +47,7 @@ export interface LayoutRendererProps {
 export function LayoutRenderer({
   layout,
   rootNodeId,
+  activePageId,
   widgets,
   registry,
   theme,
@@ -67,6 +69,7 @@ export function LayoutRenderer({
     renderChildren(
       rootNode.children,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -86,6 +89,7 @@ export function LayoutRenderer({
 function renderChildren(
   childIds: string[],
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -121,6 +125,7 @@ function renderChildren(
     return renderNode(
       node,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -138,6 +143,7 @@ function renderChildren(
 function renderNode(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -156,6 +162,7 @@ function renderNode(
   return renderer(
     node,
     layout,
+    activePageId,
     widgets,
     registry,
     theme,
@@ -174,6 +181,7 @@ function renderNode(
 type NodeRenderer = (
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -196,12 +204,14 @@ const COMPONENT_RENDERERS: Record<LayoutComponentType, NodeRenderer> = {
   tab: renderTab,
   spacer: renderSpacer,
   header: renderHeader,
+  markdown: renderMarkdown,
   divider: renderDivider,
 };
 
 function renderGrid(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -225,6 +235,7 @@ function renderGrid(
     renderChildren(
       node.children,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -242,6 +253,7 @@ function renderGrid(
 function renderRow(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -265,6 +277,7 @@ function renderRow(
     renderChildren(
       node.children,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -296,6 +309,7 @@ function buildRowColumns(childIds: string[], layout: LayoutMap): string {
 function renderColumn(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -318,6 +332,7 @@ function renderColumn(
     renderChildren(
       node.children,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -335,6 +350,7 @@ function renderColumn(
 function renderWidget(
   node: LayoutComponent,
   _layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -373,7 +389,12 @@ function renderWidget(
   };
 
   // Compute active filters for this widget
-  const widgetActiveFilters = computeActiveFilters(widgetDef.id, filters, activeFilterValues);
+  const widgetActiveFilters = computeActiveFilters(
+    widgetDef.id,
+    filters,
+    activeFilterValues,
+    activePageId,
+  );
 
   // Translate dataBinding field roles into config keys so widgets can
   // access field references (e.g. xField, yFields) without knowing about
@@ -411,6 +432,7 @@ function computeActiveFilters(
   widgetId: string,
   filters: FilterDefinition[] | undefined,
   activeFilterValues: FilterValue[] | undefined,
+  activePageId: string | undefined,
 ): FilterValue[] {
   if (!filters || !activeFilterValues || activeFilterValues.length === 0) return [];
 
@@ -421,11 +443,7 @@ function computeActiveFilters(
     const fv = activeMap.get(filter.id);
     if (!fv) continue;
 
-    if (filter.scope.type === 'global') {
-      result.push(fv);
-    } else if (filter.scope.type === 'page') {
-      result.push(fv);
-    } else if (filter.scope.type === 'widgets' && filter.scope.widgetIds.includes(widgetId)) {
+    if (filterAppliesToWidget(filter.scope, widgetId, activePageId)) {
       result.push(fv);
     }
   }
@@ -436,6 +454,7 @@ function computeActiveFilters(
 function renderTabs(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -451,6 +470,7 @@ function renderTabs(
     key: node.id,
     node,
     layout,
+    activePageId,
     widgets,
     registry,
     theme,
@@ -470,6 +490,7 @@ function renderTabs(
 function TabsContainer({
   node,
   layout,
+  activePageId,
   widgets,
   registry,
   theme,
@@ -483,6 +504,7 @@ function TabsContainer({
 }: {
   node: LayoutComponent;
   layout: LayoutMap;
+  activePageId: string | undefined;
   widgets: WidgetDefinition[];
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
@@ -546,6 +568,7 @@ function TabsContainer({
           renderChildren(
             tabNodes[activeTab].children,
             layout,
+            activePageId,
             widgets,
             registry,
             theme,
@@ -565,6 +588,7 @@ function TabsContainer({
 function renderTab(
   node: LayoutComponent,
   layout: LayoutMap,
+  activePageId: string | undefined,
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
@@ -583,6 +607,7 @@ function renderTab(
     renderChildren(
       node.children,
       layout,
+      activePageId,
       widgets,
       registry,
       theme,
@@ -600,6 +625,7 @@ function renderTab(
 function renderSpacer(
   node: LayoutComponent,
   _layout: LayoutMap,
+  _activePageId: string | undefined,
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
@@ -625,6 +651,7 @@ function renderSpacer(
 function renderHeader(
   node: LayoutComponent,
   _layout: LayoutMap,
+  _activePageId: string | undefined,
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
@@ -648,9 +675,38 @@ function renderHeader(
   );
 }
 
+function renderMarkdown(
+  node: LayoutComponent,
+  _layout: LayoutMap,
+  _activePageId: string | undefined,
+  _widgets: WidgetDefinition[],
+  _registry: WidgetRegistry,
+  _theme: Record<string, unknown> | undefined,
+  _filters: FilterDefinition[] | undefined,
+  _datasets: DatasetDefinition[] | undefined,
+  _filterOptions: Record<string, string[]> | undefined,
+  _activeFilterValues: FilterValue[] | undefined,
+  _onWidgetEvent: ((event: WidgetEvent) => void) | undefined,
+  _visited: Set<string>,
+  _depth: number,
+): ReactNode {
+  const style: CSSProperties = {
+    margin: 0,
+    whiteSpace: 'pre-wrap',
+    lineHeight: 1.6,
+  };
+
+  return createElement(
+    'div',
+    { key: node.id, className: 'ss-markdown', style, 'data-ss-node': node.id },
+    node.meta.text ?? '',
+  );
+}
+
 function renderDivider(
   node: LayoutComponent,
   _layout: LayoutMap,
+  _activePageId: string | undefined,
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
