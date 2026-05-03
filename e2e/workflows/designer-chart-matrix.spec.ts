@@ -1026,6 +1026,11 @@ async function getBaseChartLabelFormatterSample(
   sample: Record<string, unknown>,
 ): Promise<string | null> {
   return locator.evaluate((element, formatterInput) => {
+    const toRecord = (value: unknown): Record<string, unknown> | undefined => {
+      return typeof value === 'object' && value !== null
+        ? (value as Record<string, unknown>)
+        : undefined;
+    };
     const fiberKey = Object.getOwnPropertyNames(element).find((key) =>
       key.startsWith('__reactFiber$'),
     );
@@ -1040,8 +1045,8 @@ async function getBaseChartLabelFormatterSample(
       if (record.memoizedProps?.option !== undefined) {
         const option = record.memoizedProps.option as Record<string, unknown>;
         const rawSeries = Array.isArray(option.series) ? option.series : [option.series];
-        const firstSeries = rawSeries.find(isRecord);
-        const formatter = asRecord(asRecord(firstSeries)?.label)?.formatter;
+        const firstSeries = rawSeries.find((candidate) => toRecord(candidate) !== undefined);
+        const formatter = toRecord(toRecord(firstSeries)?.label)?.formatter;
 
         return typeof formatter === 'function' ? String(formatter(formatterInput)) : null;
       }
