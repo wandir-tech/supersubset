@@ -26,6 +26,10 @@
 - [ ] Long legend labels wrap or scroll without colliding with chart titles
 - [ ] Color palette is consistent across chart types
 - [ ] Icons are clear and properly sized
+- [ ] The chosen chart type matches the analytical task instead of merely rendering the data
+- [ ] Pie/donut usage is limited to small, legible part-to-whole cases
+- [ ] Truncated axes, if used, are clearly signaled and not visually misleading
+- [ ] Multi-series line charts remain readable and do not collapse into spaghetti
 
 ## Keyboard Navigation
 
@@ -64,6 +68,9 @@
 - [ ] Loading spinners are visible and centered
 - [ ] Error states don't break the layout
 - [ ] Tooltips appear within viewport bounds
+- [ ] Titles, legends, labels, and units are understandable without insider field knowledge
+- [ ] Filters are grouped and labeled in a way a first-time user can operate correctly
+- [ ] Filter changes create an obvious analytical outcome, not just a changed control value
 
 ## State & Persistence Workflows
 
@@ -74,6 +81,7 @@
 - [ ] Page selection recovers safely when an imported dashboard changes the page set
 - [ ] Page delete confirmation names the targeted page and fallback selection is predictable
 - [ ] Undo/redo history resets or advances intentionally after import/publish actions
+- [ ] Host-owned viewers re-query or recompute correctly after user-facing filter changes
 
 ## Automated Regression Expectations
 
@@ -81,3 +89,5 @@
 - [ ] Visual regressions for canvas charts use targeted screenshot baselines
 - [ ] Workflow tests fail on unexpected console errors or warnings
 - [ ] Import/export tests assert semantic equivalence, not only that a dialog opens
+- [ ] Widget/control rows touched by the change are updated in `docs/testing/widget-control-regression-matrix.md`
+- [ ] Market-critical host workflows assert query-log, payload, row-count, KPI, or equivalent semantic outcomes when applicable

@@ -1,23 +1,28 @@
 ---
 name: browser-testing
-description: "Run browser tests against Supersubset using Chrome MCP. Use when verifying designer UI interactions, renderer output, drag-and-drop behavior, filter propagation, responsive modes, or visual regression. Covers Chrome DevTools MCP integration, test plan execution, screenshot capture, and console error detection."
+description: 'Run browser tests against Supersubset using Chrome MCP. Use when verifying designer UI interactions, renderer output, drag-and-drop behavior, filter propagation, responsive modes, or visual regression. Covers Chrome DevTools MCP integration, test plan execution, screenshot capture, and console error detection.'
 ---
 
 # Browser Testing with Chrome MCP
 
 ## When to Use
+
 - Verifying the designer loads and functions correctly
 - Testing drag-and-drop widget interactions
 - Verifying property edits update rendered widgets
 - Testing JSON/YAML import/export round-trips
+- Validating Probe mode against pasted metadata or controlled live discovery/query backends
 - Verifying renderer output against saved definitions
 - Checking filter propagation across widgets
+- Verifying that host-owned query refresh actually changes visible dashboard output
 - Detecting console errors and rendering regressions
 - Responsive mode testing
+- Running release-oriented blocker discovery sweeps in real host examples
 
 ## Chrome MCP Setup
 
 The workspace has Chrome MCP configured in `.vscode/mcp.json`:
+
 ```json
 {
   "io.github.ChromeDevTools/chrome-devtools-mcp": {
@@ -30,6 +35,7 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 ## Test Plans
 
 ### Plan A — Designer Happy Path
+
 1. Open local dev app (`http://localhost:5173` or configured port)
 2. Load sample metadata model
 3. Create new dashboard
@@ -41,12 +47,14 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 9. Reload and verify semantic equivalence
 
 ### Plan B — Renderer Happy Path
+
 1. Load saved dashboard definition
 2. Execute through mock adapter and real adapter fixture
 3. Verify charts/tables/cards appear correctly
 4. Verify cross-filtering and drill actions
 
 ### Plan C — Regression and Robustness
+
 1. Malformed schema import
 2. Missing field bindings
 3. Unsupported chart config
@@ -57,17 +65,38 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 8. Theme switch
 
 ### Plan D — Host Integration
+
 1. Mount designer inside host shell
 2. Persist schema via host callback
 3. Mount renderer in separate route/component tree
 4. Verify no hidden backend dependency
 
+### Plan F — Market-Critical BI Sweep
+
+1. Use the strongest host or authoring surface for the workflow under test
+2. Reproduce the end-user journey that changes analytical meaning
+3. Verify any host query or request payload mutation when the host owns data refresh
+4. Verify the visible dashboard outcome changed in a way a user can perceive
+5. Capture console, network, screenshot, and query-log evidence
+6. Record whether the result is a blocker, a regression gap, or a pass
+
+### Probe Workflows
+
+1. Use `e2e/workflows/probe-metadata-paste.spec.ts` for deterministic paste-JSON onboarding coverage
+2. Use a sibling workflow in `e2e/workflows/` for live backend discovery/query/auth validation when the branch includes one
+3. Anchor live backend assertions to the probe contract documented in `docs/api/metadata-and-cli.md`
+
 ## Procedure
 
-1. Start the dev app: `cd packages/dev-app && pnpm dev`
-2. Use Chrome MCP to navigate to the app URL
-3. Take initial screenshot for baseline
-4. Execute test plan steps using Chrome MCP tools:
+1. Decide first whether browser automation is the right layer by reading `.github/skills/testing-strategy/SKILL.md`
+2. If multiple agents or checkouts share the machine, lease ports first:
+   `mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)`
+3. Export explicit origins before starting servers or Playwright-backed flows:
+   `SUPERSUBSET_DEV_APP_PORT`, `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`, `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`
+4. Start the target app or stack on the leased ports, or reuse the configured Playwright web server
+5. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default
+6. Take an initial screenshot for baseline
+7. Execute test plan steps using Chrome MCP tools:
    - `chr_navigate_page` — navigate to URLs
    - `chr_click` — click elements
    - `chr_fill` — fill input fields
@@ -75,14 +104,42 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
    - `chr_take_snapshot` — capture DOM state
    - `chr_list_console_messages` — check for errors
    - `chr_evaluate_script` — run assertions in browser
-5. Compare screenshots and DOM state to expected outcomes
-6. Report results with evidence
+8. Compare screenshots and DOM state to expected outcomes
+9. Report results with evidence, including the leased local origin that was tested
+
+## Agent Run Hygiene
+
+When running Playwright unattended from an agent session:
+
+- set `PLAYWRIGHT_HTML_OPEN=never` so Playwright does not open the HTML report UI on failures
+- prefer `--reporter=line` for focused runs so progress and failures stay in terminal output
+- avoid adding `CI=1` when you intend to reuse an already-running local dev server; Playwright may treat the configured web server as exclusive and fail on an occupied port
+- if the target app imports a workspace package through package exports, rebuild the touched package before rerunning browser tests when that package resolves from `dist/`
+
+In this repo, this matters especially for `packages/dev-app` and the example hosts, which consume built workspace package outputs rather than raw source in several flows.
+
+For BI workflows, do not stop at screenshots or control values when a stronger proof exists. Prefer evidence like:
+
+- query log changed from the previous value set
+- row count or table contents changed
+- KPI value or delta changed
+- legend, series, or mark count changed in the rendered chart
+- network request payload reflects the expected filter or interaction state
 
 ## Verification Checklist
+
 - [ ] No console errors during test
 - [ ] All widgets render without visual defects
 - [ ] Drag-and-drop produces correct layout changes
 - [ ] Property edits reflect immediately in preview
 - [ ] Filter changes propagate to all bound widgets
+- [ ] When the host owns query refresh, filter changes mutate the expected query or request payload
+- [ ] Filter or interaction changes produce an obvious analytical outcome, not only a control-state update
 - [ ] Export/import produces semantically identical schema
 - [ ] Responsive resize works without layout breaks
+
+## See Also
+
+- `.github/skills/testing-strategy/SKILL.md`
+- `.github/skills/bi-visualization-quality/SKILL.md`
+- `docs/testing/verification-strategy.md`

@@ -28,36 +28,100 @@
 
 const PALETTES: Record<string, string[]> = {
   supersetColors: [
-    '#1FA8C9', '#454E7C', '#5AC189', '#FF7F44', '#666666',
-    '#E04355', '#FCC700', '#A868B7', '#3CCCCB', '#A38F79',
+    '#1FA8C9',
+    '#454E7C',
+    '#5AC189',
+    '#FF7F44',
+    '#666666',
+    '#E04355',
+    '#FCC700',
+    '#A868B7',
+    '#3CCCCB',
+    '#A38F79',
   ],
   d3Category10: [
-    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#1f77b4',
+    '#ff7f0e',
+    '#2ca02c',
+    '#d62728',
+    '#9467bd',
+    '#8c564b',
+    '#e377c2',
+    '#7f7f7f',
+    '#bcbd22',
+    '#17becf',
   ],
   google10: [
-    '#3366CC', '#DC3912', '#FF9900', '#109618', '#990099',
-    '#0099C6', '#DD4477', '#66AA00', '#B82E2E', '#316395',
+    '#3366CC',
+    '#DC3912',
+    '#FF9900',
+    '#109618',
+    '#990099',
+    '#0099C6',
+    '#DD4477',
+    '#66AA00',
+    '#B82E2E',
+    '#316395',
   ],
   tableau10: [
-    '#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F',
-    '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F', '#BAB0AC',
+    '#4E79A7',
+    '#F28E2B',
+    '#E15759',
+    '#76B7B2',
+    '#59A14F',
+    '#EDC948',
+    '#B07AA1',
+    '#FF9DA7',
+    '#9C755F',
+    '#BAB0AC',
   ],
   pastel: [
-    '#AEC7E8', '#FFBB78', '#98DF8A', '#FF9896', '#C5B0D5',
-    '#C49C94', '#F7B6D2', '#C7C7C7', '#DBDB8D', '#9EDAE5',
+    '#AEC7E8',
+    '#FFBB78',
+    '#98DF8A',
+    '#FF9896',
+    '#C5B0D5',
+    '#C49C94',
+    '#F7B6D2',
+    '#C7C7C7',
+    '#DBDB8D',
+    '#9EDAE5',
   ],
   dark: [
-    '#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E',
-    '#E6AB02', '#A6761D', '#666666', '#1D91C0', '#AE017E',
+    '#1B9E77',
+    '#D95F02',
+    '#7570B3',
+    '#E7298A',
+    '#66A61E',
+    '#E6AB02',
+    '#A6761D',
+    '#666666',
+    '#1D91C0',
+    '#AE017E',
   ],
   warm: [
-    '#FE4A49', '#FED766', '#F77F00', '#E36414', '#9A031E',
-    '#D00000', '#DC2F02', '#E85D04', '#FAA307', '#FFBA08',
+    '#FE4A49',
+    '#FED766',
+    '#F77F00',
+    '#E36414',
+    '#9A031E',
+    '#D00000',
+    '#DC2F02',
+    '#E85D04',
+    '#FAA307',
+    '#FFBA08',
   ],
   cool: [
-    '#264653', '#2A9D8F', '#E9C46A', '#F4A261', '#E76F51',
-    '#023E8A', '#0077B6', '#0096C7', '#00B4D8', '#48CAE4',
+    '#264653',
+    '#2A9D8F',
+    '#E9C46A',
+    '#F4A261',
+    '#E76F51',
+    '#023E8A',
+    '#0077B6',
+    '#0096C7',
+    '#00B4D8',
+    '#48CAE4',
   ],
 };
 
@@ -96,16 +160,32 @@ export interface SharedConfig {
   zoomable?: boolean;
 }
 
+function toOptionalBoolean(value: unknown): boolean | undefined {
+  if (value === true || value === false) {
+    return value;
+  }
+
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  return undefined;
+}
+
 /**
  * Extract shared config from generic WidgetProps config record.
  */
 export function extractSharedConfig(config: Record<string, unknown>): SharedConfig {
   return {
     colorScheme: config.colorScheme as string | undefined,
-    showLegend: config.showLegend as boolean | undefined,
+    showLegend: toOptionalBoolean(config.showLegend),
     legendPosition: config.legendPosition as SharedConfig['legendPosition'],
     legendType: config.legendType as SharedConfig['legendType'],
-    showValues: config.showValues as boolean | undefined,
+    showValues: toOptionalBoolean(config.showValues),
     numberFormat: config.numberFormat as string | undefined,
     tooltipTrigger: config.tooltipTrigger as SharedConfig['tooltipTrigger'],
     xAxisTitle: config.xAxisTitle as string | undefined,
@@ -113,8 +193,8 @@ export function extractSharedConfig(config: Record<string, unknown>): SharedConf
     xAxisLabelRotate: config.xAxisLabelRotate as number | undefined,
     yAxisMin: config.yAxisMin as number | null | undefined,
     yAxisMax: config.yAxisMax as number | null | undefined,
-    logAxis: config.logAxis as boolean | undefined,
-    zoomable: config.zoomable as boolean | undefined,
+    logAxis: toOptionalBoolean(config.logAxis),
+    zoomable: toOptionalBoolean(config.zoomable),
   };
 }
 
@@ -192,7 +272,7 @@ export function buildLegendOption(
  */
 export function buildTooltipOption(
   shared: SharedConfig,
-  defaultTrigger: 'axis' | 'item' = 'axis'
+  defaultTrigger: 'axis' | 'item' = 'axis',
 ): Record<string, unknown> | undefined {
   const trigger = shared.tooltipTrigger ?? defaultTrigger;
   if (trigger === 'none') return { show: false };
@@ -205,7 +285,7 @@ export function buildTooltipOption(
  */
 export function buildGridOption(
   shared: SharedConfig,
-  layout?: { hasTitle?: boolean; hasLegend?: boolean }
+  layout?: { hasTitle?: boolean; hasLegend?: boolean; zoomAxis?: 'x' | 'y' },
 ): Record<string, unknown> {
   const grid: Record<string, unknown> = {
     left: '3%',
@@ -230,11 +310,21 @@ export function buildGridOption(
     if (pos === 'right') grid.right = '12%';
   }
 
-  // Extra bottom space for data zoom
+  if (shared.yAxisTitle && grid.left === '3%') {
+    grid.left = '10%';
+  }
+
+  if (shared.xAxisTitle) {
+    grid.bottom = typeof grid.bottom === 'number' ? (grid.bottom as number) + 28 : '10%';
+  }
+
+  // Reserve space for data zoom controls on the axis they target.
   if (shared.zoomable) {
-    grid.bottom = typeof grid.bottom === 'number'
-      ? (grid.bottom as number) + 40
-      : '12%';
+    if (layout?.zoomAxis === 'y') {
+      grid.right = typeof grid.right === 'number' ? (grid.right as number) + 40 : '12%';
+    } else {
+      grid.bottom = typeof grid.bottom === 'number' ? (grid.bottom as number) + 40 : '12%';
+    }
   }
 
   return grid;
@@ -246,7 +336,7 @@ export function buildGridOption(
 export function buildCategoryAxisOption(
   shared: SharedConfig,
   categoryData: string[],
-  axis: 'x' | 'y' = 'x'
+  axis: 'x' | 'y' = 'x',
 ): Record<string, unknown> {
   const axisOpt: Record<string, unknown> = {
     type: 'category',
@@ -254,7 +344,11 @@ export function buildCategoryAxisOption(
   };
 
   const title = axis === 'x' ? shared.xAxisTitle : shared.yAxisTitle;
-  if (title) axisOpt.name = title;
+  if (title) {
+    axisOpt.name = title;
+    axisOpt.nameLocation = 'middle';
+    axisOpt.nameGap = axis === 'x' ? 32 : 48;
+  }
 
   if (axis === 'x' && shared.xAxisLabelRotate) {
     axisOpt.axisLabel = { rotate: shared.xAxisLabelRotate };
@@ -268,14 +362,18 @@ export function buildCategoryAxisOption(
  */
 export function buildValueAxisOption(
   shared: SharedConfig,
-  axis: 'x' | 'y' = 'y'
+  axis: 'x' | 'y' = 'y',
 ): Record<string, unknown> {
   const axisOpt: Record<string, unknown> = {
     type: shared.logAxis && axis === 'y' ? 'log' : 'value',
   };
 
   const title = axis === 'x' ? shared.xAxisTitle : shared.yAxisTitle;
-  if (title) axisOpt.name = title;
+  if (title) {
+    axisOpt.name = title;
+    axisOpt.nameLocation = 'middle';
+    axisOpt.nameGap = axis === 'x' ? 32 : 48;
+  }
 
   if (axis === 'y') {
     if (shared.yAxisMin != null) axisOpt.min = shared.yAxisMin;
@@ -293,9 +391,18 @@ export function buildValueAxisOption(
  * Build data zoom option for slider-based zoom.
  */
 export function buildDataZoomOption(
-  shared: SharedConfig
+  shared: SharedConfig,
+  axis: 'x' | 'y' = 'x',
 ): Array<Record<string, unknown>> | undefined {
   if (!shared.zoomable) return undefined;
+
+  if (axis === 'y') {
+    return [
+      { type: 'slider', yAxisIndex: 0, orient: 'vertical' },
+      { type: 'inside', yAxisIndex: 0, orient: 'vertical' },
+    ];
+  }
+
   return [
     { type: 'slider', xAxisIndex: 0 },
     { type: 'inside', xAxisIndex: 0 },
@@ -305,9 +412,7 @@ export function buildDataZoomOption(
 /**
  * Build label option for showing values on data points.
  */
-export function buildLabelOption(
-  shared: SharedConfig
-): Record<string, unknown> | undefined {
+export function buildLabelOption(shared: SharedConfig): Record<string, unknown> | undefined {
   if (!shared.showValues) return undefined;
   const label: Record<string, unknown> = {
     show: true,
@@ -315,9 +420,12 @@ export function buildLabelOption(
   };
   if (shared.numberFormat) {
     label.formatter = (params: { value: unknown }) => {
-      const v = typeof params.value === 'number' ? params.value
-        : Array.isArray(params.value) ? Number(params.value[1] ?? 0)
-        : Number(params.value ?? 0);
+      const v =
+        typeof params.value === 'number'
+          ? params.value
+          : Array.isArray(params.value)
+            ? Number(params.value[1] ?? 0)
+            : Number(params.value ?? 0);
       return formatNumber(v, shared.numberFormat!);
     };
   }

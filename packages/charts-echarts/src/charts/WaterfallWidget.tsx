@@ -27,7 +27,11 @@ export function WaterfallWidget({ config, data, columns, title, height, theme }:
       return buildEmptyOption(title);
     }
 
-    const nameField = (config.nameField as string) ?? columns?.[0]?.fieldId ?? '';
+    const nameField =
+      (config.nameField as string | undefined) ??
+      (config.categoryField as string | undefined) ??
+      columns?.[0]?.fieldId ??
+      '';
     const valueField = (config.valueField as string) ?? columns?.[1]?.fieldId ?? '';
     const totalLabel = config.totalLabel as string | undefined;
     const increaseColor = (config.increaseColor as string) ?? '#52c41a';

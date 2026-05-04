@@ -96,6 +96,64 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await expect(page.getByText('Interactions')).toBeVisible();
   });
 
+  test('designer canvas preserves authored row spans from the canonical dashboard', async ({
+    page,
+  }) => {
+    await page.getByText('Designer').click();
+    await expect(page.getByTestId('designer-header-controls')).toBeVisible({ timeout: 10000 });
+
+    const canvas = page.frameLocator('iframe').first();
+    await expect(canvas.getByText('Operations Watchlist')).toBeVisible();
+
+    const metrics = await canvas.locator('body').evaluate(() => {
+      const findRow = (text: string) =>
+        Array.from(document.querySelectorAll('div')).find(
+          (element) =>
+            (element.textContent || '').includes(text) &&
+            getComputedStyle(element).display === 'grid',
+        );
+
+      const measureRow = (row: Element | undefined) => {
+        if (!row) {
+          return null;
+        }
+
+        return {
+          width: row.getBoundingClientRect().width,
+          children: Array.from(row.children).map((child) => ({
+            width: child.getBoundingClientRect().width,
+            gridColumn: getComputedStyle(child).gridColumn,
+          })),
+        };
+      };
+
+      return {
+        filters: measureRow(findRow('All Dashboard Filters')),
+        alerts: measureRow(findRow('Operations Watchlist')),
+        kpis: measureRow(findRow('Total Revenue')),
+      };
+    });
+
+    expect(metrics.filters).not.toBeNull();
+    expect(metrics.alerts).not.toBeNull();
+    expect(metrics.kpis).not.toBeNull();
+
+    expect(metrics.filters?.children.map((child) => child.gridColumn)).toEqual([
+      'span 8',
+      'span 4',
+    ]);
+    expect(metrics.alerts?.children.map((child) => child.gridColumn)).toEqual(['span 12']);
+    expect(metrics.kpis?.children.map((child) => child.gridColumn)).toEqual([
+      'span 4',
+      'span 4',
+      'span 4',
+    ]);
+
+    expect(metrics.alerts?.children[0]?.width ?? 0).toBeGreaterThan(
+      (metrics.alerts?.width ?? 0) * 0.9,
+    );
+  });
+
   test('filters panel opens as slide-over', async ({ page }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);

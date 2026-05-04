@@ -9,6 +9,7 @@ const { chartInstance, initMock } = vi.hoisted(() => {
     setOption: vi.fn(),
     resize: vi.fn(),
     dispose: vi.fn(),
+    isDisposed: vi.fn(() => false),
   };
 
   return {
@@ -43,6 +44,8 @@ describe('BaseChart interaction events', () => {
     chartInstance.off.mockClear();
     chartInstance.setOption.mockClear();
     chartInstance.dispose.mockClear();
+    chartInstance.isDisposed.mockReset();
+    chartInstance.isDisposed.mockReturnValue(false);
     initMock.mockClear();
 
     vi.stubGlobal(
@@ -163,5 +166,17 @@ describe('BaseChart interaction events', () => {
       }),
       expect.objectContaining({ renderer: 'canvas' }),
     );
+  });
+
+  it('skips setOption when the chart instance is already disposed', () => {
+    chartInstance.isDisposed.mockReturnValue(true);
+
+    render(
+      React.createElement(BaseChart, {
+        option: { title: { text: 'Disposed' } },
+      }),
+    );
+
+    expect(chartInstance.setOption).not.toHaveBeenCalled();
   });
 });

@@ -48,10 +48,10 @@ export function ComboChartWidget({ config, data, columns, title, height, theme }
       name: field,
       type: 'bar' as const,
       data: data.map((row) => row[field]),
-      ...(stacked ? { stack: 'bars' } : {}),
       yAxisIndex: 0,
-      ...(barBorderRadius > 0 ? { itemStyle: { borderRadius: barBorderRadius } } : {}),
       ...(label ? { label } : {}),
+      ...(stacked ? { stack: 'bars' } : {}),
+      ...(barBorderRadius > 0 ? { itemStyle: { borderRadius: barBorderRadius } } : {}),
     }));
 
     const lineSeries = lineFields.map((field) => ({

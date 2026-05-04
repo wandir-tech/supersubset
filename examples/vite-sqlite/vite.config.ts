@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const devPort = Number(process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT ?? 3002);
+
 export default defineConfig({
   plugins: [react()],
   build: {
@@ -40,7 +42,10 @@ export default defineConfig({
             return 'echarts-renderers';
           }
 
-          if (id.includes('/node_modules/echarts/core') || id.includes('/node_modules/echarts/lib/core/')) {
+          if (
+            id.includes('/node_modules/echarts/core') ||
+            id.includes('/node_modules/echarts/lib/core/')
+          ) {
             return 'echarts-core';
           }
 
@@ -70,6 +75,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3002,
+    port: devPort,
+    strictPort: Boolean(process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT),
   },
 });

@@ -2,16 +2,16 @@
  * FilterBar — renders dashboard-level filter controls from FilterDefinition[].
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
-import { createElement, type ReactNode } from 'react';
+import { createElement, useId, type ReactNode } from 'react';
 import type { FilterDefinition, DatasetDefinition } from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
 
 // ─── Styles ──────────────────────────────────────────────────
 
-const BAR_STYLE: React.CSSProperties = {
+type FilterBarLayout = 'horizontal' | 'vertical';
+
+const BAR_BASE_STYLE: React.CSSProperties = {
   display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'center',
   gap: '12px',
   padding: '10px 16px',
   background: 'var(--ss-filter-bar-bg, #f7f8fa)',
@@ -76,12 +76,51 @@ export interface FilterBarProps {
   /** Static option values per filter ID — host app provides these from query results */
   filterOptions?: Record<string, string[]>;
   className?: string;
+  layout?: FilterBarLayout;
+}
+
+function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
+  if (layout === 'vertical') {
+    return {
+      ...BAR_BASE_STYLE,
+      flexDirection: 'column',
+      flexWrap: 'nowrap',
+      alignItems: 'stretch',
+    };
+  }
+
+  return {
+    ...BAR_BASE_STYLE,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  };
+}
+
+function getResetStyle(layout: FilterBarLayout): React.CSSProperties {
+  if (layout === 'vertical') {
+    return {
+      ...RESET_STYLE,
+      marginLeft: 0,
+      marginTop: '4px',
+      alignSelf: 'flex-start',
+    };
+  }
+
+  return RESET_STYLE;
 }
 
 // ─── Component ───────────────────────────────────────────────
 
-export function FilterBar({ filters, datasets, filterOptions, className }: FilterBarProps) {
+export function FilterBar({
+  filters,
+  datasets,
+  filterOptions,
+  className,
+  layout = 'horizontal',
+}: FilterBarProps) {
   const { state, setFilter, resetAll } = useFilters();
+  const inputIdPrefix = useId();
 
   if (filters.length === 0) return null;
 
@@ -89,13 +128,18 @@ export function FilterBar({ filters, datasets, filterOptions, className }: Filte
 
   return createElement(
     'div',
-    { className: `ss-filter-bar ${className ?? ''}`.trim(), style: BAR_STYLE },
+    {
+      className: `ss-filter-bar ${className ?? ''}`.trim(),
+      style: getBarStyle(layout),
+      'data-ss-filter-bar-layout': layout,
+    },
     ...filters.map((f) =>
       createElement(FilterControl, {
         key: f.id,
         filter: f,
         value: state.values[f.id],
         datasets,
+        inputIdPrefix,
         options: filterOptions?.[f.id],
         onChangeValue: (value: unknown) => setFilter(f.id, value),
       }),
@@ -107,7 +151,7 @@ export function FilterBar({ filters, datasets, filterOptions, className }: Filte
             className: 'ss-filter-reset',
             type: 'button',
             onClick: resetAll,
-            style: RESET_STYLE,
+            style: getResetStyle(layout),
           },
           '✕ Clear filters',
         )
@@ -121,14 +165,22 @@ interface FilterControlProps {
   filter: FilterDefinition;
   value: unknown;
   datasets?: DatasetDefinition[];
+  inputIdPrefix: string;
   options?: string[];
   onChangeValue: (value: unknown) => void;
 }
 
-function FilterControl({ filter, value, datasets, options, onChangeValue }: FilterControlProps) {
+function FilterControl({
+  filter,
+  value,
+  datasets,
+  inputIdPrefix,
+  options,
+  onChangeValue,
+}: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
   const resolvedOptions = options ?? getFieldOptions(filter, datasets);
-  const inputIdBase = `ss-filter-${filter.id}`;
+  const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
     'div',

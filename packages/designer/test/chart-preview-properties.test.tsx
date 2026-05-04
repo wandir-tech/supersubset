@@ -15,26 +15,42 @@ import { render } from '@testing-library/react';
 const mockChartWidget = vi.fn((props: Record<string, unknown>) =>
   React.createElement('div', {
     'data-testid': `chart-${props.widgetType}`,
-  })
+  }),
 );
 
 vi.mock('@supersubset/charts-echarts', () => ({
-  LineChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'line-chart' }),
-  BarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'bar-chart' }),
-  PieChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'pie-chart' }),
-  ScatterChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
-  AreaChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'area-chart' }),
-  ComboChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'combo-chart' }),
-  HeatmapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'heatmap' }),
-  RadarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'radar-chart' }),
-  FunnelChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
-  TreemapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'treemap' }),
-  SankeyWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'sankey' }),
-  WaterfallWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'waterfall' }),
-  BoxPlotWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'box-plot' }),
-  GaugeWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'gauge' }),
-  TableWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'table' }),
-  KPICardWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'kpi-card' }),
+  LineChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'line-chart' }),
+  BarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'bar-chart' }),
+  PieChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'pie-chart' }),
+  ScatterChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
+  AreaChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'area-chart' }),
+  ComboChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'combo-chart' }),
+  HeatmapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'heatmap' }),
+  RadarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'radar-chart' }),
+  FunnelChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
+  TreemapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'treemap' }),
+  SankeyWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'sankey' }),
+  WaterfallWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'waterfall' }),
+  BoxPlotWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'box-plot' }),
+  GaugeWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'gauge' }),
+  TableWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'table' }),
+  KPICardWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'kpi-card' }),
 }));
 
 vi.mock('@supersubset/runtime', () => ({}));
@@ -50,11 +66,13 @@ function renderPreview(widgetType: string, puckProps: Record<string, unknown>) {
       widgetType,
       puckProps: { title: 'Test', ...puckProps },
       fallbackIcon: '📊',
-    })
+    }),
   );
   expect(mockChartWidget).toHaveBeenCalled();
-  return mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0]
-    .config as Record<string, unknown>;
+  return mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0].config as Record<
+    string,
+    unknown
+  >;
 }
 
 /** Capture both config and data from the rendered widget */
@@ -65,7 +83,7 @@ function renderPreviewFull(widgetType: string, puckProps: Record<string, unknown
       widgetType,
       puckProps: { title: 'Test', ...puckProps },
       fallbackIcon: '📊',
-    })
+    }),
   );
   expect(mockChartWidget).toHaveBeenCalled();
   const props = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -434,13 +452,19 @@ describe('ChartPreview — field-change data remapping', () => {
     });
 
     it('remaps both x and y simultaneously', () => {
-      const { data } = renderPreviewFull('line-chart', { xAxisField: 'region', yAxisField: 'sales' });
+      const { data } = renderPreviewFull('line-chart', {
+        xAxisField: 'region',
+        yAxisField: 'sales',
+      });
       expect(data[0]).toHaveProperty('region');
       expect(data[0]).toHaveProperty('sales');
     });
 
     it('keeps original keys when fields match defaults', () => {
-      const { data } = renderPreviewFull('line-chart', { xAxisField: 'month', yAxisField: 'revenue' });
+      const { data } = renderPreviewFull('line-chart', {
+        xAxisField: 'month',
+        yAxisField: 'revenue',
+      });
       expect(data[0]).toHaveProperty('month');
       expect(data[0]).toHaveProperty('revenue');
     });
@@ -475,7 +499,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('scatter-chart', () => {
     it('remaps xAxisField and yAxisField', () => {
-      const { data } = renderPreviewFull('scatter-chart', { xAxisField: 'quantity', yAxisField: 'amount' });
+      const { data } = renderPreviewFull('scatter-chart', {
+        xAxisField: 'quantity',
+        yAxisField: 'amount',
+      });
       expect(data[0]).toHaveProperty('quantity');
       expect(data[0]).toHaveProperty('amount');
     });
@@ -489,7 +516,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('combo-chart', () => {
     it('remaps barField and lineField', () => {
-      const { config, data } = renderPreviewFull('combo-chart', { barField: 'revenue', lineField: 'margin' });
+      const { config, data } = renderPreviewFull('combo-chart', {
+        barField: 'revenue',
+        lineField: 'margin',
+      });
       expect(config.barFields).toEqual(['revenue']);
       expect(config.lineFields).toEqual(['margin']);
       expect(data[0]).toHaveProperty('revenue');
@@ -499,7 +529,11 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('heatmap', () => {
     it('remaps all three fields', () => {
-      const { data } = renderPreviewFull('heatmap', { xAxisField: 'hour', yAxisField: 'day', valueField: 'sales' });
+      const { data } = renderPreviewFull('heatmap', {
+        xAxisField: 'hour',
+        yAxisField: 'day',
+        valueField: 'sales',
+      });
       expect(data[0]).toHaveProperty('hour');
       expect(data[0]).toHaveProperty('day');
       expect(data[0]).toHaveProperty('sales');
@@ -508,7 +542,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('funnel-chart', () => {
     it('remaps categoryField and valueField', () => {
-      const { config, data } = renderPreviewFull('funnel-chart', { categoryField: 'phase', valueField: 'count' });
+      const { config, data } = renderPreviewFull('funnel-chart', {
+        categoryField: 'phase',
+        valueField: 'count',
+      });
       expect(config.nameField).toBe('phase');
       expect(data[0]).toHaveProperty('phase');
       expect(data[0]).toHaveProperty('count');
@@ -517,7 +554,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('treemap', () => {
     it('remaps nameField and valueField', () => {
-      const { config, data } = renderPreviewFull('treemap', { nameField: 'category', valueField: 'amount' });
+      const { config, data } = renderPreviewFull('treemap', {
+        nameField: 'category',
+        valueField: 'amount',
+      });
       expect(config.nameField).toBe('category');
       expect(data[0]).toHaveProperty('category');
       expect(data[0]).toHaveProperty('amount');
@@ -526,7 +566,11 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('sankey', () => {
     it('remaps all three fields', () => {
-      const { config, data } = renderPreviewFull('sankey', { sourceField: 'origin', targetField: 'destination', valueField: 'visits' });
+      const { config, data } = renderPreviewFull('sankey', {
+        sourceField: 'origin',
+        targetField: 'destination',
+        valueField: 'visits',
+      });
       expect(config.sourceField).toBe('origin');
       expect(config.targetField).toBe('destination');
       expect(data[0]).toHaveProperty('origin');
@@ -537,7 +581,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('waterfall', () => {
     it('remaps categoryField and valueField', () => {
-      const { config, data } = renderPreviewFull('waterfall', { categoryField: 'item', valueField: 'amount' });
+      const { config, data } = renderPreviewFull('waterfall', {
+        categoryField: 'item',
+        valueField: 'amount',
+      });
       expect(config.categoryField).toBe('item');
       expect(data[0]).toHaveProperty('item');
       expect(data[0]).toHaveProperty('amount');
@@ -546,7 +593,10 @@ describe('ChartPreview — field-change data remapping', () => {
 
   describe('kpi-card', () => {
     it('remaps valueField and comparisonField', () => {
-      const { config, data } = renderPreviewFull('kpi-card', { valueField: 'revenue', comparisonField: 'prevRevenue' });
+      const { config, data } = renderPreviewFull('kpi-card', {
+        valueField: 'revenue',
+        comparisonField: 'prevRevenue',
+      });
       expect(config.valueField).toBe('revenue');
       expect(config.comparisonField).toBe('prevRevenue');
       expect(data[0]).toHaveProperty('revenue');
@@ -597,6 +647,11 @@ describe('ChartPreview — field config mappings', () => {
   it('maps parentField to config (treemap)', () => {
     const c = renderPreview('treemap', { parentField: 'group' });
     expect(c.parentField).toBe('group');
+  });
+
+  it('clears the default treemap parentField when the widget is authored flat', () => {
+    const c = renderPreview('treemap', { parentField: '' });
+    expect(c.parentField).toBeUndefined();
   });
 
   it('maps sourceField to config (sankey)', () => {

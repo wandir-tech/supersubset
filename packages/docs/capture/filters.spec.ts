@@ -30,7 +30,7 @@ test.describe('Filter screenshots', () => {
     await switchToViewer(page);
     await waitForChartsReady(page);
 
-    const filterBar = page.locator('.ss-filter-bar');
+    const filterBar = page.locator('.ss-filter-bar').first();
     if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
       await captureElement(filterBar, 'filters', 'filter-bar', 'default', 'viewer');
     } else {
@@ -57,7 +57,7 @@ test.describe('Filter screenshots', () => {
     await switchToViewer(page);
     await waitForChartsReady(page);
     // Scroll to make the filter bar visible at the top
-    const filterBar = page.locator('.ss-filter-bar');
+    const filterBar = page.locator('.ss-filter-bar').first();
     if (await filterBar.isVisible({ timeout: 3000 }).catch(() => false)) {
       await filterBar.scrollIntoViewIfNeeded();
       await page.waitForTimeout(300);

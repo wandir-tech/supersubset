@@ -65,13 +65,13 @@ export function AreaChartWidget({ config, data, columns, title, height, theme }:
         type: 'line' as const,
         data: data.map((row) => row[field]),
         smooth,
-        ...(step ? { step } : {}),
         connectNulls,
         showSymbol: showMarkers,
-        ...(stacked ? { stack: 'total' } : {}),
         areaStyle: { opacity: areaOpacity },
         emphasis: { focus: 'series' as const },
         ...(label ? { label } : {}),
+        ...(step ? { step } : {}),
+        ...(stacked ? { stack: 'total' } : {}),
       })),
     };
   }, [config, data, columns, title]);

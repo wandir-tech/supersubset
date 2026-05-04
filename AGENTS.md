@@ -74,6 +74,10 @@ See `.github/agents/` for specialized agent definitions:
 
 The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It decomposes complex requests, delegates to specialized agents, parallelizes independent work, and verifies results. Use it for any task that spans multiple packages or domains. See `.github/skills/orchestration/SKILL.md` for the delegation methodology.
 
+For designer-shell visual work, pair the `designer` agent with `.github/skills/designer-design/SKILL.md`. Use `.github/skills/puck-integration/SKILL.md` for Puck mechanics and serialization.
+
+For testing work, pair the `testing` agent with `.github/skills/testing-strategy/SKILL.md` for layer selection and evidence expectations. Use `.github/skills/browser-testing/SKILL.md` for Chrome MCP and Playwright browser execution details.
+
 ### Planning, CI, and AI context skills
 
 | Skill                         | Use when                                                                                                  |
@@ -81,6 +85,7 @@ The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It deco
 | `github-cli`                  | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser                                 |
 | `work-kickoff`                | Turning an idea into a reviewed GitHub issue + implementation plan                                        |
 | `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
+| `release-runbook`             | End-to-end release execution: candidate validation, changesets, branch promotion, publish, downstream PRs |
 | `maintaining-ai-context`      | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions`                          |
 | `parallel-agent-environments` | Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing |
 

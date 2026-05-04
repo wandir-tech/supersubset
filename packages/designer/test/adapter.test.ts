@@ -64,7 +64,7 @@ describe('puckToCanonical', () => {
     expect(widget.dataBinding!.fields[1].aggregation).toBe('sum');
 
     // Config
-    expect(widget.config.smooth).toBe('true');
+    expect(widget.config.smooth).toBe(true);
 
     // Layout should have root, grid, and widget entry
     expect(page.layout['root']).toBeDefined();
@@ -193,8 +193,20 @@ describe('puckToCanonical', () => {
           title: 'Overview',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: ['header-overview'], parentId: 'root', meta: { columns: 12 } },
-            'header-overview': { id: 'header-overview', type: 'header', children: [], parentId: 'grid-main', meta: { text: 'Overview', headerSize: 'large' } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['header-overview'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'header-overview': {
+              id: 'header-overview',
+              type: 'header',
+              children: [],
+              parentId: 'grid-main',
+              meta: { text: 'Overview', headerSize: 'large' },
+            },
           },
           rootNodeId: 'root',
           widgets: [],
@@ -204,8 +216,20 @@ describe('puckToCanonical', () => {
           title: 'Detail',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: ['header-detail'], parentId: 'root', meta: { columns: 12 } },
-            'header-detail': { id: 'header-detail', type: 'header', children: [], parentId: 'grid-main', meta: { text: 'Detail', headerSize: 'large' } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['header-detail'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'header-detail': {
+              id: 'header-detail',
+              type: 'header',
+              children: [],
+              parentId: 'grid-main',
+              meta: { text: 'Detail', headerSize: 'large' },
+            },
           },
           rootNodeId: 'root',
           widgets: [],
@@ -246,17 +270,49 @@ describe('puckToCanonical', () => {
     const puckData: Data = {
       root: { props: { title: 'Multi Charts' } },
       content: [
-        { type: 'BarChart', props: { id: 'bar-1', title: 'Sales', datasetRef: 'ds', xAxisField: 'cat', yAxisField: 'val', seriesField: '', aggregation: 'none', orientation: 'vertical', stacked: 'false' } },
-        { type: 'PieChart', props: { id: 'pie-1', title: 'Share', datasetRef: 'ds', categoryField: 'cat', valueField: 'val', aggregation: 'none', variant: 'donut' } },
-        { type: 'GaugeChart', props: { id: 'gauge-1', title: 'Score', datasetRef: 'ds', valueField: 'score', minValue: 0, maxValue: 100 } },
+        {
+          type: 'BarChart',
+          props: {
+            id: 'bar-1',
+            title: 'Sales',
+            datasetRef: 'ds',
+            xAxisField: 'cat',
+            yAxisField: 'val',
+            seriesField: '',
+            aggregation: 'none',
+            orientation: 'vertical',
+            stacked: 'false',
+          },
+        },
+        {
+          type: 'PieChart',
+          props: {
+            id: 'pie-1',
+            title: 'Share',
+            datasetRef: 'ds',
+            categoryField: 'cat',
+            valueField: 'val',
+            aggregation: 'none',
+            variant: 'donut',
+          },
+        },
+        {
+          type: 'GaugeChart',
+          props: {
+            id: 'gauge-1',
+            title: 'Score',
+            datasetRef: 'ds',
+            valueField: 'score',
+            minValue: 0,
+            maxValue: 100,
+          },
+        },
       ],
     };
 
     const result = puckToCanonical(puckData);
     expect(result.pages[0].widgets).toHaveLength(3);
-    expect(result.pages[0].widgets.map((w) => w.type)).toEqual([
-      'bar-chart', 'pie-chart', 'gauge',
-    ]);
+    expect(result.pages[0].widgets.map((w) => w.type)).toEqual(['bar-chart', 'pie-chart', 'gauge']);
   });
 });
 
@@ -272,7 +328,13 @@ describe('canonicalToPuck', () => {
           title: 'Page 1',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: [], parentId: 'root', meta: { columns: 12 } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: [],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
           },
           rootNodeId: 'root',
           widgets: [],
@@ -296,8 +358,20 @@ describe('canonicalToPuck', () => {
           title: 'Page 1',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: ['layout-line-1'], parentId: 'root', meta: { columns: 12 } },
-            'layout-line-1': { id: 'layout-line-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'line-1', width: 12 } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['layout-line-1'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'layout-line-1': {
+              id: 'layout-line-1',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'line-1', width: 12 },
+            },
           },
           rootNodeId: 'root',
           widgets: [
@@ -341,8 +415,20 @@ describe('canonicalToPuck', () => {
           title: 'Page 1',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: ['layout-alerts-1'], parentId: 'root', meta: { columns: 12 } },
-            'layout-alerts-1': { id: 'layout-alerts-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'alerts-1', width: 12 } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['layout-alerts-1'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'layout-alerts-1': {
+              id: 'layout-alerts-1',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'alerts-1', width: 12 },
+            },
           },
           rootNodeId: 'root',
           widgets: [
@@ -387,6 +473,112 @@ describe('canonicalToPuck', () => {
     expect(result.content![0].props.defaultSeverity).toBe('danger');
   });
 
+  it('wraps row widget widths into ColumnBlocks when restoring canonical dashboards', () => {
+    const dashboard: DashboardDefinition = {
+      schemaVersion: '0.2.0',
+      id: 'test',
+      title: 'Viewer Fidelity Dashboard',
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          layout: {
+            root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['row-overview'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'row-overview': {
+              id: 'row-overview',
+              type: 'row',
+              children: ['layout-alerts-1', 'layout-kpi-1'],
+              parentId: 'grid-main',
+              meta: {},
+            },
+            'layout-alerts-1': {
+              id: 'layout-alerts-1',
+              type: 'widget',
+              children: [],
+              parentId: 'row-overview',
+              meta: { widgetRef: 'alerts-1', width: 8 },
+            },
+            'layout-kpi-1': {
+              id: 'layout-kpi-1',
+              type: 'widget',
+              children: [],
+              parentId: 'row-overview',
+              meta: { widgetRef: 'kpi-1', width: 4 },
+            },
+          },
+          rootNodeId: 'root',
+          widgets: [
+            {
+              id: 'alerts-1',
+              type: 'alerts',
+              title: 'Operations Watchlist',
+              config: {
+                titleField: 'alert_title',
+                messageField: 'alert_message',
+                severityField: 'severity',
+                timestampField: 'detected_at',
+                layout: 'wrap',
+                maxItems: 3,
+                emptyState: 'placeholder',
+                showTimestamp: true,
+                defaultSeverity: 'warning',
+              },
+              dataBinding: {
+                datasetRef: 'ops_alerts',
+                fields: [
+                  { role: 'alert-title', fieldRef: 'alert_title' },
+                  { role: 'alert-message', fieldRef: 'alert_message' },
+                  { role: 'alert-severity', fieldRef: 'severity' },
+                  { role: 'alert-timestamp', fieldRef: 'detected_at' },
+                ],
+              },
+            },
+            {
+              id: 'kpi-1',
+              type: 'kpi-card',
+              title: 'Orders',
+              config: { valueField: 'orders', format: 'compact' },
+              dataBinding: {
+                datasetRef: 'sales',
+                fields: [{ role: 'value', fieldRef: 'orders' }],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = canonicalToPuck(dashboard);
+    expect(result.content).toHaveLength(1);
+
+    const row = result.content![0] as { type: string; props: Record<string, unknown> };
+    expect(row.type).toBe('RowBlock');
+
+    const columns = row.props.content as Array<{ type: string; props: Record<string, unknown> }>;
+    expect(columns).toHaveLength(2);
+    expect(columns.map((column) => column.type)).toEqual(['ColumnBlock', 'ColumnBlock']);
+    expect(columns.map((column) => column.props.span)).toEqual([8, 4]);
+
+    const alerts = (
+      columns[0].props.content as Array<{ type: string; props: Record<string, unknown> }>
+    )[0];
+    expect(alerts.type).toBe('AlertsWidgetBlock');
+    expect(alerts.props.layout).toBe('wrap');
+
+    const kpi = (
+      columns[1].props.content as Array<{ type: string; props: Record<string, unknown> }>
+    )[0];
+    expect(kpi.type).toBe('KPICard');
+    expect(kpi.props.valueField).toBe('orders');
+  });
+
   it('converts header layout nodes back to Puck content', () => {
     const dashboard: DashboardDefinition = {
       schemaVersion: '0.2.0',
@@ -398,8 +590,20 @@ describe('canonicalToPuck', () => {
           title: 'Page 1',
           layout: {
             root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-            'grid-main': { id: 'grid-main', type: 'grid', children: ['header-1'], parentId: 'root', meta: { columns: 12 } },
-            'header-1': { id: 'header-1', type: 'header', children: [], parentId: 'grid-main', meta: { text: 'Dashboard Title', headerSize: 'large' } },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['header-1'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'header-1': {
+              id: 'header-1',
+              type: 'header',
+              children: [],
+              parentId: 'grid-main',
+              meta: { text: 'Dashboard Title', headerSize: 'large' },
+            },
           },
           rootNodeId: 'root',
           widgets: [],

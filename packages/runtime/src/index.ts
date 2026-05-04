@@ -1,10 +1,18 @@
 // @supersubset/runtime — Dashboard rendering engine
 
 // Main renderer component
-export { SupersubsetRenderer, type SupersubsetRendererProps } from './components/SupersubsetRenderer';
+export {
+  SupersubsetRenderer,
+  type SupersubsetRendererProps,
+} from './components/SupersubsetRenderer';
 
 // FilterBar component
-export { FilterBar, type FilterBarProps, DATE_PRESETS, resolveRelativeDate } from './components/FilterBar';
+export {
+  FilterBar,
+  type FilterBarProps,
+  DATE_PRESETS,
+  resolveRelativeDate,
+} from './components/FilterBar';
 
 // DrillBreadcrumbBar component
 export { DrillBreadcrumbBar } from './components/DrillBreadcrumbBar';
@@ -13,6 +21,7 @@ export { DrillBreadcrumbBar } from './components/DrillBreadcrumbBar';
 export {
   WidgetRegistry,
   createWidgetRegistry,
+  getBuiltInWidgetEntries,
   type WidgetProps,
   type WidgetEvent,
   type WidgetComponent,

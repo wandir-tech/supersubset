@@ -42,11 +42,21 @@ export function screenshotPath(
 export async function switchToViewer(page: Page): Promise<void> {
   // Try button role first, then fall back to text matching
   const btn = page.getByRole('button', { name: /viewer/i });
-  if (await btn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (
+    await btn
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+  ) {
     await btn.first().click();
   } else {
     const textBtn = page.getByText('Viewer');
-    if (await textBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (
+      await textBtn
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
       await textBtn.first().click();
     }
   }
@@ -58,11 +68,21 @@ export async function switchToViewer(page: Page): Promise<void> {
  */
 export async function switchToDesigner(page: Page): Promise<void> {
   const btn = page.getByRole('button', { name: /designer/i });
-  if (await btn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (
+    await btn
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+  ) {
     await btn.first().click();
   } else {
     const textBtn = page.getByText('Designer');
-    if (await textBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (
+      await textBtn
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
       await textBtn.first().click();
     }
   }
@@ -76,21 +96,36 @@ export async function switchToDesigner(page: Page): Promise<void> {
 export async function navigateToPage(page: Page, pageTitle: string): Promise<void> {
   // Try role=tab first
   const tab = page.getByRole('tab', { name: new RegExp(pageTitle, 'i') });
-  if (await tab.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (
+    await tab
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+  ) {
     await tab.first().click();
     await page.waitForTimeout(500);
     return;
   }
   // Try nav buttons
   const navBtn = page.locator('nav button', { hasText: new RegExp(pageTitle, 'i') });
-  if (await navBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (
+    await navBtn
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+  ) {
     await navBtn.first().click();
     await page.waitForTimeout(500);
     return;
   }
   // Try any button with the text
   const anyBtn = page.locator('button', { hasText: new RegExp(pageTitle, 'i') });
-  if (await anyBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (
+    await anyBtn
+      .first()
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+  ) {
     await anyBtn.first().click();
     await page.waitForTimeout(500);
   }
@@ -273,38 +308,79 @@ export async function selectWidgetViaCanvas(
 }
 
 /**
+ * Select a widget in the designer by clicking its stable `data-puck-component`
+ * wrapper inside the canvas iframe.
+ */
+export async function selectWidgetFromCanvasByComponentId(
+  page: Page,
+  puckComponentId: string,
+): Promise<boolean> {
+  const iframe = page.frameLocator('iframe').first();
+  const widget = iframe.locator(`[data-puck-component="${puckComponentId}"]`).first();
+
+  if (!(await widget.isVisible({ timeout: 3000 }).catch(() => false))) {
+    return false;
+  }
+
+  await widget.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(200);
+  await widget.click();
+  await page.waitForTimeout(500);
+  return true;
+}
+
+/**
  * Select a widget in the designer by clicking its layer entry in the Layers panel.
  * For duplicate labels (e.g., multiple KPI Cards), clicks the first match.
  */
-export async function selectWidgetViaLayers(
-  page: Page,
-  widgetLabel: string,
-): Promise<boolean> {
+export async function selectWidgetViaLayers(page: Page, widgetLabel: string): Promise<boolean> {
   // Switch to Layers tab
-  const layersBtn = page.getByText('Layers').first();
-  if (await layersBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+  const layersBtn = page.getByRole('button', { name: /^Layers$/ }).first();
+  if (await layersBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
     await layersBtn.click();
     await page.waitForTimeout(500);
+  } else {
+    const layersText = page.getByText('Layers').first();
+    if (await layersText.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await layersText.click();
+      await page.waitForTimeout(500);
+    }
   }
 
-  // Click the layer button with matching text
-  // Use exact text on the name span to avoid partial matches
-  const layerBtn = page.locator(`[class*="Layer-name"]`).filter({ hasText: new RegExp(`^${widgetLabel}$`) });
-  const count = await layerBtn.count();
-  if (count > 0) {
-    await layerBtn.first().click();
+  const exactWidgetName = new RegExp(`^${escapeRegExp(widgetLabel)}$`);
+  const layerTree = page.locator('nav + ul').first();
+  const rowButtons = layerTree.getByRole('button', { name: /Row \(12-col Grid\)$/ });
+  const rowCount = await rowButtons.count();
+
+  const widgetButton = layerTree.getByRole('button', { name: exactWidgetName }).first();
+  if (await widgetButton.isVisible({ timeout: 300 }).catch(() => false)) {
+    await widgetButton.click();
     await page.waitForTimeout(800);
     return true;
   }
-  
-  // Fallback: try the clickable button with has-text
-  const clickable = page.locator('[class*="Layer-clickable"]').filter({ hasText: widgetLabel });
-  if (await clickable.first().isVisible({ timeout: 2000 }).catch(() => false)) {
-    await clickable.first().click();
-    await page.waitForTimeout(800);
-    return true;
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const rowButton = rowButtons.nth(index);
+    if (!(await rowButton.isVisible({ timeout: 300 }).catch(() => false))) {
+      continue;
+    }
+
+    await rowButton.scrollIntoViewIfNeeded();
+    await rowButton.click();
+    await page.waitForTimeout(150);
+
+    if (await widgetButton.isVisible({ timeout: 300 }).catch(() => false)) {
+      await widgetButton.click();
+      await page.waitForTimeout(800);
+      return true;
+    }
   }
+
   return false;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -441,51 +517,56 @@ export async function toggleRadioProperty(
   targetValue: string,
 ): Promise<boolean> {
   // Use page.evaluate for reliable DOM traversal
-  const clicked = await page.evaluate(({ fieldLabel, targetValue }) => {
-    // Find the label div whose text content includes our field name
-    const labelDivs = document.querySelectorAll('[class*="Input-label"]');
-    for (const labelDiv of labelDivs) {
-      // Check direct text content (excluding child element text)
-      const textContent = Array.from(labelDiv.childNodes)
-        .filter(n => n.nodeType === Node.TEXT_NODE)
-        .map(n => n.textContent?.trim())
-        .join('');
-      if (textContent !== fieldLabel) continue;
+  const clicked = await page.evaluate(
+    ({ fieldLabel, targetValue }) => {
+      // Find the label div whose text content includes our field name
+      const labelDivs = document.querySelectorAll('[class*="Input-label"]');
+      for (const labelDiv of labelDivs) {
+        // Check direct text content (excluding child element text)
+        const textContent = Array.from(labelDiv.childNodes)
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent?.trim())
+          .join('');
+        if (textContent !== fieldLabel) continue;
 
-      // Found the label — now find the radio group in its parent
-      const inputContainer = labelDiv.closest('[class*="Input_"]');
-      if (!inputContainer) continue;
+        // Found the label — now find the radio group in its parent
+        const inputContainer = labelDiv.closest('[class*="Input_"]');
+        if (!inputContainer) continue;
 
-      // Find radio option with matching text
-      const radioInners = inputContainer.querySelectorAll('[class*="Input-radioInner"]');
-      for (const inner of radioInners) {
-        if (inner.textContent?.trim() === targetValue) {
-          // Find the input element (sibling of radioInner inside the label)
-          const radioLabelEl = inner.closest('[class*="Input-radio"]') as HTMLElement;
-          if (!radioLabelEl) continue;
+        // Find radio option with matching text
+        const radioInners = inputContainer.querySelectorAll('[class*="Input-radioInner"]');
+        for (const inner of radioInners) {
+          if (inner.textContent?.trim() === targetValue) {
+            // Find the input element (sibling of radioInner inside the label)
+            const radioLabelEl = inner.closest('[class*="Input-radio"]') as HTMLElement;
+            if (!radioLabelEl) continue;
 
-          const input = radioLabelEl.querySelector('input[type="radio"]') as HTMLInputElement | null;
-          if (input) {
-            // Method 1: Try React onChange via __reactProps$
-            const propsKey = Object.keys(input).find(k => k.startsWith('__reactProps$'));
-            if (propsKey) {
-              const props = (input as any)[propsKey];
-              if (props?.onChange) {
-                input.checked = true;
-                props.onChange({ target: input, currentTarget: input });
-                return true;
+            const input = radioLabelEl.querySelector(
+              'input[type="radio"]',
+            ) as HTMLInputElement | null;
+            if (input) {
+              // Method 1: Try React onChange via __reactProps$
+              const propsKey = Object.keys(input).find((k) => k.startsWith('__reactProps$'));
+              if (propsKey) {
+                const props = (input as any)[propsKey];
+                if (props?.onChange) {
+                  input.checked = true;
+                  props.onChange({ target: input, currentTarget: input });
+                  return true;
+                }
               }
             }
-          }
 
-          // Method 2: Fallback to native click on the label
-          radioLabelEl.click();
-          return true;
+            // Method 2: Fallback to native click on the label
+            radioLabelEl.click();
+            return true;
+          }
         }
       }
-    }
-    return false;
-  }, { fieldLabel, targetValue });
+      return false;
+    },
+    { fieldLabel, targetValue },
+  );
 
   if (clicked) {
     await page.waitForTimeout(1200); // Wait for chart to re-render
@@ -508,64 +589,70 @@ export async function changeSelectProperty(
   // Puck JSON-encodes select option values as {"value":"actual_value"}.
   // We need to find the matching option and use its raw value attribute,
   // then trigger React's onChange handler properly.
-  const changed = await page.evaluate(({ fieldLabel, targetValue }) => {
-    const labelDivs = document.querySelectorAll('[class*="Input-label"]');
-    for (const labelDiv of labelDivs) {
-      const textContent = Array.from(labelDiv.childNodes)
-        .filter(n => n.nodeType === Node.TEXT_NODE)
-        .map(n => n.textContent?.trim())
-        .join('');
-      if (textContent !== fieldLabel) continue;
+  const changed = await page.evaluate(
+    ({ fieldLabel, targetValue }) => {
+      const labelDivs = document.querySelectorAll('[class*="Input-label"]');
+      for (const labelDiv of labelDivs) {
+        const textContent = Array.from(labelDiv.childNodes)
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent?.trim())
+          .join('');
+        if (textContent !== fieldLabel) continue;
 
-      const fieldContainer = labelDiv.closest('[class*="PuckFields-field"]')
-        ?? labelDiv.closest('[class*="Input_"]');
-      if (!fieldContainer) continue;
+        const fieldContainer =
+          labelDiv.closest('[class*="PuckFields-field"]') ?? labelDiv.closest('[class*="Input_"]');
+        if (!fieldContainer) continue;
 
-      const select = fieldContainer.querySelector('select') as HTMLSelectElement | null;
-      if (!select) continue;
+        const select = fieldContainer.querySelector('select') as HTMLSelectElement | null;
+        if (!select) continue;
 
-      // Find the option whose value matches targetValue.
-      // Puck options may be JSON-encoded ({"value":"20%"}) or plain strings.
-      let matchingOptionValue: string | null = null;
-      for (const opt of select.options) {
-        if (opt.value === targetValue) {
-          matchingOptionValue = opt.value;
-          break;
-        }
-        // Try JSON-decoded match
-        try {
-          const parsed = JSON.parse(opt.value);
-          if (parsed?.value === targetValue) {
+        // Find the option whose value matches targetValue.
+        // Puck options may be JSON-encoded ({"value":"20%"}) or plain strings.
+        let matchingOptionValue: string | null = null;
+        for (const opt of select.options) {
+          if (opt.value === targetValue) {
             matchingOptionValue = opt.value;
             break;
           }
-        } catch { /* not JSON */ }
-      }
-
-      const valueToSet = matchingOptionValue ?? targetValue;
-
-      // Set the native value
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        HTMLSelectElement.prototype, 'value',
-      )?.set;
-      nativeInputValueSetter?.call(select, valueToSet);
-
-      // Try React onChange via __reactProps$
-      const propsKey = Object.keys(select).find(k => k.startsWith('__reactProps$'));
-      if (propsKey) {
-        const props = (select as any)[propsKey];
-        if (props?.onChange) {
-          props.onChange({ target: select, currentTarget: select });
-          return true;
+          // Try JSON-decoded match
+          try {
+            const parsed = JSON.parse(opt.value);
+            if (parsed?.value === targetValue) {
+              matchingOptionValue = opt.value;
+              break;
+            }
+          } catch {
+            /* not JSON */
+          }
         }
-      }
 
-      // Fallback: dispatch native change event
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      return true;
-    }
-    return false;
-  }, { fieldLabel, targetValue });
+        const valueToSet = matchingOptionValue ?? targetValue;
+
+        // Set the native value
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          'value',
+        )?.set;
+        nativeInputValueSetter?.call(select, valueToSet);
+
+        // Try React onChange via __reactProps$
+        const propsKey = Object.keys(select).find((k) => k.startsWith('__reactProps$'));
+        if (propsKey) {
+          const props = (select as any)[propsKey];
+          if (props?.onChange) {
+            props.onChange({ target: select, currentTarget: select });
+            return true;
+          }
+        }
+
+        // Fallback: dispatch native change event
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      }
+      return false;
+    },
+    { fieldLabel, targetValue },
+  );
 
   if (changed) {
     await page.waitForTimeout(1200);
@@ -574,17 +661,85 @@ export async function changeSelectProperty(
 }
 
 /**
- * Scroll a property into view within the Puck property panel sidebar.
+ * Change a numeric property in the Puck property panel.
  */
-export async function scrollPropertyIntoView(
+export async function changeNumberProperty(
   page: Page,
   fieldLabel: string,
-): Promise<void> {
+  targetValue: string,
+): Promise<boolean> {
+  const changed = await page.evaluate(
+    ({ fieldLabel, targetValue }) => {
+      const labelDivs = document.querySelectorAll('[class*="Input-label"]');
+      for (const labelDiv of labelDivs) {
+        const textContent = Array.from(labelDiv.childNodes)
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent?.trim())
+          .join('');
+        if (textContent !== fieldLabel) continue;
+
+        const fieldContainer =
+          labelDiv.closest('[class*="PuckFields-field"]') ?? labelDiv.closest('[class*="Input_"]');
+        if (!fieldContainer) continue;
+
+        const input = fieldContainer.querySelector('input') as HTMLInputElement | null;
+        if (!input) continue;
+
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        )?.set;
+        nativeSetter?.call(input, targetValue);
+
+        const propsKey = Object.keys(input).find((key) => key.startsWith('__reactProps$'));
+        if (propsKey) {
+          const props = (input as Record<string, unknown>)[propsKey] as
+            | {
+                onChange?: (event: {
+                  target: HTMLInputElement;
+                  currentTarget: HTMLInputElement;
+                }) => void;
+              }
+            | undefined;
+          if (props?.onChange) {
+            props.onChange({ target: input, currentTarget: input });
+            input.dispatchEvent(new Event('blur', { bubbles: true }));
+            return true;
+          }
+        }
+
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new Event('blur', { bubbles: true }));
+        return true;
+      }
+
+      return false;
+    },
+    { fieldLabel, targetValue },
+  );
+
+  if (changed) {
+    await page.waitForTimeout(1200);
+  }
+
+  return changed;
+}
+
+/**
+ * Scroll a property into view within the Puck property panel sidebar.
+ */
+export async function scrollPropertyIntoView(page: Page, fieldLabel: string): Promise<void> {
   const fieldContainer = page.locator('[class*="PuckFields-field"]').filter({
     has: page.locator('[class*="Input-label"]', { hasText: new RegExp(`^${fieldLabel}$`) }),
   });
 
-  if (await fieldContainer.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+  if (
+    await fieldContainer
+      .first()
+      .isVisible({ timeout: 3000 })
+      .catch(() => false)
+  ) {
     await fieldContainer.first().scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
   } else {
@@ -597,7 +752,12 @@ export async function scrollPropertyIntoView(
           scrollable.scrollBy(0, 200);
         });
         await page.waitForTimeout(200);
-        if (await fieldContainer.first().isVisible({ timeout: 500 }).catch(() => false)) {
+        if (
+          await fieldContainer
+            .first()
+            .isVisible({ timeout: 500 })
+            .catch(() => false)
+        ) {
           await fieldContainer.first().scrollIntoViewIfNeeded();
           break;
         }

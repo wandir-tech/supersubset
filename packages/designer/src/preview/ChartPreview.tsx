@@ -89,6 +89,34 @@ const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
   },
 };
 
+function unwrapPuckPropValue(value: unknown): unknown {
+  if (value && typeof value === 'object' && 'value' in value) {
+    return unwrapPuckPropValue((value as { value: unknown }).value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}') && trimmed.includes('"value"')) {
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        if (parsed && typeof parsed === 'object' && 'value' in parsed) {
+          return unwrapPuckPropValue((parsed as { value: unknown }).value);
+        }
+      } catch {
+        // Fall through to the original string when the field value is not JSON.
+      }
+    }
+  }
+
+  return value;
+}
+
+function normalizePuckProps(puckProps: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(puckProps).map(([key, value]) => [key, unwrapPuckPropValue(value)]),
+  );
+}
+
 type AlertSeverity = 'info' | 'success' | 'warning' | 'danger';
 type AlertLayout = 'stack' | 'wrap' | 'inline';
 
@@ -300,6 +328,7 @@ function buildWidgetConfig(
   puckProps: Record<string, unknown>,
 ): Record<string, unknown> {
   const defaults = DEFAULT_CONFIGS[widgetType] ?? {};
+  const normalizedPuckProps = normalizePuckProps(puckProps);
 
   // Map common Puck field names → widget config keys
   const config: Record<string, unknown> = { ...defaults };
@@ -309,174 +338,206 @@ function buildWidgetConfig(
   // original types (boolean/number). Puck radio/select fields produce string
   // values only after user interaction, which the string-based handlers below
   // will override.
-  for (const key of Object.keys(puckProps)) {
-    const val = puckProps[key];
+  for (const key of Object.keys(normalizedPuckProps)) {
+    const val = normalizedPuckProps[key];
     if (typeof val === 'boolean' || typeof val === 'number') {
       config[key] = val;
     }
   }
 
   // Override defaults if user has set actual field references (non-empty strings)
-  const s = (v: unknown) => (typeof v === 'string' && v.length > 0 ? v : undefined);
-  if (s(puckProps.xAxisField)) config.xField = puckProps.xAxisField;
-  if (s(puckProps.yAxisField)) {
-    config.yFields = [puckProps.yAxisField as string];
-    config.yField = puckProps.yAxisField;
+  const s = (v: unknown) => {
+    const normalized = unwrapPuckPropValue(v);
+    return typeof normalized === 'string' && normalized.length > 0 ? normalized : undefined;
+  };
+  const hasScatterBindings =
+    widgetType === 'scatter-chart' &&
+    [
+      normalizedPuckProps.datasetRef,
+      normalizedPuckProps.xAxisField,
+      normalizedPuckProps.yAxisField,
+      normalizedPuckProps.colorGroupField,
+    ].some((value) => s(value));
+
+  if (s(normalizedPuckProps.xAxisField)) config.xField = normalizedPuckProps.xAxisField;
+  if (s(normalizedPuckProps.yAxisField)) {
+    config.yFields = [normalizedPuckProps.yAxisField as string];
+    config.yField = normalizedPuckProps.yAxisField;
   }
-  if (s(puckProps.seriesField)) config.seriesField = puckProps.seriesField;
-  if (s(puckProps.categoryField)) {
-    config.nameField = puckProps.categoryField;
-    config.categoryField = puckProps.categoryField;
+  if (s(normalizedPuckProps.seriesField)) config.seriesField = normalizedPuckProps.seriesField;
+  if (s(normalizedPuckProps.categoryField)) {
+    config.nameField = normalizedPuckProps.categoryField;
+    config.categoryField = normalizedPuckProps.categoryField;
   }
-  if (s(puckProps.valueField)) config.valueField = puckProps.valueField;
-  if (s(puckProps.sizeField)) config.sizeField = puckProps.sizeField;
-  if (s(puckProps.colorGroupField)) config.colorGroupField = puckProps.colorGroupField;
-  if (s(puckProps.aggregation)) config.aggregation = puckProps.aggregation;
-  if (s(puckProps.nameField)) config.nameField = puckProps.nameField;
-  if (s(puckProps.parentField)) config.parentField = puckProps.parentField;
-  if (s(puckProps.sourceField)) config.sourceField = puckProps.sourceField;
-  if (s(puckProps.targetField)) config.targetField = puckProps.targetField;
-  if (s(puckProps.barField)) config.barFields = [puckProps.barField as string];
-  if (s(puckProps.lineField)) config.lineFields = [puckProps.lineField as string];
-  if (s(puckProps.comparisonField)) config.comparisonField = puckProps.comparisonField;
-  if (s(puckProps.titleField)) config.titleField = puckProps.titleField;
-  if (s(puckProps.messageField)) config.messageField = puckProps.messageField;
-  if (s(puckProps.severityField)) config.severityField = puckProps.severityField;
-  if (s(puckProps.timestampField)) config.timestampField = puckProps.timestampField;
-  if (s(puckProps.layout)) config.layout = puckProps.layout;
-  if (puckProps.maxItems != null && puckProps.maxItems !== '')
-    config.maxItems = Number(puckProps.maxItems);
-  if (s(puckProps.emptyState)) config.emptyState = puckProps.emptyState;
-  if (puckProps.showTimestamp === 'true') config.showTimestamp = true;
-  else if (puckProps.showTimestamp === 'false') config.showTimestamp = false;
-  if (s(puckProps.defaultSeverity)) config.defaultSeverity = puckProps.defaultSeverity;
-  if (puckProps.smooth === 'true') config.smooth = true;
-  else if (puckProps.smooth === 'false') config.smooth = false;
-  if (puckProps.stacked === 'true') config.stacked = true;
-  else if (puckProps.stacked === 'false') config.stacked = false;
-  if (puckProps.orientation === 'horizontal') config.horizontal = true;
-  else if (puckProps.orientation === 'vertical') config.horizontal = false;
+  if (s(normalizedPuckProps.valueField)) config.valueField = normalizedPuckProps.valueField;
+  if (s(normalizedPuckProps.sizeField)) config.sizeField = normalizedPuckProps.sizeField;
+  else if (hasScatterBindings) delete config.sizeField;
+  if (s(normalizedPuckProps.colorGroupField))
+    config.colorGroupField = normalizedPuckProps.colorGroupField;
+  if (s(normalizedPuckProps.aggregation)) config.aggregation = normalizedPuckProps.aggregation;
+  if (s(normalizedPuckProps.nameField)) config.nameField = normalizedPuckProps.nameField;
+  if (s(normalizedPuckProps.parentField)) config.parentField = normalizedPuckProps.parentField;
+  else if (widgetType === 'treemap') delete config.parentField;
+  if (s(normalizedPuckProps.sourceField)) config.sourceField = normalizedPuckProps.sourceField;
+  if (s(normalizedPuckProps.targetField)) config.targetField = normalizedPuckProps.targetField;
+  if (s(normalizedPuckProps.barField)) config.barFields = [normalizedPuckProps.barField as string];
+  if (s(normalizedPuckProps.lineField))
+    config.lineFields = [normalizedPuckProps.lineField as string];
+  if (s(normalizedPuckProps.comparisonField))
+    config.comparisonField = normalizedPuckProps.comparisonField;
+  if (s(normalizedPuckProps.titleField)) config.titleField = normalizedPuckProps.titleField;
+  if (s(normalizedPuckProps.messageField)) config.messageField = normalizedPuckProps.messageField;
+  if (s(normalizedPuckProps.severityField))
+    config.severityField = normalizedPuckProps.severityField;
+  if (s(normalizedPuckProps.timestampField))
+    config.timestampField = normalizedPuckProps.timestampField;
+  if (s(normalizedPuckProps.layout)) config.layout = normalizedPuckProps.layout;
+  if (normalizedPuckProps.maxItems != null && normalizedPuckProps.maxItems !== '')
+    config.maxItems = Number(normalizedPuckProps.maxItems);
+  if (s(normalizedPuckProps.emptyState)) config.emptyState = normalizedPuckProps.emptyState;
+  if (normalizedPuckProps.showTimestamp === 'true') config.showTimestamp = true;
+  else if (normalizedPuckProps.showTimestamp === 'false') config.showTimestamp = false;
+  if (s(normalizedPuckProps.defaultSeverity))
+    config.defaultSeverity = normalizedPuckProps.defaultSeverity;
+  if (normalizedPuckProps.smooth === 'true') config.smooth = true;
+  else if (normalizedPuckProps.smooth === 'false') config.smooth = false;
+  if (normalizedPuckProps.stacked === 'true') config.stacked = true;
+  else if (normalizedPuckProps.stacked === 'false') config.stacked = false;
+  if (normalizedPuckProps.orientation === 'horizontal') config.horizontal = true;
+  else if (normalizedPuckProps.orientation === 'vertical') config.horizontal = false;
 
   // Shared visual controls (Phase 2.A.1)
-  if (s(puckProps.colorScheme)) config.colorScheme = puckProps.colorScheme;
-  if (puckProps.showLegend === 'true') config.showLegend = true;
-  else if (puckProps.showLegend === 'false') config.showLegend = false;
-  if (s(puckProps.legendPosition)) config.legendPosition = puckProps.legendPosition;
-  if (puckProps.showValues === 'true') config.showValues = true;
-  else if (puckProps.showValues === 'false') config.showValues = false;
-  if (s(puckProps.numberFormat)) config.numberFormat = puckProps.numberFormat;
-  if (s(puckProps.xAxisTitle)) config.xAxisTitle = puckProps.xAxisTitle;
-  if (s(puckProps.yAxisTitle)) config.yAxisTitle = puckProps.yAxisTitle;
-  if (s(puckProps.xAxisLabelRotate) && puckProps.xAxisLabelRotate !== '0') {
-    config.xAxisLabelRotate = Number(puckProps.xAxisLabelRotate);
+  if (s(normalizedPuckProps.colorScheme)) config.colorScheme = normalizedPuckProps.colorScheme;
+  if (normalizedPuckProps.showLegend === 'true') config.showLegend = true;
+  else if (normalizedPuckProps.showLegend === 'false') config.showLegend = false;
+  if (s(normalizedPuckProps.legendPosition))
+    config.legendPosition = normalizedPuckProps.legendPosition;
+  if (normalizedPuckProps.showValues === 'true') config.showValues = true;
+  else if (normalizedPuckProps.showValues === 'false') config.showValues = false;
+  if (s(normalizedPuckProps.numberFormat)) config.numberFormat = normalizedPuckProps.numberFormat;
+  if (s(normalizedPuckProps.xAxisTitle)) config.xAxisTitle = normalizedPuckProps.xAxisTitle;
+  if (s(normalizedPuckProps.yAxisTitle)) config.yAxisTitle = normalizedPuckProps.yAxisTitle;
+  if (s(normalizedPuckProps.xAxisLabelRotate) && normalizedPuckProps.xAxisLabelRotate !== '0') {
+    config.xAxisLabelRotate = Number(s(normalizedPuckProps.xAxisLabelRotate));
   }
-  if (puckProps.yAxisMin != null && puckProps.yAxisMin !== '')
-    config.yAxisMin = Number(puckProps.yAxisMin);
-  if (puckProps.yAxisMax != null && puckProps.yAxisMax !== '')
-    config.yAxisMax = Number(puckProps.yAxisMax);
-  if (puckProps.logAxis === 'true') config.logAxis = true;
-  else if (puckProps.logAxis === 'false') config.logAxis = false;
-  if (puckProps.zoomable === 'true') config.zoomable = true;
-  else if (puckProps.zoomable === 'false') config.zoomable = false;
+  if (normalizedPuckProps.yAxisMin != null && normalizedPuckProps.yAxisMin !== '')
+    config.yAxisMin = Number(normalizedPuckProps.yAxisMin);
+  if (normalizedPuckProps.yAxisMax != null && normalizedPuckProps.yAxisMax !== '')
+    config.yAxisMax = Number(normalizedPuckProps.yAxisMax);
+  if (normalizedPuckProps.logAxis === 'true') config.logAxis = true;
+  else if (normalizedPuckProps.logAxis === 'false') config.logAxis = false;
+  if (normalizedPuckProps.zoomable === 'true') config.zoomable = true;
+  else if (normalizedPuckProps.zoomable === 'false') config.zoomable = false;
 
   // Per-chart controls (Phase 2.A.2–2.A.17)
   // Line / Area
-  if (puckProps.showMarkers === 'true') config.showMarkers = true;
-  else if (puckProps.showMarkers === 'false') config.showMarkers = false;
-  if (puckProps.markerSize != null && puckProps.markerSize !== '')
-    config.markerSize = Number(puckProps.markerSize);
-  if (s(puckProps.step)) config.step = puckProps.step;
-  if (puckProps.connectNulls === 'true') config.connectNulls = true;
-  else if (puckProps.connectNulls === 'false') config.connectNulls = false;
-  if (s(puckProps.areaOpacity)) config.areaOpacity = Number(puckProps.areaOpacity);
+  if (normalizedPuckProps.showMarkers === 'true') config.showMarkers = true;
+  else if (normalizedPuckProps.showMarkers === 'false') config.showMarkers = false;
+  if (normalizedPuckProps.markerSize != null && normalizedPuckProps.markerSize !== '')
+    config.markerSize = Number(normalizedPuckProps.markerSize);
+  if (s(normalizedPuckProps.step)) config.step = normalizedPuckProps.step;
+  if (normalizedPuckProps.connectNulls === 'true') config.connectNulls = true;
+  else if (normalizedPuckProps.connectNulls === 'false') config.connectNulls = false;
+  if (s(normalizedPuckProps.areaOpacity))
+    config.areaOpacity = Number(s(normalizedPuckProps.areaOpacity));
   // Bar
-  if (s(puckProps.barWidth)) config.barWidth = puckProps.barWidth;
-  if (s(puckProps.barGap)) config.barGap = puckProps.barGap;
+  if (s(normalizedPuckProps.barWidth)) config.barWidth = normalizedPuckProps.barWidth;
+  if (s(normalizedPuckProps.barGap)) config.barGap = normalizedPuckProps.barGap;
   if (
-    puckProps.borderRadius != null &&
-    puckProps.borderRadius !== '' &&
-    Number(puckProps.borderRadius) > 0
+    normalizedPuckProps.borderRadius != null &&
+    normalizedPuckProps.borderRadius !== '' &&
+    Number(normalizedPuckProps.borderRadius) > 0
   )
-    config.borderRadius = Number(puckProps.borderRadius);
-  if (puckProps.barMinHeight != null && Number(puckProps.barMinHeight) > 0)
-    config.barMinHeight = Number(puckProps.barMinHeight);
+    config.borderRadius = Number(normalizedPuckProps.borderRadius);
+  if (normalizedPuckProps.barMinHeight != null && Number(normalizedPuckProps.barMinHeight) > 0)
+    config.barMinHeight = Number(normalizedPuckProps.barMinHeight);
   // Pie
-  if (puckProps.innerRadius != null && puckProps.innerRadius !== '')
-    config.innerRadius = Number(puckProps.innerRadius);
-  if (puckProps.outerRadius != null && puckProps.outerRadius !== '')
-    config.outerRadius = Number(puckProps.outerRadius);
-  if (s(puckProps.labelPosition)) config.labelPosition = puckProps.labelPosition;
-  if (puckProps.padAngle != null && Number(puckProps.padAngle) > 0)
-    config.padAngle = Number(puckProps.padAngle);
-  if (puckProps.variant === 'donut') config.donut = true;
-  else if (puckProps.variant === 'pie') config.donut = false;
-  if (puckProps.variant === 'rose') config.roseType = 'radius';
+  if (normalizedPuckProps.innerRadius != null && normalizedPuckProps.innerRadius !== '')
+    config.innerRadius = Number(normalizedPuckProps.innerRadius);
+  if (normalizedPuckProps.outerRadius != null && normalizedPuckProps.outerRadius !== '')
+    config.outerRadius = Number(normalizedPuckProps.outerRadius);
+  if (s(normalizedPuckProps.labelPosition))
+    config.labelPosition = normalizedPuckProps.labelPosition;
+  if (normalizedPuckProps.padAngle != null && Number(normalizedPuckProps.padAngle) > 0)
+    config.padAngle = Number(normalizedPuckProps.padAngle);
+  if (normalizedPuckProps.variant === 'donut') config.donut = true;
+  else if (normalizedPuckProps.variant === 'pie') config.donut = false;
+  if (normalizedPuckProps.variant === 'rose') config.roseType = 'radius';
   // Scatter
-  if (puckProps.symbolSize != null && puckProps.symbolSize !== '')
-    config.symbolSize = Number(puckProps.symbolSize);
-  if (s(puckProps.opacity)) config.opacity = Number(puckProps.opacity);
+  if (normalizedPuckProps.symbolSize != null && normalizedPuckProps.symbolSize !== '')
+    config.symbolSize = Number(normalizedPuckProps.symbolSize);
+  if (s(normalizedPuckProps.opacity)) config.opacity = Number(s(normalizedPuckProps.opacity));
   // Combo
-  if (puckProps.lineSmooth === 'false') config.lineSmooth = false;
-  if (puckProps.barBorderRadius != null && Number(puckProps.barBorderRadius) > 0)
-    config.barBorderRadius = Number(puckProps.barBorderRadius);
+  if (normalizedPuckProps.lineSmooth === 'false') config.lineSmooth = false;
+  if (
+    normalizedPuckProps.barBorderRadius != null &&
+    Number(normalizedPuckProps.barBorderRadius) > 0
+  )
+    config.barBorderRadius = Number(normalizedPuckProps.barBorderRadius);
   // Heatmap
-  if (puckProps.cellBorderWidth != null && puckProps.cellBorderWidth !== '')
-    config.cellBorderWidth = Number(puckProps.cellBorderWidth);
-  if (s(puckProps.cellBorderColor)) config.cellBorderColor = puckProps.cellBorderColor;
+  if (normalizedPuckProps.cellBorderWidth != null && normalizedPuckProps.cellBorderWidth !== '')
+    config.cellBorderWidth = Number(normalizedPuckProps.cellBorderWidth);
+  if (s(normalizedPuckProps.cellBorderColor))
+    config.cellBorderColor = normalizedPuckProps.cellBorderColor;
   // Radar
-  if (s(puckProps.shape)) config.shape = puckProps.shape;
-  if (puckProps.areaFill === 'false') config.areaFill = false;
+  if (s(normalizedPuckProps.shape)) config.shape = normalizedPuckProps.shape;
+  if (normalizedPuckProps.areaFill === 'false') config.areaFill = false;
   // Funnel
-  if (s(puckProps.sort)) config.sort = puckProps.sort;
-  if (s(puckProps.funnelAlign)) config.funnelAlign = puckProps.funnelAlign;
-  if (puckProps.gap != null && Number(puckProps.gap) > 0) config.gap = Number(puckProps.gap);
+  if (s(normalizedPuckProps.sort)) config.sort = normalizedPuckProps.sort;
+  if (s(normalizedPuckProps.funnelAlign)) config.funnelAlign = normalizedPuckProps.funnelAlign;
+  if (normalizedPuckProps.gap != null && Number(normalizedPuckProps.gap) > 0)
+    config.gap = Number(normalizedPuckProps.gap);
   // Treemap
-  if (puckProps.showUpperLabel === 'true') config.showUpperLabel = true;
-  else if (puckProps.showUpperLabel === 'false') config.showUpperLabel = false;
-  if (puckProps.maxDepth != null && Number(puckProps.maxDepth) > 0)
-    config.maxDepth = Number(puckProps.maxDepth);
-  if (puckProps.borderWidth != null && Number(puckProps.borderWidth) > 0)
-    config.borderWidth = Number(puckProps.borderWidth);
+  if (normalizedPuckProps.showUpperLabel === 'true') config.showUpperLabel = true;
+  else if (normalizedPuckProps.showUpperLabel === 'false') config.showUpperLabel = false;
+  if (normalizedPuckProps.maxDepth != null && Number(normalizedPuckProps.maxDepth) > 0)
+    config.maxDepth = Number(normalizedPuckProps.maxDepth);
+  if (normalizedPuckProps.borderWidth != null && Number(normalizedPuckProps.borderWidth) > 0)
+    config.borderWidth = Number(normalizedPuckProps.borderWidth);
   // Sankey
-  if (puckProps.nodeWidth != null && puckProps.nodeWidth !== '')
-    config.nodeWidth = Number(puckProps.nodeWidth);
-  if (puckProps.nodeGap != null && puckProps.nodeGap !== '')
-    config.nodeGap = Number(puckProps.nodeGap);
-  if (s(puckProps.orient)) config.orient = puckProps.orient;
+  if (normalizedPuckProps.nodeWidth != null && normalizedPuckProps.nodeWidth !== '')
+    config.nodeWidth = Number(normalizedPuckProps.nodeWidth);
+  if (normalizedPuckProps.nodeGap != null && normalizedPuckProps.nodeGap !== '')
+    config.nodeGap = Number(normalizedPuckProps.nodeGap);
+  if (s(normalizedPuckProps.orient)) config.orient = normalizedPuckProps.orient;
   // Waterfall
-  if (s(puckProps.totalLabel)) config.totalLabel = puckProps.totalLabel;
-  if (s(puckProps.increaseColor)) config.increaseColor = puckProps.increaseColor;
-  if (s(puckProps.decreaseColor)) config.decreaseColor = puckProps.decreaseColor;
-  if (s(puckProps.totalColor)) config.totalColor = puckProps.totalColor;
+  if (s(normalizedPuckProps.totalLabel)) config.totalLabel = normalizedPuckProps.totalLabel;
+  if (s(normalizedPuckProps.increaseColor))
+    config.increaseColor = normalizedPuckProps.increaseColor;
+  if (s(normalizedPuckProps.decreaseColor))
+    config.decreaseColor = normalizedPuckProps.decreaseColor;
+  if (s(normalizedPuckProps.totalColor)) config.totalColor = normalizedPuckProps.totalColor;
   // BoxPlot
-  if (s(puckProps.boxWidth)) config.boxWidth = puckProps.boxWidth;
+  if (s(normalizedPuckProps.boxWidth)) config.boxWidth = normalizedPuckProps.boxWidth;
   // Gauge
-  if (puckProps.startAngle != null && puckProps.startAngle !== '')
-    config.startAngle = Number(puckProps.startAngle);
-  if (puckProps.endAngle != null && puckProps.endAngle !== '')
-    config.endAngle = Number(puckProps.endAngle);
-  if (puckProps.roundCap === 'true') config.roundCap = true;
-  else if (puckProps.roundCap === 'false') config.roundCap = false;
-  if (puckProps.splitCount != null && puckProps.splitCount !== '')
-    config.splitCount = Number(puckProps.splitCount);
-  if (puckProps.progressMode === 'true') config.progressMode = true;
-  else if (puckProps.progressMode === 'false') config.progressMode = false;
+  if (normalizedPuckProps.startAngle != null && normalizedPuckProps.startAngle !== '')
+    config.startAngle = Number(normalizedPuckProps.startAngle);
+  if (normalizedPuckProps.endAngle != null && normalizedPuckProps.endAngle !== '')
+    config.endAngle = Number(normalizedPuckProps.endAngle);
+  if (normalizedPuckProps.roundCap === 'true') config.roundCap = true;
+  else if (normalizedPuckProps.roundCap === 'false') config.roundCap = false;
+  if (normalizedPuckProps.splitCount != null && normalizedPuckProps.splitCount !== '')
+    config.splitCount = Number(normalizedPuckProps.splitCount);
+  if (normalizedPuckProps.progressMode === 'true') config.progressMode = true;
+  else if (normalizedPuckProps.progressMode === 'false') config.progressMode = false;
   // Table
-  if (puckProps.striped === 'true') config.striped = true;
-  else if (puckProps.striped === 'false') config.striped = false;
-  if (puckProps.showRowNumbers === 'true') config.showRowNumbers = true;
-  else if (puckProps.showRowNumbers === 'false') config.showRowNumbers = false;
-  if (puckProps.showTotals === 'true') config.showTotals = true;
-  else if (puckProps.showTotals === 'false') config.showTotals = false;
-  if (s(puckProps.headerAlign)) config.headerAlign = puckProps.headerAlign;
-  if (s(puckProps.cellAlign)) config.cellAlign = puckProps.cellAlign;
+  if (normalizedPuckProps.striped === 'true') config.striped = true;
+  else if (normalizedPuckProps.striped === 'false') config.striped = false;
+  if (normalizedPuckProps.showRowNumbers === 'true') config.showRowNumbers = true;
+  else if (normalizedPuckProps.showRowNumbers === 'false') config.showRowNumbers = false;
+  if (normalizedPuckProps.showTotals === 'true') config.showTotals = true;
+  else if (normalizedPuckProps.showTotals === 'false') config.showTotals = false;
+  if (s(normalizedPuckProps.headerAlign)) config.headerAlign = normalizedPuckProps.headerAlign;
+  if (s(normalizedPuckProps.cellAlign)) config.cellAlign = normalizedPuckProps.cellAlign;
   // KPI
-  if (s(puckProps.subtitleField)) config.subtitleField = puckProps.subtitleField;
-  if (s(puckProps.fontSize)) config.fontSize = puckProps.fontSize;
-  if (s(puckProps.trendDirection)) config.trendDirection = puckProps.trendDirection;
-  if (s(puckProps.prefix)) config.prefix = puckProps.prefix;
-  if (s(puckProps.suffix)) config.suffix = puckProps.suffix;
-  if (s(puckProps.format)) config.format = puckProps.format;
+  if (s(normalizedPuckProps.subtitleField))
+    config.subtitleField = normalizedPuckProps.subtitleField;
+  if (s(normalizedPuckProps.fontSize)) config.fontSize = normalizedPuckProps.fontSize;
+  if (s(normalizedPuckProps.trendDirection))
+    config.trendDirection = normalizedPuckProps.trendDirection;
+  if (s(normalizedPuckProps.prefix)) config.prefix = normalizedPuckProps.prefix;
+  if (s(normalizedPuckProps.suffix)) config.suffix = normalizedPuckProps.suffix;
+  if (s(normalizedPuckProps.format)) config.format = normalizedPuckProps.format;
 
   return config;
 }

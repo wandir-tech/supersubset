@@ -14,9 +14,11 @@ import {
   waitForChartsReady,
   captureWidgetFromCanvas,
   capturePropertyCallout,
+  selectWidgetFromCanvasByComponentId,
   selectWidgetViaLayers,
   toggleRadioProperty,
   changeSelectProperty,
+  changeNumberProperty,
   scrollPropertyIntoView,
   screenshotPath,
   setupConsoleErrorCapture,
@@ -28,12 +30,12 @@ import {
 interface PropertyVariant {
   /** Property label as shown in Puck panel */
   fieldLabel: string;
-  /** Value to set (for radio: button label; for select: option value) */
+  /** Value to set (for radio: button label; for select: option value; for number: input value) */
   targetValue: string;
   /** Variant slug for the screenshot filename */
   variantSlug: string;
-  /** 'radio' or 'select' */
-  fieldType: 'radio' | 'select';
+  /** 'radio', 'select', or 'number' */
+  fieldType: 'radio' | 'select' | 'number';
 }
 
 interface WidgetVariantSpec {
@@ -64,9 +66,24 @@ const overviewWidgets: WidgetVariantSpec[] = [
     slug: 'line-chart',
     page: 'overview',
     variants: [
-      { fieldLabel: 'Smooth', targetValue: 'No', variantSlug: 'straight-lines', fieldType: 'radio' },
-      { fieldLabel: 'Show Markers', targetValue: 'No', variantSlug: 'no-markers', fieldType: 'radio' },
-      { fieldLabel: 'Connect Nulls', targetValue: 'Yes', variantSlug: 'connect-nulls', fieldType: 'radio' },
+      {
+        fieldLabel: 'Smooth',
+        targetValue: 'No',
+        variantSlug: 'straight-lines',
+        fieldType: 'radio',
+      },
+      {
+        fieldLabel: 'Show Markers',
+        targetValue: 'No',
+        variantSlug: 'no-markers',
+        fieldType: 'radio',
+      },
+      {
+        fieldLabel: 'Step Interpolation',
+        targetValue: 'middle',
+        variantSlug: 'step-middle',
+        fieldType: 'select',
+      },
     ],
   },
   {
@@ -77,9 +94,24 @@ const overviewWidgets: WidgetVariantSpec[] = [
     slug: 'bar-chart',
     page: 'overview',
     variants: [
-      { fieldLabel: 'Orientation', targetValue: 'Horizontal', variantSlug: 'horizontal', fieldType: 'radio' },
-      { fieldLabel: 'Stacked', targetValue: 'Yes', variantSlug: 'stacked', fieldType: 'radio' },
-      { fieldLabel: 'Bar Width', targetValue: '20%', variantSlug: 'slim-bars', fieldType: 'select' },
+      {
+        fieldLabel: 'Orientation',
+        targetValue: 'Horizontal',
+        variantSlug: 'horizontal',
+        fieldType: 'radio',
+      },
+      {
+        fieldLabel: 'Show Values',
+        targetValue: 'Yes',
+        variantSlug: 'show-values',
+        fieldType: 'radio',
+      },
+      {
+        fieldLabel: 'Bar Width',
+        targetValue: '20%',
+        variantSlug: 'slim-bars',
+        fieldType: 'select',
+      },
     ],
   },
   {
@@ -91,8 +123,18 @@ const overviewWidgets: WidgetVariantSpec[] = [
     page: 'overview',
     variants: [
       { fieldLabel: 'Striped', targetValue: 'No', variantSlug: 'no-stripes', fieldType: 'radio' },
-      { fieldLabel: 'Row Numbers', targetValue: 'Yes', variantSlug: 'row-numbers', fieldType: 'radio' },
-      { fieldLabel: 'Show Totals', targetValue: 'Yes', variantSlug: 'show-totals', fieldType: 'radio' },
+      {
+        fieldLabel: 'Row Numbers',
+        targetValue: 'Yes',
+        variantSlug: 'row-numbers',
+        fieldType: 'radio',
+      },
+      {
+        fieldLabel: 'Show Totals',
+        targetValue: 'Yes',
+        variantSlug: 'show-totals',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -103,8 +145,18 @@ const overviewWidgets: WidgetVariantSpec[] = [
     slug: 'alerts',
     page: 'overview',
     variants: [
-      { fieldLabel: 'Layout', targetValue: 'inline', variantSlug: 'inline-layout', fieldType: 'select' },
-      { fieldLabel: 'Show Timestamp', targetValue: 'No', variantSlug: 'no-timestamp', fieldType: 'radio' },
+      {
+        fieldLabel: 'Layout',
+        targetValue: 'inline',
+        variantSlug: 'inline-layout',
+        fieldType: 'select',
+      },
+      {
+        fieldLabel: 'Show Timestamp',
+        targetValue: 'No',
+        variantSlug: 'no-timestamp',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -115,8 +167,18 @@ const overviewWidgets: WidgetVariantSpec[] = [
     slug: 'kpi-card',
     page: 'overview',
     variants: [
-      { fieldLabel: 'Font Size', targetValue: 'lg', variantSlug: 'large-font', fieldType: 'select' },
-      { fieldLabel: 'Trend Direction', targetValue: 'Down = Good', variantSlug: 'down-good', fieldType: 'radio' },
+      {
+        fieldLabel: 'Font Size',
+        targetValue: 'lg',
+        variantSlug: 'large-font',
+        fieldType: 'select',
+      },
+      {
+        fieldLabel: 'Trend Direction',
+        targetValue: 'Down = Good',
+        variantSlug: 'down-good',
+        fieldType: 'radio',
+      },
     ],
   },
 ];
@@ -133,7 +195,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     page: 'gallery',
     variants: [
       { fieldLabel: 'Variant', targetValue: 'donut', variantSlug: 'donut', fieldType: 'select' },
-      { fieldLabel: 'Label Position', targetValue: 'inside', variantSlug: 'labels-inside', fieldType: 'select' },
+      {
+        fieldLabel: 'Label Position',
+        targetValue: 'inside',
+        variantSlug: 'labels-inside',
+        fieldType: 'select',
+      },
     ],
   },
   {
@@ -144,7 +211,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'scatter-chart',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Opacity', targetValue: '0.4', variantSlug: 'low-opacity', fieldType: 'select' },
+      {
+        fieldLabel: 'Opacity',
+        targetValue: '0.4',
+        variantSlug: 'low-opacity',
+        fieldType: 'select',
+      },
     ],
   },
   {
@@ -155,9 +227,24 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'area-chart',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Stacked', targetValue: 'No', variantSlug: 'unstacked', fieldType: 'radio' },
-      { fieldLabel: 'Area Opacity', targetValue: '1', variantSlug: 'full-opacity', fieldType: 'select' },
-      { fieldLabel: 'Show Markers', targetValue: 'No', variantSlug: 'no-markers', fieldType: 'radio' },
+      {
+        fieldLabel: 'Step Interpolation',
+        targetValue: 'middle',
+        variantSlug: 'step-middle',
+        fieldType: 'select',
+      },
+      {
+        fieldLabel: 'Area Opacity',
+        targetValue: '1',
+        variantSlug: 'full-opacity',
+        fieldType: 'select',
+      },
+      {
+        fieldLabel: 'Show Markers',
+        targetValue: 'No',
+        variantSlug: 'no-markers',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -168,7 +255,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'combo-chart',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Smooth Lines', targetValue: 'No', variantSlug: 'straight-lines', fieldType: 'radio' },
+      {
+        fieldLabel: 'Smooth Lines',
+        targetValue: 'No',
+        variantSlug: 'straight-lines',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -179,8 +271,18 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'gauge',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Round Cap', targetValue: 'Yes', variantSlug: 'round-cap', fieldType: 'radio' },
-      { fieldLabel: 'Progress Mode', targetValue: 'Yes', variantSlug: 'progress', fieldType: 'radio' },
+      {
+        fieldLabel: 'Split Count',
+        targetValue: '5',
+        variantSlug: 'low-split-count',
+        fieldType: 'number',
+      },
+      {
+        fieldLabel: 'Progress Mode',
+        targetValue: 'Yes',
+        variantSlug: 'progress',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -191,8 +293,18 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'funnel-chart',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Sort', targetValue: 'ascending', variantSlug: 'ascending', fieldType: 'select' },
-      { fieldLabel: 'Alignment', targetValue: 'Left', variantSlug: 'align-left', fieldType: 'radio' },
+      {
+        fieldLabel: 'Sort',
+        targetValue: 'ascending',
+        variantSlug: 'ascending',
+        fieldType: 'select',
+      },
+      {
+        fieldLabel: 'Alignment',
+        targetValue: 'Left',
+        variantSlug: 'align-left',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -215,7 +327,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'treemap',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Show Parent Labels', targetValue: 'Yes', variantSlug: 'parent-labels', fieldType: 'radio' },
+      {
+        fieldLabel: 'Show Values',
+        targetValue: 'Yes',
+        variantSlug: 'show-values',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -226,7 +343,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'heatmap',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Show Values', targetValue: 'Yes', variantSlug: 'show-values', fieldType: 'radio' },
+      {
+        fieldLabel: 'Show Values',
+        targetValue: 'Yes',
+        variantSlug: 'show-values',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -237,7 +359,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'waterfall',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Show Values', targetValue: 'Yes', variantSlug: 'show-values', fieldType: 'radio' },
+      {
+        fieldLabel: 'Show Values',
+        targetValue: 'Yes',
+        variantSlug: 'show-values',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -248,7 +375,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'sankey',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Orientation', targetValue: 'Vertical', variantSlug: 'vertical', fieldType: 'radio' },
+      {
+        fieldLabel: 'Orientation',
+        targetValue: 'Vertical',
+        variantSlug: 'vertical',
+        fieldType: 'radio',
+      },
     ],
   },
   {
@@ -259,7 +391,12 @@ const galleryWidgets: WidgetVariantSpec[] = [
     slug: 'box-plot',
     page: 'gallery',
     variants: [
-      { fieldLabel: 'Box Width', targetValue: '50', variantSlug: 'wide-boxes', fieldType: 'select' },
+      {
+        fieldLabel: 'Box Width',
+        targetValue: '50',
+        variantSlug: 'wide-boxes',
+        fieldType: 'select',
+      },
     ],
   },
 ];
@@ -290,12 +427,18 @@ function generateTests(widgets: WidgetVariantSpec[]) {
         }
 
         // 2. Select the widget via Layers
-        const selected = await selectWidgetViaLayers(page, widget.layerLabel);
+        const selected =
+          (await selectWidgetFromCanvasByComponentId(page, widget.puckComponentId)) ||
+          (await selectWidgetViaLayers(page, widget.layerLabel));
         expect(selected, `Could not select ${widget.layerLabel} via Layers`).toBe(true);
 
         // 2b. Capture the DEFAULT viewer from canvas BEFORE toggling
         const beforePath = await captureWidgetFromCanvas(
-          page, widget.puckComponentId, widget.category, widget.slug, `${variant.variantSlug}-before`,
+          page,
+          widget.puckComponentId,
+          widget.category,
+          widget.slug,
+          `${variant.variantSlug}-before`,
         );
 
         // 3. Scroll property into view and toggle it
@@ -304,10 +447,14 @@ function generateTests(widgets: WidgetVariantSpec[]) {
         let toggled: boolean;
         if (variant.fieldType === 'radio') {
           toggled = await toggleRadioProperty(page, variant.fieldLabel, variant.targetValue);
-        } else {
+        } else if (variant.fieldType === 'select') {
           toggled = await changeSelectProperty(page, variant.fieldLabel, variant.targetValue);
+        } else {
+          toggled = await changeNumberProperty(page, variant.fieldLabel, variant.targetValue);
         }
-        expect(toggled, `Could not toggle ${variant.fieldLabel} to ${variant.targetValue}`).toBe(true);
+        expect(toggled, `Could not toggle ${variant.fieldLabel} to ${variant.targetValue}`).toBe(
+          true,
+        );
 
         // 4. Wait for Puck re-render to settle after property change
         await page.waitForTimeout(1500);
@@ -316,12 +463,20 @@ function generateTests(widgets: WidgetVariantSpec[]) {
         await scrollPropertyIntoView(page, variant.fieldLabel);
         await page.waitForTimeout(500);
         await capturePropertyCallout(
-          page, variant.fieldLabel, widget.category, widget.slug, variant.variantSlug,
+          page,
+          variant.fieldLabel,
+          widget.category,
+          widget.slug,
+          variant.variantSlug,
         );
 
         // 5. Capture the AFTER viewer from the Puck canvas iframe
         const afterPath = await captureWidgetFromCanvas(
-          page, widget.puckComponentId, widget.category, widget.slug, variant.variantSlug,
+          page,
+          widget.puckComponentId,
+          widget.category,
+          widget.slug,
+          variant.variantSlug,
         );
 
         // 6. Compare before and after — verify they differ
