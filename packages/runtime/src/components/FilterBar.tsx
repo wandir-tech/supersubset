@@ -8,10 +8,10 @@ import { useFilters } from '../filters/FilterEngine';
 
 // ─── Styles ──────────────────────────────────────────────────
 
-const BAR_STYLE: React.CSSProperties = {
+type FilterBarLayout = 'horizontal' | 'vertical';
+
+const BAR_BASE_STYLE: React.CSSProperties = {
   display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'center',
   gap: '12px',
   padding: '10px 16px',
   background: 'var(--ss-filter-bar-bg, #f7f8fa)',
@@ -76,11 +76,49 @@ export interface FilterBarProps {
   /** Static option values per filter ID — host app provides these from query results */
   filterOptions?: Record<string, string[]>;
   className?: string;
+  layout?: FilterBarLayout;
+}
+
+function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
+  if (layout === 'vertical') {
+    return {
+      ...BAR_BASE_STYLE,
+      flexDirection: 'column',
+      flexWrap: 'nowrap',
+      alignItems: 'stretch',
+    };
+  }
+
+  return {
+    ...BAR_BASE_STYLE,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  };
+}
+
+function getResetStyle(layout: FilterBarLayout): React.CSSProperties {
+  if (layout === 'vertical') {
+    return {
+      ...RESET_STYLE,
+      marginLeft: 0,
+      marginTop: '4px',
+      alignSelf: 'flex-start',
+    };
+  }
+
+  return RESET_STYLE;
 }
 
 // ─── Component ───────────────────────────────────────────────
 
-export function FilterBar({ filters, datasets, filterOptions, className }: FilterBarProps) {
+export function FilterBar({
+  filters,
+  datasets,
+  filterOptions,
+  className,
+  layout = 'horizontal',
+}: FilterBarProps) {
   const { state, setFilter, resetAll } = useFilters();
   const inputIdPrefix = useId();
 
@@ -90,7 +128,11 @@ export function FilterBar({ filters, datasets, filterOptions, className }: Filte
 
   return createElement(
     'div',
-    { className: `ss-filter-bar ${className ?? ''}`.trim(), style: BAR_STYLE },
+    {
+      className: `ss-filter-bar ${className ?? ''}`.trim(),
+      style: getBarStyle(layout),
+      'data-ss-filter-bar-layout': layout,
+    },
     ...filters.map((f) =>
       createElement(FilterControl, {
         key: f.id,
@@ -109,7 +151,7 @@ export function FilterBar({ filters, datasets, filterOptions, className }: Filte
             className: 'ss-filter-reset',
             type: 'button',
             onClick: resetAll,
-            style: RESET_STYLE,
+            style: getResetStyle(layout),
           },
           '✕ Clear filters',
         )

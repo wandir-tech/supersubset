@@ -285,7 +285,7 @@ export function buildTooltipOption(
  */
 export function buildGridOption(
   shared: SharedConfig,
-  layout?: { hasTitle?: boolean; hasLegend?: boolean },
+  layout?: { hasTitle?: boolean; hasLegend?: boolean; zoomAxis?: 'x' | 'y' },
 ): Record<string, unknown> {
   const grid: Record<string, unknown> = {
     left: '3%',
@@ -310,9 +310,21 @@ export function buildGridOption(
     if (pos === 'right') grid.right = '12%';
   }
 
-  // Extra bottom space for data zoom
+  if (shared.yAxisTitle && grid.left === '3%') {
+    grid.left = '10%';
+  }
+
+  if (shared.xAxisTitle) {
+    grid.bottom = typeof grid.bottom === 'number' ? (grid.bottom as number) + 28 : '10%';
+  }
+
+  // Reserve space for data zoom controls on the axis they target.
   if (shared.zoomable) {
-    grid.bottom = typeof grid.bottom === 'number' ? (grid.bottom as number) + 40 : '12%';
+    if (layout?.zoomAxis === 'y') {
+      grid.right = typeof grid.right === 'number' ? (grid.right as number) + 40 : '12%';
+    } else {
+      grid.bottom = typeof grid.bottom === 'number' ? (grid.bottom as number) + 40 : '12%';
+    }
   }
 
   return grid;
@@ -332,7 +344,11 @@ export function buildCategoryAxisOption(
   };
 
   const title = axis === 'x' ? shared.xAxisTitle : shared.yAxisTitle;
-  if (title) axisOpt.name = title;
+  if (title) {
+    axisOpt.name = title;
+    axisOpt.nameLocation = 'middle';
+    axisOpt.nameGap = axis === 'x' ? 32 : 48;
+  }
 
   if (axis === 'x' && shared.xAxisLabelRotate) {
     axisOpt.axisLabel = { rotate: shared.xAxisLabelRotate };
@@ -353,7 +369,11 @@ export function buildValueAxisOption(
   };
 
   const title = axis === 'x' ? shared.xAxisTitle : shared.yAxisTitle;
-  if (title) axisOpt.name = title;
+  if (title) {
+    axisOpt.name = title;
+    axisOpt.nameLocation = 'middle';
+    axisOpt.nameGap = axis === 'x' ? 32 : 48;
+  }
 
   if (axis === 'y') {
     if (shared.yAxisMin != null) axisOpt.min = shared.yAxisMin;
@@ -372,8 +392,17 @@ export function buildValueAxisOption(
  */
 export function buildDataZoomOption(
   shared: SharedConfig,
+  axis: 'x' | 'y' = 'x',
 ): Array<Record<string, unknown>> | undefined {
   if (!shared.zoomable) return undefined;
+
+  if (axis === 'y') {
+    return [
+      { type: 'slider', yAxisIndex: 0, orient: 'vertical' },
+      { type: 'inside', yAxisIndex: 0, orient: 'vertical' },
+    ];
+  }
+
   return [
     { type: 'slider', xAxisIndex: 0 },
     { type: 'inside', xAxisIndex: 0 },

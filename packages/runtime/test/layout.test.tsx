@@ -19,7 +19,13 @@ describe('LayoutRenderer', () => {
   it('renders a simple grid with one widget', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
-      'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: { columns: 12 } },
+      'grid-1': {
+        id: 'grid-1',
+        type: 'grid',
+        children: ['w-1'],
+        parentId: 'root',
+        meta: { columns: 12 },
+      },
       'w-1': {
         id: 'w-1',
         type: 'widget',
@@ -33,12 +39,7 @@ describe('LayoutRenderer', () => {
     ];
 
     const { container } = render(
-      <LayoutRenderer
-        layout={layout}
-        rootNodeId="root"
-        widgets={widgets}
-        registry={registry}
-      />,
+      <LayoutRenderer layout={layout} rootNodeId="root" widgets={widgets} registry={registry} />,
     );
 
     expect(container.querySelector('.ss-layout-root')).toBeTruthy();
@@ -53,8 +54,20 @@ describe('LayoutRenderer', () => {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['row-1'], parentId: 'root', meta: {} },
       'row-1': { id: 'row-1', type: 'row', children: ['w-1', 'w-2'], parentId: 'grid-1', meta: {} },
-      'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'row-1', meta: { widgetRef: 'chart-1', width: 8 } },
-      'w-2': { id: 'w-2', type: 'widget', children: [], parentId: 'row-1', meta: { widgetRef: 'chart-2', width: 4 } },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'row-1',
+        meta: { widgetRef: 'chart-1', width: 8 },
+      },
+      'w-2': {
+        id: 'w-2',
+        type: 'widget',
+        children: [],
+        parentId: 'row-1',
+        meta: { widgetRef: 'chart-2', width: 4 },
+      },
     };
     const widgets: WidgetDefinition[] = [
       { id: 'chart-1', type: 'line-chart', title: 'Sales Trend', config: {} },
@@ -73,7 +86,13 @@ describe('LayoutRenderer', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: {} },
-      'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'nonexistent' } },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'nonexistent' },
+      },
     };
 
     const { container } = render(
@@ -87,11 +106,15 @@ describe('LayoutRenderer', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: {} },
-      'w-1': { id: 'w-1', type: 'widget', children: [], parentId: 'grid-1', meta: { widgetRef: 'x-1' } },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'x-1' },
+      },
     };
-    const widgets: WidgetDefinition[] = [
-      { id: 'x-1', type: 'unknown-chart-type', config: {} },
-    ];
+    const widgets: WidgetDefinition[] = [{ id: 'x-1', type: 'unknown-chart-type', config: {} }];
 
     const { container } = render(
       <LayoutRenderer layout={layout} rootNodeId="root" widgets={widgets} registry={registry} />,
@@ -103,8 +126,20 @@ describe('LayoutRenderer', () => {
   it('renders header and divider components', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
-      'grid-1': { id: 'grid-1', type: 'grid', children: ['h-1', 'div-1'], parentId: 'root', meta: {} },
-      'h-1': { id: 'h-1', type: 'header', children: [], parentId: 'grid-1', meta: { text: 'Dashboard Title', headerSize: 'large' } },
+      'grid-1': {
+        id: 'grid-1',
+        type: 'grid',
+        children: ['h-1', 'div-1'],
+        parentId: 'root',
+        meta: {},
+      },
+      'h-1': {
+        id: 'h-1',
+        type: 'header',
+        children: [],
+        parentId: 'grid-1',
+        meta: { text: 'Dashboard Title', headerSize: 'large' },
+      },
       'div-1': { id: 'div-1', type: 'divider', children: [], parentId: 'grid-1', meta: {} },
     };
 
@@ -129,7 +164,13 @@ describe('LayoutRenderer', () => {
     const layout: LayoutMap = {
       root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
       'grid-1': { id: 'grid-1', type: 'grid', children: ['sp-1'], parentId: 'root', meta: {} },
-      'sp-1': { id: 'sp-1', type: 'spacer', children: [], parentId: 'grid-1', meta: { height: 48 } },
+      'sp-1': {
+        id: 'sp-1',
+        type: 'spacer',
+        children: [],
+        parentId: 'grid-1',
+        meta: { height: 48 },
+      },
     };
 
     const { container } = render(
@@ -138,5 +179,32 @@ describe('LayoutRenderer', () => {
 
     const spacer = container.querySelector('.ss-spacer');
     expect(spacer).toBeTruthy();
+  });
+
+  it('renders markdown content blocks emitted by the designer', () => {
+    const layout: LayoutMap = {
+      root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
+      'grid-1': {
+        id: 'grid-1',
+        type: 'grid',
+        children: ['markdown-1'],
+        parentId: 'root',
+        meta: {},
+      },
+      'markdown-1': {
+        id: 'markdown-1',
+        type: 'markdown',
+        children: [],
+        parentId: 'grid-1',
+        meta: { text: 'Review the chart cookbook for field-mapping examples.' },
+      },
+    };
+
+    const { container } = render(
+      <LayoutRenderer layout={layout} rootNodeId="root" widgets={[]} registry={registry} />,
+    );
+
+    expect(container.querySelector('.ss-markdown')).toBeTruthy();
+    expect(screen.getByText('Review the chart cookbook for field-mapping examples.')).toBeTruthy();
   });
 });

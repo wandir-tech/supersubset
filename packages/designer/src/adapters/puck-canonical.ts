@@ -279,7 +279,10 @@ function layoutChildrenToPuck(
     // Row or column → reconstruct as RowBlock/ColumnBlock with nested content
     const puckLayoutName = layoutTypeToPuckName[node.type];
     if (puckLayoutName) {
-      const nestedContent = layoutChildrenToPuck(node.children, layout, widgets);
+      const nestedContent =
+        node.type === 'row'
+          ? rowChildrenToPuck(node.children, layout, widgets)
+          : layoutChildrenToPuck(node.children, layout, widgets);
       content.push({
         type: puckLayoutName,
         props: {
@@ -327,6 +330,42 @@ function layoutChildrenToPuck(
   return content;
 }
 
+function rowChildrenToPuck(
+  childIds: string[],
+  layout: LayoutMap,
+  widgets: WidgetDefinition[],
+): ComponentData[] {
+  const content: ComponentData[] = [];
+
+  for (const childId of childIds) {
+    const child = layout[childId];
+    if (!child) continue;
+
+    if (child.type === 'column') {
+      content.push(...layoutChildrenToPuck([childId], layout, widgets));
+      continue;
+    }
+
+    const rawWidth = child.meta.width;
+    const span =
+      typeof rawWidth === 'number' && Number.isFinite(rawWidth)
+        ? Math.min(12, Math.max(1, rawWidth))
+        : 12;
+
+    content.push({
+      type: 'ColumnBlock',
+      props: {
+        id: `column-${child.id}`,
+        span,
+        verticalAlign: 'stretch',
+        content: layoutChildrenToPuck([childId], layout, widgets),
+      },
+    } as ComponentData);
+  }
+
+  return content;
+}
+
 function buildLayoutBlockMeta(
   puckType: string,
   props: Record<string, unknown>,
@@ -358,6 +397,124 @@ function layoutNodeToPuckProps(node: LayoutComponent): Record<string, unknown> {
     if (node.meta.verticalAlign) props.verticalAlign = node.meta.verticalAlign;
   }
   return props;
+}
+
+const TABLE_BOOLEAN_CONFIG_KEYS = new Set(['striped', 'showRowNumbers', 'showTotals']);
+
+const BOOLEAN_CONFIG_KEYS = new Set([
+  ...TABLE_BOOLEAN_CONFIG_KEYS,
+  'showTimestamp',
+  'smooth',
+  'stacked',
+  'showLegend',
+  'showValues',
+  'logAxis',
+  'zoomable',
+  'showMarkers',
+  'connectNulls',
+  'lineSmooth',
+  'areaFill',
+  'showUpperLabel',
+  'roundCap',
+  'progressMode',
+]);
+
+const NUMERIC_CONFIG_KEYS = new Set([
+  'maxItems',
+  'xAxisLabelRotate',
+  'yAxisMin',
+  'yAxisMax',
+  'markerSize',
+  'areaOpacity',
+  'borderRadius',
+  'barMinHeight',
+  'innerRadius',
+  'outerRadius',
+  'padAngle',
+  'symbolSize',
+  'opacity',
+  'barBorderRadius',
+  'cellBorderWidth',
+  'gap',
+  'maxDepth',
+  'nodeWidth',
+  'nodeGap',
+  'startAngle',
+  'endAngle',
+  'splitCount',
+  'pageSize',
+]);
+
+const PUCK_STRING_NUMERIC_CONFIG_KEYS = new Set(['xAxisLabelRotate', 'areaOpacity', 'opacity']);
+
+function normalizeBooleanRadioValue(value: unknown): unknown {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return value;
+}
+
+function unwrapPuckOptionValue(value: unknown): unknown {
+  if (value && typeof value === 'object' && 'value' in value) {
+    return unwrapPuckOptionValue((value as { value: unknown }).value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}') && trimmed.includes('"value"')) {
+      try {
+        const parsed = JSON.parse(trimmed) as unknown;
+        if (parsed && typeof parsed === 'object' && 'value' in parsed) {
+          return unwrapPuckOptionValue((parsed as { value: unknown }).value);
+        }
+      } catch {
+        // Keep the original string when the value is not a serialized option payload.
+      }
+    }
+  }
+
+  return value;
+}
+
+function normalizeNumericConfigValue(value: unknown): unknown {
+  const unwrapped = unwrapPuckOptionValue(value);
+  if (typeof unwrapped === 'number' && Number.isFinite(unwrapped)) {
+    return unwrapped;
+  }
+
+  if (typeof unwrapped === 'string' && unwrapped.trim() !== '') {
+    const parsed = Number(unwrapped);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return unwrapped;
+}
+
+function normalizeConfigEntries(key: string, value: unknown): Array<[string, unknown]> {
+  const unwrappedValue = unwrapPuckOptionValue(value);
+
+  if (key === 'orientation') {
+    if (unwrappedValue === 'horizontal') return [['horizontal', true]];
+    if (unwrappedValue === 'vertical') return [['horizontal', false]];
+    return [];
+  }
+
+  if (key === 'variant') {
+    if (unwrappedValue === 'donut') return [['donut', true]];
+    if (unwrappedValue === 'pie') return [['donut', false]];
+    if (unwrappedValue === 'rose') return [['roseType', 'radius']];
+    return [];
+  }
+
+  const booleanNormalized = BOOLEAN_CONFIG_KEYS.has(key)
+    ? normalizeBooleanRadioValue(unwrappedValue)
+    : unwrappedValue;
+  const numericNormalized = NUMERIC_CONFIG_KEYS.has(key)
+    ? normalizeNumericConfigValue(booleanNormalized)
+    : booleanNormalized;
+
+  return [[key, numericNormalized]];
 }
 
 function buildWidgetDefinition(
@@ -442,7 +599,11 @@ function buildWidgetDefinition(
     }
 
     if (!NON_CONFIG_KEYS.has(key) && value !== undefined && value !== '') {
-      widget.config[key] = value;
+      for (const [configKey, normalizedValue] of normalizeConfigEntries(key, value)) {
+        if (normalizedValue !== undefined && normalizedValue !== '') {
+          widget.config[configKey] = normalizedValue;
+        }
+      }
     }
   }
 
@@ -563,6 +724,37 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
         props[key] = filterIds;
       }
 
+      continue;
+    }
+
+    if (key === 'horizontal' && typeof value === 'boolean') {
+      props.orientation = value ? 'horizontal' : 'vertical';
+      continue;
+    }
+
+    if (key === 'donut' && typeof value === 'boolean') {
+      if (props.variant === undefined) {
+        props.variant = value ? 'donut' : 'pie';
+      }
+      continue;
+    }
+
+    if (key === 'roseType') {
+      if (value) {
+        props.variant = 'rose';
+      } else if (props.variant === undefined) {
+        props.variant = 'pie';
+      }
+      continue;
+    }
+
+    if (BOOLEAN_CONFIG_KEYS.has(key) && typeof value === 'boolean') {
+      props[key] = value ? 'true' : 'false';
+      continue;
+    }
+
+    if (PUCK_STRING_NUMERIC_CONFIG_KEYS.has(key) && typeof value === 'number') {
+      props[key] = String(value);
       continue;
     }
 

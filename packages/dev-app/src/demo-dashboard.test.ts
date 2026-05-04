@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { demoDashboard } from './demo-dashboard';
 
 describe('demo dashboard fixture', () => {
+  it('exposes select, text, range, and date filters in the live dashboard', () => {
+    const filterTypes = (demoDashboard.filters ?? []).map((filter) => filter.type);
+
+    expect(filterTypes).toEqual(expect.arrayContaining(['select', 'text', 'range', 'date']));
+  });
+
   it('places both all-filter and subset filter-bar widgets on the overview page', () => {
     const overviewPage = demoDashboard.pages.find((page) => page.id === 'page-overview');
 

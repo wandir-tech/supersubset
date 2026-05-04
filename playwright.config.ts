@@ -1,5 +1,4 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
@@ -9,42 +8,19 @@ type LocalPortSelection = {
   viteSqliteExample: string;
 };
 
+type ReuseExistingServerSelection = {
+  devApp: boolean;
+  nextjsExample: boolean;
+  viteSqliteExample: boolean;
+};
+
 const DEFAULT_PORTS: LocalPortSelection = {
   devApp: '3000',
   nextjsExample: '3001',
   viteSqliteExample: '3002',
 };
 
-const DEVENV_STATE_PATH = path.resolve(process.cwd(), 'tmp/devenv-state.json');
 const FIND_FREE_PORT_SCRIPT = path.resolve(process.cwd(), 'scripts/find-free-port.mjs');
-
-function readPersistedPorts(): LocalPortSelection | null {
-  if (!existsSync(DEVENV_STATE_PATH)) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(readFileSync(DEVENV_STATE_PATH, 'utf8')) as {
-      ports?: { devApp?: number; nextjsExample?: number; viteSqliteExample?: number };
-    };
-
-    if (
-      parsed.ports?.devApp == null ||
-      parsed.ports.nextjsExample == null ||
-      parsed.ports.viteSqliteExample == null
-    ) {
-      return null;
-    }
-
-    return {
-      devApp: String(parsed.ports.devApp),
-      nextjsExample: String(parsed.ports.nextjsExample),
-      viteSqliteExample: String(parsed.ports.viteSqliteExample),
-    };
-  } catch {
-    return null;
-  }
-}
 
 function leaseLocalPorts(): LocalPortSelection {
   const output = execFileSync(
@@ -52,9 +28,9 @@ function leaseLocalPorts(): LocalPortSelection {
     [
       FIND_FREE_PORT_SCRIPT,
       '--start',
-      '3110',
+      '3210',
       '--end',
-      '3199',
+      '3299',
       '--count',
       '3',
       '--host',
@@ -77,15 +53,20 @@ function leaseLocalPorts(): LocalPortSelection {
 }
 
 function resolvePlaywrightPorts() {
-  const hasExplicitPorts = Boolean(
-    process.env.SUPERSUBSET_DEV_APP_PORT ||
-    process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT ||
-    process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT,
-  );
-  const persistedPorts = readPersistedPorts();
+  const explicitPorts: ReuseExistingServerSelection = {
+    devApp: Boolean(process.env.SUPERSUBSET_DEV_APP_PORT),
+    nextjsExample: Boolean(process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT),
+    viteSqliteExample: Boolean(process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT),
+  };
+  const ciPorts: ReuseExistingServerSelection = {
+    devApp: false,
+    nextjsExample: false,
+    viteSqliteExample: false,
+  };
 
-  // Local runs should avoid silently reusing arbitrary processes on the shared defaults.
-  const fallbackPorts = process.env.CI ? DEFAULT_PORTS : (persistedPorts ?? leaseLocalPorts());
+  // Local Playwright runs should be isolated from long-lived DevEnv tasks unless the caller
+  // intentionally pins ports to an already-running server tuple.
+  const fallbackPorts = process.env.CI ? DEFAULT_PORTS : leaseLocalPorts();
   const ports: LocalPortSelection = {
     devApp: process.env.SUPERSUBSET_DEV_APP_PORT ?? fallbackPorts.devApp,
     nextjsExample: process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT ?? fallbackPorts.nextjsExample,
@@ -95,7 +76,7 @@ function resolvePlaywrightPorts() {
 
   return {
     ports,
-    reuseExistingServer: !process.env.CI && (hasExplicitPorts || persistedPorts !== null),
+    reuseExistingServer: process.env.CI ? ciPorts : explicitPorts,
   };
 }
 
@@ -136,7 +117,7 @@ export default defineConfig({
       command: 'pnpm --filter @supersubset/dev-app dev',
       url: devAppOrigin,
       env: { ...process.env, SUPERSUBSET_DEV_APP_PORT: ports.devApp },
-      reuseExistingServer,
+      reuseExistingServer: reuseExistingServer.devApp,
       timeout: 120_000,
     },
     {
@@ -146,7 +127,7 @@ export default defineConfig({
         ...process.env,
         SUPERSUBSET_EXAMPLE_NEXTJS_PORT: ports.nextjsExample,
       },
-      reuseExistingServer,
+      reuseExistingServer: reuseExistingServer.nextjsExample,
       timeout: 120_000,
     },
     {
@@ -156,7 +137,7 @@ export default defineConfig({
         ...process.env,
         SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT: ports.viteSqliteExample,
       },
-      reuseExistingServer,
+      reuseExistingServer: reuseExistingServer.viteSqliteExample,
       timeout: 120_000,
     },
   ],

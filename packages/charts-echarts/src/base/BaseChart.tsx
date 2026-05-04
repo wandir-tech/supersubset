@@ -39,6 +39,16 @@ export interface BaseChartProps {
   buildClickPayload?: (params: unknown) => Record<string, unknown> | undefined;
 }
 
+interface ChartTestClickDetail {
+  seriesIndex?: number;
+  dataIndex?: number;
+}
+
+type ChartTestWindow = Window & {
+  __SUPERSUBSET_ENABLE_CHART_TEST_HOOKS__?: boolean;
+  __SUPERSUBSET_CHART_TEST_CLICKS__?: Array<Record<string, unknown>>;
+};
+
 export function BaseChart({
   option,
   width,
@@ -104,6 +114,46 @@ export function BaseChart({
     };
   }, [buildClickPayload, echartsTheme, onEvent, widgetId]);
 
+  useEffect(() => {
+    const chart = chartRef.current;
+    const container = containerRef.current;
+    const debugWindow = container?.ownerDocument.defaultView as ChartTestWindow | null;
+    if (!chart || !container || !onEvent || !widgetId || !isChartTestHookEnabled(debugWindow)) {
+      return;
+    }
+
+    const handleTestClick = (event: Event) => {
+      const detail = (event as CustomEvent<ChartTestClickDetail>).detail;
+      const params = buildSyntheticClickParams(
+        option,
+        detail?.seriesIndex ?? 0,
+        detail?.dataIndex ?? 0,
+      );
+      if (!params) {
+        return;
+      }
+
+      if (debugWindow) {
+        debugWindow.__SUPERSUBSET_CHART_TEST_CLICKS__ ??= [];
+        debugWindow.__SUPERSUBSET_CHART_TEST_CLICKS__.push({
+          widgetId,
+          payload: buildClickPayload?.(params) ?? extractClickPayload(params),
+        });
+      }
+
+      onEvent({
+        type: 'click',
+        widgetId,
+        payload: buildClickPayload?.(params) ?? extractClickPayload(params),
+      });
+    };
+
+    container.addEventListener('ss-chart-test-click', handleTestClick as EventListener);
+    return () => {
+      container.removeEventListener('ss-chart-test-click', handleTestClick as EventListener);
+    };
+  }, [buildClickPayload, onEvent, option, widgetId]);
+
   const containerStyle: CSSProperties = {
     width: width ? `${width}px` : '100%',
     height: height ? `${height}px` : '100%',
@@ -116,8 +166,19 @@ export function BaseChart({
       ref={containerRef}
       className={`ss-chart ${className ?? ''}`.trim()}
       style={containerStyle}
+      data-ss-chart-test-hook={
+        onEvent &&
+        widgetId &&
+        isChartTestHookEnabled(typeof window !== 'undefined' ? (window as ChartTestWindow) : null)
+          ? 'ready'
+          : undefined
+      }
     />
   );
+}
+
+function isChartTestHookEnabled(debugWindow: ChartTestWindow | null | undefined): boolean {
+  return debugWindow?.__SUPERSUBSET_ENABLE_CHART_TEST_HOOKS__ === true;
 }
 
 function extractClickPayload(params: unknown): Record<string, unknown> | undefined {
@@ -156,6 +217,48 @@ function extractClickPayload(params: unknown): Record<string, unknown> | undefin
   }
 
   return Object.keys(payload).length > 0 ? payload : undefined;
+}
+
+function buildSyntheticClickParams(
+  option: echarts.EChartsCoreOption,
+  seriesIndex: number,
+  dataIndex: number,
+): Record<string, unknown> | undefined {
+  const seriesList = Array.isArray(option.series)
+    ? option.series
+    : option.series !== undefined
+      ? [option.series]
+      : [];
+  const series = seriesList[seriesIndex];
+  if (!isRecord(series) || !Array.isArray(series.data)) {
+    return undefined;
+  }
+
+  const datum = series.data[dataIndex];
+  if (datum === undefined) {
+    return undefined;
+  }
+
+  const params: Record<string, unknown> = {
+    data: datum,
+  };
+
+  if (typeof series.name === 'string') {
+    params.seriesName = series.name;
+  }
+
+  if (isRecord(datum)) {
+    if (datum.value !== undefined) {
+      params.value = datum.value;
+    }
+    if (typeof datum.name === 'string') {
+      params.name = datum.name;
+    }
+  } else {
+    params.value = datum;
+  }
+
+  return params;
 }
 
 function toEChartsTheme(theme: string | Record<string, unknown> | undefined) {

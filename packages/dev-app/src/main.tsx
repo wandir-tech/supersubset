@@ -13,6 +13,7 @@ import {
   ImportExportPanel,
   CodeViewPanel,
   LivePreviewPane,
+  type FetchPreviewData,
   useUndoRedo,
   UndoRedoToolbar,
   useUndoRedoKeyboard,
@@ -209,6 +210,29 @@ function normalizeSelectFilterValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
+function normalizeTextFilterValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim().toLowerCase()
+    : undefined;
+}
+
+function normalizeRangeFilterValue(value: unknown): { min?: number; max?: number } | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const rawMin = (value as { min?: unknown }).min;
+  const rawMax = (value as { max?: unknown }).max;
+  const min = typeof rawMin === 'number' && Number.isFinite(rawMin) ? rawMin : undefined;
+  const max = typeof rawMax === 'number' && Number.isFinite(rawMax) ? rawMax : undefined;
+
+  if (min === undefined && max === undefined) {
+    return undefined;
+  }
+
+  return { min, max };
+}
+
 function normalizeDateFilterValue(value: unknown): { start?: string; end?: string } | undefined {
   if (!value || typeof value !== 'object') {
     return undefined;
@@ -249,17 +273,74 @@ function orderMatchesDateFilter(
   return true;
 }
 
+function orderMatchesSearchFilter(order: LiveDemoOrder, searchQuery: string | undefined): boolean {
+  if (!searchQuery) {
+    return true;
+  }
+
+  return order.customer.toLowerCase().includes(searchQuery);
+}
+
+function orderMatchesAmountFilter(
+  order: LiveDemoOrder,
+  amountFilter: { min?: number; max?: number } | undefined,
+): boolean {
+  if (!amountFilter) {
+    return true;
+  }
+
+  if (amountFilter.min !== undefined && order.amount < amountFilter.min) {
+    return false;
+  }
+
+  if (amountFilter.max !== undefined && order.amount > amountFilter.max) {
+    return false;
+  }
+
+  return true;
+}
+
 function filterLiveDemoOrders(filterValues: Record<string, unknown>): LiveDemoOrder[] {
   const region = normalizeSelectFilterValue(filterValues['filter-region']);
   const category = normalizeSelectFilterValue(filterValues['filter-category']);
+  const searchQuery = normalizeTextFilterValue(filterValues['filter-search']);
+  const amountFilter = normalizeRangeFilterValue(filterValues['filter-amount']);
   const dateFilter = normalizeDateFilterValue(filterValues['filter-date']);
 
   return LIVE_DEMO_ORDERS.filter(
     (order) =>
       (region === undefined || order.region === region) &&
       (category === undefined || order.category === category) &&
+      orderMatchesSearchFilter(order, searchQuery) &&
+      orderMatchesAmountFilter(order, amountFilter) &&
       orderMatchesDateFilter(order, dateFilter),
   );
+}
+
+function filterValuesForPage(
+  filterDefinitions: FilterDefinition[] | undefined,
+  filterValues: Record<string, unknown>,
+  pageId: string,
+): Record<string, unknown> {
+  const applicableFilterValues: Record<string, unknown> = {};
+
+  for (const filter of filterDefinitions ?? []) {
+    const value = filterValues[filter.id];
+    if (value === undefined) {
+      continue;
+    }
+
+    if (filter.scope.type === 'global') {
+      applicableFilterValues[filter.id] = value;
+      continue;
+    }
+
+    if (filter.scope.type === 'page' && filter.scope.pageId === pageId) {
+      applicableFilterValues[filter.id] = value;
+    }
+  }
+
+  return applicableFilterValues;
 }
 
 function buildRevenueTrendData(orders: LiveDemoOrder[]): Record<string, unknown>[] {
@@ -331,6 +412,53 @@ function buildLiveDashboardDemoData(filterValues: Record<string, unknown>): Demo
   };
 }
 
+function buildPageNavigationDemoData(
+  filterValues: Record<string, unknown>,
+  activePageId: string,
+): DemoWidgetDataMap {
+  const scopedFilterValues = filterValuesForPage(
+    pageNavigationDemoDashboard.filters as FilterDefinition[] | undefined,
+    filterValues,
+    activePageId,
+  );
+  const filteredOrders = filterLiveDemoOrders(scopedFilterValues);
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.amount, 0);
+  const previousRevenue = filteredOrders.reduce((sum, order) => sum + order.prevAmount, 0);
+  const totalOrders = filteredOrders.length;
+  const averageOrderValue = totalOrders === 0 ? 0 : totalRevenue / totalOrders;
+  const previousOrders = totalOrders === 0 ? 0 : Math.max(1, totalOrders - 1);
+
+  return {
+    'pages-kpi-revenue': {
+      data: [{ revenue: totalRevenue, prevRevenue: previousRevenue }],
+    },
+    'pages-kpi-orders': {
+      data: [{ orders: totalOrders, prevOrders: previousOrders }],
+    },
+    'pages-kpi-aov': {
+      data: [{ aov: averageOrderValue }],
+    },
+    'pages-chart-region-sales': {
+      data: buildRegionSalesData(filteredOrders),
+    },
+    'pages-chart-revenue-trend': {
+      data: buildRevenueTrendData(filteredOrders),
+    },
+    'pages-table-orders': {
+      data: filteredOrders.map(
+        ({
+          prevAmount: _prevAmount,
+          month: _month,
+          region: _region,
+          category: _category,
+          ...row
+        }) => row,
+      ),
+      columns: ordersTableColumns,
+    },
+  };
+}
+
 function createDemoRegistry(getDemoData: (widgetId: string) => DemoWidgetData | undefined) {
   const reg = createWidgetRegistry();
   registerAllCharts(reg);
@@ -357,6 +485,73 @@ function createDemoRegistry(getDemoData: (widgetId: string) => DemoWidgetData | 
 
   return reg;
 }
+
+function collectPreviewFieldIds(fields: Record<string, string | string[] | undefined>): string[] {
+  const ids = new Set<string>();
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (key === 'aggregation' || key === 'metricFields') {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (entry) {
+          ids.add(entry);
+        }
+      }
+      continue;
+    }
+
+    if (value) {
+      ids.add(value);
+    }
+  }
+
+  return Array.from(ids);
+}
+
+function previewRowsSupportFields(rows: Record<string, unknown>[], fieldIds: string[]): boolean {
+  if (rows.length === 0) {
+    return false;
+  }
+
+  return fieldIds.every((fieldId) => rows.some((row) => fieldId in row));
+}
+
+const LOCAL_PREVIEW_DATA: Record<string, Record<string, unknown>[][]> = {
+  'ds-orders': [
+    scatterData,
+    waterfallData,
+    comboData,
+    areaData,
+    heatmapData,
+    sankeyData,
+    boxplotData,
+    trendData,
+    regionData,
+    pieData,
+    gaugeData,
+    funnelData,
+    radarData,
+    treemapData,
+    kpiData,
+    ordersTableData,
+  ],
+  'ds-ops-alerts': [alertsData],
+};
+
+const fetchLocalPreviewData: FetchPreviewData = (request) => {
+  const candidates = LOCAL_PREVIEW_DATA[request.datasetRef] ?? [];
+  const fieldIds = collectPreviewFieldIds(request.fields);
+
+  if (fieldIds.length === 0) {
+    return [];
+  }
+
+  const match = candidates.find((rows) => previewRowsSupportFields(rows, fieldIds));
+  return match ? match.map((row) => ({ ...row })) : [];
+};
 
 type ViewerScenario = 'live' | 'pages' | 'dashboards';
 
@@ -580,8 +775,13 @@ function App() {
     () =>
       viewerScenario === 'live'
         ? { ...DEMO_DATA, ...buildLiveDashboardDemoData(viewerFilterValues) }
-        : DEMO_DATA,
-    [viewerFilterValues, viewerScenario],
+        : viewerScenario === 'pages'
+          ? {
+              ...DEMO_DATA,
+              ...buildPageNavigationDemoData(viewerFilterValues, viewerActivePage),
+            }
+          : DEMO_DATA,
+    [viewerActivePage, viewerFilterValues, viewerScenario],
   );
   const viewerDemoDataRef = useRef<DemoWidgetDataMap>(viewerDemoData);
   viewerDemoDataRef.current = viewerDemoData;
@@ -773,6 +973,7 @@ function App() {
                   headerTitle="Supersubset Designer"
                   height="100%"
                   datasets={demoDatasets}
+                  fetchPreviewData={fetchLocalPreviewData}
                   headerActions={
                     <div
                       data-testid="dev-app-designer-actions"
@@ -1127,7 +1328,14 @@ function App() {
               filterOptions={FILTER_OPTIONS}
               onNavigate={handleViewerNavigate}
               onFilterChange={handleViewerFilterChange}
-              onWidgetEvent={(event) => console.log('[Supersubset] Widget event:', event)}
+              onWidgetEvent={(event) => {
+                const debugWindow = window as Window & {
+                  __SUPERSUBSET_WIDGET_EVENTS__?: unknown[];
+                };
+                debugWindow.__SUPERSUBSET_WIDGET_EVENTS__ ??= [];
+                debugWindow.__SUPERSUBSET_WIDGET_EVENTS__.push(event);
+                console.log('[Supersubset] Widget event:', event);
+              }}
             />
           </div>
         )}

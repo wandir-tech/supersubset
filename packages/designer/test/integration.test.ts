@@ -379,10 +379,10 @@ describe('Layout blocks integration', () => {
     expect((row.fields?.content as { type: string }).type).toBe('slot');
   });
 
-  it('ColumnBlock is not inline and has slot field', () => {
+  it('ColumnBlock is inline and has slot field', () => {
     const col = config.components['ColumnBlock'];
     expect(col).toBeDefined();
-    expect(col.inline).toBe(false);
+    expect(col.inline).toBe(true);
     expect((col.fields?.content as { type: string }).type).toBe('slot');
   });
 

@@ -7,6 +7,8 @@ import { test, expect, type Page } from '@playwright/test';
 
 const DEV_APP_ORIGIN = `http://localhost:${process.env.SUPERSUBSET_DEV_APP_PORT ?? '3006'}`;
 const FILTER_BAR_REGISTRY_ERROR = 'No widget registered for type: filter-bar';
+const DESIGNER_VIEWPORT = { width: 1440, height: 900 };
+const DESIGNER_RENDER_WAIT_MS = 900;
 
 async function openViewerLiveDashboard(page: Page) {
   await page.goto(DEV_APP_ORIGIN);
@@ -38,6 +40,70 @@ function filterBarWidget(page: Page, layoutNodeId: 'w-filter-bar-all' | 'w-filte
   return page.locator(`[data-ss-dashboard="demo-sales"] [data-ss-node="${layoutNodeId}"]`);
 }
 
+async function openDesignerLiveDashboard(page: Page) {
+  await page.goto(DEV_APP_ORIGIN);
+  await page.getByRole('button', { name: /designer/i }).click();
+  await expect(page.getByTestId('designer-header-controls')).toBeVisible({ timeout: 10000 });
+  await page.locator('nav').evaluate((nav) => {
+    const item = Array.from(nav.querySelectorAll('li')).find(
+      (candidate) => candidate.textContent?.trim() === 'Fields',
+    );
+
+    if (!(item instanceof HTMLElement)) {
+      throw new Error('Could not find the Fields nav item in the designer shell');
+    }
+
+    const clickTarget = item.querySelector('div');
+    (clickTarget instanceof HTMLElement ? clickTarget : item).click();
+  });
+  await page.waitForTimeout(DESIGNER_RENDER_WAIT_MS);
+}
+
+function previewFrame(page: Page) {
+  return page.frameLocator('iframe').first();
+}
+
+async function selectDesignerWidget(page: Page, widgetId: string) {
+  const component = previewFrame(page).locator(`[data-puck-component="${widgetId}"]`).last();
+  await expect(component).toBeVisible();
+  await component.click({ position: { x: 20, y: 20 } });
+}
+
+async function setDesignerTextField(page: Page, widgetId: string, field: string, value: string) {
+  const input = page.locator(`#${widgetId}_text_${field}`).last();
+  await expect(input).toBeVisible();
+  await input.fill(value);
+}
+
+async function setDesignerRadioField(page: Page, widgetId: string, field: string, label: string) {
+  const radio = page.locator(`#${widgetId}_radio_${field} label`).filter({ hasText: label }).last();
+  await expect(radio).toBeVisible();
+  await radio.click();
+}
+
+async function setFilterSubset(page: Page, visibleFilters: string[]) {
+  const allFilterLabels = ['Region', 'Category', 'Customer Search', 'Order Amount', 'Order Date'];
+
+  for (const label of allFilterLabels) {
+    const checkbox = page.getByLabel(`Show filter ${label}`).last();
+    await expect(checkbox).toBeVisible();
+
+    if (visibleFilters.includes(label)) {
+      if (!(await checkbox.isChecked())) {
+        await checkbox.check();
+      }
+    } else if (await checkbox.isChecked()) {
+      await checkbox.uncheck();
+    }
+  }
+}
+
+async function switchToViewer(page: Page) {
+  await page.getByRole('button', { name: /viewer/i }).click();
+  await expect(page.locator('[data-ss-dashboard="demo-sales"]')).toBeVisible({ timeout: 10000 });
+  await page.waitForTimeout(DESIGNER_RENDER_WAIT_MS);
+}
+
 test.describe('Dashboard Filters', () => {
   test('viewer renders placed filter-bar widgets without registry errors', async ({ page }) => {
     const consoleErrors = trackConsoleErrors(page);
@@ -60,10 +126,16 @@ test.describe('Dashboard Filters', () => {
 
     await expect(allFiltersBar.getByLabel('Region')).toBeVisible();
     await expect(allFiltersBar.getByLabel('Category')).toBeVisible();
+    await expect(allFiltersBar.getByLabel('Customer Search')).toBeVisible();
+    await expect(allFiltersBar.getByLabel('Order Amount minimum')).toBeVisible();
+    await expect(allFiltersBar.getByLabel('Order Amount maximum')).toBeVisible();
     await expect(allFiltersBar.getByLabel('Order Date')).toBeVisible();
 
     await expect(regionFiltersBar.getByLabel('Region')).toBeVisible();
     await expect(regionFiltersBar.getByLabel('Category')).toHaveCount(0);
+    await expect(regionFiltersBar.getByLabel('Customer Search')).toHaveCount(0);
+    await expect(regionFiltersBar.getByLabel('Order Amount minimum')).toHaveCount(0);
+    await expect(regionFiltersBar.getByLabel('Order Amount maximum')).toHaveCount(0);
     await expect(regionFiltersBar.getByLabel('Order Date')).toHaveCount(0);
 
     const allFilterControlCount = await allFiltersBar.locator('.ss-filter-control').count();
@@ -110,12 +182,8 @@ test.describe('Dashboard Filters', () => {
     const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
     const regionFiltersBar = filterBarWidget(page, 'w-filter-bar-region').locator('.ss-filter-bar');
     const regionFilter = regionFiltersBar.getByLabel('Region');
-    const revenueKpi = page.locator(
-      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-kpi-revenue"] .ss-kpi',
-    );
-    const ordersTable = page.locator(
-      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-table"] .ss-table',
-    );
+    const revenueKpi = page.locator('.ss-kpi').filter({ hasText: 'Total Revenue' });
+    const ordersTable = page.locator('.ss-table').first();
     const tableRows = ordersTable.locator('tbody tr');
 
     await expect(revenueKpi).toContainText('$23.0K');
@@ -131,6 +199,165 @@ test.describe('Dashboard Filters', () => {
     await expect(ordersTable).toContainText('Acme Corp');
     await expect(ordersTable).toContainText('Waystar');
     await expect(ordersTable).not.toContainText('Globex Inc');
+  });
+
+  test('live dashboard text filter updates KPI and table data', async ({ page }) => {
+    await openViewerLiveDashboard(page);
+
+    const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
+    const searchFilter = allFiltersBar.getByLabel('Customer Search');
+    const revenueKpi = page.locator('.ss-kpi').filter({ hasText: 'Total Revenue' });
+    const ordersTable = page.locator('.ss-table').first();
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await searchFilter.fill('Way');
+
+    await expect(searchFilter).toHaveValue('Way');
+    await expect(revenueKpi).toContainText('$9.2K');
+    await expect(tableRows).toHaveCount(2);
+    await expect(ordersTable).toContainText('Waystar');
+    await expect(ordersTable).toContainText('Wayne Ent');
+    await expect(ordersTable).not.toContainText('Acme Corp');
+  });
+
+  test('live dashboard range filter updates KPI and table data', async ({ page }) => {
+    await openViewerLiveDashboard(page);
+
+    const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
+    const minAmountFilter = allFiltersBar.getByLabel('Order Amount minimum');
+    const maxAmountFilter = allFiltersBar.getByLabel('Order Amount maximum');
+    const revenueKpi = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-kpi-revenue"] .ss-kpi',
+    );
+    const ordersTable = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-table"] .ss-table',
+    );
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await minAmountFilter.fill('3000');
+    await maxAmountFilter.fill('4500');
+
+    await expect(minAmountFilter).toHaveValue('3000');
+    await expect(maxAmountFilter).toHaveValue('4500');
+    await expect(revenueKpi).toContainText('$7.2K');
+    await expect(tableRows).toHaveCount(2);
+    await expect(ordersTable).toContainText('Initech');
+    await expect(ordersTable).toContainText('Waystar');
+    await expect(ordersTable).not.toContainText('Wayne Ent');
+  });
+
+  test('live dashboard custom date filter updates KPI and table data', async ({ page }) => {
+    await openViewerLiveDashboard(page);
+
+    const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
+    const datePresetFilter = allFiltersBar.getByLabel('Order Date');
+    const revenueKpi = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-kpi-revenue"] .ss-kpi',
+    );
+    const ordersTable = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-table"] .ss-table',
+    );
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await datePresetFilter.selectOption({ label: 'Custom range…' });
+
+    const startDateFilter = allFiltersBar.getByLabel('Order Date start date');
+    const endDateFilter = allFiltersBar.getByLabel('Order Date end date');
+
+    await startDateFilter.fill('2026-04-01');
+    await endDateFilter.fill('2026-04-10');
+
+    await expect(startDateFilter).toHaveValue('2026-04-01');
+    await expect(endDateFilter).toHaveValue('2026-04-10');
+    await expect(revenueKpi).toContainText('$6.8K');
+    await expect(tableRows).toHaveCount(2);
+    await expect(ordersTable).toContainText('Waystar');
+    await expect(ordersTable).toContainText('Stark Ind');
+    await expect(ordersTable).not.toContainText('Initech');
+  });
+
+  test('live dashboard custom date filter clear resets control state and analytical results', async ({
+    page,
+  }) => {
+    await openViewerLiveDashboard(page);
+
+    const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
+    const datePresetFilter = allFiltersBar.getByLabel('Order Date');
+    const revenueKpi = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-kpi-revenue"] .ss-kpi',
+    );
+    const ordersTable = page.locator(
+      '[data-ss-dashboard="demo-sales"] [data-ss-node="w-table"] .ss-table',
+    );
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await datePresetFilter.selectOption({ label: 'Custom range…' });
+
+    const startDateFilter = allFiltersBar.getByLabel('Order Date start date');
+    const endDateFilter = allFiltersBar.getByLabel('Order Date end date');
+
+    await startDateFilter.fill('2026-04-01');
+    await endDateFilter.fill('2026-04-10');
+
+    await expect(revenueKpi).toContainText('$6.8K');
+    await expect(tableRows).toHaveCount(2);
+
+    await allFiltersBar.getByRole('button', { name: /clear filters/i }).click();
+
+    await expect(datePresetFilter).toHaveValue('');
+    await expect(allFiltersBar.getByLabel('Order Date start date')).toHaveCount(0);
+    await expect(allFiltersBar.getByLabel('Order Date end date')).toHaveCount(0);
+    await expect(revenueKpi).toContainText('$23.0K');
+    await expect(tableRows).toHaveCount(8);
+    await expect(ordersTable).toContainText('Initech');
+    await expect(ordersTable).toContainText('Wayne Ent');
+  });
+
+  test('designer-edited filter bar widget preserves title, vertical layout, subset, and analytical behavior', async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESIGNER_VIEWPORT);
+    await openDesignerLiveDashboard(page);
+    await selectDesignerWidget(page, 'filters-all');
+    await setDesignerTextField(page, 'filters-all', 'title', 'Focused Filters');
+    await setDesignerRadioField(page, 'filters-all', 'layout', 'Vertical');
+    await setFilterSubset(page, ['Region', 'Customer Search']);
+
+    await switchToViewer(page);
+
+    const focusedWidget = page
+      .locator('.ss-filter-bar-widget')
+      .filter({ hasText: 'Focused Filters' });
+    const focusedBar = focusedWidget.locator('.ss-filter-bar');
+    const focusedTitle = focusedWidget.locator('.ss-filter-bar-widget-title');
+    const regionControl = focusedBar.locator('.ss-filter-control[data-ss-filter="filter-region"]');
+    const searchControl = focusedBar.locator('.ss-filter-control[data-ss-filter="filter-search"]');
+    const revenueKpi = page.locator('.ss-kpi').filter({ hasText: 'Total Revenue' });
+    const ordersTable = page.locator('.ss-table').first();
+    const tableRows = ordersTable.locator('tbody tr');
+
+    await expect(focusedTitle).toBeVisible();
+    await expect(regionControl.getByLabel('Region')).toBeVisible();
+    await expect(searchControl.getByLabel('Customer Search')).toBeVisible();
+    await expect(focusedBar.getByLabel('Category')).toHaveCount(0);
+    await expect(focusedBar.getByLabel('Order Amount minimum')).toHaveCount(0);
+    await expect(focusedBar.getByLabel('Order Amount maximum')).toHaveCount(0);
+    await expect(focusedBar.getByLabel('Order Date')).toHaveCount(0);
+
+    const regionBox = await regionControl.boundingBox();
+    const searchBox = await searchControl.boundingBox();
+    expect(regionBox).not.toBeNull();
+    expect(searchBox).not.toBeNull();
+    expect(Math.abs((searchBox?.x ?? 0) - (regionBox?.x ?? 0))).toBeLessThan(40);
+    expect((searchBox?.y ?? 0) - (regionBox?.y ?? 0)).toBeGreaterThan(20);
+
+    await focusedBar.getByLabel('Customer Search').fill('Way');
+
+    await expect(revenueKpi).toContainText('$9.2K');
+    await expect(tableRows).toHaveCount(2);
+    await expect(ordersTable).toContainText('Waystar');
+    await expect(ordersTable).toContainText('Wayne Ent');
+    await expect(ordersTable).not.toContainText('Acme Corp');
   });
 });
 

@@ -69,6 +69,7 @@ const FilterContext = createContext<FilterContextValue | null>(null);
 export interface FilterProviderProps {
   initialValues?: Record<string, unknown>;
   filters?: FilterDefinition[];
+  activePageId?: string;
   onFilterChange?: (state: FilterState) => void;
   children: ReactNode;
 }
@@ -76,6 +77,7 @@ export interface FilterProviderProps {
 export function FilterProvider({
   initialValues,
   filters: _filters, // accepted for API symmetry; resolution happens via getFiltersForWidget
+  activePageId,
   onFilterChange,
   children,
 }: FilterProviderProps) {
@@ -112,11 +114,11 @@ export function FilterProvider({
   const getFiltersForWidget = useCallback(
     (widgetId: string, allFilters: FilterDefinition[]): FilterValue[] => {
       return allFilters
-        .filter((f) => filterAppliesToWidget(f.scope, widgetId))
+        .filter((f) => filterAppliesToWidget(f.scope, widgetId, activePageId))
         .map((f) => ({ filterId: f.id, value: state.values[f.id] }))
         .filter((fv) => fv.value !== undefined);
     },
-    [state.values],
+    [activePageId, state.values],
   );
 
   const value = useMemo(
@@ -139,9 +141,13 @@ export function useFilters(): FilterContextValue {
 
 // ─── Scope Logic ─────────────────────────────────────────────
 
-function filterAppliesToWidget(scope: FilterScope, widgetId: string): boolean {
+export function filterAppliesToWidget(
+  scope: FilterScope,
+  widgetId: string,
+  activePageId?: string,
+): boolean {
   if (scope.type === 'global') return true;
-  if (scope.type === 'page') return true; // page-level filters apply to all widgets on the page
+  if (scope.type === 'page') return scope.pageId === activePageId;
   if (scope.type === 'widgets') return scope.widgetIds.includes(widgetId);
   return false;
 }

@@ -9,6 +9,14 @@ function SummaryWidget({ title }: WidgetProps) {
   return createElement('div', null, title ?? 'Summary');
 }
 
+function ActiveFiltersProbe({ activeFilters }: WidgetProps) {
+  return createElement(
+    'div',
+    { 'data-testid': 'active-filters-probe' },
+    JSON.stringify(activeFilters ?? []),
+  );
+}
+
 const baseFilters: NonNullable<DashboardDefinition['filters']> = [
   {
     id: 'region',
@@ -136,6 +144,109 @@ const subsetDashboard: DashboardDefinition = {
   ],
 };
 
+const titledVerticalLayoutDashboard: DashboardDefinition = {
+  ...subsetDashboard,
+  id: 'titled-vertical-layout-dashboard',
+  pages: [
+    {
+      ...subsetDashboard.pages[0],
+      widgets: [
+        {
+          id: 'filters-region',
+          type: 'filter-bar',
+          title: 'Focused Filters',
+          config: { filterIds: ['region'], layout: 'vertical' },
+        },
+        subsetDashboard.pages[0].widgets[1],
+      ],
+    },
+  ],
+};
+
+const pageScopedDashboard: DashboardDefinition = {
+  schemaVersion: '0.2.0',
+  id: 'page-scoped-dashboard',
+  title: 'Page Scoped Dashboard',
+  filters: [
+    {
+      id: 'category',
+      title: 'Category',
+      type: 'select',
+      fieldRef: 'orders.category',
+      datasetRef: 'orders',
+      operator: 'equals',
+      scope: { type: 'page', pageId: 'overview' },
+    },
+  ],
+  pages: [
+    {
+      id: 'overview',
+      title: 'Overview',
+      rootNodeId: 'overview-root',
+      layout: {
+        'overview-root': {
+          id: 'overview-root',
+          type: 'root',
+          children: ['overview-grid'],
+          meta: {},
+        },
+        'overview-grid': {
+          id: 'overview-grid',
+          type: 'grid',
+          children: ['overview-widget-node'],
+          parentId: 'overview-root',
+          meta: {},
+        },
+        'overview-widget-node': {
+          id: 'overview-widget-node',
+          type: 'widget',
+          children: [],
+          parentId: 'overview-grid',
+          meta: { widgetRef: 'overview-probe', width: 12 },
+        },
+      },
+      widgets: [
+        {
+          id: 'overview-probe',
+          type: 'active-filters-probe',
+          title: 'Overview Probe',
+          config: {},
+        },
+      ],
+    },
+    {
+      id: 'detail',
+      title: 'Detail',
+      rootNodeId: 'detail-root',
+      layout: {
+        'detail-root': { id: 'detail-root', type: 'root', children: ['detail-grid'], meta: {} },
+        'detail-grid': {
+          id: 'detail-grid',
+          type: 'grid',
+          children: ['detail-widget-node'],
+          parentId: 'detail-root',
+          meta: {},
+        },
+        'detail-widget-node': {
+          id: 'detail-widget-node',
+          type: 'widget',
+          children: [],
+          parentId: 'detail-grid',
+          meta: { widgetRef: 'detail-probe', width: 12 },
+        },
+      },
+      widgets: [
+        {
+          id: 'detail-probe',
+          type: 'active-filters-probe',
+          title: 'Detail Probe',
+          config: {},
+        },
+      ],
+    },
+  ],
+};
+
 describe('filter-bar runtime widget', () => {
   it('does not render a shell-level filter bar when filters exist but no filter-bar widget is placed', () => {
     const registry = createWidgetRegistry([['summary-widget', SummaryWidget]]);
@@ -176,5 +287,56 @@ describe('filter-bar runtime widget', () => {
 
     expect(regionSelectA.value).toBe('West');
     expect(regionSelectB.value).toBe('West');
+  });
+
+  it('renders filter-bar widget titles and vertical layout when configured', () => {
+    const { container } = render(
+      createElement(SupersubsetRenderer, {
+        definition: titledVerticalLayoutDashboard,
+        registry: createWidgetRegistry(),
+        filterOptions: baseFilterOptions,
+      }),
+    );
+
+    const regionWidget = container.querySelector(
+      '[data-ss-node="filters-region-node"]',
+    ) as HTMLElement;
+    expect(regionWidget).toBeTruthy();
+    expect(within(regionWidget).getByText('Focused Filters')).toBeTruthy();
+
+    const regionBar = regionWidget.querySelector('.ss-filter-bar') as HTMLElement;
+    expect(regionBar).toBeTruthy();
+    expect(regionBar.dataset.ssFilterBarLayout).toBe('vertical');
+    expect(regionBar.style.flexDirection).toBe('column');
+    expect(within(regionBar).getByLabelText('Region')).toBeTruthy();
+    expect(within(regionBar).queryByLabelText('Status')).toBeNull();
+  });
+
+  it('applies page-scoped filters only on the matching active page', () => {
+    const registry = createWidgetRegistry([['active-filters-probe', ActiveFiltersProbe]]);
+
+    const overviewRender = render(
+      createElement(SupersubsetRenderer, {
+        definition: pageScopedDashboard,
+        activePage: 'overview',
+        initialFilterValues: { category: 'Electronics' },
+        registry,
+      }),
+    );
+
+    expect(overviewRender.getByTestId('active-filters-probe').textContent).toContain('category');
+
+    overviewRender.unmount();
+
+    const detailRender = render(
+      createElement(SupersubsetRenderer, {
+        definition: pageScopedDashboard,
+        activePage: 'detail',
+        initialFilterValues: { category: 'Electronics' },
+        registry,
+      }),
+    );
+
+    expect(detailRender.getByTestId('active-filters-probe').textContent).toBe('[]');
   });
 });

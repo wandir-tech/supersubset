@@ -107,6 +107,17 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 8. Compare screenshots and DOM state to expected outcomes
 9. Report results with evidence, including the leased local origin that was tested
 
+## Agent Run Hygiene
+
+When running Playwright unattended from an agent session:
+
+- set `PLAYWRIGHT_HTML_OPEN=never` so Playwright does not open the HTML report UI on failures
+- prefer `--reporter=line` for focused runs so progress and failures stay in terminal output
+- avoid adding `CI=1` when you intend to reuse an already-running local dev server; Playwright may treat the configured web server as exclusive and fail on an occupied port
+- if the target app imports a workspace package through package exports, rebuild the touched package before rerunning browser tests when that package resolves from `dist/`
+
+In this repo, this matters especially for `packages/dev-app` and the example hosts, which consume built workspace package outputs rather than raw source in several flows.
+
 For BI workflows, do not stop at screenshots or control values when a stronger proof exists. Prefer evidence like:
 
 - query log changed from the previous value set

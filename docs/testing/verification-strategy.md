@@ -85,6 +85,19 @@ These are the "complete workflow" Playwright tests that exercise full user journ
 
 Release hardening should add or strengthen workflows whenever a human finds a gap in one of these journeys. Human-found misses are evidence that the workflow matrix is incomplete, not just that one test needs a tweak.
 
+## Widget And Control Regression Matrix
+
+Use `docs/testing/widget-control-regression-matrix.md` as the living source of truth for widget and control coverage.
+
+That matrix owns:
+
+- the inventory of bundled widgets and analytical controls
+- the attribute families that must be covered for each surface
+- the minimum `U` + `D` + `B` evidence expected for each row
+- the commands that should be run when a surface changes
+
+Any PR that changes a widget or control field, default, option set, mapping, or runtime behavior must update the matrix in the same PR.
+
 ## Market-Critical Discovery Order
 
 When preparing for release or hardening a branch after human-found misses, investigate in this order:

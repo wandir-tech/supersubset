@@ -54,6 +54,7 @@ export type LayoutComponentType =
   | 'tab'
   | 'spacer'
   | 'header'
+  | 'markdown'
   | 'divider';
 
 export interface LayoutComponent {
@@ -77,7 +78,7 @@ export interface LayoutMeta {
   minHeight?: string;
   /** Widget ID reference (for widget-type components) */
   widgetRef?: string;
-  /** Display text (for header, tab components) */
+  /** Display text (for header, tab, markdown components) */
   text?: string;
   /** Header size variant */
   headerSize?: 'small' | 'medium' | 'large';
@@ -115,13 +116,14 @@ export interface BreakpointOverride {
  */
 export const VALID_CHILDREN: Record<LayoutComponentType, LayoutComponentType[]> = {
   root: ['grid', 'tabs'],
-  grid: ['row', 'tabs', 'widget', 'header', 'divider', 'spacer'],
-  row: ['column', 'widget', 'header', 'divider', 'spacer'],
-  column: ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
+  grid: ['row', 'tabs', 'widget', 'header', 'markdown', 'divider', 'spacer'],
+  row: ['column', 'widget', 'header', 'markdown', 'divider', 'spacer'],
+  column: ['row', 'widget', 'tabs', 'header', 'markdown', 'divider', 'spacer'],
   tabs: ['tab'],
-  tab: ['row', 'widget', 'tabs', 'header', 'divider', 'spacer'],
+  tab: ['row', 'widget', 'tabs', 'header', 'markdown', 'divider', 'spacer'],
   widget: [],
   header: [],
+  markdown: [],
   divider: [],
   spacer: [],
 };

@@ -94,6 +94,10 @@ Use these docs when the task affects milestone confidence, not just one automate
 
 These are the authority for human-review expectations, screenshot checkpoints, and gate criteria.
 
+- `docs/testing/widget-control-regression-matrix.md`
+
+This matrix is the per-surface source of truth for widget and control coverage. Use it whenever a task changes exposed widget or control properties.
+
 ## Test Routing Heuristics
 
 ### Start Low, Climb Only When Needed
@@ -216,6 +220,8 @@ Repo-specific notes:
 - `playwright.config.ts` already records traces on first retry and screenshots only on failure
 - the root suite currently targets Chromium and Firefox
 - the dev app origin is controlled by `SUPERSUBSET_DEV_APP_PORT` and defaults to `http://localhost:3000`
+- for unattended agent runs, prefer terminal-only Playwright output: set `PLAYWRIGHT_HTML_OPEN=never` and use `--reporter=line` so progress and failures stay in chat instead of opening the HTML report UI
+- do not assume source edits are live in browser tests when the target app imports a workspace package through package exports; rebuild the touched package first if it resolves from `dist/`
 
 For release-oriented BI validation, prefer the strongest host-owned test bed that can prove the behavior:
 
@@ -231,6 +237,7 @@ Before calling testing work done, leave evidence at the right layer:
 - the narrowest command(s) run to validate the affected surface
 - trace, screenshot, console output, or failing assertion details when the problem is browser-based
 - updated checklist, checkpoint brief, or screenshot artifact when the work affects a milestone gate
+- an updated row in `docs/testing/widget-control-regression-matrix.md` when a widget or control inventory or property surface changed
 
 For human-found bugs:
 

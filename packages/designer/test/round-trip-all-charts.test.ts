@@ -22,7 +22,9 @@ import { puckToCanonical, canonicalToPuck } from '../src/adapters/puck-canonical
 function makePuckData(type: string, props: Record<string, unknown>): Data {
   return {
     root: { props: { title: 'Round-trip Test' } },
-    content: [{ type, props: { id: `widget-${type.toLowerCase()}`, title: `Test ${type}`, ...props } }],
+    content: [
+      { type, props: { id: `widget-${type.toLowerCase()}`, title: `Test ${type}`, ...props } },
+    ],
   };
 }
 
@@ -32,17 +34,31 @@ function makeCanonical(widget: WidgetDefinition): DashboardDefinition {
     schemaVersion: '0.2.0',
     id: 'test',
     title: 'Round-trip Test',
-    pages: [{
-      id: 'page-1',
-      title: 'Page 1',
-      rootNodeId: 'root',
-      layout: {
-        root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-        'grid-main': { id: 'grid-main', type: 'grid', children: [`layout-${widget.id}`], parentId: 'root', meta: { columns: 12 } },
-        [`layout-${widget.id}`]: { id: `layout-${widget.id}`, type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: widget.id, width: 12 } },
+    pages: [
+      {
+        id: 'page-1',
+        title: 'Page 1',
+        rootNodeId: 'root',
+        layout: {
+          root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+          'grid-main': {
+            id: 'grid-main',
+            type: 'grid',
+            children: [`layout-${widget.id}`],
+            parentId: 'root',
+            meta: { columns: 12 },
+          },
+          [`layout-${widget.id}`]: {
+            id: `layout-${widget.id}`,
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: widget.id, width: 12 },
+          },
+        },
+        widgets: [widget],
       },
-      widgets: [widget],
-    }],
+    ],
   };
 }
 
@@ -101,8 +117,8 @@ describe('round-trip: Puck → Canonical → Puck (every chart type)', () => {
         expect.objectContaining({ role: 'y-axis', fieldRef: 'amount' }),
       ]),
     );
-    expect(w.config.orientation).toBe('horizontal');
-    expect(w.config.stacked).toBe('true');
+    expect(w.config.horizontal).toBe(true);
+    expect(w.config.stacked).toBe(true);
 
     const restored = canonicalToPuck(canonical);
     const rp = restored.content![0].props;
@@ -381,9 +397,7 @@ describe('round-trip: Puck → Canonical → Puck (every chart type)', () => {
     const w = canonical.pages[0].widgets[0];
     expect(w.type).toBe('gauge');
     expect(w.dataBinding?.fields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ role: 'value', fieldRef: 'completion' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ role: 'value', fieldRef: 'completion' })]),
     );
 
     const restored = canonicalToPuck(canonical);
@@ -484,7 +498,9 @@ describe('round-trip: Puck → Canonical → Puck (every chart type)', () => {
 describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props', () => {
   it('line-chart with dataBinding', () => {
     const dash = makeCanonical({
-      id: 'line-1', type: 'line-chart', title: 'Revenue Trend',
+      id: 'line-1',
+      type: 'line-chart',
+      title: 'Revenue Trend',
       config: { smooth: 'true' },
       dataBinding: {
         datasetRef: 'sales',
@@ -508,7 +524,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('bar-chart with dataBinding', () => {
     const dash = makeCanonical({
-      id: 'bar-1', type: 'bar-chart', title: 'Sales',
+      id: 'bar-1',
+      type: 'bar-chart',
+      title: 'Sales',
       config: { orientation: 'horizontal', stacked: 'true' },
       dataBinding: {
         datasetRef: 'ds',
@@ -528,7 +546,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('pie-chart with dataBinding', () => {
     const dash = makeCanonical({
-      id: 'pie-1', type: 'pie-chart', title: 'Share',
+      id: 'pie-1',
+      type: 'pie-chart',
+      title: 'Share',
       config: { variant: 'donut' },
       dataBinding: {
         datasetRef: 'ds',
@@ -548,7 +568,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('scatter-chart with size + colorGroup', () => {
     const dash = makeCanonical({
-      id: 'scatter-1', type: 'scatter-chart', title: 'Scatter',
+      id: 'scatter-1',
+      type: 'scatter-chart',
+      title: 'Scatter',
       config: {},
       dataBinding: {
         datasetRef: 'ds',
@@ -571,7 +593,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('combo-chart with bar-y + line-y', () => {
     const dash = makeCanonical({
-      id: 'combo-1', type: 'combo-chart', title: 'Combo',
+      id: 'combo-1',
+      type: 'combo-chart',
+      title: 'Combo',
       config: {},
       dataBinding: {
         datasetRef: 'ds',
@@ -592,7 +616,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('heatmap with x/y/value', () => {
     const dash = makeCanonical({
-      id: 'heat-1', type: 'heatmap', title: 'Heat',
+      id: 'heat-1',
+      type: 'heatmap',
+      title: 'Heat',
       config: {},
       dataBinding: {
         datasetRef: 'ds',
@@ -613,7 +639,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('treemap with name + value + parent', () => {
     const dash = makeCanonical({
-      id: 'tree-1', type: 'treemap', title: 'Tree',
+      id: 'tree-1',
+      type: 'treemap',
+      title: 'Tree',
       config: {},
       dataBinding: {
         datasetRef: 'ds',
@@ -634,7 +662,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('sankey with source + target + value', () => {
     const dash = makeCanonical({
-      id: 'sankey-1', type: 'sankey', title: 'Flow',
+      id: 'sankey-1',
+      type: 'sankey',
+      title: 'Flow',
       config: {},
       dataBinding: {
         datasetRef: 'ds',
@@ -655,7 +685,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('kpi-card with value + comparison + subtitle', () => {
     const dash = makeCanonical({
-      id: 'kpi-1', type: 'kpi-card', title: 'KPI',
+      id: 'kpi-1',
+      type: 'kpi-card',
+      title: 'KPI',
       config: { prefix: '$', subtitleField: 'period' },
       dataBinding: {
         datasetRef: 'ds',
@@ -676,11 +708,16 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('alerts with all 4 field bindings', () => {
     const dash = makeCanonical({
-      id: 'alerts-1', type: 'alerts', title: 'Alerts',
+      id: 'alerts-1',
+      type: 'alerts',
+      title: 'Alerts',
       config: {
-        titleField: 'alert_title', messageField: 'body',
-        severityField: 'level', timestampField: 'created',
-        layout: 'stack', maxItems: 3,
+        titleField: 'alert_title',
+        messageField: 'body',
+        severityField: 'level',
+        timestampField: 'created',
+        layout: 'stack',
+        maxItems: 3,
       },
       dataBinding: {
         datasetRef: 'ds-alerts',
@@ -705,7 +742,9 @@ describe('canonicalToPuck: dataBinding correctly populates field-ref Puck props'
 
   it('gauge with value field', () => {
     const dash = makeCanonical({
-      id: 'gauge-1', type: 'gauge', title: 'Gauge',
+      id: 'gauge-1',
+      type: 'gauge',
+      title: 'Gauge',
       config: { minValue: 0, maxValue: 100 },
       dataBinding: {
         datasetRef: 'ds',
@@ -732,105 +771,279 @@ describe('demo dashboard fixtures produce populated Puck props', () => {
     schemaVersion: '0.2.0',
     id: 'demo-sales',
     title: 'Sales Dashboard',
-    pages: [{
-      id: 'page-overview',
-      title: 'Overview',
-      rootNodeId: 'root',
-      layout: {
-        root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-        'grid-main': {
-          id: 'grid-main', type: 'grid', parentId: 'root', meta: { columns: 12 },
-          children: [
-            'layout-alerts-1', 'layout-kpi-1', 'layout-kpi-2',
-            'layout-line-1', 'layout-bar-1', 'layout-pie-1',
-            'layout-scatter-1', 'layout-combo-1', 'layout-sankey-1',
-            'layout-treemap-1', 'layout-heatmap-1', 'layout-gauge-1',
-          ],
-        },
-        'layout-alerts-1': { id: 'layout-alerts-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'alerts-1', width: 12 } },
-        'layout-kpi-1': { id: 'layout-kpi-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'kpi-1', width: 4 } },
-        'layout-kpi-2': { id: 'layout-kpi-2', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'kpi-2', width: 4 } },
-        'layout-line-1': { id: 'layout-line-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'line-1', width: 8 } },
-        'layout-bar-1': { id: 'layout-bar-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'bar-1', width: 4 } },
-        'layout-pie-1': { id: 'layout-pie-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'pie-1', width: 6 } },
-        'layout-scatter-1': { id: 'layout-scatter-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'scatter-1', width: 6 } },
-        'layout-combo-1': { id: 'layout-combo-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'combo-1', width: 6 } },
-        'layout-sankey-1': { id: 'layout-sankey-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'sankey-1', width: 6 } },
-        'layout-treemap-1': { id: 'layout-treemap-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'treemap-1', width: 6 } },
-        'layout-heatmap-1': { id: 'layout-heatmap-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'heatmap-1', width: 6 } },
-        'layout-gauge-1': { id: 'layout-gauge-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'gauge-1', width: 4 } },
-      },
-      widgets: [
-        {
-          id: 'alerts-1', type: 'alerts', title: 'Ops Alerts',
-          config: { titleField: 'alert_title', messageField: 'alert_body', severityField: 'level', timestampField: 'created_at', layout: 'wrap', maxItems: 3 },
-          dataBinding: {
-            datasetRef: 'ds-alerts',
-            fields: [
-              { role: 'alert-title', fieldRef: 'alert_title' },
-              { role: 'alert-message', fieldRef: 'alert_body' },
-              { role: 'alert-severity', fieldRef: 'level' },
-              { role: 'alert-timestamp', fieldRef: 'created_at' },
+    pages: [
+      {
+        id: 'page-overview',
+        title: 'Overview',
+        rootNodeId: 'root',
+        layout: {
+          root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+          'grid-main': {
+            id: 'grid-main',
+            type: 'grid',
+            parentId: 'root',
+            meta: { columns: 12 },
+            children: [
+              'layout-alerts-1',
+              'layout-kpi-1',
+              'layout-kpi-2',
+              'layout-line-1',
+              'layout-bar-1',
+              'layout-pie-1',
+              'layout-scatter-1',
+              'layout-combo-1',
+              'layout-sankey-1',
+              'layout-treemap-1',
+              'layout-heatmap-1',
+              'layout-gauge-1',
             ],
           },
+          'layout-alerts-1': {
+            id: 'layout-alerts-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'alerts-1', width: 12 },
+          },
+          'layout-kpi-1': {
+            id: 'layout-kpi-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'kpi-1', width: 4 },
+          },
+          'layout-kpi-2': {
+            id: 'layout-kpi-2',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'kpi-2', width: 4 },
+          },
+          'layout-line-1': {
+            id: 'layout-line-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'line-1', width: 8 },
+          },
+          'layout-bar-1': {
+            id: 'layout-bar-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'bar-1', width: 4 },
+          },
+          'layout-pie-1': {
+            id: 'layout-pie-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'pie-1', width: 6 },
+          },
+          'layout-scatter-1': {
+            id: 'layout-scatter-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'scatter-1', width: 6 },
+          },
+          'layout-combo-1': {
+            id: 'layout-combo-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'combo-1', width: 6 },
+          },
+          'layout-sankey-1': {
+            id: 'layout-sankey-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'sankey-1', width: 6 },
+          },
+          'layout-treemap-1': {
+            id: 'layout-treemap-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'treemap-1', width: 6 },
+          },
+          'layout-heatmap-1': {
+            id: 'layout-heatmap-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'heatmap-1', width: 6 },
+          },
+          'layout-gauge-1': {
+            id: 'layout-gauge-1',
+            type: 'widget',
+            children: [],
+            parentId: 'grid-main',
+            meta: { widgetRef: 'gauge-1', width: 4 },
+          },
         },
-        {
-          id: 'kpi-1', type: 'kpi-card', title: 'Revenue',
-          config: { prefix: '$' },
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'value', fieldRef: 'revenue' }, { role: 'comparison', fieldRef: 'prev' }] },
-        },
-        {
-          id: 'kpi-2', type: 'kpi-card', title: 'Orders',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'value', fieldRef: 'orders' }] },
-        },
-        {
-          id: 'line-1', type: 'line-chart', title: 'Revenue Trend',
-          config: { smooth: 'true' },
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'x-axis', fieldRef: 'month' }, { role: 'y-axis', fieldRef: 'revenue' }] },
-        },
-        {
-          id: 'bar-1', type: 'bar-chart', title: 'Region Sales',
-          config: { orientation: 'horizontal' },
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'x-axis', fieldRef: 'region' }, { role: 'y-axis', fieldRef: 'revenue' }] },
-        },
-        {
-          id: 'pie-1', type: 'pie-chart', title: 'Region Share',
-          config: { variant: 'donut' },
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'category', fieldRef: 'region' }, { role: 'value', fieldRef: 'revenue' }] },
-        },
-        {
-          id: 'scatter-1', type: 'scatter-chart', title: 'Scatter',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'x-axis', fieldRef: 'qty' }, { role: 'y-axis', fieldRef: 'amt' }, { role: 'size', fieldRef: 'profit' }] },
-        },
-        {
-          id: 'combo-1', type: 'combo-chart', title: 'Rev vs Margin',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'x-axis', fieldRef: 'month' }, { role: 'bar-y', fieldRef: 'revenue' }, { role: 'line-y', fieldRef: 'margin' }] },
-        },
-        {
-          id: 'sankey-1', type: 'sankey', title: 'Traffic Flow',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'source', fieldRef: 'src' }, { role: 'target', fieldRef: 'dst' }, { role: 'value', fieldRef: 'visits' }] },
-        },
-        {
-          id: 'treemap-1', type: 'treemap', title: 'Expenses',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'name', fieldRef: 'cat' }, { role: 'value', fieldRef: 'amt' }] },
-        },
-        {
-          id: 'heatmap-1', type: 'heatmap', title: 'Sales Grid',
-          config: {},
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'x-axis', fieldRef: 'hour' }, { role: 'y-axis', fieldRef: 'day' }, { role: 'value', fieldRef: 'sales' }] },
-        },
-        {
-          id: 'gauge-1', type: 'gauge', title: 'Achievement',
-          config: { minValue: 0, maxValue: 100 },
-          dataBinding: { datasetRef: 'ds', fields: [{ role: 'value', fieldRef: 'pct' }] },
-        },
-      ],
-    }],
+        widgets: [
+          {
+            id: 'alerts-1',
+            type: 'alerts',
+            title: 'Ops Alerts',
+            config: {
+              titleField: 'alert_title',
+              messageField: 'alert_body',
+              severityField: 'level',
+              timestampField: 'created_at',
+              layout: 'wrap',
+              maxItems: 3,
+            },
+            dataBinding: {
+              datasetRef: 'ds-alerts',
+              fields: [
+                { role: 'alert-title', fieldRef: 'alert_title' },
+                { role: 'alert-message', fieldRef: 'alert_body' },
+                { role: 'alert-severity', fieldRef: 'level' },
+                { role: 'alert-timestamp', fieldRef: 'created_at' },
+              ],
+            },
+          },
+          {
+            id: 'kpi-1',
+            type: 'kpi-card',
+            title: 'Revenue',
+            config: { prefix: '$' },
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'value', fieldRef: 'revenue' },
+                { role: 'comparison', fieldRef: 'prev' },
+              ],
+            },
+          },
+          {
+            id: 'kpi-2',
+            type: 'kpi-card',
+            title: 'Orders',
+            config: {},
+            dataBinding: { datasetRef: 'ds', fields: [{ role: 'value', fieldRef: 'orders' }] },
+          },
+          {
+            id: 'line-1',
+            type: 'line-chart',
+            title: 'Revenue Trend',
+            config: { smooth: 'true' },
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'x-axis', fieldRef: 'month' },
+                { role: 'y-axis', fieldRef: 'revenue' },
+              ],
+            },
+          },
+          {
+            id: 'bar-1',
+            type: 'bar-chart',
+            title: 'Region Sales',
+            config: { orientation: 'horizontal' },
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'x-axis', fieldRef: 'region' },
+                { role: 'y-axis', fieldRef: 'revenue' },
+              ],
+            },
+          },
+          {
+            id: 'pie-1',
+            type: 'pie-chart',
+            title: 'Region Share',
+            config: { variant: 'donut' },
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'category', fieldRef: 'region' },
+                { role: 'value', fieldRef: 'revenue' },
+              ],
+            },
+          },
+          {
+            id: 'scatter-1',
+            type: 'scatter-chart',
+            title: 'Scatter',
+            config: {},
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'x-axis', fieldRef: 'qty' },
+                { role: 'y-axis', fieldRef: 'amt' },
+                { role: 'size', fieldRef: 'profit' },
+              ],
+            },
+          },
+          {
+            id: 'combo-1',
+            type: 'combo-chart',
+            title: 'Rev vs Margin',
+            config: {},
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'x-axis', fieldRef: 'month' },
+                { role: 'bar-y', fieldRef: 'revenue' },
+                { role: 'line-y', fieldRef: 'margin' },
+              ],
+            },
+          },
+          {
+            id: 'sankey-1',
+            type: 'sankey',
+            title: 'Traffic Flow',
+            config: {},
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'source', fieldRef: 'src' },
+                { role: 'target', fieldRef: 'dst' },
+                { role: 'value', fieldRef: 'visits' },
+              ],
+            },
+          },
+          {
+            id: 'treemap-1',
+            type: 'treemap',
+            title: 'Expenses',
+            config: {},
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'name', fieldRef: 'cat' },
+                { role: 'value', fieldRef: 'amt' },
+              ],
+            },
+          },
+          {
+            id: 'heatmap-1',
+            type: 'heatmap',
+            title: 'Sales Grid',
+            config: {},
+            dataBinding: {
+              datasetRef: 'ds',
+              fields: [
+                { role: 'x-axis', fieldRef: 'hour' },
+                { role: 'y-axis', fieldRef: 'day' },
+                { role: 'value', fieldRef: 'sales' },
+              ],
+            },
+          },
+          {
+            id: 'gauge-1',
+            type: 'gauge',
+            title: 'Achievement',
+            config: { minValue: 0, maxValue: 100 },
+            dataBinding: { datasetRef: 'ds', fields: [{ role: 'value', fieldRef: 'pct' }] },
+          },
+        ],
+      },
+    ],
   };
 
   it('all widgets have field-ref props populated after canonicalToPuck', () => {
@@ -927,46 +1140,66 @@ describe('export→import round-trip: canonical → JSON → canonical → Puck'
       schemaVersion: '0.2.0',
       id: 'export-test',
       title: 'Export Test',
-      pages: [{
-        id: 'page-1',
-        title: 'Page 1',
-        rootNodeId: 'root',
-        layout: {
-          root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
-          'grid-main': { id: 'grid-main', type: 'grid', children: ['layout-combo-1', 'layout-kpi-1'], parentId: 'root', meta: { columns: 12 } },
-          'layout-combo-1': { id: 'layout-combo-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'combo-1', width: 8 } },
-          'layout-kpi-1': { id: 'layout-kpi-1', type: 'widget', children: [], parentId: 'grid-main', meta: { widgetRef: 'kpi-1', width: 4 } },
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          rootNodeId: 'root',
+          layout: {
+            root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['layout-combo-1', 'layout-kpi-1'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'layout-combo-1': {
+              id: 'layout-combo-1',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'combo-1', width: 8 },
+            },
+            'layout-kpi-1': {
+              id: 'layout-kpi-1',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'kpi-1', width: 4 },
+            },
+          },
+          widgets: [
+            {
+              id: 'combo-1',
+              type: 'combo-chart',
+              title: 'Rev vs Margin',
+              config: {},
+              dataBinding: {
+                datasetRef: 'ds',
+                fields: [
+                  { role: 'x-axis', fieldRef: 'month' },
+                  { role: 'bar-y', fieldRef: 'revenue' },
+                  { role: 'line-y', fieldRef: 'margin' },
+                ],
+              },
+            },
+            {
+              id: 'kpi-1',
+              type: 'kpi-card',
+              title: 'Revenue',
+              config: { prefix: '$' },
+              dataBinding: {
+                datasetRef: 'ds',
+                fields: [
+                  { role: 'value', fieldRef: 'revenue' },
+                  { role: 'comparison', fieldRef: 'prev_revenue' },
+                ],
+              },
+            },
+          ],
         },
-        widgets: [
-          {
-            id: 'combo-1',
-            type: 'combo-chart',
-            title: 'Rev vs Margin',
-            config: {},
-            dataBinding: {
-              datasetRef: 'ds',
-              fields: [
-                { role: 'x-axis', fieldRef: 'month' },
-                { role: 'bar-y', fieldRef: 'revenue' },
-                { role: 'line-y', fieldRef: 'margin' },
-              ],
-            },
-          },
-          {
-            id: 'kpi-1',
-            type: 'kpi-card',
-            title: 'Revenue',
-            config: { prefix: '$' },
-            dataBinding: {
-              datasetRef: 'ds',
-              fields: [
-                { role: 'value', fieldRef: 'revenue' },
-                { role: 'comparison', fieldRef: 'prev_revenue' },
-              ],
-            },
-          },
-        ],
-      }],
+      ],
     };
 
     // Simulate export

@@ -33,7 +33,8 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'demo-pages-workbook',
   title: 'Regional Sales Workbook',
-  description: 'One dashboard with two pages that share filters, theme, and interaction state.',
+  description:
+    'One dashboard with two pages that share workbook state while allowing page-scoped filters.',
   defaults: {
     activePage: 'page-overview',
   },
@@ -54,7 +55,7 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
       fieldRef: 'category',
       datasetRef: 'ds-orders',
       operator: 'equals',
-      scope: { type: 'global' },
+      scope: { type: 'page', pageId: 'page-overview' },
     },
   ],
   interactions: [
@@ -169,7 +170,7 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           title: '',
           config: {
             content:
-              'A page is another canvas inside the same dashboard document. These two pages share the same dashboard id, filters, interactions, theme, and saved state. Use the shared filter bar and page tabs to see one workbook state carried across multiple canvases.',
+              'A page is another canvas inside the same dashboard document. These two pages share the same dashboard id, interactions, theme, and saved state, while filters can still target a specific page. Use Region across both pages, then try Category to see overview-only filter scope.',
           },
         },
         {
@@ -296,7 +297,7 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
           title: '',
           config: {
             content:
-              'This is still the same dashboard. The shared filter bar, theme, and persisted state carry over from the overview page. Use pages when you want one analytical workbook with multiple canvases.',
+              'This is still the same dashboard. Shared state carries over from the overview page, but overview-scoped filters do not change detail-page widgets. Use pages when you want one analytical workbook with multiple canvases and selective filter scope.',
           },
         },
         {
