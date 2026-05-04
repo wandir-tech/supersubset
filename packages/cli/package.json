@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/cli",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Supersubset CLI — `npx supersubset import-schema` for Prisma/SQL/dbt/JSON metadata introspection",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",

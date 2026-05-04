@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/designer",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Supersubset designer: <SupersubsetDesigner /> drag-and-drop dashboard editor built on Puck",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",

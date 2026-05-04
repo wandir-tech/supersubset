@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/query-client",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Query abstraction with a fluent QueryBuilder for Supersubset dashboards",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
