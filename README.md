@@ -55,7 +55,7 @@ Supersubset assumes:
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22.13+
 - pnpm 9+
 
 ### Build
@@ -92,6 +92,20 @@ pnpm dev:vite-sqlite-example
 pnpm dev
 # Open http://localhost:3000
 ```
+
+### VS Code tasks
+
+If you want a repeatable local environment from the editor, use the workspace tasks:
+
+- `Build Workspace`
+- `DevEnv`
+- `WorktreeDevEnv`
+- `ExamplesDevEnv`
+- `DocsDevEnv`
+- `DevEnv Print URLs`
+- `DevEnv Status`
+
+`DevEnv` starts the dev app plus both example hosts on the shared defaults. `WorktreeDevEnv` leases a fresh local port tuple, writes it to `tmp/devenv-state.json`, and starts the same stack for an isolated checkout.
 
 ### Run Tests
 

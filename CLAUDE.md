@@ -98,15 +98,19 @@ When modifying files in specific packages, read the corresponding instruction fi
 For domain-specific knowledge, read the relevant skill file:
 
 - **Schema design**: `.github/skills/schema-design/SKILL.md`
+- **BI visualization quality**: `.github/skills/bi-visualization-quality/SKILL.md`
 - **ECharts widgets**: `.github/skills/echarts-widgets/SKILL.md`
+- **Designer shell design**: `.github/skills/designer-design/SKILL.md`
 - **Puck integration**: `.github/skills/puck-integration/SKILL.md`
 - **Adapter development**: `.github/skills/adapter-development/SKILL.md`
+- **Testing strategy**: `.github/skills/testing-strategy/SKILL.md`
 - **Browser testing**: `.github/skills/browser-testing/SKILL.md`
 - **OSS archaeology**: `.github/skills/oss-archaeology/SKILL.md`
 - **Orchestration**: `.github/skills/orchestration/SKILL.md`
 - **GitHub CLI usage**: `.github/skills/github-cli/SKILL.md`
 - **Work kickoff**: `.github/skills/work-kickoff/SKILL.md`
 - **Branch/CI promotion**: `.github/skills/branch-ci-promotion/SKILL.md`
+- **Release runbook**: `.github/skills/release-runbook/SKILL.md`
 - **Document a feature**: `.github/skills/document-feature/SKILL.md`
 - **AI context maintenance**: `.github/skills/maintaining-ai-context/SKILL.md`
 - **Parallel agent work**: `.github/skills/parallel-agent-environments/SKILL.md`

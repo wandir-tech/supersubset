@@ -39,6 +39,7 @@ Before delegating, determine:
 3. **What is parallelizable?** Independent research, independent package changes, and independent tests can run in parallel.
 4. **What requires sequential ordering?** Interface changes → consumers, schema → validation → serialization.
 5. **Is a human gate involved?** Check `docs/status/master-plan.md` for upcoming HC-N checkpoints.
+6. **Will local browser validation run in parallel?** If yes, assign a leased port tuple using `node scripts/find-free-port.mjs --count 3` and record it in the brief.
 
 ### Step 2: Write the Brief
 
@@ -53,6 +54,7 @@ For each subagent task, write a structured brief:
 **Acceptance criteria**: How to verify the work is correct
 **Context**: Links to relevant ADRs, schema types, interfaces
 **Constraints**: Which files/packages the agent must NOT modify
+**Port lease**: Explicit local origin or port tuple if the task starts dev servers or browser tests
 ```
 
 ### Step 3: Determine Execution Order
@@ -72,6 +74,7 @@ When invoking subagents:
 - **Use the right agent**: Match the domain — don't ask the charts agent to modify the designer
 - **Invoke parallel subagents simultaneously**: Use multiple `runSubagent` calls for independent tasks
 - **Keep the orchestrator's context clean**: Subagents return summaries, not raw file contents
+- **Assign explicit ports when needed**: For browser or dev-server tasks, never rely on shared defaults when multiple agents run locally
 
 ### Step 5: Reconcile Results
 

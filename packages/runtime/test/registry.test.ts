@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { WidgetRegistry, createWidgetRegistry } from '../src/widgets/registry';
+import {
+  WidgetRegistry,
+  createWidgetRegistry,
+  getBuiltInWidgetEntries,
+} from '../src/widgets/registry';
 import type { WidgetProps } from '../src/widgets/registry';
 
 // Simple mock widgets for testing
@@ -50,9 +54,11 @@ describe('WidgetRegistry', () => {
 });
 
 describe('createWidgetRegistry', () => {
-  it('creates an empty registry', () => {
+  it('preserves an empty explicit registry while exposing built-in widgets', () => {
     const registry = createWidgetRegistry();
     expect(registry.getRegisteredTypes()).toEqual([]);
+    expect(registry.has('filter-bar')).toBe(true);
+    expect(registry.get('filter-bar')).toBeDefined();
   });
 
   it('creates a pre-populated registry', () => {
@@ -63,5 +69,16 @@ describe('createWidgetRegistry', () => {
     expect(registry.has('line-chart')).toBe(true);
     expect(registry.has('bar-chart')).toBe(true);
     expect(registry.getRegisteredTypes()).toHaveLength(2);
+  });
+
+  it('lets explicit registrations override built-in widgets', () => {
+    const registry = createWidgetRegistry([['filter-bar', MockBar]]);
+
+    expect(registry.get('filter-bar')).toBe(MockBar);
+    expect(registry.getRegisteredTypes()).toEqual(['filter-bar']);
+  });
+
+  it('exports the built-in widget helper entries', () => {
+    expect(getBuiltInWidgetEntries().map(([type]) => type)).toContain('filter-bar');
   });
 });

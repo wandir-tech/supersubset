@@ -14,7 +14,11 @@ import { LAYOUT_BLOCK_NAMES } from '../src/blocks/layout';
 
 describe('createPuckConfig', () => {
   const config = createPuckConfig();
-  const totalBlockCount = CHART_BLOCK_NAMES.length + CONTENT_BLOCK_NAMES.length + CONTROL_BLOCK_NAMES.length + LAYOUT_BLOCK_NAMES.length;
+  const totalBlockCount =
+    CHART_BLOCK_NAMES.length +
+    CONTENT_BLOCK_NAMES.length +
+    CONTROL_BLOCK_NAMES.length +
+    LAYOUT_BLOCK_NAMES.length;
 
   it('returns a valid Puck Config object', () => {
     expect(config).toBeDefined();
@@ -79,7 +83,11 @@ describe('createPuckConfig', () => {
   });
 
   it('tables category contains Table, KPICard, and AlertsWidgetBlock', () => {
-    expect(config.categories!.tables!.components).toEqual(['Table', 'KPICard', 'AlertsWidgetBlock']);
+    expect(config.categories!.tables!.components).toEqual([
+      'Table',
+      'KPICard',
+      'AlertsWidgetBlock',
+    ]);
   });
 
   it('every chart component has a title field', () => {
@@ -87,6 +95,27 @@ describe('createPuckConfig', () => {
       const comp = config.components[name];
       expect(comp.fields?.title).toBeDefined();
     }
+  });
+
+  it('builds FilterBarBlock with a custom filter subset field', () => {
+    const filterAwareConfig = createPuckConfig({
+      filterDefinitions: [
+        {
+          id: 'region-filter',
+          title: 'Region',
+          type: 'select',
+          fieldRef: 'region',
+          datasetRef: 'orders',
+          operator: 'equals',
+          scope: { type: 'global' },
+        },
+      ],
+    });
+
+    expect(filterAwareConfig.components.FilterBarBlock.fields?.filterIds).toBeDefined();
+    expect(
+      (filterAwareConfig.components.FilterBarBlock.fields?.filterIds as { type: string }).type,
+    ).toBe('custom');
   });
 });
 

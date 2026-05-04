@@ -9,23 +9,22 @@ import { puckToCanonical, canonicalToPuck } from '../src/adapters/puck-canonical
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-interface PropTest {
-  /** Puck block name (e.g. 'LineChart') */
-  block: string;
-  /** Per-chart props to set on the block */
-  perChartProps: Record<string, unknown>;
-  /** Base props needed to make a valid block */
-  baseProps?: Record<string, unknown>;
-}
-
 const BASE_XY = {
-  id: 'test-1', title: 'Test', datasetRef: 'ds',
-  xAxisField: 'x', yAxisField: 'y', seriesField: '', aggregation: 'none',
+  id: 'test-1',
+  title: 'Test',
+  datasetRef: 'ds',
+  xAxisField: 'x',
+  yAxisField: 'y',
+  seriesField: '',
+  aggregation: 'none',
 };
 
 const BASE_CAT_VAL = {
-  id: 'test-1', title: 'Test', datasetRef: 'ds',
-  categoryField: 'cat', valueField: 'val',
+  id: 'test-1',
+  title: 'Test',
+  datasetRef: 'ds',
+  categoryField: 'cat',
+  valueField: 'val',
 };
 
 function roundTrip(block: string, props: Record<string, unknown>) {
@@ -36,6 +35,15 @@ function roundTrip(block: string, props: Record<string, unknown>) {
   const canonical = puckToCanonical(puckData);
   const restored = canonicalToPuck(canonical);
   return restored.content![0].props as Record<string, unknown>;
+}
+
+function canonicalWidgetConfig(block: string, props: Record<string, unknown>) {
+  const puckData: Data = {
+    root: { props: { title: 'Canonical' } },
+    content: [{ type: block, props }],
+  };
+
+  return puckToCanonical(puckData).pages[0].widgets[0].config as Record<string, unknown>;
 }
 
 // ─── Line Chart ──────────────────────────────────────────────
@@ -50,7 +58,7 @@ describe('Adapter round-trip — Line per-chart props', () => {
 
   it('markerSize survives', () => {
     const p = roundTrip('LineChart', { ...base, markerSize: '12' });
-    expect(p.markerSize).toBe('12');
+    expect(p.markerSize).toBe(12);
   });
 
   it('step survives', () => {
@@ -81,12 +89,12 @@ describe('Adapter round-trip — Bar per-chart props', () => {
 
   it('borderRadius survives', () => {
     const p = roundTrip('BarChart', { ...base, borderRadius: '6' });
-    expect(p.borderRadius).toBe('6');
+    expect(p.borderRadius).toBe(6);
   });
 
   it('barMinHeight survives', () => {
     const p = roundTrip('BarChart', { ...base, barMinHeight: '5' });
-    expect(p.barMinHeight).toBe('5');
+    expect(p.barMinHeight).toBe(5);
   });
 });
 
@@ -97,12 +105,12 @@ describe('Adapter round-trip — Pie per-chart props', () => {
 
   it('innerRadius survives', () => {
     const p = roundTrip('PieChart', { ...base, innerRadius: '50' });
-    expect(p.innerRadius).toBe('50');
+    expect(p.innerRadius).toBe(50);
   });
 
   it('outerRadius survives', () => {
     const p = roundTrip('PieChart', { ...base, outerRadius: '85' });
-    expect(p.outerRadius).toBe('85');
+    expect(p.outerRadius).toBe(85);
   });
 
   it('labelPosition survives', () => {
@@ -112,7 +120,7 @@ describe('Adapter round-trip — Pie per-chart props', () => {
 
   it('padAngle survives', () => {
     const p = roundTrip('PieChart', { ...base, padAngle: '5' });
-    expect(p.padAngle).toBe('5');
+    expect(p.padAngle).toBe(5);
   });
 });
 
@@ -134,7 +142,7 @@ describe('Adapter round-trip — Scatter per-chart props', () => {
 
   it('symbolSize survives', () => {
     const p = roundTrip('ScatterChart', { ...base, symbolSize: '20' });
-    expect(p.symbolSize).toBe('20');
+    expect(p.symbolSize).toBe(20);
   });
 
   it('opacity survives', () => {
@@ -147,8 +155,13 @@ describe('Adapter round-trip — Scatter per-chart props', () => {
 
 describe('Adapter round-trip — Combo per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    xAxisField: 'x', barField: 'b', lineField: 'l', aggregation: 'none',
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    xAxisField: 'x',
+    barField: 'b',
+    lineField: 'l',
+    aggregation: 'none',
   };
 
   it('lineSmooth survives', () => {
@@ -158,7 +171,7 @@ describe('Adapter round-trip — Combo per-chart props', () => {
 
   it('barBorderRadius survives', () => {
     const p = roundTrip('ComboChart', { ...base, barBorderRadius: '4' });
-    expect(p.barBorderRadius).toBe('4');
+    expect(p.barBorderRadius).toBe(4);
   });
 });
 
@@ -166,13 +179,17 @@ describe('Adapter round-trip — Combo per-chart props', () => {
 
 describe('Adapter round-trip — Heatmap per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    xAxisField: 'x', yAxisField: 'y', valueField: 'v',
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    xAxisField: 'x',
+    yAxisField: 'y',
+    valueField: 'v',
   };
 
   it('cellBorderWidth survives', () => {
     const p = roundTrip('HeatmapChart', { ...base, cellBorderWidth: '3' });
-    expect(p.cellBorderWidth).toBe('3');
+    expect(p.cellBorderWidth).toBe(3);
   });
 
   it('cellBorderColor survives', () => {
@@ -214,7 +231,7 @@ describe('Adapter round-trip — Funnel per-chart props', () => {
 
   it('gap survives', () => {
     const p = roundTrip('FunnelChart', { ...base, gap: '5' });
-    expect(p.gap).toBe('5');
+    expect(p.gap).toBe(5);
   });
 });
 
@@ -222,8 +239,12 @@ describe('Adapter round-trip — Funnel per-chart props', () => {
 
 describe('Adapter round-trip — Treemap per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    nameField: 'name', valueField: 'value', parentField: '',
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    nameField: 'name',
+    valueField: 'value',
+    parentField: '',
   };
 
   it('showUpperLabel survives', () => {
@@ -233,7 +254,7 @@ describe('Adapter round-trip — Treemap per-chart props', () => {
 
   it('maxDepth survives', () => {
     const p = roundTrip('TreemapChart', { ...base, maxDepth: '2' });
-    expect(p.maxDepth).toBe('2');
+    expect(p.maxDepth).toBe(2);
   });
 
   it('borderWidth survives', () => {
@@ -246,18 +267,22 @@ describe('Adapter round-trip — Treemap per-chart props', () => {
 
 describe('Adapter round-trip — Sankey per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    sourceField: 'from', targetField: 'to', valueField: 'flow',
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    sourceField: 'from',
+    targetField: 'to',
+    valueField: 'flow',
   };
 
   it('nodeWidth survives', () => {
     const p = roundTrip('SankeyChart', { ...base, nodeWidth: '30' });
-    expect(p.nodeWidth).toBe('30');
+    expect(p.nodeWidth).toBe(30);
   });
 
   it('nodeGap survives', () => {
     const p = roundTrip('SankeyChart', { ...base, nodeGap: '15' });
-    expect(p.nodeGap).toBe('15');
+    expect(p.nodeGap).toBe(15);
   });
 
   it('orient survives', () => {
@@ -307,23 +332,27 @@ describe('Adapter round-trip — BoxPlot per-chart props', () => {
 
 describe('Adapter round-trip — Gauge per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    valueField: 'metric', minValue: 0, maxValue: 100,
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    valueField: 'metric',
+    minValue: 0,
+    maxValue: 100,
   };
 
   it('startAngle survives', () => {
     const p = roundTrip('GaugeChart', { ...base, startAngle: '180' });
-    expect(p.startAngle).toBe('180');
+    expect(p.startAngle).toBe(180);
   });
 
   it('endAngle survives', () => {
     const p = roundTrip('GaugeChart', { ...base, endAngle: '0' });
-    expect(p.endAngle).toBe('0');
+    expect(p.endAngle).toBe(0);
   });
 
   it('splitCount survives', () => {
     const p = roundTrip('GaugeChart', { ...base, splitCount: '5' });
-    expect(p.splitCount).toBe('5');
+    expect(p.splitCount).toBe(5);
   });
 
   it('progressMode survives', () => {
@@ -341,6 +370,19 @@ describe('Adapter round-trip — Gauge per-chart props', () => {
 
 describe('Adapter round-trip — Table per-chart props', () => {
   const base = { id: 'test-1', title: 'Test', datasetRef: 'ds', pageSize: 50, striped: 'true' };
+
+  it('serializes boolean table flags as booleans in canonical config', () => {
+    const config = canonicalWidgetConfig('Table', {
+      ...base,
+      striped: 'false',
+      showRowNumbers: 'true',
+      showTotals: 'true',
+    });
+
+    expect(config.striped).toBe(false);
+    expect(config.showRowNumbers).toBe(true);
+    expect(config.showTotals).toBe(true);
+  });
 
   it('showRowNumbers survives', () => {
     const p = roundTrip('Table', { ...base, showRowNumbers: 'true' });
@@ -367,9 +409,14 @@ describe('Adapter round-trip — Table per-chart props', () => {
 
 describe('Adapter round-trip — KPI per-chart props', () => {
   const base = {
-    id: 'test-1', title: 'Test', datasetRef: 'ds',
-    valueField: 'revenue', aggregation: 'sum',
-    prefix: '$', suffix: 'M', comparisonField: 'prev',
+    id: 'test-1',
+    title: 'Test',
+    datasetRef: 'ds',
+    valueField: 'revenue',
+    aggregation: 'sum',
+    prefix: '$',
+    suffix: 'M',
+    comparisonField: 'prev',
   };
 
   it('subtitleField survives', () => {

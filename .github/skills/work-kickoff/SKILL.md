@@ -46,6 +46,7 @@ Structure:
 3. **Phases** — Ordered steps (e.g. schema/types → runtime → designer → tests → docs/screenshots).
 4. **Key files** — Table: path → one-line intent.
 5. **Testing** — Unit targets, `pnpm test`, Playwright / Chrome MCP plans (`docs/testing/`), Storybook if relevant.
+   For parallel local validation, include the leased port tuple and the probe command (`node scripts/find-free-port.mjs --count 3`) in the issue.
 6. **Verification** — Commands: `pnpm lint && pnpm typecheck && pnpm test` (root); package-scoped variants if faster.
 7. **Docs / evidence** — If UI-facing: follow **`document-feature`** (screenshots, MDX); do not commit throwaway images to unrelated paths.
 
@@ -65,7 +66,7 @@ Stop for human approval of the issue before implementation unless they explicitl
 
 ### Step 6: Hand off
 
-After approval, implementers: follow the issue, load essential skills, respect agent/package boundaries from **`AGENTS.md`**. For **parallel agents or multiple checkouts**, see **`.github/skills/parallel-agent-environments/SKILL.md`** to avoid port and file-scope collisions.
+After approval, implementers: follow the issue, load essential skills, respect agent/package boundaries from **`AGENTS.md`**. For **parallel agents or multiple checkouts**, see **`.github/skills/parallel-agent-environments/SKILL.md`** to avoid port and file-scope collisions, and record the exact leased local origins in the issue if browser validation is part of the work.
 
 ## Principles
 

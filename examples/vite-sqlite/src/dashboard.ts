@@ -4,7 +4,8 @@ export const defaultDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'vite-sqlite-dashboard',
   title: 'SQLite Analytics Workbench',
-  description: 'A Vite host app that re-queries an in-browser SQLite database based on Supersubset filter state.',
+  description:
+    'A Vite host app that re-queries an in-browser SQLite database based on Supersubset filter state.',
   filters: [
     {
       id: 'filter-region',
@@ -45,7 +46,14 @@ export const defaultDashboard: DashboardDefinition = {
           id: 'grid-main',
           type: 'grid',
           parentId: 'root',
-          children: ['header-title', 'divider', 'row-kpis', 'row-charts', 'row-table'],
+          children: [
+            'header-title',
+            'divider',
+            'row-filter-bars',
+            'row-kpis',
+            'row-charts',
+            'row-table',
+          ],
           meta: { columns: 12 },
         },
         'header-title': {
@@ -61,6 +69,20 @@ export const defaultDashboard: DashboardDefinition = {
           parentId: 'grid-main',
           children: [],
           meta: {},
+        },
+        'row-filter-bars': {
+          id: 'row-filter-bars',
+          type: 'row',
+          parentId: 'grid-main',
+          children: ['w-filter-bar-all'],
+          meta: {},
+        },
+        'w-filter-bar-all': {
+          id: 'w-filter-bar-all',
+          type: 'widget',
+          parentId: 'row-filter-bars',
+          children: [],
+          meta: { widgetRef: 'filters-all', width: 12, height: 88 },
         },
         'row-kpis': {
           id: 'row-kpis',
@@ -128,6 +150,12 @@ export const defaultDashboard: DashboardDefinition = {
       },
       widgets: [
         {
+          id: 'filters-all',
+          type: 'filter-bar',
+          title: 'All Dashboard Filters',
+          config: {},
+        },
+        {
           id: 'kpi-revenue',
           type: 'kpi-card',
           title: 'Revenue',
@@ -138,7 +166,12 @@ export const defaultDashboard: DashboardDefinition = {
               { role: 'comparison', fieldRef: 'previousRevenue' },
             ],
           },
-          config: { valueField: 'revenue', comparisonField: 'previousRevenue', format: 'currency', prefix: '$' },
+          config: {
+            valueField: 'revenue',
+            comparisonField: 'previousRevenue',
+            format: 'currency',
+            prefix: '$',
+          },
         },
         {
           id: 'kpi-orders',
@@ -164,7 +197,12 @@ export const defaultDashboard: DashboardDefinition = {
               { role: 'comparison', fieldRef: 'previousAov' },
             ],
           },
-          config: { valueField: 'aov', comparisonField: 'previousAov', format: 'currency', prefix: '$' },
+          config: {
+            valueField: 'aov',
+            comparisonField: 'previousAov',
+            format: 'currency',
+            prefix: '$',
+          },
         },
         {
           id: 'chart-monthly-sales',

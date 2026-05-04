@@ -124,10 +124,10 @@ export const ColumnBlock: ComponentConfig = {
                 zIndex: 1,
               },
             },
-            `${span}/12`
+            `${span}/12`,
           )
         : null,
-      React.createElement(Content)
+      React.createElement(Content),
     );
   },
 };

@@ -12,7 +12,13 @@ const ordersDataset: NormalizedDataset = {
     { id: 'order_date', label: 'Order Date', dataType: 'date', role: 'time' },
     { id: 'category', label: 'Category', dataType: 'string', role: 'dimension' },
     { id: 'region', label: 'Region', dataType: 'string', role: 'dimension' },
-    { id: 'revenue', label: 'Revenue', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
+    {
+      id: 'revenue',
+      label: 'Revenue',
+      dataType: 'number',
+      role: 'measure',
+      defaultAggregation: 'sum',
+    },
   ],
   source: { type: 'table', ref: 'orders' },
 };
@@ -30,7 +36,7 @@ const sampleFilters: FilterDefinition[] = [
   {
     id: 'f-date',
     title: 'Date Range',
-    type: 'date-range',
+    type: 'date',
     fieldRef: 'order_date',
     datasetRef: 'ds-orders',
     operator: 'between',

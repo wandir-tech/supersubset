@@ -366,6 +366,24 @@ describe('BarChartWidget — per-chart properties', () => {
     expect((opt.yAxis as Record<string, unknown>).type).toBe('category');
   });
 
+  it('horizontal zoom targets the category y-axis and reserves side space', () => {
+    render(
+      <BarChartWidget
+        {...makeProps({
+          config: { xField: 'category', yFields: ['sales'], horizontal: true, zoomable: true },
+          data: sampleCategoryData,
+        })}
+      />,
+    );
+    const opt = getOption();
+    const zoom = opt.dataZoom as Array<Record<string, unknown>>;
+
+    expect(zoom).toHaveLength(2);
+    expect(zoom[0]).toMatchObject({ type: 'slider', yAxisIndex: 0, orient: 'vertical' });
+    expect(zoom[1]).toMatchObject({ type: 'inside', yAxisIndex: 0, orient: 'vertical' });
+    expect((opt.grid as Record<string, unknown>).right).toBe('12%');
+  });
+
   it('stacked=true sets stack on series', () => {
     render(
       <BarChartWidget
@@ -484,6 +502,7 @@ describe('PieChartWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().padAngle).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'padAngle')).toBe(false);
   });
 
   it('roseType=radius produces rose chart', () => {
@@ -546,6 +565,19 @@ describe('PieChartWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().roseType).toBe('radius');
+  });
+
+  it('omits roseType when no rose variant is configured', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value' },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().roseType).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'roseType')).toBe(false);
   });
 
   // Regression: #10 — showValues=false must not hide labels when labelPosition is set
@@ -1011,6 +1043,70 @@ describe('TreemapWidget — per-chart properties', () => {
     expect(upper.show).toBe(false);
   });
 
+  it('showValues=true formats treemap labels with raw values when no number format is set', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: true },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as {
+      show: boolean;
+      formatter: (params: { name: string; value: number }) => string;
+    };
+    expect(label.show).toBe(true);
+    expect(label.formatter({ name: 'A', value: 100 })).toBe('A\n100');
+  });
+
+  it('showValues="true" from the designer still enables treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: 'true' },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as {
+      show: boolean;
+      formatter: (params: { name: string; value: number }) => string;
+    };
+    expect(label.show).toBe(true);
+    expect(label.formatter({ name: 'A', value: 100 })).toBe('A\n100');
+  });
+
+  it('showValues=false hides treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: false },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(false);
+  });
+
+  it('showValues="false" from the designer hides treemap labels', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', showValues: 'false' },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(false);
+  });
+
   it('maxDepth limits tree depth', () => {
     render(
       <TreemapWidget
@@ -1033,6 +1129,7 @@ describe('TreemapWidget — per-chart properties', () => {
       />,
     );
     expect(getSeries().leafDepth).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'leafDepth')).toBe(false);
   });
 
   it('borderWidth sets itemStyle borderWidth', () => {
@@ -1046,6 +1143,19 @@ describe('TreemapWidget — per-chart properties', () => {
     );
     const style = getSeries().itemStyle as Record<string, unknown>;
     expect(style.borderWidth).toBe(3);
+  });
+
+  it('omits itemStyle when no treemap border is configured', () => {
+    render(
+      <TreemapWidget
+        {...makeProps({
+          config: { nameField: 'name', valueField: 'value', borderWidth: 0 },
+          data: sampleTreemapData,
+        })}
+      />,
+    );
+    expect(getSeries().itemStyle).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(getSeries(), 'itemStyle')).toBe(false);
   });
 });
 

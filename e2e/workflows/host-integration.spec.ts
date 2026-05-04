@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { defaultDashboard } from '../../examples/vite-sqlite/src/dashboard';
 
 const SQLITE_STORAGE_KEY = 'supersubset:vite-sqlite-dashboard';
+const NEXTJS_EXAMPLE_ORIGIN = `http://localhost:${process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT ?? '3001'}`;
+const VITE_SQLITE_EXAMPLE_ORIGIN = `http://localhost:${process.env.SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT ?? '3002'}`;
 
 function buildImportedHostDashboard() {
   const dashboard = structuredClone(defaultDashboard);
@@ -26,7 +28,7 @@ test.describe('Host Integration Workflow', () => {
       }
     });
 
-    await page.goto('http://localhost:3001');
+    await page.goto(NEXTJS_EXAMPLE_ORIGIN);
 
     await expect(page.getByText('Next.js Runtime Host')).toBeVisible();
     await expect(page.getByText('Supersubset inside a storefront operations shell.')).toBeVisible();
@@ -72,7 +74,7 @@ test.describe('Host Integration Workflow', () => {
       }
     });
 
-    await page.goto('http://localhost:3002');
+    await page.goto(VITE_SQLITE_EXAMPLE_ORIGIN);
 
     await expect(page.getByText('Vite + SQLite host example')).toBeVisible();
     await expect(page.getByText('Query log')).toBeVisible();

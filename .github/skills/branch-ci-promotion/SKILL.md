@@ -31,6 +31,34 @@ Supersubset uses a **four-tier branch model**: feature branches → `develop` �
 - After CI fails on a branch — triage without guessing.
 - When defining “green” for a release tag or publishing docs/examples.
 
+## Branch base preflight (required before branching)
+
+Never create a normal `feature/*`, `fix/*`, or `issue/*` branch from an unrefreshed local `develop`.
+
+Use one of these flows:
+
+```bash
+git fetch origin
+git switch develop
+git pull --ff-only origin develop
+git switch -c fix/my-slice
+```
+
+If local `develop` is dirty, has local-only commits, or you want a cleaner start, branch directly from the remote tip instead:
+
+```bash
+git fetch origin
+git switch -c fix/my-slice origin/develop
+```
+
+Failure mode to avoid:
+
+- branching from stale local `develop`
+- re-implementing changes that are already on `origin/develop`
+- opening a PR that conflicts because the same files were already changed upstream
+
+For worktree-based flows, follow **`.github/skills/parallel-agent-environments/SKILL.md`** and base the worktree on `origin/develop` for normal feature work.
+
 ## Local verification (authoritative before push)
 
 From repo root:
@@ -51,7 +79,8 @@ pnpm test:e2e
 
 ## PR / merge checklist
 
-- [ ] **Branch** is up to date with target (`main` or the agreed base) or merge conflicts resolved intentionally.
+- [ ] **Branch base** was created from the current remote target base (`git fetch origin` + `git pull --ff-only`, or direct branch from `origin/develop` for normal work).
+- [ ] **Branch** is rebased or merged with the target before final review if the target moved after branch creation.
 - [ ] **`pnpm lint`** — no new violations in touched packages.
 - [ ] **`pnpm typecheck`** — strict TS clean across workspace.
 - [ ] **`pnpm test`** — unit/integration tests for changed packages pass.
@@ -84,5 +113,6 @@ If **no workflows** yet, this skill still applies: **run the same commands local
 
 - `.github/skills/github-cli/SKILL.md`
 - `.github/skills/orchestration/SKILL.md`
+- `.github/skills/release-runbook/SKILL.md`
 - `.github/skills/browser-testing/SKILL.md`
 - `docs/bootstrap.md`
