@@ -61,7 +61,7 @@ export const RowBlock: ComponentConfig = {
 
 export const ColumnBlock: ComponentConfig = {
   label: 'Column',
-  inline: false,
+  inline: true,
   fields: {
     span: { type: 'number' as const, label: 'Column Span (1–12)' },
     content: { type: 'slot' as const },

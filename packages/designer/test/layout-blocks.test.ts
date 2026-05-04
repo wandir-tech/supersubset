@@ -55,8 +55,8 @@ describe('ColumnBlock', () => {
     expect(ColumnBlock.label).toBe('Column');
   });
 
-  it('is not inline so nested widgets can own canvas selection', () => {
-    expect(ColumnBlock.inline).toBe(false);
+  it('is inline so grid span styles apply to the draggable canvas wrapper', () => {
+    expect(ColumnBlock.inline).toBe(true);
   });
 
   it('has content slot field', () => {

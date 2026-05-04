@@ -279,7 +279,10 @@ function layoutChildrenToPuck(
     // Row or column → reconstruct as RowBlock/ColumnBlock with nested content
     const puckLayoutName = layoutTypeToPuckName[node.type];
     if (puckLayoutName) {
-      const nestedContent = layoutChildrenToPuck(node.children, layout, widgets);
+      const nestedContent =
+        node.type === 'row'
+          ? rowChildrenToPuck(node.children, layout, widgets)
+          : layoutChildrenToPuck(node.children, layout, widgets);
       content.push({
         type: puckLayoutName,
         props: {
@@ -322,6 +325,42 @@ function layoutChildrenToPuck(
         },
       } as ComponentData);
     }
+  }
+
+  return content;
+}
+
+function rowChildrenToPuck(
+  childIds: string[],
+  layout: LayoutMap,
+  widgets: WidgetDefinition[],
+): ComponentData[] {
+  const content: ComponentData[] = [];
+
+  for (const childId of childIds) {
+    const child = layout[childId];
+    if (!child) continue;
+
+    if (child.type === 'column') {
+      content.push(...layoutChildrenToPuck([childId], layout, widgets));
+      continue;
+    }
+
+    const rawWidth = child.meta.width;
+    const span =
+      typeof rawWidth === 'number' && Number.isFinite(rawWidth)
+        ? Math.min(12, Math.max(1, rawWidth))
+        : 12;
+
+    content.push({
+      type: 'ColumnBlock',
+      props: {
+        id: `column-${child.id}`,
+        span,
+        verticalAlign: 'stretch',
+        content: layoutChildrenToPuck([childId], layout, widgets),
+      },
+    } as ComponentData);
   }
 
   return content;
