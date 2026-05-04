@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/schema",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Canonical dashboard schema types, Zod validation, and JSON/YAML serializers for Supersubset",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
