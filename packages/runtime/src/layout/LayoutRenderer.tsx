@@ -487,13 +487,13 @@ function QueryBoundWidget({
   activeFilters,
   widgetProps,
 }: QueryBoundWidgetProps) {
-  const structuredAlertRule = useMemo(() => parseStructuredAlertRule(widgetDef), [widgetDef]);
-  const activeFilterSignature = useMemo(() => JSON.stringify(activeFilters ?? []), [activeFilters]);
-  const query = useMemo(
-    () => buildWidgetQuery(widgetDef, filters, activeFilters, structuredAlertRule),
-    [widgetDef, filters, activeFilterSignature, structuredAlertRule],
+  const structuredAlertRule = parseStructuredAlertRule(widgetDef);
+  const query = buildWidgetQuery(widgetDef, filters, activeFilters, structuredAlertRule);
+  const querySignature = JSON.stringify(query ?? null);
+  const structuredAlertResultSignature = buildStructuredAlertResultSignature(
+    widgetDef,
+    structuredAlertRule,
   );
-  const querySignature = useMemo(() => JSON.stringify(query ?? null), [query]);
   const [queryState, setQueryState] = useState<QueryState>({
     data: undefined,
     columns: undefined,
@@ -554,7 +554,7 @@ function QueryBoundWidget({
     return () => {
       isCancelled = true;
     };
-  }, [queryAdapter, querySignature, structuredAlertRule, widgetDef]);
+  }, [queryAdapter, querySignature, structuredAlertResultSignature]);
 
   return createElement(widgetComponent, {
     ...widgetProps,
@@ -659,6 +659,41 @@ function parseStructuredAlertRule(
   return parsed.data;
 }
 
+function buildStructuredAlertResultSignature(
+  widgetDef: WidgetDefinition,
+  structuredAlertRule: StructuredAlertRuleDefinition | null,
+): string {
+  if (!structuredAlertRule) {
+    return 'unbound';
+  }
+
+  const { titleField, messageField, severityField } = resolveStructuredAlertFieldNames(widgetDef);
+
+  return JSON.stringify({
+    structuredAlertRule,
+    titleField,
+    messageField,
+    severityField,
+  });
+}
+
+function resolveStructuredAlertFieldNames(widgetDef: WidgetDefinition): {
+  titleField: string;
+  messageField: string;
+  severityField: string;
+} {
+  const mergedConfig = resolveDataBindingConfig(widgetDef);
+
+  return {
+    titleField:
+      typeof mergedConfig.titleField === 'string' ? mergedConfig.titleField : 'alert_title',
+    messageField:
+      typeof mergedConfig.messageField === 'string' ? mergedConfig.messageField : 'alert_message',
+    severityField:
+      typeof mergedConfig.severityField === 'string' ? mergedConfig.severityField : 'severity',
+  };
+}
+
 function resolveStructuredAlertDatasetId(
   widgetDef: WidgetDefinition,
   structuredAlertRule: StructuredAlertRuleDefinition,
@@ -690,13 +725,7 @@ function mapStructuredAlertRuleResult(
   result: QueryResult,
   structuredAlertRule: StructuredAlertRuleDefinition,
 ): Pick<QueryState, 'data' | 'columns'> {
-  const mergedConfig = resolveDataBindingConfig(widgetDef);
-  const titleField =
-    typeof mergedConfig.titleField === 'string' ? mergedConfig.titleField : 'alert_title';
-  const messageField =
-    typeof mergedConfig.messageField === 'string' ? mergedConfig.messageField : 'alert_message';
-  const severityField =
-    typeof mergedConfig.severityField === 'string' ? mergedConfig.severityField : 'severity';
+  const { titleField, messageField, severityField } = resolveStructuredAlertFieldNames(widgetDef);
 
   const columns: NonNullable<WidgetProps['columns']> = [
     { fieldId: titleField, label: 'Alert Title', dataType: 'string' },

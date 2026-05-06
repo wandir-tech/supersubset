@@ -213,46 +213,48 @@ const alertRuleAlertSchema = z.object({
   severity: alertRuleSeveritySchema.optional(),
 });
 
-const structuredAlertRuleSchema = z.object({
-  mode: z.literal('structured'),
-  datasetRef: z.string().min(1).optional(),
-  metricFieldRef: z.string().min(1),
-  aggregation: structuredAlertRuleAggregationSchema,
-  operator: structuredAlertRuleOperatorSchema,
-  threshold: z.number().finite(),
-  alert: alertRuleAlertSchema,
-});
+const structuredAlertRuleSchema = z
+  .object({
+    mode: z.literal('structured'),
+    datasetRef: z.string().min(1).optional(),
+    metricFieldRef: z.string().min(1),
+    aggregation: structuredAlertRuleAggregationSchema,
+    operator: structuredAlertRuleOperatorSchema,
+    threshold: z.number().finite(),
+    alert: alertRuleAlertSchema,
+  })
+  .strict();
 
 // ─── Widget ──────────────────────────────────────────────────
 
-const widgetDefinitionSchema = z
-  .object({
-    id: z.string().min(1),
-    type: z.string().min(1),
-    title: z.string().optional(),
-    config: safeRecord(z.unknown()),
-    dataBinding: dataBindingSchema.optional(),
-    filters: z.array(filterRefSchema).optional(),
-    interactions: z.array(interactionRefSchema).optional(),
-  })
-  .superRefine((widget, context) => {
-    if (widget.type !== 'alerts' || widget.config.alertRule === undefined) {
-      return;
-    }
+const widgetDefinitionSchema = z.object({
+  id: z.string().min(1),
+  type: z.string().min(1),
+  title: z.string().optional(),
+  config: safeRecord(z.unknown()),
+  dataBinding: dataBindingSchema.optional(),
+  filters: z.array(filterRefSchema).optional(),
+  interactions: z.array(interactionRefSchema).optional(),
+});
 
-    const parsed = structuredAlertRuleSchema.safeParse(widget.config.alertRule);
-    if (parsed.success) {
-      return;
-    }
+const validatedWidgetDefinitionSchema = widgetDefinitionSchema.superRefine((widget, context) => {
+  if (widget.type !== 'alerts' || widget.config.alertRule === undefined) {
+    return;
+  }
 
-    for (const issue of parsed.error.issues) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: issue.message,
-        path: ['config', 'alertRule', ...issue.path],
-      });
-    }
-  });
+  const parsed = structuredAlertRuleSchema.safeParse(widget.config.alertRule);
+  if (parsed.success) {
+    return;
+  }
+
+  for (const issue of parsed.error.issues) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: issue.message,
+      path: ['config', 'alertRule', ...issue.path],
+    });
+  }
+});
 
 // ─── Theme ───────────────────────────────────────────────────
 
@@ -350,7 +352,7 @@ const pageDefinitionSchema = z.object({
   title: z.string(),
   layout: layoutMapSchema,
   rootNodeId: z.string().min(1),
-  widgets: z.array(widgetDefinitionSchema),
+  widgets: z.array(validatedWidgetDefinitionSchema),
 });
 
 // ─── Dashboard ───────────────────────────────────────────────
@@ -378,6 +380,7 @@ export {
   layoutMetaSchema,
   layoutComponentTypeSchema,
   widgetDefinitionSchema,
+  validatedWidgetDefinitionSchema,
   dataBindingSchema,
   fieldBindingSchema,
   filterDefinitionSchema,

@@ -1,5 +1,25 @@
+import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { dashboardDefinitionSchema } from '../src/validation';
+import {
+  dashboardDefinitionSchema,
+  validatedWidgetDefinitionSchema,
+  widgetDefinitionSchema,
+} from '../src/validation';
+
+function createAlertsWidget(alertRule: Record<string, unknown>) {
+  return {
+    id: 'alerts-1',
+    type: 'alerts',
+    title: 'Revenue Watch',
+    config: {
+      alertRule,
+    },
+    dataBinding: {
+      datasetRef: 'sales',
+      fields: [],
+    },
+  };
+}
 
 function createAlertsDashboard(alertRule: Record<string, unknown>) {
   return {
@@ -28,29 +48,50 @@ function createAlertsDashboard(alertRule: Record<string, unknown>) {
             meta: { widgetRef: 'alerts-1' },
           },
         },
-        widgets: [
-          {
-            id: 'alerts-1',
-            type: 'alerts',
-            title: 'Revenue Watch',
-            config: {
-              alertRule,
-            },
-            dataBinding: {
-              datasetRef: 'sales',
-              fields: [],
-            },
-          },
-        ],
+        widgets: [createAlertsWidget(alertRule)],
       },
     ],
   };
 }
 
 describe('dashboardDefinitionSchema alert rules', () => {
+  it('keeps widgetDefinitionSchema chainable for sub-schema consumers', () => {
+    const extendedWidgetSchema = widgetDefinitionSchema.extend({
+      note: z.string().optional(),
+    });
+
+    const result = extendedWidgetSchema.safeParse({
+      id: 'widget-1',
+      type: 'kpi-card',
+      config: {},
+      note: 'consumer metadata',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it('accepts structured alert rules on alerts widgets', () => {
     const result = dashboardDefinitionSchema.safeParse(
       createAlertsDashboard({
+        mode: 'structured',
+        metricFieldRef: 'revenue',
+        aggregation: 'sum',
+        operator: 'gte',
+        threshold: 1000,
+        alert: {
+          title: 'Revenue threshold breached',
+          message: 'Revenue crossed the configured threshold.',
+          severity: 'warning',
+        },
+      }),
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it('keeps a validated widget schema for direct alerts-widget parsing', () => {
+    const result = validatedWidgetDefinitionSchema.safeParse(
+      createAlertsWidget({
         mode: 'structured',
         metricFieldRef: 'revenue',
         aggregation: 'sum',
@@ -88,6 +129,33 @@ describe('dashboardDefinitionSchema alert rules', () => {
         ? false
         : result.error.issues.some(
             (issue) => issue.path.join('.') === 'pages.0.widgets.0.config.alertRule.operator',
+          ),
+    ).toBe(true);
+  });
+
+  it('rejects unknown keys in structured alert rules on alerts widgets', () => {
+    const result = dashboardDefinitionSchema.safeParse(
+      createAlertsDashboard({
+        mode: 'structured',
+        metricFieldRef: 'revenue',
+        aggregation: 'sum',
+        operator: 'gte',
+        threshold: 1000,
+        unexpected: 'stale-field',
+        alert: {
+          title: 'Revenue threshold breached',
+          message: 'Revenue crossed the configured threshold.',
+          severity: 'warning',
+        },
+      }),
+    );
+
+    expect(result.success).toBe(false);
+    expect(
+      result.success
+        ? false
+        : result.error.issues.some(
+            (issue) => issue.path.join('.') === 'pages.0.widgets.0.config.alertRule',
           ),
     ).toBe(true);
   });

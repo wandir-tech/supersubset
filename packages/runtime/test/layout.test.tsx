@@ -743,4 +743,89 @@ describe('LayoutRenderer', () => {
 
     expect(screen.getByTestId('widget-query-probe').textContent).toBe('200');
   });
+
+  it('does not re-execute identical queries when widgets are re-created with the same semantics', async () => {
+    const layout: LayoutMap = {
+      root: { id: 'root', type: 'root', children: ['grid-1'], meta: {} },
+      'grid-1': { id: 'grid-1', type: 'grid', children: ['w-1'], parentId: 'root', meta: {} },
+      'w-1': {
+        id: 'w-1',
+        type: 'widget',
+        children: [],
+        parentId: 'grid-1',
+        meta: { widgetRef: 'alerts-1' },
+      },
+    };
+    const createWidgets = (): WidgetDefinition[] => [
+      {
+        id: 'alerts-1',
+        type: 'alerts',
+        title: 'Alert Rule Probe',
+        config: {
+          titleField: 'alert_title',
+          messageField: 'alert_message',
+          severityField: 'severity',
+          alertRule: {
+            mode: 'structured',
+            metricFieldRef: 'revenue',
+            aggregation: 'sum',
+            operator: 'gte',
+            threshold: 1000,
+            alert: {
+              title: 'Revenue threshold breached',
+              message: 'Revenue crossed the configured threshold.',
+              severity: 'warning',
+            },
+          },
+        },
+        dataBinding: {
+          datasetRef: 'sales',
+          fields: [{ role: 'value', fieldRef: 'revenue', aggregation: 'sum' }],
+        },
+      },
+    ];
+
+    const queryAdapter: QueryAdapter = {
+      name: 'mock-query',
+      execute: vi.fn().mockResolvedValue(createQueryResult(1200)),
+    };
+
+    const { rerender } = render(
+      <LayoutRenderer
+        layout={layout}
+        rootNodeId="root"
+        widgets={createWidgets()}
+        registry={registry}
+        queryAdapter={queryAdapter}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(queryAdapter.execute).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-alert-rule-probe').textContent).toBe(
+        '1:Revenue threshold breached:warning',
+      );
+    });
+
+    rerender(
+      <LayoutRenderer
+        layout={layout}
+        rootNodeId="root"
+        widgets={createWidgets()}
+        registry={registry}
+        queryAdapter={queryAdapter}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('widget-alert-rule-probe').textContent).toBe(
+        '1:Revenue threshold breached:warning',
+      );
+    });
+
+    expect(queryAdapter.execute).toHaveBeenCalledTimes(1);
+  });
 });

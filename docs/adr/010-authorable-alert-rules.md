@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 
@@ -198,10 +198,13 @@ The `sql-predicate` mode is optional and only available when the host explicitly
 
 Structured mode is intended for the common, safe, backend-agnostic cases.
 
-Initial scope:
+Initial release scope:
+
+- threshold comparisons on aggregated values
+
+Future structured-mode extensions may add:
 
 - previous-period metric change
-- threshold comparisons on aggregated values
 - optional grouping for repeated alert rows
 
 Structured mode should compile into the existing logical query contract or the smallest compatible extension of it. It must not require raw SQL authoring.
