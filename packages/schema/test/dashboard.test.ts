@@ -115,6 +115,18 @@ describe('DashboardDefinition schema', () => {
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(true);
   });
+
+  it('rejects field-backed option sources with minSearchChars below 1', () => {
+    const raw = JSON.parse(fixtureJSON);
+    raw.filters[0].optionSource = {
+      kind: 'field',
+      strategy: 'search',
+      minSearchChars: 0,
+    };
+
+    const result = dashboardDefinitionSchema.safeParse(raw);
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('layout nesting validation', () => {

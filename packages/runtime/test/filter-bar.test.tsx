@@ -148,6 +148,18 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['All', 'Pending', 'Resolved']);
   });
 
+  it('renders an unavailable select state when no option source is available', () => {
+    const { container } = renderFilterBar([{ ...selectFilter, optionSource: undefined }]);
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(select.disabled).toBe(true);
+    expect(optionLabels).toEqual(['Options unavailable']);
+  });
+
   it('renders a multi-select control for multi-select filters', () => {
     const { container } = renderFilterBar([multiSelectFilter]);
 
@@ -159,6 +171,28 @@ describe('FilterBar', () => {
       (option) => option.textContent,
     );
     expect(optionLabels).toEqual(['Footwear', 'Apparel', 'Hydration']);
+  });
+
+  it('renders an unavailable multi-select state for field-backed options without runtime support', () => {
+    const { container } = renderFilterBar([
+      {
+        ...multiSelectFilter,
+        optionSource: {
+          kind: 'field',
+          strategy: 'search',
+          minSearchChars: 2,
+        },
+      },
+    ]);
+
+    const select = container.querySelector('.ss-filter-multi-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(select.disabled).toBe(true);
+    expect(select.size).toBe(1);
+    expect(optionLabels).toEqual(['Field-backed options require host support']);
   });
 
   it('renders a text input for text-type filter', () => {

@@ -2,11 +2,11 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Date
 
-2026-05-04
+2026-05-06
 
 ## Context
 
@@ -158,6 +158,8 @@ Resolution order should become:
 
 If a select filter has no valid option source, the runtime should render a clear unavailable state and the designer should warn during authoring. It should not silently render an empty dropdown that looks valid but cannot function.
 
+During the current rollout, field-backed runtime resolution remains tracked separately in [Issue #121](https://github.com/wandir-tech/supersubset/issues/121). Until that runtime path is wired, unsupported select-like filters must render as unavailable rather than appearing interactive with no usable options.
+
 ### 6. Keep option-source semantics on the filter, not only on dataset metadata
 
 Field metadata may later grow hints such as low-cardinality, enum-like values, or recommended strategies, but that is not sufficient as the primary contract.
@@ -209,4 +211,5 @@ Therefore the authored filter definition owns the option-source decision, while 
 - [ADR-006: Multi-Dashboard Navigation, Alerts Widget, and Reusable Filter Rule Editor](./006-multi-dashboard-navigation-alerts-and-filter-editor.md)
 - [ADR-008: Supersubset HTTP Probe Contract](./008-supersubset-http-probe-contract.md)
 - [Issue #118](https://github.com/wandir-tech/supersubset/issues/118)
+- [Issue #121](https://github.com/wandir-tech/supersubset/issues/121)
 - [Runtime API](../api/runtime.md)

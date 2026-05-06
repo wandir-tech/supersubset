@@ -286,6 +286,7 @@ function FilterEditor({
     (nextType: SupportedFilterControlType) => {
       const nextPatch: Partial<FilterDefinition> = { type: nextType };
 
+      // Multi-select authoring implies list-style operators in the canonical contract.
       if (nextType === 'multi-select' && !['in', 'not_in'].includes(filter.operator)) {
         nextPatch.operator = 'in';
       }

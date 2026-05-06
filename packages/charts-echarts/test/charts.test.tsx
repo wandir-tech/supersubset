@@ -240,9 +240,7 @@ describe('MarkdownWidget', () => {
   });
 
   it('renders empty content gracefully', () => {
-    const { container } = render(
-      <MarkdownWidget {...makeProps({ config: {} })} />,
-    );
+    const { container } = render(<MarkdownWidget {...makeProps({ config: {} })} />);
 
     expect(container.querySelector('.ss-markdown')).toBeTruthy();
   });
@@ -348,6 +346,71 @@ describe('AlertsWidget', () => {
     // jsdom normalises hex → rgb
     expect(badge.style.color).toBe('rgb(127, 29, 29)');
   });
+
+  it('shows a loading state while alert data is being fetched', () => {
+    render(
+      <AlertsWidget
+        {...makeProps({
+          widgetId: 'alerts-loading',
+          config: {
+            datasetRef: 'ops-alerts',
+            titleField: 'alert_title',
+            messageField: 'alert_message',
+          },
+          loading: true,
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('alerts-widget-loading-alerts-loading')).toBeTruthy();
+    expect(screen.getByText('Loading alert data')).toBeTruthy();
+    expect(screen.queryByText('No alerts are currently firing.')).toBeNull();
+  });
+
+  it('shows a query error state instead of the empty state', () => {
+    render(
+      <AlertsWidget
+        {...makeProps({
+          widgetId: 'alerts-error',
+          config: {
+            datasetRef: 'ops-alerts',
+            titleField: 'alert_title',
+            messageField: 'alert_message',
+          },
+          error: new Error('Host query failed'),
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('alerts-widget-error-alerts-error')).toBeTruthy();
+    expect(screen.getByText('Alert data failed to load')).toBeTruthy();
+    expect(screen.getByText('Host query failed')).toBeTruthy();
+    expect(screen.queryByText('No alerts are currently firing.')).toBeNull();
+  });
+
+  it('shows a data unavailable state when a dataset-backed widget has no query adapter data', () => {
+    render(
+      <AlertsWidget
+        {...makeProps({
+          widgetId: 'alerts-unavailable',
+          config: {
+            datasetRef: 'ops-alerts',
+            titleField: 'alert_title',
+            messageField: 'alert_message',
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('alerts-widget-unavailable-alerts-unavailable')).toBeTruthy();
+    expect(screen.getByText('Alert data unavailable')).toBeTruthy();
+    expect(
+      screen.getByText(
+        'This dashboard view is not connected to a host query adapter for alert data.',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText('No alerts are currently firing.')).toBeNull();
+  });
 });
 
 describe('registerAllCharts', () => {
@@ -358,10 +421,24 @@ describe('registerAllCharts', () => {
     registerAllCharts(registry);
 
     const expectedTypes = [
-      'line-chart', 'bar-chart', 'table', 'kpi-card',
-      'pie-chart', 'scatter-chart', 'area-chart', 'gauge',
-      'funnel-chart', 'radar-chart', 'treemap', 'heatmap',
-      'combo-chart', 'waterfall', 'sankey', 'box-plot', 'markdown', 'alerts',
+      'line-chart',
+      'bar-chart',
+      'table',
+      'kpi-card',
+      'pie-chart',
+      'scatter-chart',
+      'area-chart',
+      'gauge',
+      'funnel-chart',
+      'radar-chart',
+      'treemap',
+      'heatmap',
+      'combo-chart',
+      'waterfall',
+      'sankey',
+      'box-plot',
+      'markdown',
+      'alerts',
     ];
 
     for (const type of expectedTypes) {

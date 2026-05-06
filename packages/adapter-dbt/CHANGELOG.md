@@ -1,5 +1,19 @@
 # @supersubset/adapter-dbt
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/data-model@0.1.2
+
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/data-model@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -204,7 +204,23 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
   const showTimestamp = config.showTimestamp !== false;
   const defaultSeverity = normalizeAlertSeverity(config.defaultSeverity, 'info');
-  const visibleAlerts = data.slice(0, maxItems);
+  const structuredAlertRule = readStructuredAlertRulePreview(config);
+  const isStructuredAlertMode = config.alertMode === 'structured' || !!structuredAlertRule;
+  const previewAlerts = structuredAlertRule
+    ? [
+        {
+          [titleField]: structuredAlertRule.alert.title,
+          [messageField]: structuredAlertRule.alert.message,
+          [severityField]: structuredAlertRule.alert.severity ?? defaultSeverity,
+        },
+      ]
+    : isStructuredAlertMode
+      ? []
+      : data;
+  const visibleAlerts = previewAlerts.slice(0, maxItems);
+  const emptyMessage = isStructuredAlertMode
+    ? 'Complete the structured rule to preview an alert.'
+    : 'No alerts are firing in the sample feed.';
 
   if (visibleAlerts.length === 0 && emptyState === 'hide') {
     return null;
@@ -250,7 +266,7 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
           }}
         >
           <span style={{ fontSize: 28 }}>{fallbackIcon}</span>
-          <span style={{ fontSize: 13 }}>No alerts are firing in the sample feed.</span>
+          <span style={{ fontSize: 13 }}>{emptyMessage}</span>
         </div>
       ) : (
         <div style={ALERT_LAYOUT_STYLES[layout]}>
@@ -399,6 +415,14 @@ function buildWidgetConfig(
   else if (normalizedPuckProps.showTimestamp === 'false') config.showTimestamp = false;
   if (s(normalizedPuckProps.defaultSeverity))
     config.defaultSeverity = normalizedPuckProps.defaultSeverity;
+  if (normalizedPuckProps.alertMode === 'structured') {
+    config.alertMode = 'structured';
+    config.alertRuleDraft = buildStructuredAlertRuleDraft(normalizedPuckProps);
+  }
+  const structuredAlertRule = buildStructuredAlertRuleConfig(normalizedPuckProps);
+  if (structuredAlertRule) {
+    config.alertRule = structuredAlertRule;
+  }
   if (normalizedPuckProps.smooth === 'true') config.smooth = true;
   else if (normalizedPuckProps.smooth === 'false') config.smooth = false;
   if (normalizedPuckProps.stacked === 'true') config.stacked = true;
@@ -540,6 +564,197 @@ function buildWidgetConfig(
   if (s(normalizedPuckProps.format)) config.format = normalizedPuckProps.format;
 
   return config;
+}
+
+function buildStructuredAlertRuleConfig(
+  normalizedPuckProps: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (normalizedPuckProps.alertMode !== 'structured') {
+    return null;
+  }
+
+  const metricFieldRef =
+    typeof normalizedPuckProps.ruleMetricField === 'string' &&
+    normalizedPuckProps.ruleMetricField.trim().length > 0
+      ? normalizedPuckProps.ruleMetricField
+      : null;
+  const aggregation =
+    typeof normalizedPuckProps.ruleAggregation === 'string' &&
+    normalizedPuckProps.ruleAggregation.trim().length > 0
+      ? normalizedPuckProps.ruleAggregation
+      : null;
+  const operator =
+    typeof normalizedPuckProps.ruleOperator === 'string' &&
+    normalizedPuckProps.ruleOperator.trim().length > 0
+      ? normalizedPuckProps.ruleOperator
+      : null;
+  const threshold =
+    normalizedPuckProps.ruleThreshold != null && normalizedPuckProps.ruleThreshold !== ''
+      ? Number(normalizedPuckProps.ruleThreshold)
+      : null;
+  const title =
+    typeof normalizedPuckProps.ruleTitle === 'string' &&
+    normalizedPuckProps.ruleTitle.trim().length > 0
+      ? normalizedPuckProps.ruleTitle
+      : null;
+  const message =
+    typeof normalizedPuckProps.ruleMessage === 'string' &&
+    normalizedPuckProps.ruleMessage.trim().length > 0
+      ? normalizedPuckProps.ruleMessage
+      : null;
+  const severity =
+    typeof normalizedPuckProps.ruleSeverity === 'string' &&
+    normalizedPuckProps.ruleSeverity.trim().length > 0
+      ? normalizedPuckProps.ruleSeverity
+      : undefined;
+
+  if (
+    !metricFieldRef ||
+    !aggregation ||
+    !operator ||
+    threshold == null ||
+    !Number.isFinite(threshold) ||
+    !title ||
+    !message
+  ) {
+    return null;
+  }
+
+  return {
+    mode: 'structured',
+    metricFieldRef,
+    aggregation,
+    operator,
+    threshold,
+    alert: {
+      title,
+      message,
+      ...(severity ? { severity } : {}),
+    },
+  };
+}
+
+function buildStructuredAlertRuleDraft(
+  normalizedPuckProps: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (normalizedPuckProps.alertMode !== 'structured') {
+    return null;
+  }
+
+  const draft: Record<string, unknown> = {
+    mode: 'structured',
+  };
+
+  if (
+    typeof normalizedPuckProps.ruleMetricField === 'string' &&
+    normalizedPuckProps.ruleMetricField.trim().length > 0
+  ) {
+    draft.metricFieldRef = normalizedPuckProps.ruleMetricField;
+  }
+
+  if (
+    typeof normalizedPuckProps.ruleAggregation === 'string' &&
+    normalizedPuckProps.ruleAggregation.trim().length > 0
+  ) {
+    draft.aggregation = normalizedPuckProps.ruleAggregation;
+  }
+
+  if (
+    typeof normalizedPuckProps.ruleOperator === 'string' &&
+    normalizedPuckProps.ruleOperator.trim().length > 0
+  ) {
+    draft.operator = normalizedPuckProps.ruleOperator;
+  }
+
+  if (normalizedPuckProps.ruleThreshold != null && normalizedPuckProps.ruleThreshold !== '') {
+    const threshold = Number(normalizedPuckProps.ruleThreshold);
+    if (Number.isFinite(threshold)) {
+      draft.threshold = threshold;
+    }
+  }
+
+  const alert: Record<string, unknown> = {};
+
+  if (
+    typeof normalizedPuckProps.ruleTitle === 'string' &&
+    normalizedPuckProps.ruleTitle.trim().length > 0
+  ) {
+    alert.title = normalizedPuckProps.ruleTitle;
+  }
+
+  if (
+    typeof normalizedPuckProps.ruleMessage === 'string' &&
+    normalizedPuckProps.ruleMessage.trim().length > 0
+  ) {
+    alert.message = normalizedPuckProps.ruleMessage;
+  }
+
+  if (
+    typeof normalizedPuckProps.ruleSeverity === 'string' &&
+    normalizedPuckProps.ruleSeverity.trim().length > 0
+  ) {
+    alert.severity = normalizedPuckProps.ruleSeverity;
+  }
+
+  if (Object.keys(alert).length > 0) {
+    draft.alert = alert;
+  }
+
+  return draft;
+}
+
+function readStructuredAlertRulePreview(
+  config: Record<string, unknown>,
+): { alert: { title: string; message: string; severity?: string } } | null {
+  const alertRuleCandidate =
+    config.alertRule && typeof config.alertRule === 'object'
+      ? config.alertRule
+      : config.alertRuleDraft && typeof config.alertRuleDraft === 'object'
+        ? config.alertRuleDraft
+        : null;
+
+  if (!alertRuleCandidate || (alertRuleCandidate as { mode?: unknown }).mode !== 'structured') {
+    return null;
+  }
+
+  const metricFieldRef = (alertRuleCandidate as { metricFieldRef?: unknown }).metricFieldRef;
+  const aggregation = (alertRuleCandidate as { aggregation?: unknown }).aggregation;
+  const operator = (alertRuleCandidate as { operator?: unknown }).operator;
+  const threshold = (alertRuleCandidate as { threshold?: unknown }).threshold;
+
+  if (
+    typeof metricFieldRef !== 'string' ||
+    metricFieldRef.trim().length === 0 ||
+    typeof aggregation !== 'string' ||
+    aggregation.trim().length === 0 ||
+    typeof operator !== 'string' ||
+    operator.trim().length === 0 ||
+    typeof threshold !== 'number' ||
+    !Number.isFinite(threshold)
+  ) {
+    return null;
+  }
+
+  const alert = (alertRuleCandidate as { alert?: unknown }).alert;
+  if (!alert || typeof alert !== 'object') {
+    return null;
+  }
+
+  const title = (alert as { title?: unknown }).title;
+  const message = (alert as { message?: unknown }).message;
+  const severity = (alert as { severity?: unknown }).severity;
+
+  if (typeof title !== 'string' || typeof message !== 'string') {
+    return null;
+  }
+
+  return {
+    alert: {
+      title,
+      message,
+      ...(typeof severity === 'string' ? { severity } : {}),
+    },
+  };
 }
 
 // ─── Sample Data Remapping ───────────────────────────────────

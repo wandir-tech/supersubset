@@ -89,6 +89,11 @@ interface ResolvedFilterOption {
   disabled?: boolean;
 }
 
+interface ResolvedFilterOptionsState {
+  options: ResolvedFilterOption[];
+  unavailableMessage?: string;
+}
+
 function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
   if (layout === 'vertical') {
     return {
@@ -189,7 +194,7 @@ function FilterControl({
   onChangeValue,
 }: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
-  const resolvedOptions = resolveFilterOptions(filter, legacyOptions, datasets);
+  const resolvedOptionsState = resolveFilterOptions(filter, legacyOptions, datasets);
   const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
@@ -205,7 +210,7 @@ function FilterControl({
       { className: 'ss-filter-label', style: LABEL_STYLE, htmlFor: `${inputIdBase}-primary` },
       label,
     ),
-    renderInput(filter.type, value, onChangeValue, resolvedOptions, {
+    renderInput(filter.type, value, onChangeValue, resolvedOptionsState, {
       inputIdBase,
       inputName: filter.id,
       label,
@@ -217,14 +222,14 @@ function renderInput(
   type: string,
   value: unknown,
   onChange: (value: unknown) => void,
-  options: ResolvedFilterOption[],
+  optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
   switch (type) {
     case 'select':
-      return renderSelect(value, onChange, options, metadata);
+      return renderSelect(value, onChange, optionsState, metadata);
     case 'multi-select':
-      return renderMultiSelect(value, onChange, options, metadata);
+      return renderMultiSelect(value, onChange, optionsState, metadata);
     case 'text':
       return renderText(value, onChange, metadata);
     case 'range':
@@ -239,9 +244,20 @@ function renderInput(
 function renderSelect(
   value: unknown,
   onChange: (value: unknown) => void,
-  options: ResolvedFilterOption[],
+  optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
+  const isUnavailable = optionsState.unavailableMessage !== undefined;
+  const options = isUnavailable
+    ? [
+        {
+          value: '',
+          label: optionsState.unavailableMessage ?? 'Options unavailable',
+          disabled: true,
+        },
+      ]
+    : optionsState.options;
+
   return createElement(
     'select',
     {
@@ -249,13 +265,14 @@ function renderSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       style: INPUT_STYLE,
-      value: (value as string) ?? '',
+      value: isUnavailable ? '' : ((value as string) ?? ''),
+      disabled: isUnavailable,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const v = e.target.value;
         onChange(v === '' ? undefined : v);
       },
     },
-    createElement('option', { value: '' }, 'All'),
+    isUnavailable ? null : createElement('option', { value: '' }, 'All'),
     ...options.map((opt) =>
       createElement(
         'option',
@@ -269,9 +286,19 @@ function renderSelect(
 function renderMultiSelect(
   value: unknown,
   onChange: (value: unknown) => void,
-  options: ResolvedFilterOption[],
+  optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
+  const isUnavailable = optionsState.unavailableMessage !== undefined;
+  const options = isUnavailable
+    ? [
+        {
+          value: '',
+          label: optionsState.unavailableMessage ?? 'Options unavailable',
+          disabled: true,
+        },
+      ]
+    : optionsState.options;
   const selectedValues = Array.isArray(value)
     ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
     : typeof value === 'string' && value.length > 0
@@ -285,9 +312,10 @@ function renderMultiSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       multiple: true,
-      size: Math.min(Math.max(options.length, 3), 6),
+      size: isUnavailable ? 1 : Math.min(Math.max(options.length, 3), 6),
       style: { ...INPUT_STYLE, minWidth: '160px', minHeight: '96px' },
-      value: selectedValues,
+      value: isUnavailable ? [''] : selectedValues,
+      disabled: isUnavailable,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const nextValues = Array.from(e.target.selectedOptions)
           .map((option) => option.value)
@@ -552,16 +580,31 @@ function resolveFilterOptions(
   filter: FilterDefinition,
   legacyOptions?: string[],
   datasets?: DatasetDefinition[],
-): ResolvedFilterOption[] {
+): ResolvedFilterOptionsState {
   if (filter.optionSource?.kind === 'static') {
-    return filter.optionSource.options.map(normalizeStaticOption);
+    return filter.optionSource.options.length > 0
+      ? { options: filter.optionSource.options.map(normalizeStaticOption) }
+      : { options: [], unavailableMessage: 'No options configured' };
   }
 
-  if (legacyOptions) {
-    return legacyOptions.map((option) => ({ value: option, label: option }));
+  if (legacyOptions && legacyOptions.length > 0) {
+    return { options: legacyOptions.map((option) => ({ value: option, label: option })) };
   }
 
-  return getFieldOptions(filter, datasets);
+  if (filter.optionSource?.kind === 'field') {
+    const fieldOptions = getFieldOptions(filter, datasets);
+    if (fieldOptions.length > 0) {
+      return { options: fieldOptions };
+    }
+
+    // TODO(issue #121): Replace this unavailable bridge with host-owned runtime resolution.
+    return {
+      options: [],
+      unavailableMessage: 'Field-backed options require host support',
+    };
+  }
+
+  return { options: [], unavailableMessage: 'Options unavailable' };
 }
 
 function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOption {

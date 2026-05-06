@@ -1,15 +1,23 @@
+import type {
+  AggregationType,
+  LogicalQuery,
+  QueryFilter,
+  QueryFilterOperator,
+  QueryResult,
+  QueryResultColumn,
+} from '@supersubset/data-model';
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
 import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
+import { SQLITE_DATASET_ID, sqliteDataModel, sqliteDatasetFields } from './sqlite-model';
 
-export interface WidgetFixture {
-  data: Record<string, unknown>[];
-  columns?: Array<{ fieldId: string; label: string; dataType: string }>;
+export interface PreviewDataRequest {
+  datasetRef: string;
+  fields: Record<string, string | string[] | undefined>;
 }
 
-export interface QueryBundle {
-  widgetData: Record<string, WidgetFixture>;
-  filterOptions: Record<string, string[]>;
-  queryLog: string[];
+export interface CompiledSqliteQuery {
+  sql: string;
+  params: unknown[];
 }
 
 let sqliteRuntimePromise: Promise<SqlJsStatic> | null = null;
@@ -331,56 +339,6 @@ function queryRows(db: Database, sql: string, params: unknown[] = []) {
   return rows;
 }
 
-function buildWhereClause(filters: Record<string, unknown>) {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-
-  const appendDimensionFilter = (columnName: string, rawValue: unknown) => {
-    const values = Array.isArray(rawValue)
-      ? rawValue.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
-      : typeof rawValue === 'string' && rawValue.length > 0
-        ? [rawValue]
-        : [];
-
-    if (values.length === 0) {
-      return;
-    }
-
-    if (values.length === 1) {
-      conditions.push(`${columnName} = ?`);
-      params.push(values[0]);
-      return;
-    }
-
-    conditions.push(`${columnName} IN (${values.map(() => '?').join(', ')})`);
-    params.push(...values);
-  };
-
-  const region = filters['filter-region'];
-  appendDimensionFilter('region', region);
-
-  const category = filters['filter-category'];
-  appendDimensionFilter('category', category);
-
-  const dateValue = filters['filter-date'];
-  if (dateValue && typeof dateValue === 'object') {
-    const maybeDate = dateValue as { start?: string; end?: string };
-    if (maybeDate.start) {
-      conditions.push('ordered_at >= ?');
-      params.push(maybeDate.start);
-    }
-    if (maybeDate.end) {
-      conditions.push('ordered_at <= ?');
-      params.push(maybeDate.end);
-    }
-  }
-
-  return {
-    whereClause: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
-    params,
-  };
-}
-
 const monthNames = [
   'Jan',
   'Feb',
@@ -396,232 +354,373 @@ const monthNames = [
   'Dec',
 ];
 
-export async function runAnalyticsQueries(filters: Record<string, unknown>): Promise<QueryBundle> {
+const FILTERABLE_SQL_FIELDS: Record<string, string> = {
+  ordered_at: 'ordered_at',
+  region: 'region',
+  category: 'category',
+  product_name: 'product_name',
+  channel: 'channel',
+};
+
+const PREVIOUS_PERIOD_PREDICATE = "ordered_at < date('now', 'start of month')";
+
+function getDatasetField(fieldId: string) {
+  return sqliteDataModel.datasets?.[0]?.fields.find((field) => field.id === fieldId);
+}
+
+function getFieldExpression(fieldId: string): string {
+  switch (fieldId) {
+    case 'month':
+      return "strftime('%m', ordered_at)";
+    default:
+      return FILTERABLE_SQL_FIELDS[fieldId] ?? fieldId;
+  }
+}
+
+function buildAggregateExpression(fieldId: string, aggregation: AggregationType): string {
+  switch (fieldId) {
+    case 'orders':
+      return 'COUNT(*)';
+    case 'aov':
+      return 'ROUND(AVG(revenue), 2)';
+    case 'previousRevenue':
+      return `ROUND(SUM(CASE WHEN ${PREVIOUS_PERIOD_PREDICATE} THEN revenue ELSE 0 END), 2)`;
+    case 'previousOrders':
+      return `SUM(CASE WHEN ${PREVIOUS_PERIOD_PREDICATE} THEN 1 ELSE 0 END)`;
+    case 'previousAov':
+      return `ROUND(AVG(CASE WHEN ${PREVIOUS_PERIOD_PREDICATE} THEN revenue END), 2)`;
+    default:
+      return applyAggregation(getFieldExpression(fieldId), aggregation);
+  }
+}
+
+function applyAggregation(expression: string, aggregation: AggregationType): string {
+  switch (aggregation) {
+    case 'avg':
+      return `ROUND(AVG(${expression}), 2)`;
+    case 'count':
+      return `COUNT(${expression})`;
+    case 'count_distinct':
+      return `COUNT(DISTINCT ${expression})`;
+    case 'min':
+      return `MIN(${expression})`;
+    case 'max':
+      return `MAX(${expression})`;
+    case 'none':
+      return expression;
+    case 'sum':
+    default:
+      return `ROUND(SUM(${expression}), 2)`;
+  }
+}
+
+function compileFilter(filter: QueryFilter, params: unknown[]): string {
+  const expression = FILTERABLE_SQL_FIELDS[filter.fieldId];
+  if (!expression) {
+    throw new Error(`Unsupported filter field: ${filter.fieldId}`);
+  }
+
+  switch (filter.operator) {
+    case 'eq':
+      params.push(filter.value);
+      return `${expression} = ?`;
+    case 'neq':
+      params.push(filter.value);
+      return `${expression} != ?`;
+    case 'gt':
+      params.push(filter.value);
+      return `${expression} > ?`;
+    case 'gte':
+      params.push(filter.value);
+      return `${expression} >= ?`;
+    case 'lt':
+      params.push(filter.value);
+      return `${expression} < ?`;
+    case 'lte':
+      params.push(filter.value);
+      return `${expression} <= ?`;
+    case 'like':
+      params.push(filter.value);
+      return `${expression} LIKE ?`;
+    case 'not_like':
+      params.push(filter.value);
+      return `${expression} NOT LIKE ?`;
+    case 'is_null':
+      return `${expression} IS NULL`;
+    case 'is_not_null':
+      return `${expression} IS NOT NULL`;
+    case 'in':
+    case 'not_in': {
+      if (!Array.isArray(filter.value) || filter.value.length === 0) {
+        return filter.operator === 'in' ? '1 = 0' : '1 = 1';
+      }
+
+      params.push(...filter.value);
+      const placeholders = filter.value.map(() => '?').join(', ');
+      return `${expression} ${filter.operator === 'in' ? 'IN' : 'NOT IN'} (${placeholders})`;
+    }
+    case 'between': {
+      if (!Array.isArray(filter.value)) {
+        throw new Error(`Unsupported between filter for field: ${filter.fieldId}`);
+      }
+
+      const [start, end] = filter.value;
+      if (start != null && end != null) {
+        params.push(start, end);
+        return `${expression} BETWEEN ? AND ?`;
+      }
+
+      if (start != null) {
+        params.push(start);
+        return `${expression} >= ?`;
+      }
+
+      if (end != null) {
+        params.push(end);
+        return `${expression} <= ?`;
+      }
+
+      return '1 = 1';
+    }
+    default: {
+      const unsupportedOperator: never = filter.operator as never;
+      throw new Error(`Unsupported filter operator: ${unsupportedOperator}`);
+    }
+  }
+}
+
+function getDefaultSortClause(query: LogicalQuery): string | null {
+  const dimensions = query.fields.filter(
+    (field) => !field.aggregation || field.aggregation === 'none',
+  );
+  const measures = query.fields.filter(
+    (field) => field.aggregation && field.aggregation !== 'none',
+  );
+
+  if (dimensions.length === 0) {
+    return null;
+  }
+
+  const timeDimension = dimensions.find((field) => getDatasetField(field.fieldId)?.role === 'time');
+  if (timeDimension) {
+    return `"${timeDimension.alias ?? timeDimension.fieldId}" ASC`;
+  }
+
+  const revenueMeasure = measures.find(
+    (field) => field.fieldId === 'revenue' || field.alias === 'revenue',
+  );
+  if (revenueMeasure) {
+    return `"${revenueMeasure.alias ?? revenueMeasure.fieldId}" DESC`;
+  }
+
+  if (measures.length > 0) {
+    const firstMeasure = measures[0];
+    return `"${firstMeasure.alias ?? firstMeasure.fieldId}" DESC`;
+  }
+
+  const firstDimension = dimensions[0];
+  return `"${firstDimension.alias ?? firstDimension.fieldId}" ASC`;
+}
+
+function buildOrderClause(query: LogicalQuery): string {
+  if (query.sort && query.sort.length > 0) {
+    return `ORDER BY ${query.sort
+      .map((sortRule) => `"${sortRule.fieldId}" ${sortRule.direction.toUpperCase()}`)
+      .join(', ')}`;
+  }
+
+  const defaultSort = getDefaultSortClause(query);
+  return defaultSort ? `ORDER BY ${defaultSort}` : '';
+}
+
+function buildColumns(query: LogicalQuery): QueryResultColumn[] {
+  return query.fields.map((field) => {
+    const datasetField = getDatasetField(field.fieldId);
+
+    return {
+      fieldId: field.alias ?? field.fieldId,
+      label: datasetField?.label ?? field.alias ?? field.fieldId,
+      dataType: (datasetField?.dataType ?? 'unknown') as QueryResultColumn['dataType'],
+    };
+  });
+}
+
+function normalizeRows(query: LogicalQuery, rows: Record<string, unknown>[]) {
+  if (!query.fields.some((field) => (field.alias ?? field.fieldId) === 'month')) {
+    return rows;
+  }
+
+  return rows.map((row) => {
+    const monthValue = row.month;
+    const monthNumber = Number(monthValue);
+    if (Number.isNaN(monthNumber)) {
+      return row;
+    }
+
+    return {
+      ...row,
+      month: monthNames[Math.max(0, monthNumber - 1)] ?? String(monthValue),
+    };
+  });
+}
+
+export function compileSqliteLogicalQuery(query: LogicalQuery): CompiledSqliteQuery {
+  if (query.datasetId !== SQLITE_DATASET_ID) {
+    throw new Error(`Unknown dataset: ${query.datasetId}`);
+  }
+
+  if (query.fields.length === 0) {
+    throw new Error('LogicalQuery must include at least one field.');
+  }
+
+  const params: unknown[] = [];
+  const whereClause = query.filters?.length
+    ? `WHERE ${query.filters.map((filter) => compileFilter(filter, params)).join(' AND ')}`
+    : '';
+
+  const dimensions = query.fields.filter(
+    (field) => !field.aggregation || field.aggregation === 'none',
+  );
+  const measures = query.fields.filter(
+    (field) => field.aggregation && field.aggregation !== 'none',
+  );
+  const selectClause = query.fields
+    .map((field) => {
+      const alias = field.alias ?? field.fieldId;
+      const expression =
+        field.aggregation && field.aggregation !== 'none'
+          ? buildAggregateExpression(field.fieldId, field.aggregation)
+          : getFieldExpression(field.fieldId);
+      return `${expression} AS "${alias}"`;
+    })
+    .join(', ');
+
+  const groupByClause =
+    measures.length > 0 && dimensions.length > 0
+      ? `GROUP BY ${dimensions.map((field) => getFieldExpression(field.fieldId)).join(', ')}`
+      : '';
+  const orderClause = buildOrderClause(query);
+  const limitClause = typeof query.limit === 'number' ? `LIMIT ${query.limit}` : '';
+  const offsetClause = typeof query.offset === 'number' ? `OFFSET ${query.offset}` : '';
+  const sql = [
+    `SELECT ${selectClause}`,
+    'FROM orders',
+    whereClause,
+    groupByClause,
+    orderClause,
+    limitClause,
+    offsetClause,
+  ]
+    .filter((part) => part.length > 0)
+    .join('\n');
+
+  return { sql, params };
+}
+
+export function formatSqliteQueryLogEntry(compiledQuery: CompiledSqliteQuery): string {
+  return `${compiledQuery.sql} -- ${JSON.stringify(compiledQuery.params)}`;
+}
+
+export async function executeSqliteLogicalQuery(
+  query: LogicalQuery,
+  compiledQuery: CompiledSqliteQuery = compileSqliteLogicalQuery(query),
+): Promise<QueryResult> {
   const db = await getDatabase();
-  const { whereClause, params } = buildWhereClause(filters);
-  const queryLog: string[] = [];
-
-  const run = (sql: string, sqlParams: unknown[] = params) => {
-    queryLog.push(`${sql} -- ${JSON.stringify(sqlParams)}`);
-    return queryRows(db, sql, sqlParams);
-  };
-
-  const summaryRows = run(
-    `
-      SELECT
-        ROUND(SUM(revenue), 2) AS revenue,
-        COUNT(*) AS orders,
-        ROUND(SUM(revenue) / COUNT(*), 2) AS aov
-      FROM orders
-      ${whereClause}
-    `,
-  );
-
-  const comparisonTimeCondition = "ordered_at < date('now', 'start of month')";
-  const comparisonWhereClause = whereClause
-    ? `${whereClause} AND ${comparisonTimeCondition}`
-    : `WHERE ${comparisonTimeCondition}`;
-
-  const previousRows = run(
-    `
-      SELECT
-        ROUND(SUM(revenue), 2) AS previousRevenue,
-        COUNT(*) AS previousOrders,
-        ROUND(SUM(revenue) / COUNT(*), 2) AS previousAov
-      FROM orders
-      ${comparisonWhereClause}
-    `,
-    params,
-  );
-
-  const monthlyRows = run(
-    `
-      SELECT
-        strftime('%m', ordered_at) AS month_number,
-        ROUND(SUM(revenue), 2) AS revenue,
-        COUNT(*) AS orders
-      FROM orders
-      ${whereClause}
-      GROUP BY strftime('%m', ordered_at)
-      ORDER BY strftime('%m', ordered_at)
-    `,
-  ).map((row) => ({
-    month: monthNames[Math.max(0, Number(row.month_number) - 1)] ?? String(row.month_number),
-    revenue: row.revenue,
-    orders: row.orders,
-  }));
-
-  const categoryRows = run(
-    `
-      SELECT category, ROUND(SUM(revenue), 2) AS revenue
-      FROM orders
-      ${whereClause}
-      GROUP BY category
-      ORDER BY revenue DESC
-    `,
-  );
-
-  const topProducts = run(
-    `
-      SELECT
-        product_name,
-        SUM(units) AS units,
-        ROUND(SUM(revenue), 2) AS revenue,
-        region
-      FROM orders
-      ${whereClause}
-      GROUP BY product_name, region
-      ORDER BY revenue DESC
-      LIMIT 6
-    `,
-  );
-
-  const regionOptions = run('SELECT DISTINCT region FROM orders ORDER BY region', []).map((row) =>
-    String(row.region),
-  );
-  const categoryOptions = run('SELECT DISTINCT category FROM orders ORDER BY category', []).map(
-    (row) => String(row.category),
-  );
-
-  const summary = summaryRows[0] ?? { revenue: 0, orders: 0, aov: 0 };
-  const previous = previousRows[0] ?? { previousRevenue: 0, previousOrders: 0, previousAov: 0 };
+  const rows = normalizeRows(query, queryRows(db, compiledQuery.sql, compiledQuery.params));
 
   return {
-    widgetData: {
-      'kpi-revenue': { data: [{ ...summary, ...previous }] },
-      'kpi-orders': { data: [{ ...summary, ...previous }] },
-      'kpi-aov': { data: [{ ...summary, ...previous }] },
-      'chart-monthly-sales': { data: monthlyRows },
-      'chart-category-sales': { data: categoryRows },
-      'table-top-products': {
-        columns: [
-          { fieldId: 'product_name', label: 'Product', dataType: 'string' },
-          { fieldId: 'units', label: 'Units', dataType: 'integer' },
-          { fieldId: 'revenue', label: 'Revenue', dataType: 'number' },
-          { fieldId: 'region', label: 'Region', dataType: 'string' },
-        ],
-        data: topProducts,
-      },
-    },
-    filterOptions: {
-      'filter-region': regionOptions,
-      'filter-category': categoryOptions,
-    },
-    queryLog,
+    columns: buildColumns(query),
+    rows,
+    totalRows: rows.length,
+  };
+}
+
+export async function loadSqliteFilterOptions(): Promise<Record<string, string[]>> {
+  const db = await getDatabase();
+
+  return {
+    'filter-region': queryRows(db, 'SELECT DISTINCT region FROM orders ORDER BY region').map(
+      (row) => String(row.region),
+    ),
+    'filter-category': queryRows(db, 'SELECT DISTINCT category FROM orders ORDER BY category').map(
+      (row) => String(row.category),
+    ),
   };
 }
 
 // ─── Preview Data Provider for Designer ──────────────────────
 
-/**
- * Column name mapping: field ids from the dataset → SQL column names.
- * Most map 1:1 except those that need aggregation or transformation.
- */
-const FIELD_TO_COLUMN: Record<string, string> = {
-  ordered_at: 'ordered_at',
-  month: "strftime('%m', ordered_at)",
-  region: 'region',
-  category: 'category',
-  product_name: 'product_name',
-  channel: 'channel',
-  revenue: 'ROUND(SUM(revenue), 2)',
-  orders: 'COUNT(*)',
-  units: 'SUM(units)',
-  aov: 'ROUND(SUM(revenue) / COUNT(*), 2)',
-};
-
-/** Measures that require GROUP BY when used */
-const AGGREGATE_FIELDS = new Set(['revenue', 'orders', 'units', 'aov']);
-
-/** Dimensions that can be used in GROUP BY */
-const DIMENSION_FIELDS = new Set([
-  'ordered_at',
-  'month',
-  'region',
-  'category',
-  'product_name',
-  'channel',
-]);
-
-/**
- * Generic preview data fetcher for the designer.
- * Builds and runs a SQL query based on the requested fields.
- */
-export async function fetchDesignerPreviewData(request: {
-  datasetRef: string;
-  fields: Record<string, string | string[] | undefined>;
-}): Promise<Record<string, unknown>[]> {
-  const db = await getDatabase();
-  const { fields } = request;
-
-  // Collect all field ids from the request
-  const allFieldIds = new Set<string>();
-  for (const val of Object.values(fields)) {
-    if (typeof val === 'string' && val.length > 0) allFieldIds.add(val);
-    if (Array.isArray(val))
-      val.forEach((v) => {
-        if (v.length > 0) allFieldIds.add(v);
-      });
+function toFieldIds(value: string | string[] | undefined): string[] {
+  if (typeof value === 'string') {
+    return value.length > 0 ? [value] : [];
   }
 
-  if (allFieldIds.size === 0) return [];
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => entry.length > 0);
+  }
 
-  // Separate dimensions from measures
-  const dimensions: string[] = [];
-  const measures: string[] = [];
-  for (const fieldId of allFieldIds) {
-    if (AGGREGATE_FIELDS.has(fieldId)) {
-      measures.push(fieldId);
-    } else if (DIMENSION_FIELDS.has(fieldId)) {
-      dimensions.push(fieldId);
+  return [];
+}
+
+function normalizePreviewAggregation(value: string | undefined): AggregationType | undefined {
+  if (
+    value === 'sum' ||
+    value === 'avg' ||
+    value === 'count' ||
+    value === 'count_distinct' ||
+    value === 'min' ||
+    value === 'max' ||
+    value === 'none'
+  ) {
+    return value;
+  }
+
+  return undefined;
+}
+
+export async function fetchDesignerPreviewData(
+  request: PreviewDataRequest,
+): Promise<Record<string, unknown>[]> {
+  if (request.datasetRef !== SQLITE_DATASET_ID) {
+    return [];
+  }
+
+  const selectedFieldIds = new Set<string>();
+  for (const [key, value] of Object.entries(request.fields)) {
+    if (key === 'aggregation' || key === 'metricFields') {
+      continue;
+    }
+
+    for (const fieldId of toFieldIds(value)) {
+      selectedFieldIds.add(fieldId);
     }
   }
 
-  // Build SELECT columns
-  const selectParts: string[] = [];
-  for (const dim of dimensions) {
-    const col = FIELD_TO_COLUMN[dim];
-    if (col) {
-      selectParts.push(`${col} AS ${dim}`);
-    } else {
-      selectParts.push(dim);
+  if (selectedFieldIds.size === 0) {
+    return [];
+  }
+
+  const previewAggregation = normalizePreviewAggregation(
+    typeof request.fields.aggregation === 'string' ? request.fields.aggregation : undefined,
+  );
+  const fields = Array.from(selectedFieldIds).map((fieldId) => {
+    const datasetField = sqliteDatasetFields.find((field) => field.id === fieldId);
+    if (datasetField?.role === 'measure') {
+      return {
+        fieldId,
+        aggregation:
+          previewAggregation ?? (datasetField.defaultAggregation as AggregationType | undefined),
+      };
     }
-  }
-  for (const meas of measures) {
-    const col = FIELD_TO_COLUMN[meas];
-    if (col) {
-      selectParts.push(`${col} AS ${meas}`);
-    } else {
-      selectParts.push(`SUM(${meas}) AS ${meas}`);
-    }
-  }
 
-  if (selectParts.length === 0) return [];
+    return { fieldId };
+  });
 
-  let sql = `SELECT ${selectParts.join(', ')} FROM orders`;
+  const result = await executeSqliteLogicalQuery({
+    datasetId: SQLITE_DATASET_ID,
+    fields,
+    limit: 100,
+  });
 
-  // Add GROUP BY for dimensions if we have measures
-  if (dimensions.length > 0 && measures.length > 0) {
-    const groupByParts = dimensions.map((dim) => FIELD_TO_COLUMN[dim] ?? dim);
-    sql += ` GROUP BY ${groupByParts.join(', ')}`;
-    sql += ` ORDER BY ${groupByParts[0]}`;
-  } else if (dimensions.length > 0) {
-    sql += ` ORDER BY ${FIELD_TO_COLUMN[dimensions[0]] ?? dimensions[0]}`;
-  }
-
-  sql += ' LIMIT 100';
-
-  const rows = queryRows(db, sql);
-
-  // Post-process: convert month numbers to names
-  if (allFieldIds.has('month')) {
-    for (const row of rows) {
-      const monthNum = Number(row.month);
-      if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12) {
-        row.month = monthNames[monthNum - 1];
-      }
-    }
-  }
-
-  return rows;
+  return result.rows;
 }

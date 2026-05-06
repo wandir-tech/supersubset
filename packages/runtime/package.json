@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/runtime",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Supersubset runtime: <SupersubsetRenderer />, widget registry, filter engine, and state persistence",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
@@ -46,6 +46,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@supersubset/data-model": "workspace:*",
     "@supersubset/schema": "workspace:*"
   },
   "peerDependencies": {

@@ -1,15 +1,17 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  SupersubsetRenderer,
-  createWidgetRegistry,
-  type FilterState,
-  type WidgetProps,
-} from '@supersubset/runtime';
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { SupersubsetRenderer, createWidgetRegistry, type FilterState } from '@supersubset/runtime';
+import type { QueryAdapter } from '@supersubset/data-model';
 import { registerEssentialWidgets } from '@supersubset/charts-echarts/essentials';
 import { resolveTheme, themeToCssVariables } from '@supersubset/theme';
 import type { DashboardDefinition } from '@supersubset/schema';
 import { defaultDashboard } from './dashboard';
-import { runAnalyticsQueries, type QueryBundle } from './sqlite';
+import {
+  compileSqliteLogicalQuery,
+  executeSqliteLogicalQuery,
+  fetchDesignerPreviewData,
+  formatSqliteQueryLogEntry,
+  loadSqliteFilterOptions,
+} from './sqlite';
 import './styles.css';
 
 const DesignerSurface = lazy(() =>
@@ -46,11 +48,11 @@ export default function App() {
     return defaultDashboard;
   });
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
-  const [bundle, setBundle] = useState<QueryBundle | null>(null);
-  const bundleRef = useRef(bundle);
-  bundleRef.current = bundle;
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [filterOptions, setFilterOptions] = useState<Record<string, string[]> | null>(null);
+  const [queryLog, setQueryLog] = useState<string[]>([]);
+  const [viewerStatus, setViewerStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const queryCycleRef = useRef({ generation: 0, pending: 0, failed: false });
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(dashboard));
@@ -58,24 +60,39 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
-    setStatus('loading');
     setError(null);
-    runAnalyticsQueries(filterState.values)
+    loadSqliteFilterOptions()
       .then((result) => {
         if (!active) return;
-        setBundle(result);
-        setStatus('ready');
+        setFilterOptions(result);
       })
       .catch((err: unknown) => {
         if (!active) return;
         setError(err instanceof Error ? err.message : String(err));
-        setStatus('error');
       });
 
     return () => {
       active = false;
     };
-  }, [filterState.values]);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!filterOptions || mode !== 'viewer') {
+      if (mode !== 'viewer') {
+        setViewerStatus('idle');
+      }
+      return;
+    }
+
+    queryCycleRef.current = {
+      generation: queryCycleRef.current.generation + 1,
+      pending: 0,
+      failed: false,
+    };
+    setQueryLog([]);
+    setViewerStatus('loading');
+    setError(null);
+  }, [dashboard, filterOptions, filterState.values, mode]);
 
   const resolvedTheme = useMemo(
     () =>
@@ -114,34 +131,43 @@ export default function App() {
     const registryInstance = createWidgetRegistry();
     registerEssentialWidgets(registryInstance);
 
-    const originalGet = registryInstance.get.bind(registryInstance);
-    const wrappedCache = new Map<string, (props: WidgetProps) => React.JSX.Element>();
-
-    registryInstance.get = (type: string) => {
-      const cached = wrappedCache.get(type);
-      if (cached) return cached;
-
-      const Original = originalGet(type);
-      if (!Original) return undefined;
-
-      const Wrapped = (props: WidgetProps) => {
-        const fixture = bundleRef.current?.widgetData[props.widgetId];
-        return (
-          <Original
-            {...props}
-            data={fixture?.data ?? props.data}
-            columns={fixture?.columns ?? props.columns}
-          />
-        );
-      };
-
-      Wrapped.displayName = `SqliteQuery(${type})`;
-      wrappedCache.set(type, Wrapped);
-      return Wrapped;
-    };
-
     return registryInstance;
   }, []);
+
+  const queryAdapter = useMemo<QueryAdapter | undefined>(() => {
+    if (!filterOptions || mode !== 'viewer') {
+      return undefined;
+    }
+
+    return {
+      name: 'vite-sqlite-host',
+      execute: async (query) => {
+        const generation = queryCycleRef.current.generation;
+        queryCycleRef.current.pending += 1;
+        const compiledQuery = compileSqliteLogicalQuery(query);
+        setQueryLog((current) => [...current, formatSqliteQueryLogEntry(compiledQuery)]);
+
+        try {
+          return await executeSqliteLogicalQuery(query, compiledQuery);
+        } catch (nextError) {
+          if (generation === queryCycleRef.current.generation) {
+            queryCycleRef.current.failed = true;
+            setViewerStatus('error');
+            setError(nextError instanceof Error ? nextError.message : String(nextError));
+          }
+
+          throw nextError;
+        } finally {
+          if (generation === queryCycleRef.current.generation) {
+            queryCycleRef.current.pending = Math.max(0, queryCycleRef.current.pending - 1);
+            if (queryCycleRef.current.pending === 0 && !queryCycleRef.current.failed) {
+              setViewerStatus('ready');
+            }
+          }
+        }
+      },
+    };
+  }, [filterOptions, mode]);
 
   return (
     <div className={mode === 'designer' ? 'shell shell--designer' : 'shell'}>
@@ -206,16 +232,17 @@ export default function App() {
             </Suspense>
           ) : (
             <div className="viewer-shell">
-              {status === 'loading' || !bundle ? (
+              {filterOptions == null || viewerStatus === 'loading' ? (
                 <div className="loading-panel">Running SQLite queries…</div>
               ) : null}
-              {bundle ? (
+              {filterOptions ? (
                 <SupersubsetRenderer
                   definition={dashboard}
                   registry={registry}
                   theme={resolvedTheme as unknown as Record<string, unknown>}
                   cssVariables={cssVariables}
-                  filterOptions={bundle.filterOptions}
+                  queryAdapter={queryAdapter}
+                  filterOptions={filterOptions}
                   onFilterChange={setFilterState}
                 />
               ) : null}
@@ -226,7 +253,7 @@ export default function App() {
         <aside className="query-panel">
           <h2>Query log</h2>
           <p>These statements are executed by the host app, not by Supersubset.</p>
-          <pre>{bundle?.queryLog.join('\n\n') ?? 'Waiting for SQLite runtime…'}</pre>
+          <pre>{queryLog.join('\n\n') || 'Waiting for SQLite runtime…'}</pre>
         </aside>
       </main>
     </div>

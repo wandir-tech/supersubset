@@ -6,11 +6,33 @@ import type {
   QueryResult,
   QueryResultColumn,
 } from '@supersubset/data-model';
-import { shipmentPerformanceRows, type ShipmentPerformanceRow } from './workbench-data';
+import {
+  buildShipmentAlertMessage,
+  buildShipmentAlertSeverity,
+  buildShipmentAlertTitle,
+  shipmentPerformanceRows,
+  type ShipmentPerformanceRow,
+} from './workbench-data';
 import { WORKBENCH_DATASET_ID, workbenchDatasets } from './workbench-shared';
 
 function getDatasetField(fieldId: string): NormalizedField | undefined {
   return workbenchDatasets[0]?.fields.find((field) => field.id === fieldId);
+}
+
+function getFieldValue(
+  row: ShipmentPerformanceRow,
+  fieldId: string,
+): ShipmentPerformanceRow[keyof ShipmentPerformanceRow] | string {
+  switch (fieldId) {
+    case 'alert_title':
+      return buildShipmentAlertTitle(row);
+    case 'alert_message':
+      return buildShipmentAlertMessage(row);
+    case 'alert_severity':
+      return buildShipmentAlertSeverity(row);
+    default:
+      return row[fieldId as keyof ShipmentPerformanceRow];
+  }
 }
 
 function comparePrimitive(left: unknown, right: unknown): number {
@@ -22,7 +44,7 @@ function comparePrimitive(left: unknown, right: unknown): number {
 }
 
 function matchesFilter(row: ShipmentPerformanceRow, filter: QueryFilter): boolean {
-  const value = row[filter.fieldId as keyof ShipmentPerformanceRow];
+  const value = getFieldValue(row, filter.fieldId);
 
   switch (filter.operator) {
     case 'eq':
@@ -147,8 +169,7 @@ export function executeWorkbenchQuery(query: LogicalQuery): QueryResult {
     rows = filteredRows.map((row) => {
       const projected: Record<string, unknown> = {};
       for (const field of dimensions) {
-        projected[field.alias ?? field.fieldId] =
-          row[field.fieldId as keyof ShipmentPerformanceRow];
+        projected[field.alias ?? field.fieldId] = getFieldValue(row, field.fieldId);
       }
       return projected;
     });

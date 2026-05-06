@@ -159,6 +159,38 @@ export interface FieldBinding {
   sort?: 'asc' | 'desc';
 }
 
+// ─── Authored Alert Rules ───────────────────────────────────
+
+export type AlertRuleSeverity = 'info' | 'success' | 'warning' | 'danger';
+
+export type StructuredAlertRuleAggregation =
+  | 'sum'
+  | 'avg'
+  | 'count'
+  | 'count_distinct'
+  | 'min'
+  | 'max';
+
+export type StructuredAlertRuleOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte';
+
+export interface AlertRuleAlertDefinition {
+  title: string;
+  message: string;
+  severity?: AlertRuleSeverity;
+}
+
+export interface StructuredAlertRuleDefinition {
+  mode: 'structured';
+  datasetRef?: string;
+  metricFieldRef: string;
+  aggregation: StructuredAlertRuleAggregation;
+  operator: StructuredAlertRuleOperator;
+  threshold: number;
+  alert: AlertRuleAlertDefinition;
+}
+
+export type AlertRuleDefinition = StructuredAlertRuleDefinition;
+
 // ─── Filters ─────────────────────────────────────────────────
 
 export interface FilterDefinition {

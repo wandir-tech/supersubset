@@ -45,6 +45,7 @@ import {
 } from './demo-dashboard';
 import { dashboardSwitchingDemo, pageNavigationDemoDashboard } from './navigation-demo';
 import { ProbeWorkspace } from './probe/ProbeWorkspace';
+import { QueryBackedAlertsRuntimeDemo } from './QueryBackedAlertsRuntimeDemo';
 
 /**
  * Data-injecting widget wrapper — in a real app, the runtime would
@@ -554,6 +555,14 @@ const fetchLocalPreviewData: FetchPreviewData = (request) => {
 type ViewerScenario = 'live' | 'pages' | 'dashboards';
 
 function App() {
+  const docsScenario = useMemo(
+    () => new URLSearchParams(window.location.search).get('docsScenario'),
+    [],
+  );
+  if (docsScenario === 'alerts-query-runtime') {
+    return <QueryBackedAlertsRuntimeDemo />;
+  }
+
   const [mode, setMode] = useState<'viewer' | 'designer' | 'preview' | 'probe'>('viewer');
   const [viewerScenario, setViewerScenario] = useState<ViewerScenario>('live');
   const [activeDashboardId, setActiveDashboardId] = useState(
