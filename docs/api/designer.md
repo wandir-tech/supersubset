@@ -52,6 +52,12 @@ Host responsibilities:
 - decide which metadata and capabilities to expose
 - mount the runtime separately if you need a dedicated viewer surface
 
+Built-in editor chrome:
+
+- `SupersubsetDesigner` includes built-in header controls for page management and dashboard filter authoring
+- use the `Dashboard Filters` button in the header to edit dashboard-level filter definitions, including control type, option source, and scope
+- `optionSource.kind = 'field'` can be authored in the designer, but runtime population still depends on host support such as `resolveFilterOptions` or a temporary compatibility fallback
+
 ## Controlled Vs Uncontrolled
 
 Use controlled mode when the host needs predictable import/export, revisioning, autosave, or multi-surface coordination.

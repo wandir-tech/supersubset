@@ -120,6 +120,26 @@ const filterRefSchema = z.object({
   filterId: z.string().min(1),
 });
 
+const filterOptionDefinitionSchema = z.object({
+  value: z.string().min(1),
+  label: z.string().optional(),
+  disabled: z.boolean().optional(),
+});
+
+const filterOptionSourceSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('static'),
+    options: z.array(filterOptionDefinitionSchema),
+    completeness: z.enum(['complete', 'curated']).optional(),
+  }),
+  z.object({
+    kind: z.literal('field'),
+    strategy: z.enum(['preload', 'search']),
+    maxOptions: z.number().int().positive().optional(),
+    minSearchChars: z.number().int().min(0).optional(),
+  }),
+]);
+
 const filterDefinitionSchema = z.object({
   id: z.string().min(1),
   title: z.string().optional(),
@@ -128,6 +148,7 @@ const filterDefinitionSchema = z.object({
   datasetRef: z.string().min(1),
   operator: z.string().min(1),
   defaultValue: z.unknown().optional(),
+  optionSource: filterOptionSourceSchema.optional(),
   scope: filterScopeSchema,
 });
 
@@ -331,6 +352,8 @@ export {
   dataBindingSchema,
   fieldBindingSchema,
   filterDefinitionSchema,
+  filterOptionDefinitionSchema,
+  filterOptionSourceSchema,
   filterScopeSchema,
   interactionDefinitionSchema,
   interactionActionSchema,

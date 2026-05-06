@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type {
+  FilterOptionRequest,
+  FilterOptionResponse,
   NormalizedDataset,
   NormalizedField,
   MetadataAdapter,
@@ -121,6 +123,46 @@ describe('QueryAdapter interface', () => {
     });
     expect(result.rows).toHaveLength(1);
     expect(result.columns[0].fieldId).toBe('status');
+  });
+
+  it('supports an optional filter option resolver capability', async () => {
+    const request: FilterOptionRequest = {
+      filterId: 'status-filter',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'op',
+      limit: 10,
+    };
+
+    const mockResponse: FilterOptionResponse = {
+      options: [
+        { value: 'open', label: 'Open' },
+        { value: 'opened_recently', label: 'Opened Recently', disabled: true },
+      ],
+      complete: false,
+      nextCursor: 'cursor-2',
+    };
+
+    const mockQuery: QueryAdapter = {
+      name: 'mock-query',
+      async execute(query: LogicalQuery): Promise<QueryResult> {
+        return {
+          columns: query.fields.map((f) => ({
+            fieldId: f.fieldId,
+            label: f.fieldId,
+            dataType: 'string',
+          })),
+          rows: [{ [query.fields[0].fieldId]: 'test-value' }],
+          totalRows: 1,
+        };
+      },
+      async resolveFilterOptions() {
+        return mockResponse;
+      },
+    };
+
+    const response = await mockQuery.resolveFilterOptions?.(request);
+    expect(response).toEqual(mockResponse);
   });
 });
 

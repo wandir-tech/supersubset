@@ -169,8 +169,28 @@ export interface FilterDefinition {
   datasetRef: string;
   operator: string;
   defaultValue?: unknown;
+  optionSource?: FilterOptionSource;
   scope: FilterScope;
 }
+
+export interface FilterOptionDefinition {
+  value: string;
+  label?: string;
+  disabled?: boolean;
+}
+
+export type FilterOptionSource =
+  | {
+      kind: 'static';
+      options: FilterOptionDefinition[];
+      completeness?: 'complete' | 'curated';
+    }
+  | {
+      kind: 'field';
+      strategy: 'preload' | 'search';
+      maxOptions?: number;
+      minSearchChars?: number;
+    };
 
 export type FilterScope =
   | { type: 'global' }

@@ -9,6 +9,10 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
+const devAppPort = process.env.SUPERSUBSET_DEV_APP_PORT ?? '3000';
+const devAppOrigin = `http://localhost:${devAppPort}`;
+const reuseExistingServer = Boolean(process.env.SUPERSUBSET_DEV_APP_PORT);
+
 export default defineConfig({
   testDir: './capture',
   fullyParallel: false, // sequential for consistent state between screenshots
@@ -17,7 +21,7 @@ export default defineConfig({
   reporter: 'list',
   timeout: 60_000,
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: devAppOrigin,
     screenshot: 'off', // we capture manually
     trace: 'off',
     video: 'off',
@@ -33,8 +37,9 @@ export default defineConfig({
   // Reuse running dev-app or start one
   webServer: {
     command: 'pnpm --filter @supersubset/dev-app dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
+    url: devAppOrigin,
+    env: { ...process.env, SUPERSUBSET_DEV_APP_PORT: devAppPort },
+    reuseExistingServer,
     timeout: 120_000,
   },
 });

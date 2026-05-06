@@ -13,6 +13,10 @@ description: "Document a Supersubset feature with before/after screenshots from 
 - Re-capturing screenshots after a bug fix or visual refresh
 - Performing systematic QA across all features by running through the full inventory
 
+Use this skill not only for net-new docs pages, but also when a PR changes an existing documented property or visual authoring surface and the screenshots in `packages/docs/src/assets/screenshots/` would otherwise become stale.
+
+If a user-visible property changed and there are already docs screenshots for that surface, the default expectation is to refresh the affected screenshots or explain explicitly why not.
+
 ## Prerequisites
 
 - The dev-app is running (`pnpm dev` from workspace root, serves at `http://localhost:3000`)
@@ -22,15 +26,15 @@ description: "Document a Supersubset feature with before/after screenshots from 
 
 ## Feature Categories
 
-| Category | Location in Docs | Designer Component | Example Features |
-|----------|-----------------|-------------------|-----------------|
-| Chart Types | `docs/chart-types/` | ChartTypePicker, FieldBindingPicker | Line, Bar, Area, Pie, Scatter, Radar, Funnel, Gauge, Heatmap, Sankey, Treemap, Waterfall, BoxPlot, Combo |
-| Widgets | `docs/widgets/` | Property panels per widget type | KPI Card, Table, Markdown, Alerts |
-| Layout | `docs/layout/` | Puck editor drag-and-drop | Grid, Row, Column, Tabs, Header, Divider |
-| Filters | `docs/filters/` | FilterBuilderPanel | Select, Date, Scope, Cross-Filtering |
-| Interactions | `docs/interactions/` | InteractionEditorPanel | Click actions, Drill-down |
-| Pages | `docs/pages/` | Page management controls | Multi-page, Navigation |
-| Import/Export | `docs/import-export/` | ImportExportPanel, CodeViewPanel | JSON export, Import, Code View |
+| Category      | Location in Docs      | Designer Component                  | Example Features                                                                                         |
+| ------------- | --------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Chart Types   | `docs/chart-types/`   | ChartTypePicker, FieldBindingPicker | Line, Bar, Area, Pie, Scatter, Radar, Funnel, Gauge, Heatmap, Sankey, Treemap, Waterfall, BoxPlot, Combo |
+| Widgets       | `docs/widgets/`       | Property panels per widget type     | KPI Card, Table, Markdown, Alerts                                                                        |
+| Layout        | `docs/layout/`        | Puck editor drag-and-drop           | Grid, Row, Column, Tabs, Header, Divider                                                                 |
+| Filters       | `docs/filters/`       | FilterBuilderPanel                  | Select, Date, Scope, Cross-Filtering                                                                     |
+| Interactions  | `docs/interactions/`  | InteractionEditorPanel              | Click actions, Drill-down                                                                                |
+| Pages         | `docs/pages/`         | Page management controls            | Multi-page, Navigation                                                                                   |
+| Import/Export | `docs/import-export/` | ImportExportPanel, CodeViewPanel    | JSON export, Import, Code View                                                                           |
 
 ## Screenshot Naming Convention
 
@@ -46,12 +50,29 @@ All screenshots go in `packages/docs/src/assets/screenshots/` using this pattern
 - **view**: `designer` or `viewer`
 
 Examples:
+
 - `chart-types/line-chart-default-designer.png`
 - `chart-types/line-chart-default-viewer.png`
 - `chart-types/line-chart-smooth-designer.png`
 - `chart-types/line-chart-smooth-viewer.png`
 
 ## Procedure
+
+### Step 0: Decide Whether Screenshot Refresh Is Required
+
+Before starting full documentation work, ask:
+
+- Does this PR change something a dashboard author or viewer can visibly see?
+- Is that surface already represented in `packages/docs/src/assets/screenshots/` or an existing MDX page?
+- Would a reviewer reasonably need a screenshot to understand the effect of the change?
+
+If yes, screenshot refresh is part of the task, not a nice-to-have follow-up.
+
+Acceptable reasons to defer screenshot refresh should be rare and explicit, for example:
+
+- the UI is intentionally temporary and not yet documented
+- the docs site is being reworked in the same area by a separate tracked task
+- the current change is backend-only and produces no visible authoring or viewer difference
 
 ### Step 1: Identify the Feature
 
@@ -72,12 +93,14 @@ Examples:
 - Verify the property panel is visible and shows the feature's settings
 
 **Commands**:
+
 ```bash
 # If dev-app isn't running:
 cd /path/to/supersubset && pnpm dev
 ```
 
 Use Playwright or Chrome MCP to navigate:
+
 ```typescript
 await page.goto('http://localhost:3000');
 // Switch to designer mode, select the widget
@@ -151,6 +174,7 @@ Verify all of the following:
 - [ ] No console errors in the browser (use `page.on('console')` or Chrome MCP `chr_list_console_messages`)
 - [ ] The designer property panel correctly shows the setting and its value
 - [ ] The viewer output visually reflects the configuration change
+- [ ] Existing screenshot artifacts for this surface were refreshed, or the omission is explicitly justified in the change notes
 - [ ] The widget renders with actual data (not empty/loading state)
 - [ ] Screenshots are sharp, correctly framed, and at consistent dimensions
 - [ ] The feature behaves as documented (no visual glitches, clipping, or overflow)
@@ -174,10 +198,10 @@ Create the MDX file in the appropriate docs directory using this template:
 
 ```mdx
 ---
-title: {Feature Title}
+title: { Feature Title }
 description: Learn how to configure the {feature name} in your Supersubset dashboard.
 sidebar:
-  order: {N}
+  order: { N }
 ---
 
 import ScreenshotComparison from '../../../components/ScreenshotComparison.astro';
@@ -246,7 +270,7 @@ sidebar: [
       { label: '{Feature Title}', slug: '{category}/{feature-slug}' },
     ],
   },
-]
+];
 ```
 
 Verify the page appears in the correct position in the sidebar.
@@ -263,22 +287,24 @@ Verify the page appears in the correct position in the sidebar.
 
 Renders a three-panel comparison for a property toggle: before viewer, after viewer, and designer callout. Use this for all property variant documentation sections. Props:
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `label` | `string` | Display name for the comparison (shown in the collapsible summary) |
-| `beforeSrc` | `ImageMetadata` | Import of the viewer screenshot **before** the property change |
-| `beforeAlt` | `string` | Alt text for the "before" image |
-| `afterSrc` | `ImageMetadata` | Import of the viewer screenshot **after** the property change |
-| `afterAlt` | `string` | Alt text for the "after" image |
-| `calloutSrc` | `ImageMetadata` | Import of the designer callout screenshot (optional) |
-| `calloutAlt` | `string` | Alt text for the callout image |
+| Prop         | Type            | Description                                                        |
+| ------------ | --------------- | ------------------------------------------------------------------ |
+| `label`      | `string`        | Display name for the comparison (shown in the collapsible summary) |
+| `beforeSrc`  | `ImageMetadata` | Import of the viewer screenshot **before** the property change     |
+| `beforeAlt`  | `string`        | Alt text for the "before" image                                    |
+| `afterSrc`   | `ImageMetadata` | Import of the viewer screenshot **after** the property change      |
+| `afterAlt`   | `string`        | Alt text for the "after" image                                     |
+| `calloutSrc` | `ImageMetadata` | Import of the designer callout screenshot (optional)               |
+| `calloutAlt` | `string`        | Alt text for the callout image                                     |
 
 **Screenshot file pattern:**
+
 - Before viewer: `{slug}-{variantSlug}-before-viewer.png`
 - After viewer: `{slug}-{variantSlug}-viewer.png`
 - Designer callout: `{slug}-{variantSlug}-callout-designer.png`
 
 **Example usage:**
+
 ```mdx
 import PropertyShowcase from '../../../components/PropertyShowcase.astro';
 import stacked_before from '../../../assets/screenshots/chart-types/bar-chart-stacked-before-viewer.png';
@@ -300,13 +326,13 @@ import stacked_callout from '../../../assets/screenshots/chart-types/bar-chart-s
 
 Renders a designer/viewer pair inside a `<details>` element. Use for "Default Appearance" sections where no before/after comparison is needed. Props:
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `label` | `string` | Display name for the comparison (shown in the summary) |
-| `designerSrc` | `ImageMetadata` | Import of the designer screenshot |
-| `designerAlt` | `string` | Alt text for the designer screenshot |
-| `viewerSrc` | `ImageMetadata` | Import of the viewer screenshot |
-| `viewerAlt` | `string` | Alt text for the viewer screenshot |
+| Prop          | Type            | Description                                            |
+| ------------- | --------------- | ------------------------------------------------------ |
+| `label`       | `string`        | Display name for the comparison (shown in the summary) |
+| `designerSrc` | `ImageMetadata` | Import of the designer screenshot                      |
+| `designerAlt` | `string`        | Alt text for the designer screenshot                   |
+| `viewerSrc`   | `ImageMetadata` | Import of the viewer screenshot                        |
+| `viewerAlt`   | `string`        | Alt text for the viewer screenshot                     |
 
 ### `<ExpandAll>`
 
@@ -316,11 +342,11 @@ Renders a toggle button that opens/closes all `<details>` elements on the page. 
 
 Renders a single captioned screenshot. Props:
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `src` | `ImageMetadata` | Import of the screenshot image |
-| `alt` | `string` | Alt text for the image |
-| `caption` | `string` | Caption displayed below the image |
+| Prop      | Type            | Description                       |
+| --------- | --------------- | --------------------------------- |
+| `src`     | `ImageMetadata` | Import of the screenshot image    |
+| `alt`     | `string`        | Alt text for the image            |
+| `caption` | `string`        | Caption displayed below the image |
 
 ## Playwright Screenshot Script Pattern
 
@@ -377,10 +403,10 @@ selectors break after any property toggle.
 
 Inside the Puck editor iframe (`page.frameLocator('iframe').first()`):
 
-| Attribute | Value | Example |
-|-----------|-------|---------|
+| Attribute             | Value                    | Example                                |
+| --------------------- | ------------------------ | -------------------------------------- |
 | `data-puck-component` | Puck component TYPE name | `LineChart`, `BarChart`, `HeaderBlock` |
-| `data-puck-dnd` | Content item instance ID | `chart-revenue-trend`, `divider-1` |
+| `data-puck-dnd`       | Content item instance ID | `chart-revenue-trend`, `divider-1`     |
 
 Use `data-puck-dnd` (or `data-puck-component`) to target specific widget
 instances within the iframe. The `captureWidgetFromCanvas()` helper handles this.
@@ -389,12 +415,12 @@ instances within the iframe. The `captureWidgetFromCanvas()` helper handles this
 
 In the runtime viewer (initial load, before any designer edits):
 
-| Attribute | Value | Example |
-|-----------|-------|---------|
-| `data-ss-node` | Layout node ID | `w-line`, `header-title`, `row-kpis` |
-| `.ss-widget` | Widget wrapper class | — |
-| `.ss-filter-bar` | Filter bar element | — |
-| `.ss-chart` | ECharts container | — |
+| Attribute        | Value                | Example                              |
+| ---------------- | -------------------- | ------------------------------------ |
+| `data-ss-node`   | Layout node ID       | `w-line`, `header-title`, `row-kpis` |
+| `.ss-widget`     | Widget wrapper class | —                                    |
+| `.ss-filter-bar` | Filter bar element   | —                                    |
+| `.ss-chart`      | ECharts container    | —                                    |
 
 **IMPORTANT**: Chart titles render inside ECharts canvas, NOT as DOM text.
 `hasText`-based selectors will NOT work on chart widgets.
@@ -423,6 +449,7 @@ The `capturePropertyCallout` helper produces compact 340×250px screenshots cent
 Puck handles form field changes through React's synthetic event system. Native DOM events (`dispatchEvent`, `nativeInputValueSetter`) do NOT trigger Puck state updates. Both radio and select helpers use React fiber props (`__reactProps$` onChange) to trigger actual Puck state changes.
 
 **Important**: After changing a property via React fiber, the designer package must be rebuilt for ChartPreview fixes to take effect:
+
 ```bash
 pnpm --filter @supersubset/designer build
 ```
@@ -443,16 +470,16 @@ If only the `'true'` case is handled, toggling to 'false' is silently ignored wh
 
 ```typescript
 interface WidgetVariantSpec {
-  layerLabel: string;       // Layer panel text to click
-  nodeId: string;           // Original data-ss-node ID (for viewer on initial load)
-  puckComponentId: string;  // data-puck-dnd value (for canvas iframe capture)
-  category: string;         // Screenshot category folder
-  slug: string;             // Feature slug for file names
+  layerLabel: string; // Layer panel text to click
+  nodeId: string; // Original data-ss-node ID (for viewer on initial load)
+  puckComponentId: string; // data-puck-dnd value (for canvas iframe capture)
+  category: string; // Screenshot category folder
+  slug: string; // Feature slug for file names
   page: 'overview' | 'gallery';
   variants: Array<{
-    name: string;           // Variant name (e.g., 'smooth', 'horizontal')
-    field: string;          // Property panel field label
-    value: string;          // Target value to set
+    name: string; // Variant name (e.g., 'smooth', 'horizontal')
+    field: string; // Property panel field label
+    value: string; // Target value to set
     type: 'radio' | 'select';
   }>;
 }

@@ -130,6 +130,28 @@ export interface QueryResultColumn {
   dataType: FieldDataType;
 }
 
+export interface QueryFilterOption {
+  value: string;
+  label?: string;
+  disabled?: boolean;
+}
+
+export interface FilterOptionRequest {
+  filterId: string;
+  datasetId: string;
+  fieldId: string;
+  search?: string;
+  limit?: number;
+  cursor?: string;
+  filterState?: Record<string, unknown>;
+}
+
+export interface FilterOptionResponse {
+  options: QueryFilterOption[];
+  nextCursor?: string;
+  complete: boolean;
+}
+
 /**
  * A QueryAdapter executes LogicalQuery against a data source.
  * The host application provides this — Supersubset never queries directly.
@@ -138,6 +160,7 @@ export interface QueryAdapter {
   readonly name: string;
   execute(query: LogicalQuery): Promise<QueryResult>;
   cancel?(queryId: string): Promise<void>;
+  resolveFilterOptions?(request: FilterOptionRequest): Promise<FilterOptionResponse>;
 }
 
 // ─── Probe Contract ──────────────────────────────────────────

@@ -169,6 +169,8 @@ export function DashboardScreen({ definition, filterOptions, widgetData }) {
       registry={registry}
       theme={theme}
       cssVariables={themeToCssVariables(theme)}
+      // Legacy fallback for authored select filters that do not already declare
+      // static options in the dashboard definition.
       filterOptions={filterOptions}
       onNavigate={handleNavigate}
     />
@@ -180,7 +182,9 @@ Host responsibilities:
 
 - provide the dashboard definition
 - register the widgets you want to allow
-- provide filter options and query-backed data
+- provide query-backed data
+- prefer authored select-filter options in `definition.filters[].optionSource`
+- use `filterOptions` only as a legacy compatibility fallback for filters that still depend on host-provided option lists
 - handle page navigation requests and reserve room for future dashboard targets
 - persist filter state or analytics state if needed
 
@@ -189,6 +193,7 @@ Notes:
 - `registerAllCharts()` includes the full bundled widget catalog, including `alerts`.
 - `onNavigate` now receives `{ target, filterState }` rather than a raw `pageId`.
 - Inline theme colors support semantic status tokens: `info`, `success`, `warning`, `danger`, and `border`.
+- `filterOptions` is now a legacy compatibility fallback. Prefer authored static filter options in the schema, and reserve host-managed option resolution for dynamic field-backed cases.
 
 ## Minimal Designer Host
 

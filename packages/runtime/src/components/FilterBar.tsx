@@ -3,7 +3,11 @@
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
 import { createElement, useId, type ReactNode } from 'react';
-import type { FilterDefinition, DatasetDefinition } from '@supersubset/schema';
+import type {
+  FilterDefinition,
+  DatasetDefinition,
+  FilterOptionDefinition,
+} from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
 
 // ─── Styles ──────────────────────────────────────────────────
@@ -73,10 +77,16 @@ const RANGE_STYLE: React.CSSProperties = {
 export interface FilterBarProps {
   filters: FilterDefinition[];
   datasets?: DatasetDefinition[];
-  /** Static option values per filter ID — host app provides these from query results */
+  /** Legacy static option values per filter ID — compatibility fallback provided by the host */
   filterOptions?: Record<string, string[]>;
   className?: string;
   layout?: FilterBarLayout;
+}
+
+interface ResolvedFilterOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
 }
 
 function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
@@ -140,7 +150,7 @@ export function FilterBar({
         value: state.values[f.id],
         datasets,
         inputIdPrefix,
-        options: filterOptions?.[f.id],
+        legacyOptions: filterOptions?.[f.id],
         onChangeValue: (value: unknown) => setFilter(f.id, value),
       }),
     ),
@@ -166,7 +176,7 @@ interface FilterControlProps {
   value: unknown;
   datasets?: DatasetDefinition[];
   inputIdPrefix: string;
-  options?: string[];
+  legacyOptions?: string[];
   onChangeValue: (value: unknown) => void;
 }
 
@@ -175,11 +185,11 @@ function FilterControl({
   value,
   datasets,
   inputIdPrefix,
-  options,
+  legacyOptions,
   onChangeValue,
 }: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
-  const resolvedOptions = options ?? getFieldOptions(filter, datasets);
+  const resolvedOptions = resolveFilterOptions(filter, legacyOptions, datasets);
   const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
@@ -207,12 +217,14 @@ function renderInput(
   type: string,
   value: unknown,
   onChange: (value: unknown) => void,
-  options: string[],
+  options: ResolvedFilterOption[],
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
   switch (type) {
     case 'select':
       return renderSelect(value, onChange, options, metadata);
+    case 'multi-select':
+      return renderMultiSelect(value, onChange, options, metadata);
     case 'text':
       return renderText(value, onChange, metadata);
     case 'range':
@@ -227,7 +239,7 @@ function renderInput(
 function renderSelect(
   value: unknown,
   onChange: (value: unknown) => void,
-  options: string[],
+  options: ResolvedFilterOption[],
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
   return createElement(
@@ -244,7 +256,52 @@ function renderSelect(
       },
     },
     createElement('option', { value: '' }, 'All'),
-    ...options.map((opt) => createElement('option', { key: opt, value: opt }, opt)),
+    ...options.map((opt) =>
+      createElement(
+        'option',
+        { key: opt.value, value: opt.value, disabled: opt.disabled },
+        opt.label,
+      ),
+    ),
+  );
+}
+
+function renderMultiSelect(
+  value: unknown,
+  onChange: (value: unknown) => void,
+  options: ResolvedFilterOption[],
+  metadata: { inputIdBase: string; inputName: string },
+): ReactNode {
+  const selectedValues = Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+    : typeof value === 'string' && value.length > 0
+      ? [value]
+      : [];
+
+  return createElement(
+    'select',
+    {
+      className: 'ss-filter-multi-select',
+      id: `${metadata.inputIdBase}-primary`,
+      name: metadata.inputName,
+      multiple: true,
+      size: Math.min(Math.max(options.length, 3), 6),
+      style: { ...INPUT_STYLE, minWidth: '160px', minHeight: '96px' },
+      value: selectedValues,
+      onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const nextValues = Array.from(e.target.selectedOptions)
+          .map((option) => option.value)
+          .filter((optionValue) => optionValue.length > 0);
+        onChange(nextValues.length > 0 ? nextValues : undefined);
+      },
+    },
+    ...options.map((opt) =>
+      createElement(
+        'option',
+        { key: opt.value, value: opt.value, disabled: opt.disabled },
+        opt.label,
+      ),
+    ),
   );
 }
 
@@ -491,11 +548,39 @@ function renderDate(
  * In a real scenario, options come from query results. For now we return
  * an empty array when datasets provide no enum values.
  */
-function getFieldOptions(filter: FilterDefinition, datasets?: DatasetDefinition[]): string[] {
+function resolveFilterOptions(
+  filter: FilterDefinition,
+  legacyOptions?: string[],
+  datasets?: DatasetDefinition[],
+): ResolvedFilterOption[] {
+  if (filter.optionSource?.kind === 'static') {
+    return filter.optionSource.options.map(normalizeStaticOption);
+  }
+
+  if (legacyOptions) {
+    return legacyOptions.map((option) => ({ value: option, label: option }));
+  }
+
+  return getFieldOptions(filter, datasets);
+}
+
+function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOption {
+  return {
+    value: option.value,
+    label: option.label ?? option.value,
+    disabled: option.disabled,
+  };
+}
+
+function getFieldOptions(
+  filter: FilterDefinition,
+  datasets?: DatasetDefinition[],
+): ResolvedFilterOption[] {
   if (!datasets) return [];
   const ds = datasets.find((d) => d.id === filter.datasetRef);
   if (!ds) return [];
-  // Field metadata doesn't carry enum values in the current schema.
-  // The host app should provide options via config if needed.
+  // Field-backed option resolution is still host-owned and not yet wired through
+  // the runtime. Static authored options and the legacy filterOptions prop are
+  // the currently supported sources.
   return [];
 }

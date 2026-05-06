@@ -10,6 +10,7 @@ function renderFilterBar(
   opts?: {
     initialValues?: Record<string, unknown>;
     onFilterChange?: (state: { values: Record<string, unknown> }) => void;
+    filterOptions?: Record<string, string[]>;
   },
 ) {
   return render(
@@ -18,7 +19,7 @@ function renderFilterBar(
       initialValues={opts?.initialValues}
       onFilterChange={opts?.onFilterChange}
     >
-      <FilterBar filters={filters} />
+      <FilterBar filters={filters} filterOptions={opts?.filterOptions} />
     </FilterProvider>,
   );
 }
@@ -30,6 +31,14 @@ const selectFilter: FilterDefinition = {
   fieldRef: 'status',
   datasetRef: 'ds-1',
   operator: 'eq',
+  optionSource: {
+    kind: 'static',
+    completeness: 'complete',
+    options: [
+      { value: 'open', label: 'Open' },
+      { value: 'closed', label: 'Closed' },
+    ],
+  },
   scope: { type: 'global' },
 };
 
@@ -63,6 +72,25 @@ const dateFilter: FilterDefinition = {
   scope: { type: 'page', pageId: 'page-1' },
 };
 
+const multiSelectFilter: FilterDefinition = {
+  id: 'f-category',
+  title: 'Category',
+  type: 'multi-select',
+  fieldRef: 'category',
+  datasetRef: 'ds-1',
+  operator: 'in',
+  optionSource: {
+    kind: 'static',
+    completeness: 'complete',
+    options: [
+      { value: 'footwear', label: 'Footwear' },
+      { value: 'apparel', label: 'Apparel' },
+      { value: 'hydration', label: 'Hydration' },
+    ],
+  },
+  scope: { type: 'global' },
+};
+
 describe('FilterBar', () => {
   it('renders a control for each filter definition', () => {
     const { container } = renderFilterBar([selectFilter, textFilter, rangeFilter, dateFilter]);
@@ -81,6 +109,56 @@ describe('FilterBar', () => {
     const select = container.querySelector('.ss-filter-select');
     expect(select).toBeTruthy();
     expect(select?.tagName).toBe('SELECT');
+  });
+
+  it('renders authored static options without the legacy filterOptions prop', () => {
+    const { container } = renderFilterBar([selectFilter]);
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(optionLabels).toEqual(['All', 'Open', 'Closed']);
+  });
+
+  it('prefers authored static options over legacy filterOptions fallback data', () => {
+    const { container } = renderFilterBar([selectFilter], {
+      filterOptions: { 'f-status': ['Wrong', 'Fallback'] },
+    });
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(optionLabels).toEqual(['All', 'Open', 'Closed']);
+  });
+
+  it('still supports legacy filterOptions when no authored option source exists', () => {
+    const { container } = renderFilterBar([{ ...selectFilter, optionSource: undefined }], {
+      filterOptions: { 'f-status': ['Pending', 'Resolved'] },
+    });
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(optionLabels).toEqual(['All', 'Pending', 'Resolved']);
+  });
+
+  it('renders a multi-select control for multi-select filters', () => {
+    const { container } = renderFilterBar([multiSelectFilter]);
+
+    const select = container.querySelector('.ss-filter-multi-select') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    expect(select.multiple).toBe(true);
+
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['Footwear', 'Apparel', 'Hydration']);
   });
 
   it('renders a text input for text-type filter', () => {
@@ -122,6 +200,22 @@ describe('FilterBar', () => {
     expect(onFilterChange).toHaveBeenCalled();
     const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
     expect(lastCall.values['f-search']).toBe('hello');
+  });
+
+  it('emits arrays for multi-select filter changes', () => {
+    const onFilterChange = vi.fn();
+    const { container } = renderFilterBar([multiSelectFilter], { onFilterChange });
+
+    const select = container.querySelector('.ss-filter-multi-select') as HTMLSelectElement;
+    Array.from(select.options).forEach((option) => {
+      option.selected = option.value === 'footwear' || option.value === 'hydration';
+    });
+
+    fireEvent.change(select);
+
+    expect(onFilterChange).toHaveBeenCalled();
+    const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
+    expect(lastCall.values['f-category']).toEqual(['footwear', 'hydration']);
   });
 
   it('renders Clear filters button when filters are active', () => {

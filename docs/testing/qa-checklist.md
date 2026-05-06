@@ -5,6 +5,7 @@
 ## Designer Usability
 
 - [ ] Widget palette is discoverable and organized
+- [ ] `Dashboard Filters` is distinguishable from the filter-bar widget inspector when a filter bar is selected
 - [ ] Drag-and-drop feels responsive (< 100ms visual feedback)
 - [ ] Property panel opens quickly when widget is selected
 - [ ] Field picker shows appropriate fields for the context
@@ -19,6 +20,7 @@
 
 - [ ] Widget spacing is uniform
 - [ ] Designer canvas remains visible and usable at medium desktop widths when page controls are present
+- [ ] Header controls wrap or reflow cleanly enough that `Dashboard Filters` stays readable and clickable at medium widths
 - [ ] Grid snapping aligns widgets consistently
 - [ ] Text rendering is crisp at all zoom levels
 - [ ] Charts have consistent margins and padding
@@ -36,6 +38,7 @@
 - [ ] Tab order follows visual layout
 - [ ] Focus indicators are visible
 - [ ] Escape closes modals/panels
+- [ ] Adding a dashboard filter scrolls to the new editor and moves focus into it immediately
 - [ ] Enter activates focused buttons
 - [ ] Arrow keys navigate within widget palette
 - [ ] Delete key removes selected widget
@@ -78,10 +81,12 @@
 - [ ] Imported dashboards survive Designer → Preview → Viewer mode switches
 - [ ] Publishing updates the same dashboard definition used by viewer/preview
 - [ ] Imported/published dashboards preserve alerts widgets and structured navigate targets
+- [ ] Dashboard filter edits survive drawer close/reopen and Designer → Viewer switches without requiring a second authoring pass
 - [ ] Page selection recovers safely when an imported dashboard changes the page set
 - [ ] Page delete confirmation names the targeted page and fallback selection is predictable
 - [ ] Undo/redo history resets or advances intentionally after import/publish actions
 - [ ] Host-owned viewers re-query or recompute correctly after user-facing filter changes
+- [ ] Example-host persistence and `Reset` behavior are understood during QA so stale localStorage state is not mistaken for a missing feature
 
 ## Automated Regression Expectations
 

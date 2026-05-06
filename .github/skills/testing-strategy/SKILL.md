@@ -41,6 +41,7 @@ Adapted to Supersubset, a strong tester agent should behave like this:
 - treat evaluation as an explicit loop: pick a check, run it, interpret it, then either stop or add the next layer
 - hand product bugs back to the owning domain once the failure is reproduced clearly
 - test the analytical outcome, not just the control state; if a filter changed, prove the query, rows, KPI, or chart changed in a way a user can perceive
+- challenge test scaffolding that carries product semantics; if a flow only works because the harness injects sidecar props or manual metadata, decide whether that dependency is intentional or a contract leak
 
 This follows the same principle we use elsewhere in the repo: simple, inspectable workflows beat elaborate autonomous wandering.
 
@@ -84,6 +85,8 @@ Use `pnpm docs:screenshots` and `packages/docs/playwright.config.ts` when the go
 
 This harness is not the default place to prove core product behavior. It is for curated screenshots with stable framing and documentation-quality output.
 
+When a PR changes a documented, user-visible property, authoring panel, or viewer rendering in a way a reviewer should be able to see, the default expectation is to refresh the affected screenshot artifacts in `packages/docs/src/assets/screenshots/` or explain explicitly why screenshot refresh is being deferred.
+
 ### Manual QA and Human Gates
 
 Use these docs when the task affects milestone confidence, not just one automated test:
@@ -109,6 +112,13 @@ This matrix is the per-surface source of truth for widget and control coverage. 
 - If the risk is documentation fidelity, use the docs screenshot harness rather than general E2E tests.
 - If the risk is a market-critical BI workflow, require semantic proof as high in the stack as needed: query-log change, visible row-count change, KPI/value change, chart-series change, or another user-visible analytical outcome.
 
+For user-visible property changes, think in pairs:
+
+- semantic proof for correctness
+- screenshot proof for what the human will actually see
+
+Do not assume one replaces the other when the feature needs both.
+
 ### Push Tests Down
 
 Follow the practical test pyramid, adapted for this repo:
@@ -133,6 +143,17 @@ Example:
 - the full dashboard journey should only assert that the user-facing outcome still works
 
 For dashboards and host examples, do not stop at proving that a dropdown, toggle, or click handler changed internal state. Prove that the dashboard meaning changed in the way the user expected.
+
+## Contract-Closure Checks
+
+When the product claims schema-first or definition-driven behavior, run this check before accepting a fix:
+
+- Add at least one proof run without host-only semantic helpers such as manual option records, hard-coded field lists, or injected UI defaults.
+- If the flow fails without that helper, classify it as a contract gap unless the dependency is an explicit invariant from `AGENTS.md`.
+- Treat helper inputs that carry authored meaning differently from intentional seams:
+  - intentional seams: widget registry, auth, persistence callbacks, backend query execution
+  - suspect seams: filter option lists, field display metadata, authored defaults, control labels, derived view state
+- When a human finds one miss, search sibling tests, examples, and docs for the same workaround so the coverage plan hardens the whole class, not just one path.
 
 ## Market-Critical Discovery Priorities
 
@@ -239,11 +260,18 @@ Before calling testing work done, leave evidence at the right layer:
 - updated checklist, checkpoint brief, or screenshot artifact when the work affects a milestone gate
 - an updated row in `docs/testing/widget-control-regression-matrix.md` when a widget or control inventory or property surface changed
 
+When a change affects a documented visual property or authoring surface, include one of these outcomes in the change evidence:
+
+- refreshed screenshot assets under `packages/docs/src/assets/screenshots/`
+- a new or updated docs capture script
+- an explicit note that screenshot refresh is deferred, with the reason
+
 For human-found bugs:
 
 - reproduce the bug cheaply
 - add the regression at the lowest adequate layer
 - add a higher-level test only if the user-facing risk still needs explicit proof
+- if the current harness only passes because of a helper prop or sidecar payload, add a proof that omits it or document the dependency as intentional
 - if the bug is critical or high severity and survives initial triage, open an issue immediately and treat it as a release blocker until fixed and regressed
 
 ## Anti-Patterns
