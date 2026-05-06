@@ -84,15 +84,15 @@ test.describe('Designer-to-Renderer Workflow', () => {
     expect(count).toBeGreaterThanOrEqual(1);
   });
 
-  test('designer toolbar shows undo/redo and filters', async ({ page }) => {
+  test('designer toolbar shows undo/redo and dashboard filters', async ({ page }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);
 
-    // Toolbar should show Undo/Redo, Code, Filters, Interactions
+    // Toolbar should show Undo/Redo, Code, Dashboard Filters, Interactions
     await expect(page.getByText('Undo')).toBeVisible();
     await expect(page.getByText('Redo')).toBeVisible();
     await expect(page.getByText('Code')).toBeVisible();
-    await expect(page.getByText('Filters')).toBeVisible();
+    await expect(page.getByTestId('designer-filters-toggle')).toHaveText(/Dashboard Filters/);
     await expect(page.getByText('Interactions')).toBeVisible();
   });
 
@@ -158,12 +158,26 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);
 
-    // Click Filters button
-    await page.getByTestId('filters-toggle').click();
+    // Click Dashboard Filters button
+    await page.getByTestId('designer-filters-toggle').click();
     await page.waitForTimeout(500);
 
     // Should see the slide-over panel
     await expect(page.getByTestId('slide-over-panel')).toBeVisible();
-    await expect(page.getByText('Dashboard Filters')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard Filters' })).toBeVisible();
+  });
+
+  test('adding a dashboard filter updates the drawer immediately', async ({ page }) => {
+    await page.getByText('Designer').click();
+    await page.waitForTimeout(1000);
+
+    await page.getByTestId('designer-filters-toggle').click();
+    await expect(page.getByTestId('filter-builder-panel')).toBeVisible();
+
+    const initialCount = await page.locator('[data-testid^="filter-editor-"]').count();
+    await page.getByTestId('add-filter').click();
+
+    await expect(page.locator('[data-testid^="filter-editor-"]')).toHaveCount(initialCount + 1);
+    await expect(page.getByLabel('Filter title').last()).toBeFocused();
   });
 });

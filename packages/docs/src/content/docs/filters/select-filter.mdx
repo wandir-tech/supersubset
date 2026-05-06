@@ -16,13 +16,13 @@ import select_filter_category_viewer from '../../../assets/screenshots/filters/s
 
 # Select Filter
 
-Select filters present a dropdown list of values from a data field, letting dashboard viewers narrow down data across all (or specific) widgets. Authors place one or more Filter Bar widgets in the layout, and each bar can show all authored filters or only a selected subset.
+Select filters present a dropdown list of values that narrow dashboard data across all, or specific, widgets. Authors create them from **Dashboard Filters** in the designer header, then surface them through one or more Filter Bar widgets. Each bar can show all authored filters or only a selected subset.
 
 <ExpandAll />
 
 ## Default Appearance
 
-A select filter with default settings shows a dropdown with all unique values from the bound field inside a placed Filter Bar widget.
+A select filter with default settings shows a dropdown sourced from its configured option source inside a placed Filter Bar widget.
 
 <ScreenshotComparison
   label="Default select filter"
@@ -34,7 +34,7 @@ A select filter with default settings shows a dropdown with all unique values fr
 
 ### Field Reference (`fieldRef`)
 
-The data field whose unique values populate the dropdown options.
+The field the filter constrains when viewers apply a value. If the option source is field-backed, this same field can also provide the lookup values.
 
 <FeatureScreenshot
   src={filter_builder_default_designer}
@@ -44,7 +44,7 @@ The data field whose unique values populate the dropdown options.
 
 ### Dataset Reference (`datasetRef`)
 
-The dataset containing the field. This determines which data source provides the filter values.
+The dataset containing the field. This determines which data source the filter targets at runtime.
 
 <FeatureScreenshot
   src={filter_builder_default_designer}
@@ -52,9 +52,29 @@ The dataset containing the field. This determines which data source provides the
   caption="Dataset reference"
 />
 
+### Control Type (`type`)
+
+Choose `Dropdown (single)` when viewers should pick one value at a time, or `Dropdown (multiple)` when the filter should emit an array of values.
+
+<FeatureScreenshot
+  src={filter_builder_default_designer}
+  alt="Control type and option source in Dashboard Filters"
+  caption="Control type and option source are authored from Dashboard Filters"
+/>
+
+### Option Source (`optionSource`)
+
+Use `Authored static options` when the full choice list should travel with the dashboard schema. Field-backed option sources are reserved for hosts that resolve lookup values at runtime.
+
+<FeatureScreenshot
+  src={filter_builder_default_designer}
+  alt="Authored static options in Dashboard Filters"
+  caption="Static options can be stored directly in the dashboard schema"
+/>
+
 ### Operator (`operator`)
 
-The comparison operator: `equals` (exact match), `contains`, `in` (multiple values).
+The comparison operator. Single-select filters commonly use `equals`; multi-select filters typically use `in`.
 
 <FeatureScreenshot
   src={select_filter_region_viewer}
@@ -74,13 +94,14 @@ Controls which widgets are affected by this filter. See [Filter Scope](/filters/
 
 ### Filter Bar Placement
 
-Select filters only appear in viewer mode when a dashboard page includes at least one Filter Bar widget. Each Filter Bar can show every authored filter or a selected subset using the widget's `Shown Filters` setting.
+Select filters are authored once at the dashboard level. They only appear in viewer mode when a dashboard page includes at least one Filter Bar widget, and each Filter Bar can show every authored filter or a selected subset using the widget's `Shown Filters` setting.
 
 ## Tips
 
 - Add one or more **Filter Bar** widgets wherever viewers should interact with filters
 - Use the Filter Bar widget's **Shown Filters** setting to create all-filters and subset bars on the same page
 - Use select filters for fields with **a limited set of values** (regions, categories, statuses)
+- Use `Authored static options` when the choice list is known up front and should not depend on host lookups
 - For date ranges, use a [Date Filter](/filters/date-filter/) instead
 - Filters update all widgets in their scope in real time
 

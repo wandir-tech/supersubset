@@ -8,6 +8,7 @@ import { test } from '@playwright/test';
 import {
   switchToViewer,
   switchToDesigner,
+  openDashboardFiltersPanel,
   waitForChartsReady,
   captureElement,
   captureFullPage,
@@ -204,11 +205,7 @@ test.describe('Filter-specific screenshots', () => {
   test('designer — filter builder region selected', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    const filtersBtn = page.locator('[data-testid="filters-toggle"]');
-    if (await filtersBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await filtersBtn.click();
-      await page.waitForTimeout(500);
-    }
+    await openDashboardFiltersPanel(page);
     // Click the first filter (Region) to expand it
     const regionItem = page.locator('[data-testid="filter-item-filter-region"]');
     if (await regionItem.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -221,11 +218,7 @@ test.describe('Filter-specific screenshots', () => {
   test('designer — filter builder date selected', async ({ page }) => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
-    const filtersBtn = page.locator('[data-testid="filters-toggle"]');
-    if (await filtersBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await filtersBtn.click();
-      await page.waitForTimeout(500);
-    }
+    await openDashboardFiltersPanel(page);
     // Click the date filter to expand it
     const dateItem = page.locator('[data-testid="filter-item-filter-date"]');
     if (await dateItem.isVisible({ timeout: 2000 }).catch(() => false)) {

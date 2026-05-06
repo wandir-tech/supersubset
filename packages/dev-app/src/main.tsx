@@ -1041,7 +1041,8 @@ function App() {
                           fontWeight: showFilters ? 600 : 400,
                         }}
                       >
-                        ⛶ Filters{demoFilters.length > 0 ? ` (${demoFilters.length})` : ''}
+                        ⛶ Dashboard Filters
+                        {demoFilters.length > 0 ? ` (${demoFilters.length})` : ''}
                       </button>
                       <button
                         onClick={() => {
@@ -1325,7 +1326,6 @@ function App() {
               cssVariables={viewerCssVars}
               activePage={viewerActivePage}
               initialFilterValues={viewerInitialFilterValues}
-              filterOptions={FILTER_OPTIONS}
               onNavigate={handleViewerNavigate}
               onFilterChange={handleViewerFilterChange}
               onWidgetEvent={(event) => {

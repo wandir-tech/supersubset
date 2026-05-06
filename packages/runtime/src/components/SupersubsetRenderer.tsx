@@ -43,7 +43,7 @@ export interface SupersubsetRendererProps {
   onDrill?: (fieldRef: string, targetWidgetId?: string) => void;
   /** Callback for errors */
   onError?: (error: Error) => void;
-  /** Static option values per filter ID for FilterBar dropdowns */
+  /** Legacy static option values per filter ID for FilterBar dropdowns */
   filterOptions?: Record<string, string[]>;
   /** Additional CSS class on the container */
   className?: string;

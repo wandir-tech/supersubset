@@ -324,6 +324,34 @@ describe('FilterBuilderPanel', () => {
     ]);
   });
 
+  it('scrolls and focuses the newly added filter editor', () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    function TestHarness() {
+      const [filters, setFilters] = React.useState<FilterDefinition[]>([]);
+      return (
+        <FilterBuilderPanel filters={filters} onChange={setFilters} datasets={[MOCK_DATASET]} />
+      );
+    }
+
+    render(<TestHarness />);
+    fireEvent.click(screen.getByTestId('add-filter'));
+
+    const titleInput = screen.getByLabelText('Filter title') as HTMLInputElement;
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(titleInput);
+
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: originalScrollIntoView,
+    });
+  });
+
   it('renders filter editor with all controls', () => {
     const filter: FilterDefinition = {
       id: 'f1',
@@ -551,11 +579,11 @@ describe('FilterBuilderPanel', () => {
     expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ type: 'date' })]);
   });
 
-  it('normalizes legacy unsupported control types on mount', () => {
+  it('supports selecting multi-select controls', () => {
     const onChange = vi.fn();
     const filter: FilterDefinition = {
       id: 'f1',
-      type: 'multi-select',
+      type: 'select',
       fieldRef: 'region',
       datasetRef: 'ds-orders',
       operator: 'equals',
@@ -563,8 +591,29 @@ describe('FilterBuilderPanel', () => {
     };
     render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
 
-    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ type: 'select' })]);
-    expect((screen.getByTestId('filter-type-f1') as HTMLSelectElement).value).toBe('select');
+    fireEvent.change(screen.getByTestId('filter-type-f1'), {
+      target: { value: 'multi-select' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ type: 'multi-select', operator: 'in' }),
+    ]);
+  });
+
+  it('normalizes legacy date-range control types on mount', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'date-range',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ type: 'date' })]);
+    expect((screen.getByTestId('filter-type-f1') as HTMLSelectElement).value).toBe('date');
   });
 
   it('does not renormalize equivalent legacy filters when props churn', () => {
@@ -572,7 +621,7 @@ describe('FilterBuilderPanel', () => {
     const rerenderOnChange = vi.fn();
     const filter: FilterDefinition = {
       id: 'f1',
-      type: 'multi-select',
+      type: 'date-range',
       fieldRef: 'region',
       datasetRef: 'ds-orders',
       operator: 'equals',
@@ -597,6 +646,22 @@ describe('FilterBuilderPanel', () => {
     );
 
     expect(rerenderOnChange).not.toHaveBeenCalled();
+  });
+
+  it('does not normalize supported multi-select filters on mount', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'multi-select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'in',
+      scope: { type: 'global' },
+    };
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect((screen.getByTestId('filter-type-f1') as HTMLSelectElement).value).toBe('multi-select');
   });
 
   it('does not emit onChange for supported filters when props churn', () => {
@@ -631,7 +696,7 @@ describe('FilterBuilderPanel', () => {
     expect(rerenderOnChange).not.toHaveBeenCalled();
   });
 
-  it('only renders runtime-supported control types', () => {
+  it('renders supported control types', () => {
     const filter: FilterDefinition = {
       id: 'f1',
       type: 'select',
@@ -646,7 +711,97 @@ describe('FilterBuilderPanel', () => {
       screen.getByTestId('filter-type-f1').querySelectorAll('option'),
     ).map((option) => option.getAttribute('value'));
 
-    expect(optionValues).toEqual(['select', 'range', 'date', 'text']);
+    expect(optionValues).toEqual(['select', 'multi-select', 'range', 'date', 'text']);
+  });
+
+  it('lets authors choose a static option source and add authored options', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    fireEvent.change(screen.getByTestId('filter-option-source-kind-f1'), {
+      target: { value: 'static' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        optionSource: {
+          kind: 'static',
+          completeness: 'complete',
+          options: [],
+        },
+      }),
+    ]);
+
+    onChange.mockClear();
+
+    const staticFilter: FilterDefinition = {
+      ...filter,
+      optionSource: { kind: 'static', completeness: 'complete', options: [] },
+    };
+    render(
+      <FilterBuilderPanel filters={[staticFilter]} onChange={onChange} datasets={[MOCK_DATASET]} />,
+    );
+
+    fireEvent.click(screen.getByTestId('filter-static-option-add-f1'));
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        optionSource: {
+          kind: 'static',
+          completeness: 'complete',
+          options: [expect.objectContaining({ value: 'option-1', label: 'Option 1' })],
+        },
+      }),
+    ]);
+  });
+
+  it('lets authors configure field-backed option source settings', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f1',
+      type: 'multi-select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'in',
+      optionSource: {
+        kind: 'field',
+        strategy: 'search',
+        maxOptions: 50,
+        minSearchChars: 2,
+      },
+      scope: { type: 'global' },
+    };
+
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    fireEvent.change(screen.getByTestId('filter-option-strategy-f1'), {
+      target: { value: 'preload' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        optionSource: expect.objectContaining({ kind: 'field', strategy: 'preload' }),
+      }),
+    ]);
+
+    fireEvent.change(screen.getByTestId('filter-option-max-options-f1'), {
+      target: { value: '25' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        optionSource: expect.objectContaining({ kind: 'field', maxOptions: 25 }),
+      }),
+    ]);
   });
 
   it('has correct operator list', () => {

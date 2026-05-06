@@ -18,6 +18,8 @@ Write all code → Hope it works → Test at end → Find drift → Rework
 
 For BI-facing features, add one more rule: do not stop at proving that a control changed state when the real user expectation is a changed analytical result.
 
+For schema-first features, add another rule: do not treat a test as sufficient when it only passes because the harness injects authored semantics through helper props, static option maps, or other sidecar data that is not part of the intended product contract.
+
 ---
 
 ## Test Layers and Ownership
@@ -85,6 +87,8 @@ These are the "complete workflow" Playwright tests that exercise full user journ
 
 Release hardening should add or strengthen workflows whenever a human finds a gap in one of these journeys. Human-found misses are evidence that the workflow matrix is incomplete, not just that one test needs a tweak.
 
+When a miss involves an undocumented helper prop or host-side semantic sidecar, expand the workflow and lower-level tests to prove the same journey without that helper, or document the dependency explicitly as an intentional architecture seam.
+
 ## Widget And Control Regression Matrix
 
 Use `docs/testing/widget-control-regression-matrix.md` as the living source of truth for widget and control coverage.
@@ -97,6 +101,15 @@ That matrix owns:
 - the commands that should be run when a surface changes
 
 Any PR that changes a widget or control field, default, option set, mapping, or runtime behavior must update the matrix in the same PR.
+
+For dashboard filter work, treat coverage as a chain rather than one row:
+
+1. designer shell discoverability and layout
+2. dashboard-level filter definition editing
+3. placed filter-bar subset/presentation behavior
+4. viewer or host analytical outcome
+
+If one link is weak, the feature is not fully covered even when the others pass.
 
 ## Market-Critical Discovery Order
 

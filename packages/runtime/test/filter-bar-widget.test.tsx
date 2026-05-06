@@ -25,6 +25,11 @@ const baseFilters: NonNullable<DashboardDefinition['filters']> = [
     fieldRef: 'orders.region',
     datasetRef: 'orders',
     operator: 'equals',
+    optionSource: {
+      kind: 'static',
+      completeness: 'complete',
+      options: [{ value: 'East' }, { value: 'West' }],
+    },
     scope: { type: 'global' },
   },
   {
@@ -34,6 +39,11 @@ const baseFilters: NonNullable<DashboardDefinition['filters']> = [
     fieldRef: 'orders.status',
     datasetRef: 'orders',
     operator: 'equals',
+    optionSource: {
+      kind: 'static',
+      completeness: 'complete',
+      options: [{ value: 'Open' }, { value: 'Closed' }],
+    },
     scope: { type: 'widgets', widgetIds: ['summary-1'] },
   },
 ];
@@ -50,11 +60,6 @@ const baseDataModel: DashboardDefinition['dataModel'] = {
       ],
     },
   ],
-};
-
-const baseFilterOptions = {
-  region: ['East', 'West'],
-  status: ['Open', 'Closed'],
 };
 
 const noFallbackDashboard: DashboardDefinition = {
@@ -254,7 +259,6 @@ describe('filter-bar runtime widget', () => {
       createElement(SupersubsetRenderer, {
         definition: noFallbackDashboard,
         registry,
-        filterOptions: baseFilterOptions,
       }),
     );
 
@@ -267,7 +271,6 @@ describe('filter-bar runtime widget', () => {
       createElement(SupersubsetRenderer, {
         definition: subsetDashboard,
         registry: createWidgetRegistry(),
-        filterOptions: baseFilterOptions,
       }),
     );
 
@@ -294,7 +297,6 @@ describe('filter-bar runtime widget', () => {
       createElement(SupersubsetRenderer, {
         definition: titledVerticalLayoutDashboard,
         registry: createWidgetRegistry(),
-        filterOptions: baseFilterOptions,
       }),
     );
 

@@ -335,17 +335,32 @@ function buildWhereClause(filters: Record<string, unknown>) {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
+  const appendDimensionFilter = (columnName: string, rawValue: unknown) => {
+    const values = Array.isArray(rawValue)
+      ? rawValue.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+      : typeof rawValue === 'string' && rawValue.length > 0
+        ? [rawValue]
+        : [];
+
+    if (values.length === 0) {
+      return;
+    }
+
+    if (values.length === 1) {
+      conditions.push(`${columnName} = ?`);
+      params.push(values[0]);
+      return;
+    }
+
+    conditions.push(`${columnName} IN (${values.map(() => '?').join(', ')})`);
+    params.push(...values);
+  };
+
   const region = filters['filter-region'];
-  if (typeof region === 'string' && region.length > 0) {
-    conditions.push('region = ?');
-    params.push(region);
-  }
+  appendDimensionFilter('region', region);
 
   const category = filters['filter-category'];
-  if (typeof category === 'string' && category.length > 0) {
-    conditions.push('category = ?');
-    params.push(category);
-  }
+  appendDimensionFilter('category', category);
 
   const dateValue = filters['filter-date'];
   if (dateValue && typeof dateValue === 'object') {

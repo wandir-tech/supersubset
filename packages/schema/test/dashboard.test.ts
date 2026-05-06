@@ -100,6 +100,21 @@ describe('DashboardDefinition schema', () => {
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(true);
   });
+
+  it('validates authored static filter option sources', () => {
+    const raw = JSON.parse(fixtureJSON);
+    raw.filters[0].optionSource = {
+      kind: 'static',
+      completeness: 'curated',
+      options: [
+        { value: 'east', label: 'East' },
+        { value: 'west', label: 'West' },
+      ],
+    };
+
+    const result = dashboardDefinitionSchema.safeParse(raw);
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('layout nesting validation', () => {
@@ -201,6 +216,27 @@ describe('JSON serialization round-trip', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const serialized = serializeToJSON(parsed);
     expect(() => JSON.parse(serialized)).not.toThrow();
+  });
+
+  it('round-trips filter option sources without semantic loss', () => {
+    const parsed = parseFromJSON(fixtureJSON);
+    parsed.filters = parsed.filters ?? [];
+    parsed.filters[0] = {
+      ...parsed.filters[0],
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: [
+          { value: 'open', label: 'Open' },
+          { value: 'closed', label: 'Closed', disabled: true },
+        ],
+      },
+    };
+
+    const serialized = serializeToJSON(parsed);
+    const reparsed = parseFromJSON(serialized);
+
+    expect(reparsed.filters?.[0].optionSource).toEqual(parsed.filters[0].optionSource);
   });
 });
 
