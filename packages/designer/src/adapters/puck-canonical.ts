@@ -421,6 +421,7 @@ const BOOLEAN_CONFIG_KEYS = new Set([
 
 const NUMERIC_CONFIG_KEYS = new Set([
   'maxItems',
+  'ruleThreshold',
   'xAxisLabelRotate',
   'yAxisMin',
   'yAxisMax',
@@ -446,6 +447,17 @@ const NUMERIC_CONFIG_KEYS = new Set([
 ]);
 
 const PUCK_STRING_NUMERIC_CONFIG_KEYS = new Set(['xAxisLabelRotate', 'areaOpacity', 'opacity']);
+
+const ALERT_RULE_DESIGNER_KEYS = [
+  'alertMode',
+  'ruleMetricField',
+  'ruleAggregation',
+  'ruleOperator',
+  'ruleThreshold',
+  'ruleTitle',
+  'ruleMessage',
+  'ruleSeverity',
+] as const;
 
 function normalizeBooleanRadioValue(value: unknown): unknown {
   if (value === 'true') return true;
@@ -607,7 +619,131 @@ function buildWidgetDefinition(
     }
   }
 
+  if (widgetType === 'alerts') {
+    const isStructuredAlertMode = widget.config.alertMode === 'structured';
+    const structuredAlertRuleDraft = buildStructuredAlertRuleDraft(widget.config);
+    const structuredAlertRule = buildStructuredAlertRuleConfig(widget.config);
+
+    for (const key of ALERT_RULE_DESIGNER_KEYS) {
+      delete widget.config[key];
+    }
+
+    if (isStructuredAlertMode) {
+      widget.config.alertMode = 'structured';
+
+      if (structuredAlertRuleDraft) {
+        widget.config.alertRuleDraft = structuredAlertRuleDraft;
+      }
+
+      if (structuredAlertRule) {
+        widget.config.alertRule = structuredAlertRule;
+      }
+    }
+  }
+
   return widget;
+}
+
+function buildStructuredAlertRuleConfig(
+  config: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (config.alertMode !== 'structured') {
+    return null;
+  }
+
+  const metricFieldRef =
+    typeof config.ruleMetricField === 'string' && config.ruleMetricField.trim().length > 0
+      ? config.ruleMetricField
+      : null;
+  const aggregation =
+    typeof config.ruleAggregation === 'string' && config.ruleAggregation.trim().length > 0
+      ? config.ruleAggregation
+      : null;
+  const operator =
+    typeof config.ruleOperator === 'string' && config.ruleOperator.trim().length > 0
+      ? config.ruleOperator
+      : null;
+  const threshold =
+    typeof config.ruleThreshold === 'number' && Number.isFinite(config.ruleThreshold)
+      ? config.ruleThreshold
+      : null;
+  const title =
+    typeof config.ruleTitle === 'string' && config.ruleTitle.trim().length > 0
+      ? config.ruleTitle
+      : null;
+  const message =
+    typeof config.ruleMessage === 'string' && config.ruleMessage.trim().length > 0
+      ? config.ruleMessage
+      : null;
+  const severity =
+    typeof config.ruleSeverity === 'string' && config.ruleSeverity.trim().length > 0
+      ? config.ruleSeverity
+      : undefined;
+
+  if (!metricFieldRef || !aggregation || !operator || threshold == null || !title || !message) {
+    return null;
+  }
+
+  return {
+    mode: 'structured',
+    metricFieldRef,
+    aggregation,
+    operator,
+    threshold,
+    alert: {
+      title,
+      message,
+      ...(severity ? { severity } : {}),
+    },
+  };
+}
+
+function buildStructuredAlertRuleDraft(
+  config: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (config.alertMode !== 'structured') {
+    return null;
+  }
+
+  const draft: Record<string, unknown> = {
+    mode: 'structured',
+  };
+
+  if (typeof config.ruleMetricField === 'string' && config.ruleMetricField.trim().length > 0) {
+    draft.metricFieldRef = config.ruleMetricField;
+  }
+
+  if (typeof config.ruleAggregation === 'string' && config.ruleAggregation.trim().length > 0) {
+    draft.aggregation = config.ruleAggregation;
+  }
+
+  if (typeof config.ruleOperator === 'string' && config.ruleOperator.trim().length > 0) {
+    draft.operator = config.ruleOperator;
+  }
+
+  if (typeof config.ruleThreshold === 'number' && Number.isFinite(config.ruleThreshold)) {
+    draft.threshold = config.ruleThreshold;
+  }
+
+  const alert: Record<string, unknown> = {};
+
+  if (typeof config.ruleTitle === 'string' && config.ruleTitle.trim().length > 0) {
+    alert.title = config.ruleTitle;
+  }
+
+  if (typeof config.ruleMessage === 'string' && config.ruleMessage.trim().length > 0) {
+    alert.message = config.ruleMessage;
+  }
+
+  if (typeof config.ruleSeverity === 'string' && config.ruleSeverity.trim().length > 0) {
+    alert.severity = config.ruleSeverity;
+  }
+
+  if (Object.keys(alert).length > 0) {
+    draft.alert = alert;
+  }
+
+  return draft;
 }
 
 function buildContentMeta(
@@ -717,6 +853,13 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
 
   // Spread config props
   for (const [key, value] of Object.entries(widget.config)) {
+    if (
+      widget.type === 'alerts' &&
+      (key === 'alertMode' || key === 'alertRule' || key === 'alertRuleDraft')
+    ) {
+      continue;
+    }
+
     if (key === 'filterIds') {
       const filterIds = normalizeStringArray(value);
 
@@ -761,7 +904,51 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
     props[key] = value;
   }
 
+  if (widget.type === 'alerts') {
+    const alertRule = widget.config.alertRule;
+    const alertRuleDraft = widget.config.alertRuleDraft;
+    const structuredAlertRule =
+      isRecord(alertRule) && alertRule.mode === 'structured' ? alertRule : null;
+    const structuredAlertRuleDraft =
+      isRecord(alertRuleDraft) && alertRuleDraft.mode === 'structured' ? alertRuleDraft : null;
+    const structuredAlertState = structuredAlertRuleDraft ?? structuredAlertRule;
+    const isStructuredAlertMode =
+      widget.config.alertMode === 'structured' || !!structuredAlertState;
+
+    props.alertMode = isStructuredAlertMode ? 'structured' : 'data-binding';
+
+    if (structuredAlertState) {
+      if (typeof structuredAlertState.metricFieldRef === 'string') {
+        props.ruleMetricField = structuredAlertState.metricFieldRef;
+      }
+      if (typeof structuredAlertState.aggregation === 'string') {
+        props.ruleAggregation = structuredAlertState.aggregation;
+      }
+      if (typeof structuredAlertState.operator === 'string') {
+        props.ruleOperator = structuredAlertState.operator;
+      }
+      if (typeof structuredAlertState.threshold === 'number') {
+        props.ruleThreshold = structuredAlertState.threshold;
+      }
+
+      const alert = isRecord(structuredAlertState.alert) ? structuredAlertState.alert : null;
+      if (alert && typeof alert.title === 'string') {
+        props.ruleTitle = alert.title;
+      }
+      if (alert && typeof alert.message === 'string') {
+        props.ruleMessage = alert.message;
+      }
+      if (alert && typeof alert.severity === 'string') {
+        props.ruleSeverity = alert.severity;
+      }
+    }
+  }
+
   return props;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function layoutMetaToPuckProps(node: LayoutComponent): Record<string, unknown> {

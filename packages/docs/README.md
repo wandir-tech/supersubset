@@ -62,16 +62,23 @@ pnpm docs:screenshots
 
 This runs 6 Playwright spec files in `capture/` and writes PNGs to `src/assets/screenshots/`.
 
+For isolated worktrees or parallel local runs, you can override the dev-app port used by the screenshot harness:
+
+```bash
+SUPERSUBSET_DEV_APP_PORT=3010 pnpm docs:screenshots
+```
+
 ### Capture Specs
 
-| Spec | What it captures |
-|------|-----------------|
-| `overview.spec.ts` | Designer/viewer overview, mode toggling |
-| `chart-gallery.spec.ts` | All 14 chart types in designer + viewer |
-| `widgets.spec.ts` | KPI card, table, markdown, alerts widgets |
-| `filters.spec.ts` | Filter bar, filter types, filter interactions |
-| `pages.spec.ts` | Multi-page navigation, page management |
-| `import-export.spec.ts` | JSON/YAML export, schema code view |
+| Spec                           | What it captures                                      |
+| ------------------------------ | ----------------------------------------------------- |
+| `overview.spec.ts`             | Designer/viewer overview, mode toggling               |
+| `chart-gallery.spec.ts`        | All 14 chart types in designer + viewer               |
+| `widgets.spec.ts`              | KPI card, table, markdown, alerts widgets             |
+| `alerts-query-runtime.spec.ts` | Query-backed alerts runtime states and filter refresh |
+| `filters.spec.ts`              | Filter bar, filter types, filter interactions         |
+| `pages.spec.ts`                | Multi-page navigation, page management                |
+| `import-export.spec.ts`        | JSON/YAML export, schema code view                    |
 
 ### Adding a Screenshot
 

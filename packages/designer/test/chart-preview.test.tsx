@@ -18,26 +18,42 @@ const mockChartWidget = vi.fn((props: Record<string, unknown>) =>
     'data-config': JSON.stringify(props.config),
     'data-has-data': Array.isArray(props.data),
     'data-data-length': Array.isArray(props.data) ? (props.data as unknown[]).length : 0,
-  })
+  }),
 );
 
 vi.mock('@supersubset/charts-echarts', () => ({
-  LineChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'line-chart' }),
-  BarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'bar-chart' }),
-  PieChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'pie-chart' }),
-  ScatterChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
-  AreaChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'area-chart' }),
-  ComboChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'combo-chart' }),
-  HeatmapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'heatmap' }),
-  RadarChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'radar-chart' }),
-  FunnelChartWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
-  TreemapWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'treemap' }),
-  SankeyWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'sankey' }),
-  WaterfallWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'waterfall' }),
-  BoxPlotWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'box-plot' }),
-  GaugeWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'gauge' }),
-  TableWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'table' }),
-  KPICardWidget: (props: Record<string, unknown>) => mockChartWidget({ ...props, widgetType: 'kpi-card' }),
+  LineChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'line-chart' }),
+  BarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'bar-chart' }),
+  PieChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'pie-chart' }),
+  ScatterChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'scatter-chart' }),
+  AreaChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'area-chart' }),
+  ComboChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'combo-chart' }),
+  HeatmapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'heatmap' }),
+  RadarChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'radar-chart' }),
+  FunnelChartWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'funnel-chart' }),
+  TreemapWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'treemap' }),
+  SankeyWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'sankey' }),
+  WaterfallWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'waterfall' }),
+  BoxPlotWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'box-plot' }),
+  GaugeWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'gauge' }),
+  TableWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'table' }),
+  KPICardWidget: (props: Record<string, unknown>) =>
+    mockChartWidget({ ...props, widgetType: 'kpi-card' }),
 }));
 
 vi.mock('@supersubset/runtime', () => ({}));
@@ -53,35 +69,32 @@ describe('ChartPreview — renders every widget type', () => {
     mockChartWidget.mockClear();
   });
 
-  it.each(ALL_WIDGET_TYPES)(
-    'renders %s with sample data',
-    (widgetType) => {
-      const sampleData = getSampleData(widgetType);
-      expect(sampleData).not.toBeNull();
+  it.each(ALL_WIDGET_TYPES)('renders %s with sample data', (widgetType) => {
+    const sampleData = getSampleData(widgetType);
+    expect(sampleData).not.toBeNull();
 
-      const { container } = render(
-        React.createElement(ChartPreview, {
-          widgetType,
-          puckProps: { title: `Test ${widgetType}` },
-          fallbackIcon: '📊',
-        })
-      );
+    const { container } = render(
+      React.createElement(ChartPreview, {
+        widgetType,
+        puckProps: { title: `Test ${widgetType}` },
+        fallbackIcon: '📊',
+      }),
+    );
 
-      expect(container.firstChild).toBeDefined();
-      if (widgetType === 'alerts') {
-        expect(mockChartWidget).not.toHaveBeenCalled();
-        expect(container.textContent).toContain('Payment retries elevated');
-        expect(container.textContent).toContain('warning');
-        return;
-      }
-
-      // Chart widget should have been called with sample data
-      expect(mockChartWidget).toHaveBeenCalled();
-      const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
-      expect(lastCall.widgetType).toBe(widgetType);
-      expect(lastCall.data).toEqual(sampleData!.data);
+    expect(container.firstChild).toBeDefined();
+    if (widgetType === 'alerts') {
+      expect(mockChartWidget).not.toHaveBeenCalled();
+      expect(container.textContent).toContain('Payment retries elevated');
+      expect(container.textContent).toContain('warning');
+      return;
     }
-  );
+
+    // Chart widget should have been called with sample data
+    expect(mockChartWidget).toHaveBeenCalled();
+    const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
+    expect(lastCall.widgetType).toBe(widgetType);
+    expect(lastCall.data).toEqual(sampleData!.data);
+  });
 });
 
 describe('ChartPreview — config mapping', () => {
@@ -95,7 +108,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'line-chart',
         puckProps: { title: 'Test', xAxisField: '', yAxisField: '' },
         fallbackIcon: '📈',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -110,7 +123,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'line-chart',
         puckProps: { title: 'Test', xAxisField: 'date', yAxisField: 'amount' },
         fallbackIcon: '📈',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -124,7 +137,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'line-chart',
         puckProps: { title: 'Test', smooth: 'true' },
         fallbackIcon: '📈',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -137,7 +150,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'bar-chart',
         puckProps: { title: 'Test', stacked: 'true' },
         fallbackIcon: '📊',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -150,7 +163,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'bar-chart',
         puckProps: { title: 'Test', orientation: 'horizontal' },
         fallbackIcon: '📊',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -163,7 +176,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'pie-chart',
         puckProps: { title: 'Test', categoryField: 'region' },
         fallbackIcon: '🥧',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -177,7 +190,7 @@ describe('ChartPreview — config mapping', () => {
         widgetType: 'gauge',
         puckProps: { title: 'Score', valueField: 'score' },
         fallbackIcon: '🎯',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -195,13 +208,56 @@ describe('ChartPreview — config mapping', () => {
           layout: 'inline',
         },
         fallbackIcon: '🚨',
-      })
+      }),
     );
 
     expect(container.textContent).toContain('Payment retries elevated');
     expect(container.textContent).toContain('EU warehouse backlog cleared');
     expect(container.textContent).not.toContain('North America revenue feed delayed');
     expect(container.textContent).not.toContain('2026-04-11 09:12 UTC');
+  });
+
+  it('renders a synthetic preview for structured alert rules', () => {
+    const { container } = render(
+      React.createElement(ChartPreview, {
+        widgetType: 'alerts',
+        puckProps: {
+          title: 'Revenue Watch',
+          alertMode: 'structured',
+          ruleMetricField: 'revenue',
+          ruleAggregation: 'sum',
+          ruleOperator: 'gte',
+          ruleThreshold: 1000,
+          ruleTitle: 'Revenue threshold breached',
+          ruleMessage: 'Revenue crossed the configured threshold.',
+          ruleSeverity: 'danger',
+        },
+        fallbackIcon: '🚨',
+      }),
+    );
+
+    expect(container.textContent).toContain('Revenue threshold breached');
+    expect(container.textContent).toContain('Revenue crossed the configured threshold.');
+    expect(container.textContent).toContain('danger');
+    expect(container.textContent).not.toContain('Payment retries elevated');
+  });
+
+  it('shows a structured authoring placeholder for incomplete rules', () => {
+    const { container } = render(
+      React.createElement(ChartPreview, {
+        widgetType: 'alerts',
+        puckProps: {
+          title: 'Revenue Watch',
+          alertMode: 'structured',
+          ruleTitle: 'Revenue threshold breached',
+          ruleMessage: 'Revenue crossed the configured threshold.',
+        },
+        fallbackIcon: '🚨',
+      }),
+    );
+
+    expect(container.textContent).toContain('Complete the structured rule to preview an alert.');
+    expect(container.textContent).not.toContain('Payment retries elevated');
   });
 });
 
@@ -216,7 +272,7 @@ describe('ChartPreview — fallback behavior', () => {
         widgetType: 'nonexistent-chart',
         puckProps: { title: 'Unknown' },
         fallbackIcon: '❓',
-      })
+      }),
     );
 
     // Should NOT call any chart widget
@@ -233,7 +289,7 @@ describe('ChartPreview — fallback behavior', () => {
         widgetType: 'line-chart',
         puckProps: { title: 'Revenue Over Time' },
         fallbackIcon: '📈',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -246,7 +302,7 @@ describe('ChartPreview — fallback behavior', () => {
         widgetType: 'bar-chart',
         puckProps: { title: '' },
         fallbackIcon: '📊',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[mockChartWidget.mock.calls.length - 1][0];
@@ -265,7 +321,7 @@ describe('ChartPreview — WidgetProps shape', () => {
         widgetType: 'pie-chart',
         puckProps: { title: 'Test' },
         fallbackIcon: '🥧',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[0][0];
@@ -278,7 +334,7 @@ describe('ChartPreview — WidgetProps shape', () => {
         widgetType: 'line-chart',
         puckProps: { title: 'Test' },
         fallbackIcon: '📈',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[0][0];
@@ -291,7 +347,7 @@ describe('ChartPreview — WidgetProps shape', () => {
         widgetType: 'kpi-card',
         puckProps: { title: 'Revenue' },
         fallbackIcon: '🔢',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[0][0];
@@ -304,7 +360,7 @@ describe('ChartPreview — WidgetProps shape', () => {
         widgetType: 'table',
         puckProps: { title: 'Data Table' },
         fallbackIcon: '📋',
-      })
+      }),
     );
 
     const lastCall = mockChartWidget.mock.calls[0][0];

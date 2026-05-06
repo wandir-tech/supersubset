@@ -69,6 +69,7 @@ export const workbenchStarterDashboard: DashboardDefinition = {
             'divider',
             'row-filter-bars',
             'row-kpis',
+            'row-alerts',
             'row-charts',
             'row-table',
           ],
@@ -129,6 +130,20 @@ export const workbenchStarterDashboard: DashboardDefinition = {
           parentId: 'row-kpis',
           children: [],
           meta: { widgetRef: 'kpi-on-time', width: 4, height: 132 },
+        },
+        'row-alerts': {
+          id: 'row-alerts',
+          type: 'row',
+          parentId: 'grid-main',
+          children: ['w-alerts'],
+          meta: {},
+        },
+        'w-alerts': {
+          id: 'w-alerts',
+          type: 'widget',
+          parentId: 'row-alerts',
+          children: [],
+          meta: { widgetRef: 'alerts-watchlist', width: 12, height: 232 },
         },
         'row-charts': {
           id: 'row-charts',
@@ -202,6 +217,29 @@ export const workbenchStarterDashboard: DashboardDefinition = {
             fields: [{ role: 'value', fieldRef: 'on_time_rate', aggregation: 'avg' }],
           },
           config: { valueField: 'on_time_rate', suffix: '%' },
+        },
+        {
+          id: 'alerts-watchlist',
+          type: 'alerts',
+          title: 'Shipment Watchlist',
+          dataBinding: {
+            datasetRef: WORKBENCH_DATASET_ID,
+            fields: [
+              { role: 'title', fieldRef: 'alert_title' },
+              { role: 'message', fieldRef: 'alert_message' },
+              { role: 'severity', fieldRef: 'alert_severity' },
+              { role: 'timestamp', fieldRef: 'shipped_at' },
+            ],
+          },
+          config: {
+            datasetRef: WORKBENCH_DATASET_ID,
+            titleField: 'alert_title',
+            messageField: 'alert_message',
+            severityField: 'alert_severity',
+            timestampField: 'shipped_at',
+            layout: 'wrap',
+            maxItems: 3,
+          },
         },
         {
           id: 'chart-monthly-revenue',

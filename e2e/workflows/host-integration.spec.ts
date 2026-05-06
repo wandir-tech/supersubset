@@ -89,6 +89,8 @@ test.describe('Host Integration Workflow', () => {
       const pre = document.querySelector('.query-panel pre');
       return !!pre && pre.textContent !== previousLog && pre.textContent?.includes('["APAC"]');
     }, initialQueryLog);
+    await expect(page.locator('.query-panel pre')).toContainText('SELECT');
+    await expect(page.locator('.query-panel pre')).toContainText('FROM orders');
 
     await page.getByRole('button', { name: 'Designer' }).click();
     await expect(page.getByTestId('sqlite-code-toggle')).toBeVisible();

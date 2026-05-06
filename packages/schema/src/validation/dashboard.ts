@@ -192,17 +192,67 @@ const interactionRefSchema = z.object({
   interactionId: z.string().min(1),
 });
 
+// ─── Authored Alert Rules ───────────────────────────────────
+
+const alertRuleSeveritySchema = z.enum(['info', 'success', 'warning', 'danger']);
+
+const structuredAlertRuleAggregationSchema = z.enum([
+  'sum',
+  'avg',
+  'count',
+  'count_distinct',
+  'min',
+  'max',
+]);
+
+const structuredAlertRuleOperatorSchema = z.enum(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']);
+
+const alertRuleAlertSchema = z.object({
+  title: z.string().min(1),
+  message: z.string().min(1),
+  severity: alertRuleSeveritySchema.optional(),
+});
+
+const structuredAlertRuleSchema = z.object({
+  mode: z.literal('structured'),
+  datasetRef: z.string().min(1).optional(),
+  metricFieldRef: z.string().min(1),
+  aggregation: structuredAlertRuleAggregationSchema,
+  operator: structuredAlertRuleOperatorSchema,
+  threshold: z.number().finite(),
+  alert: alertRuleAlertSchema,
+});
+
 // ─── Widget ──────────────────────────────────────────────────
 
-const widgetDefinitionSchema = z.object({
-  id: z.string().min(1),
-  type: z.string().min(1),
-  title: z.string().optional(),
-  config: safeRecord(z.unknown()),
-  dataBinding: dataBindingSchema.optional(),
-  filters: z.array(filterRefSchema).optional(),
-  interactions: z.array(interactionRefSchema).optional(),
-});
+const widgetDefinitionSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.string().min(1),
+    title: z.string().optional(),
+    config: safeRecord(z.unknown()),
+    dataBinding: dataBindingSchema.optional(),
+    filters: z.array(filterRefSchema).optional(),
+    interactions: z.array(interactionRefSchema).optional(),
+  })
+  .superRefine((widget, context) => {
+    if (widget.type !== 'alerts' || widget.config.alertRule === undefined) {
+      return;
+    }
+
+    const parsed = structuredAlertRuleSchema.safeParse(widget.config.alertRule);
+    if (parsed.success) {
+      return;
+    }
+
+    for (const issue of parsed.error.issues) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: issue.message,
+        path: ['config', 'alertRule', ...issue.path],
+      });
+    }
+  });
 
 // ─── Theme ───────────────────────────────────────────────────
 
@@ -339,5 +389,10 @@ export {
   datasetDefinitionSchema,
   datasetFieldSchema,
   dashboardDefaultsSchema,
+  alertRuleAlertSchema,
+  alertRuleSeveritySchema,
+  structuredAlertRuleAggregationSchema,
+  structuredAlertRuleOperatorSchema,
+  structuredAlertRuleSchema,
   visibilityRuleSchema,
 };

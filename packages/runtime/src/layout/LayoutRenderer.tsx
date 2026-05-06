@@ -6,20 +6,36 @@ import {
   type CSSProperties,
   type ReactNode,
   createElement,
+  useEffect,
+  useMemo,
   useState,
   Component,
   type ErrorInfo,
   type PropsWithChildren,
 } from 'react';
 import type {
-  LayoutMap,
-  LayoutComponent,
-  LayoutComponentType,
-  WidgetDefinition,
-  FilterDefinition,
-  DatasetDefinition,
+  AggregationType,
+  LogicalQuery,
+  QueryAdapter,
+  QueryFilterOperator,
+  QueryResult,
+} from '@supersubset/data-model';
+import {
+  structuredAlertRuleSchema,
+  type LayoutMap,
+  type LayoutComponent,
+  type LayoutComponentType,
+  type StructuredAlertRuleDefinition,
+  type WidgetDefinition,
+  type FilterDefinition,
+  type DatasetDefinition,
 } from '@supersubset/schema';
-import type { WidgetRegistry, WidgetProps, WidgetEvent } from '../widgets/registry';
+import type {
+  WidgetComponent,
+  WidgetRegistry,
+  WidgetProps,
+  WidgetEvent,
+} from '../widgets/registry';
 import { filterAppliesToWidget, type FilterValue } from '../filters/FilterEngine';
 
 // ─── Layout Renderer Props ───────────────────────────────────
@@ -34,6 +50,7 @@ export interface LayoutRendererProps {
   widgets: WidgetDefinition[];
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
+  queryAdapter?: QueryAdapter;
   filters?: FilterDefinition[];
   datasets?: DatasetDefinition[];
   filterOptions?: Record<string, string[]>;
@@ -51,6 +68,7 @@ export function LayoutRenderer({
   widgets,
   registry,
   theme,
+  queryAdapter,
   filters,
   datasets,
   filterOptions,
@@ -73,6 +91,7 @@ export function LayoutRenderer({
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -93,6 +112,7 @@ function renderChildren(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -129,6 +149,7 @@ function renderChildren(
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -147,6 +168,7 @@ function renderNode(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -166,6 +188,7 @@ function renderNode(
     widgets,
     registry,
     theme,
+    queryAdapter,
     filters,
     datasets,
     filterOptions,
@@ -185,6 +208,7 @@ type NodeRenderer = (
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -215,6 +239,7 @@ function renderGrid(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -239,6 +264,7 @@ function renderGrid(
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -257,6 +283,7 @@ function renderRow(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -281,6 +308,7 @@ function renderRow(
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -313,6 +341,7 @@ function renderColumn(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -336,6 +365,7 @@ function renderColumn(
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -354,6 +384,7 @@ function renderWidget(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -420,8 +451,444 @@ function renderWidget(
     createElement(
       WidgetErrorBoundary,
       { widgetId: widgetDef.id, title: widgetDef.title },
-      createElement(Component, widgetProps),
+      createElement(QueryBoundWidget, {
+        widgetDef,
+        widgetComponent: Component,
+        queryAdapter,
+        filters,
+        activeFilters: widgetActiveFilters,
+        widgetProps,
+      }),
     ),
+  );
+}
+
+interface QueryBoundWidgetProps {
+  widgetDef: WidgetDefinition;
+  widgetComponent: WidgetComponent;
+  queryAdapter?: QueryAdapter;
+  filters?: FilterDefinition[];
+  activeFilters?: FilterValue[];
+  widgetProps: WidgetProps;
+}
+
+interface QueryState {
+  data?: Record<string, unknown>[];
+  columns?: WidgetProps['columns'];
+  error: Error | null;
+  loading: boolean;
+}
+
+function QueryBoundWidget({
+  widgetDef,
+  widgetComponent,
+  queryAdapter,
+  filters,
+  activeFilters,
+  widgetProps,
+}: QueryBoundWidgetProps) {
+  const structuredAlertRule = useMemo(() => parseStructuredAlertRule(widgetDef), [widgetDef]);
+  const activeFilterSignature = useMemo(() => JSON.stringify(activeFilters ?? []), [activeFilters]);
+  const query = useMemo(
+    () => buildWidgetQuery(widgetDef, filters, activeFilters, structuredAlertRule),
+    [widgetDef, filters, activeFilterSignature, structuredAlertRule],
+  );
+  const querySignature = useMemo(() => JSON.stringify(query ?? null), [query]);
+  const [queryState, setQueryState] = useState<QueryState>({
+    data: undefined,
+    columns: undefined,
+    error: null,
+    loading: false,
+  });
+
+  useEffect(() => {
+    if (!queryAdapter || !query) {
+      setQueryState({
+        data: undefined,
+        columns: undefined,
+        error: null,
+        loading: false,
+      });
+      return;
+    }
+
+    let isCancelled = false;
+
+    setQueryState({
+      data: undefined,
+      columns: undefined,
+      error: null,
+      loading: true,
+    });
+
+    void queryAdapter
+      .execute(query)
+      .then((result) => {
+        if (isCancelled) {
+          return;
+        }
+
+        const nextState = structuredAlertRule
+          ? mapStructuredAlertRuleResult(widgetDef, result, structuredAlertRule)
+          : mapQueryResultToState(result);
+
+        setQueryState({
+          ...nextState,
+          error: null,
+          loading: false,
+        });
+      })
+      .catch((error: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setQueryState({
+          data: undefined,
+          columns: undefined,
+          error: error instanceof Error ? error : new Error(String(error)),
+          loading: false,
+        });
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [queryAdapter, querySignature, structuredAlertRule, widgetDef]);
+
+  return createElement(widgetComponent, {
+    ...widgetProps,
+    data: queryState.data,
+    columns: queryState.columns,
+    error: queryState.error,
+    loading: queryState.loading,
+  });
+}
+
+const DIRECT_QUERY_OPERATORS = new Set<QueryFilterOperator>([
+  'eq',
+  'neq',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'in',
+  'not_in',
+  'like',
+  'not_like',
+  'is_null',
+  'is_not_null',
+  'between',
+]);
+
+const VALID_AGGREGATIONS = new Set<AggregationType>([
+  'sum',
+  'avg',
+  'count',
+  'count_distinct',
+  'min',
+  'max',
+  'none',
+]);
+
+function buildWidgetQuery(
+  widgetDef: WidgetDefinition,
+  filters: FilterDefinition[] | undefined,
+  activeFilters: FilterValue[] | undefined,
+  structuredAlertRule?: StructuredAlertRuleDefinition | null,
+): LogicalQuery | null {
+  if (structuredAlertRule) {
+    const datasetId = resolveStructuredAlertDatasetId(widgetDef, structuredAlertRule);
+    if (!datasetId) {
+      return null;
+    }
+
+    const compiledFilters = compileActiveFiltersForQuery(datasetId, filters, activeFilters);
+
+    return {
+      datasetId,
+      fields: [
+        {
+          fieldId: structuredAlertRule.metricFieldRef,
+          aggregation: structuredAlertRule.aggregation,
+        },
+      ],
+      ...(compiledFilters.length > 0 ? { filters: compiledFilters } : {}),
+    };
+  }
+
+  const dataBinding = widgetDef.dataBinding;
+  if (!dataBinding?.datasetRef || !dataBinding.fields || dataBinding.fields.length === 0) {
+    return null;
+  }
+
+  const fields = dataBinding.fields.map((field) => {
+    const queryField: LogicalQuery['fields'][number] = {
+      fieldId: field.fieldRef,
+    };
+
+    const aggregation = normalizeAggregation(field.aggregation);
+    if (aggregation) {
+      queryField.aggregation = aggregation;
+    }
+
+    return queryField;
+  });
+
+  const compiledFilters = compileActiveFiltersForQuery(
+    dataBinding.datasetRef,
+    filters,
+    activeFilters,
+  );
+
+  return {
+    datasetId: dataBinding.datasetRef,
+    fields,
+    ...(compiledFilters.length > 0 ? { filters: compiledFilters } : {}),
+  };
+}
+
+function parseStructuredAlertRule(
+  widgetDef: WidgetDefinition,
+): StructuredAlertRuleDefinition | null {
+  const parsed = structuredAlertRuleSchema.safeParse(widgetDef.config.alertRule);
+  if (!parsed.success) {
+    return null;
+  }
+
+  return parsed.data;
+}
+
+function resolveStructuredAlertDatasetId(
+  widgetDef: WidgetDefinition,
+  structuredAlertRule: StructuredAlertRuleDefinition,
+): string | undefined {
+  if (structuredAlertRule.datasetRef) {
+    return structuredAlertRule.datasetRef;
+  }
+
+  if (widgetDef.dataBinding?.datasetRef) {
+    return widgetDef.dataBinding.datasetRef;
+  }
+
+  return typeof widgetDef.config.datasetRef === 'string' ? widgetDef.config.datasetRef : undefined;
+}
+
+function mapQueryResultToState(result: QueryResult): Pick<QueryState, 'data' | 'columns'> {
+  return {
+    data: result.rows,
+    columns: result.columns.map((column) => ({
+      fieldId: column.fieldId,
+      label: column.label,
+      dataType: column.dataType,
+    })),
+  };
+}
+
+function mapStructuredAlertRuleResult(
+  widgetDef: WidgetDefinition,
+  result: QueryResult,
+  structuredAlertRule: StructuredAlertRuleDefinition,
+): Pick<QueryState, 'data' | 'columns'> {
+  const mergedConfig = resolveDataBindingConfig(widgetDef);
+  const titleField =
+    typeof mergedConfig.titleField === 'string' ? mergedConfig.titleField : 'alert_title';
+  const messageField =
+    typeof mergedConfig.messageField === 'string' ? mergedConfig.messageField : 'alert_message';
+  const severityField =
+    typeof mergedConfig.severityField === 'string' ? mergedConfig.severityField : 'severity';
+
+  const columns: NonNullable<WidgetProps['columns']> = [
+    { fieldId: titleField, label: 'Alert Title', dataType: 'string' },
+    { fieldId: messageField, label: 'Alert Message', dataType: 'string' },
+    { fieldId: severityField, label: 'Severity', dataType: 'string' },
+  ];
+
+  const metricValue = resolveStructuredAlertMetricValue(result, structuredAlertRule.metricFieldRef);
+  if (!matchesStructuredAlertRule(metricValue, structuredAlertRule)) {
+    return { data: [], columns };
+  }
+
+  return {
+    data: [
+      {
+        [titleField]: structuredAlertRule.alert.title,
+        [messageField]: structuredAlertRule.alert.message,
+        [severityField]: structuredAlertRule.alert.severity ?? 'info',
+        metric_value: metricValue,
+      },
+    ],
+    columns,
+  };
+}
+
+function resolveStructuredAlertMetricValue(
+  result: QueryResult,
+  metricFieldRef: string,
+): number | null {
+  const firstRow = result.rows[0];
+  if (!firstRow) {
+    return null;
+  }
+
+  const firstColumnFieldId = result.columns[0]?.fieldId;
+  const candidateKeys = [metricFieldRef, firstColumnFieldId].filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  );
+
+  for (const key of candidateKeys) {
+    const value = normalizeNumericValue(firstRow[key]);
+    if (value != null) {
+      return value;
+    }
+  }
+
+  return normalizeNumericValue(Object.values(firstRow)[0]);
+}
+
+function matchesStructuredAlertRule(
+  metricValue: number | null,
+  structuredAlertRule: StructuredAlertRuleDefinition,
+): boolean {
+  if (metricValue == null) {
+    return false;
+  }
+
+  switch (structuredAlertRule.operator) {
+    case 'eq':
+      return metricValue === structuredAlertRule.threshold;
+    case 'neq':
+      return metricValue !== structuredAlertRule.threshold;
+    case 'gt':
+      return metricValue > structuredAlertRule.threshold;
+    case 'gte':
+      return metricValue >= structuredAlertRule.threshold;
+    case 'lt':
+      return metricValue < structuredAlertRule.threshold;
+    case 'lte':
+      return metricValue <= structuredAlertRule.threshold;
+  }
+}
+
+function normalizeNumericValue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function compileActiveFiltersForQuery(
+  datasetId: string,
+  filters: FilterDefinition[] | undefined,
+  activeFilters: FilterValue[] | undefined,
+): NonNullable<LogicalQuery['filters']> {
+  if (!filters || !activeFilters || activeFilters.length === 0) {
+    return [];
+  }
+
+  const filterDefinitions = new Map(filters.map((filter) => [filter.id, filter]));
+
+  return activeFilters.flatMap((activeFilter) => {
+    const definition = filterDefinitions.get(activeFilter.filterId);
+    if (!definition || definition.datasetRef !== datasetId) {
+      return [];
+    }
+
+    const compiledFilter = compileFilterValue(definition, activeFilter.value);
+    return compiledFilter ? [compiledFilter] : [];
+  });
+}
+
+function compileFilterValue(
+  definition: FilterDefinition,
+  value: unknown,
+): NonNullable<LogicalQuery['filters']>[number] | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    const values = value.filter((entry) => entry != null && entry !== '');
+    if (values.length === 0) {
+      return null;
+    }
+
+    return {
+      fieldId: definition.fieldRef,
+      operator: definition.operator === 'not_in' ? 'not_in' : 'in',
+      value: values,
+    };
+  }
+
+  if (isBetweenValue(value)) {
+    const lower = value.start ?? value.min;
+    const upper = value.end ?? value.max;
+
+    if (lower == null && upper == null) {
+      return null;
+    }
+
+    return {
+      fieldId: definition.fieldRef,
+      operator: 'between',
+      value: [lower, upper],
+    };
+  }
+
+  if (typeof value === 'string' && value.length === 0) {
+    return null;
+  }
+
+  const operator = normalizeFilterOperator(definition.operator);
+  if (!operator) {
+    return null;
+  }
+
+  return {
+    fieldId: definition.fieldRef,
+    operator,
+    value,
+  };
+}
+
+function normalizeFilterOperator(operator: string): QueryFilterOperator | null {
+  if (DIRECT_QUERY_OPERATORS.has(operator as QueryFilterOperator)) {
+    return operator as QueryFilterOperator;
+  }
+
+  switch (operator) {
+    case 'equals':
+      return 'eq';
+    case 'contains':
+      return 'like';
+    default:
+      return null;
+  }
+}
+
+function normalizeAggregation(value: string | undefined): AggregationType | undefined {
+  if (!value || !VALID_AGGREGATIONS.has(value as AggregationType) || value === 'none') {
+    return undefined;
+  }
+
+  return value as AggregationType;
+}
+
+function isBetweenValue(
+  value: unknown,
+): value is { start?: string; end?: string; min?: number; max?: number } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    ('start' in value || 'end' in value || 'min' in value || 'max' in value)
   );
 }
 
@@ -458,6 +925,7 @@ function renderTabs(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -474,6 +942,7 @@ function renderTabs(
     widgets,
     registry,
     theme,
+    queryAdapter,
     filters,
     datasets,
     filterOptions,
@@ -494,6 +963,7 @@ function TabsContainer({
   widgets,
   registry,
   theme,
+  queryAdapter,
   filters,
   datasets,
   filterOptions,
@@ -508,6 +978,7 @@ function TabsContainer({
   widgets: WidgetDefinition[];
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
+  queryAdapter?: QueryAdapter;
   filters?: FilterDefinition[];
   datasets?: DatasetDefinition[];
   filterOptions?: Record<string, string[]>;
@@ -572,6 +1043,7 @@ function TabsContainer({
             widgets,
             registry,
             theme,
+            queryAdapter,
             filters,
             datasets,
             filterOptions,
@@ -592,6 +1064,7 @@ function renderTab(
   widgets: WidgetDefinition[],
   registry: WidgetRegistry,
   theme: Record<string, unknown> | undefined,
+  queryAdapter: QueryAdapter | undefined,
   filters: FilterDefinition[] | undefined,
   datasets: DatasetDefinition[] | undefined,
   filterOptions: Record<string, string[]> | undefined,
@@ -611,6 +1084,7 @@ function renderTab(
       widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets,
       filterOptions,
@@ -629,6 +1103,7 @@ function renderSpacer(
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
+  _queryAdapter: QueryAdapter | undefined,
   _filters: FilterDefinition[] | undefined,
   _datasets: DatasetDefinition[] | undefined,
   _filterOptions: Record<string, string[]> | undefined,
@@ -655,6 +1130,7 @@ function renderHeader(
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
+  _queryAdapter: QueryAdapter | undefined,
   _filters: FilterDefinition[] | undefined,
   _datasets: DatasetDefinition[] | undefined,
   _filterOptions: Record<string, string[]> | undefined,
@@ -682,6 +1158,7 @@ function renderMarkdown(
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
+  _queryAdapter: QueryAdapter | undefined,
   _filters: FilterDefinition[] | undefined,
   _datasets: DatasetDefinition[] | undefined,
   _filterOptions: Record<string, string[]> | undefined,
@@ -710,6 +1187,7 @@ function renderDivider(
   _widgets: WidgetDefinition[],
   _registry: WidgetRegistry,
   _theme: Record<string, unknown> | undefined,
+  _queryAdapter: QueryAdapter | undefined,
   _filters: FilterDefinition[] | undefined,
   _datasets: DatasetDefinition[] | undefined,
   _filterOptions: Record<string, string[]> | undefined,
