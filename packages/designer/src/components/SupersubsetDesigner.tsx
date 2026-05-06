@@ -33,7 +33,7 @@ const SIDEBAR_CSS = `\
 [data-supersubset-designer-root] [class*="PuckHeader-inner"]{grid-template-columns:auto auto 1fr}\
 [data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0}\
 }\
-@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}}\
+@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}[data-testid="designer-header-controls"]{gap:8px!important;row-gap:6px!important}[data-testid="designer-page-controls"]{flex:1 0 100%!important}[data-supersubset-header-metadata="true"]{flex:0 1 auto!important;flex-wrap:nowrap!important;align-items:center!important}[data-supersubset-header-metadata="true"] label{gap:0!important}[data-supersubset-header-metadata="true"] label>span{display:none!important}[data-testid="designer-page-title-input"]{width:150px!important}[data-testid="designer-dashboard-title-input"]{width:180px!important}[data-supersubset-built-in-actions="true"]{flex:0 0 auto!important}[data-testid="designer-host-actions"]{flex:1 1 220px!important;justify-content:flex-start!important;min-width:0!important;overflow:hidden!important}}\
 `;
 
 let sidebarStyleInjected = false;
@@ -565,6 +565,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         const metadataControls = React.createElement(
           'div',
           {
+            'data-supersubset-header-metadata': 'true',
             style: {
               display: 'flex',
               gap: 12,
@@ -649,6 +650,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         const builtInActions = React.createElement(
           'div',
           {
+            'data-supersubset-built-in-actions': 'true',
             style: {
               display: 'flex',
               alignItems: 'center',
