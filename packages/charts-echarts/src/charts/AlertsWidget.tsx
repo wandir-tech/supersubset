@@ -48,12 +48,24 @@ const FALLBACK_SEVERITY_STYLES: Record<
   },
 };
 
-export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetProps) {
+export function AlertsWidget({
+  widgetId,
+  config,
+  data,
+  theme,
+  title,
+  loading,
+  error,
+}: WidgetProps) {
   const rows = Array.isArray(data) ? data : [];
   const titleField = typeof config.titleField === 'string' ? config.titleField : 'alert_title';
-  const messageField = typeof config.messageField === 'string' ? config.messageField : 'alert_message';
-  const severityField = typeof config.severityField === 'string' ? config.severityField : 'severity';
-  const timestampField = typeof config.timestampField === 'string' ? config.timestampField : 'detected_at';
+  const messageField =
+    typeof config.messageField === 'string' ? config.messageField : 'alert_message';
+  const severityField =
+    typeof config.severityField === 'string' ? config.severityField : 'severity';
+  const timestampField =
+    typeof config.timestampField === 'string' ? config.timestampField : 'detected_at';
+  const datasetRef = typeof config.datasetRef === 'string' ? config.datasetRef : undefined;
   const layout = getLayout(config.layout);
   const maxItems = toPositiveInteger(config.maxItems);
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
@@ -61,6 +73,12 @@ export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetPro
   const defaultSeverity = isAlertSeverity(config.defaultSeverity) ? config.defaultSeverity : 'info';
   const visibleRows = maxItems ? rows.slice(0, maxItems) : rows;
   const borderColor = getThemeColor(theme, 'border', '#d9d9d9');
+  const isDataUnavailable = datasetRef !== undefined && data === undefined && !loading && !error;
+  const statusLabel = loading
+    ? 'Loading'
+    : error || isDataUnavailable
+      ? 'Unavailable'
+      : `${visibleRows.length} active`;
 
   if (visibleRows.length === 0 && emptyState === 'hide') {
     return null;
@@ -72,17 +90,39 @@ export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetPro
       data-testid={`alerts-widget-${widgetId}`}
       style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}
+      >
         <strong style={{ color: 'var(--ss-color-text, #0f172a)', fontSize: 16 }}>
           {title ?? 'Alerts'}
         </strong>
         <span style={{ color: 'var(--ss-color-text, #64748b)', fontSize: 12, opacity: 0.7 }}>
-          {visibleRows.length}
-          {' active'}
+          {statusLabel}
         </span>
       </div>
 
-      {visibleRows.length === 0 ? (
+      {loading ? (
+        <AlertStateCard
+          dataTestId={`alerts-widget-loading-${widgetId}`}
+          borderColor={borderColor}
+          title="Loading alert data"
+          message="Waiting for the host query to return the latest alerts."
+        />
+      ) : error ? (
+        <AlertStateCard
+          dataTestId={`alerts-widget-error-${widgetId}`}
+          borderColor={borderColor}
+          title="Alert data failed to load"
+          message={error.message || 'The host query returned an error.'}
+        />
+      ) : isDataUnavailable ? (
+        <AlertStateCard
+          dataTestId={`alerts-widget-unavailable-${widgetId}`}
+          borderColor={borderColor}
+          title="Alert data unavailable"
+          message="This dashboard view is not connected to a host query adapter for alert data."
+        />
+      ) : visibleRows.length === 0 ? (
         <div
           data-testid={`alerts-widget-empty-${widgetId}`}
           style={{
@@ -128,7 +168,14 @@ export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetPro
                   gap: 8,
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    alignItems: 'flex-start',
+                  }}
+                >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <strong style={{ color: 'var(--ss-color-text, #0f172a)', fontSize: 14 }}>
                       {String(alertTitle)}
@@ -162,7 +209,9 @@ export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetPro
                   </span>
                 </div>
                 {showTimestamp && timestamp ? (
-                  <span style={{ color: 'var(--ss-color-text, #64748b)', fontSize: 11, opacity: 0.7 }}>
+                  <span
+                    style={{ color: 'var(--ss-color-text, #64748b)', fontSize: 11, opacity: 0.7 }}
+                  >
                     {timestamp}
                   </span>
                 ) : null}
@@ -171,6 +220,37 @@ export function AlertsWidget({ widgetId, config, data, theme, title }: WidgetPro
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+function AlertStateCard({
+  dataTestId,
+  borderColor,
+  title,
+  message,
+}: {
+  dataTestId: string;
+  borderColor: string;
+  title: string;
+  message: string;
+}) {
+  return (
+    <div
+      data-testid={dataTestId}
+      style={{
+        border: `1px dashed ${borderColor}`,
+        borderRadius: 10,
+        padding: 16,
+        color: 'var(--ss-color-text, #475569)',
+        background: 'var(--ss-color-surface, #ffffff)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+    >
+      <strong style={{ color: 'var(--ss-color-text, #0f172a)', fontSize: 14 }}>{title}</strong>
+      <span style={{ fontSize: 13, lineHeight: 1.5, opacity: 0.85 }}>{message}</span>
     </div>
   );
 }
@@ -203,7 +283,7 @@ function resolveSeverityStyle(theme: Record<string, unknown> | undefined, severi
 
   return {
     accent,
-    background: withAlpha(accent, 0.10) ?? fallback.background,
+    background: withAlpha(accent, 0.1) ?? fallback.background,
     border: withAlpha(accent, 0.24) ?? fallback.border,
   };
 }
@@ -235,9 +315,13 @@ function withAlpha(color: string, alpha: number): string | null {
 
 function hexToRgb(color: string): { r: number; g: number; b: number } | null {
   const normalized = color.trim().replace('#', '');
-  const hex = normalized.length === 3
-    ? normalized.split('').map((part) => `${part}${part}`).join('')
-    : normalized;
+  const hex =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((part) => `${part}${part}`)
+          .join('')
+      : normalized;
 
   if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
     return null;

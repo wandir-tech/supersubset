@@ -176,6 +176,94 @@ describe('puckToCanonical', () => {
     expect(widget.config.defaultSeverity).toBe('warning');
   });
 
+  it('nests structured alert-rule fields under config.alertRule', () => {
+    const puckData: Data = {
+      root: { props: { title: 'Alerts Test' } },
+      content: [
+        {
+          type: 'AlertsWidgetBlock',
+          props: {
+            id: 'alerts-1',
+            title: 'Revenue Watch',
+            datasetRef: 'sales',
+            alertMode: 'structured',
+            ruleMetricField: 'revenue',
+            ruleAggregation: 'sum',
+            ruleOperator: 'gte',
+            ruleThreshold: 1000,
+            ruleTitle: 'Revenue threshold breached',
+            ruleMessage: 'Revenue crossed the configured threshold.',
+            ruleSeverity: 'warning',
+          },
+        },
+      ],
+    };
+
+    const result = puckToCanonical(puckData);
+    const widget = result.pages[0].widgets[0];
+
+    expect(widget.type).toBe('alerts');
+    expect(widget.dataBinding?.datasetRef).toBe('sales');
+    expect(widget.config.alertRule).toEqual({
+      mode: 'structured',
+      metricFieldRef: 'revenue',
+      aggregation: 'sum',
+      operator: 'gte',
+      threshold: 1000,
+      alert: {
+        title: 'Revenue threshold breached',
+        message: 'Revenue crossed the configured threshold.',
+        severity: 'warning',
+      },
+    });
+  });
+
+  it('preserves structured mode and partial rule fields before the rule is complete', () => {
+    const puckData: Data = {
+      root: { props: { title: 'Alerts Test' } },
+      content: [
+        {
+          type: 'AlertsWidgetBlock',
+          props: {
+            id: 'alerts-1',
+            title: 'Revenue Watch',
+            datasetRef: 'sales',
+            alertMode: 'structured',
+            ruleOperator: 'gte',
+            ruleThreshold: 1000,
+            ruleTitle: 'Revenue threshold breached',
+            ruleMessage: 'Revenue crossed the configured threshold.',
+          },
+        },
+      ],
+    };
+
+    const result = puckToCanonical(puckData);
+    const widget = result.pages[0].widgets[0];
+
+    expect(widget.config.alertMode).toBe('structured');
+    expect(widget.config.alertRule).toBeUndefined();
+    expect(widget.config.alertRuleDraft).toEqual({
+      mode: 'structured',
+      operator: 'gte',
+      threshold: 1000,
+      alert: {
+        title: 'Revenue threshold breached',
+        message: 'Revenue crossed the configured threshold.',
+      },
+    });
+
+    const restored = canonicalToPuck(result);
+    const alerts = restored.content![0] as { type: string; props: Record<string, unknown> };
+
+    expect(alerts.props.alertMode).toBe('structured');
+    expect(alerts.props.ruleMetricField).toBeUndefined();
+    expect(alerts.props.ruleOperator).toBe('gte');
+    expect(alerts.props.ruleThreshold).toBe(1000);
+    expect(alerts.props.ruleTitle).toBe('Revenue threshold breached');
+    expect(alerts.props.ruleMessage).toBe('Revenue crossed the configured threshold.');
+  });
+
   it('respects dashboardId option', () => {
     const puckData: Data = { root: { props: {} }, content: [] };
     const result = puckToCanonical(puckData, { dashboardId: 'my-id' });
@@ -577,6 +665,76 @@ describe('canonicalToPuck', () => {
     )[0];
     expect(kpi.type).toBe('KPICard');
     expect(kpi.props.valueField).toBe('orders');
+  });
+
+  it('converts structured alert rules back to flat Puck props', () => {
+    const dashboard: DashboardDefinition = {
+      schemaVersion: '0.2.0',
+      id: 'test',
+      title: 'Structured Alerts',
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          layout: {
+            root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['alerts-layout'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'alerts-layout': {
+              id: 'alerts-layout',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'alerts-1', width: 12 },
+            },
+          },
+          rootNodeId: 'root',
+          widgets: [
+            {
+              id: 'alerts-1',
+              type: 'alerts',
+              title: 'Revenue Watch',
+              config: {
+                alertRule: {
+                  mode: 'structured',
+                  metricFieldRef: 'revenue',
+                  aggregation: 'sum',
+                  operator: 'gte',
+                  threshold: 1000,
+                  alert: {
+                    title: 'Revenue threshold breached',
+                    message: 'Revenue crossed the configured threshold.',
+                    severity: 'warning',
+                  },
+                },
+              },
+              dataBinding: {
+                datasetRef: 'sales',
+                fields: [],
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = canonicalToPuck(dashboard);
+    const alerts = result.content![0] as { type: string; props: Record<string, unknown> };
+
+    expect(alerts.type).toBe('AlertsWidgetBlock');
+    expect(alerts.props.alertMode).toBe('structured');
+    expect(alerts.props.ruleMetricField).toBe('revenue');
+    expect(alerts.props.ruleAggregation).toBe('sum');
+    expect(alerts.props.ruleOperator).toBe('gte');
+    expect(alerts.props.ruleThreshold).toBe(1000);
+    expect(alerts.props.ruleTitle).toBe('Revenue threshold breached');
+    expect(alerts.props.ruleMessage).toBe('Revenue crossed the configured threshold.');
+    expect(alerts.props.ruleSeverity).toBe('warning');
   });
 
   it('converts header layout nodes back to Puck content', () => {

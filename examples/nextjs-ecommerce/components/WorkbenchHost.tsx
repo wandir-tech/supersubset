@@ -1,22 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CodeViewPanel,
   ImportExportPanel,
   SupersubsetDesigner,
   type FetchPreviewData,
 } from '@supersubset/designer';
-import {
-  SupersubsetRenderer,
-  createWidgetRegistry,
-  type FilterState,
-  type WidgetProps,
-} from '@supersubset/runtime';
+import { SupersubsetRenderer, createWidgetRegistry, type FilterState } from '@supersubset/runtime';
+import type { QueryAdapter, NormalizedDataset } from '@supersubset/data-model';
+import { AlertsWidget } from '@supersubset/charts-echarts';
 import { registerEssentialWidgets } from '@supersubset/charts-echarts/essentials';
 import { resolveTheme, themeToCssVariables } from '@supersubset/theme';
 import type { DashboardDefinition, InlineThemeDefinition } from '@supersubset/schema';
-import type { NormalizedDataset } from '@supersubset/data-model';
 import {
   buildWorkbenchPreviewQuery,
   clearStoredWorkbenchToken,
@@ -28,8 +24,6 @@ import {
   persistWorkbenchToken,
   readStoredWorkbenchDashboard,
   readStoredWorkbenchToken,
-  runWorkbenchViewerQueries,
-  type QueryBundle,
 } from '../lib/workbench-client';
 import { WORKBENCH_LOGIN_EMAIL, WORKBENCH_LOGIN_PASSWORD } from '../lib/workbench-auth';
 import { workbenchStarterDashboard } from '../lib/workbench-dashboard';
@@ -46,20 +40,19 @@ export function WorkbenchHost() {
   const [mode, setMode] = useState<'designer' | 'viewer'>('designer');
   const [showCode, setShowCode] = useState(false);
   const [designerRevision, setDesignerRevision] = useState(0);
-  const [bundle, setBundle] = useState<QueryBundle | null>(null);
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged-out' | 'ready'>('checking');
   const [viewerStatus, setViewerStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState('');
-  const bundleRef = useRef(bundle);
-  bundleRef.current = bundle;
+  const [queryLog, setQueryLog] = useState<string[]>([]);
+  const queryCycleRef = useRef({ generation: 0, pending: 0, failed: false });
 
   function resetSession(nextError = '') {
     clearStoredWorkbenchToken();
     setToken('');
     setDatasets([]);
-    setBundle(null);
     setFilterState({ values: {} });
+    setQueryLog([]);
     setAuthStatus('logged-out');
     setViewerStatus('idle');
     setError(nextError);
@@ -121,72 +114,78 @@ export function WorkbenchHost() {
     if (!token || datasets.length === 0) {
       return;
     }
-
-    let active = true;
-    setViewerStatus('loading');
-    runWorkbenchViewerQueries({
-      dashboard: publishedDashboard,
-      datasets,
-      token,
-      filterValues: filterState.values,
-    })
-      .then((nextBundle) => {
-        if (!active) return;
-        setBundle(nextBundle);
-        setViewerStatus('ready');
-      })
-      .catch((nextError: unknown) => {
-        if (!active) return;
-        if (isWorkbenchAuthorizationError(nextError)) {
-          resetSession(
-            nextError instanceof Error
-              ? nextError.message
-              : 'Your demo session expired. Log in again.',
-          );
-          return;
-        }
-
-        setViewerStatus('error');
-        setError(nextError instanceof Error ? nextError.message : 'Failed to run viewer queries.');
-      });
-
-    return () => {
-      active = false;
-    };
   }, [datasets, filterState.values, publishedDashboard, token]);
+
+  useLayoutEffect(() => {
+    if (!token || datasets.length === 0 || mode !== 'viewer') {
+      if (mode !== 'viewer') {
+        setViewerStatus('idle');
+      }
+      return;
+    }
+
+    queryCycleRef.current = {
+      generation: queryCycleRef.current.generation + 1,
+      pending: 0,
+      failed: false,
+    };
+    setQueryLog([]);
+    setViewerStatus('loading');
+    setError('');
+  }, [datasets.length, filterState.values, mode, publishedDashboard, token]);
 
   const registry = useMemo(() => {
     const registryInstance = createWidgetRegistry();
     registerEssentialWidgets(registryInstance);
-
-    const originalGet = registryInstance.get.bind(registryInstance);
-    const wrappedCache = new Map<string, (props: WidgetProps) => React.JSX.Element>();
-
-    registryInstance.get = (type: string) => {
-      const cached = wrappedCache.get(type);
-      if (cached) return cached;
-
-      const Original = originalGet(type);
-      if (!Original) return undefined;
-
-      const Wrapped = (props: WidgetProps) => {
-        const fixture = bundleRef.current?.widgetData[props.widgetId];
-        return (
-          <Original
-            {...props}
-            data={fixture?.data ?? props.data}
-            columns={fixture?.columns ?? props.columns}
-          />
-        );
-      };
-
-      Wrapped.displayName = `WorkbenchQuery(${type})`;
-      wrappedCache.set(type, Wrapped);
-      return Wrapped;
-    };
+    registryInstance.register('alerts', AlertsWidget);
 
     return registryInstance;
   }, []);
+
+  const queryAdapter = useMemo<QueryAdapter | undefined>(() => {
+    if (!token || mode !== 'viewer') {
+      return undefined;
+    }
+
+    return {
+      name: 'nextjs-workbench-host',
+      execute: async (query) => {
+        const generation = queryCycleRef.current.generation;
+        queryCycleRef.current.pending += 1;
+        setQueryLog((current) => [...current, JSON.stringify(query, null, 2)]);
+
+        try {
+          return await executeWorkbenchLogicalQuery(token, query);
+        } catch (nextError) {
+          if (generation === queryCycleRef.current.generation) {
+            queryCycleRef.current.failed = true;
+
+            if (isWorkbenchAuthorizationError(nextError)) {
+              resetSession(
+                nextError instanceof Error
+                  ? nextError.message
+                  : 'Your demo session expired. Log in again.',
+              );
+            } else {
+              setViewerStatus('error');
+              setError(
+                nextError instanceof Error ? nextError.message : 'Failed to run viewer queries.',
+              );
+            }
+          }
+
+          throw nextError;
+        } finally {
+          if (generation === queryCycleRef.current.generation) {
+            queryCycleRef.current.pending = Math.max(0, queryCycleRef.current.pending - 1);
+            if (queryCycleRef.current.pending === 0 && !queryCycleRef.current.failed) {
+              setViewerStatus('ready');
+            }
+          }
+        }
+      },
+    };
+  }, [mode, token]);
 
   const inlineTheme =
     publishedDashboard.theme?.type === 'inline'
@@ -457,8 +456,8 @@ export function WorkbenchHost() {
           />
           <StatusCard
             label="Runtime"
-            value={viewerStatus === 'loading' ? 'Refreshing...' : 'Connected'}
-            detail="Published dashboard re-queries on filter changes"
+            value={viewerStatus === 'loading' ? 'Refreshing...' : 'Query adapter'}
+            detail="Published widgets execute through the runtime queryAdapter seam"
           />
         </div>
       </section>
@@ -514,19 +513,18 @@ export function WorkbenchHost() {
             />
           ) : (
             <div style={{ minHeight: 720, padding: 20, background: '#f8fbff' }}>
-              {viewerStatus === 'loading' || !bundle ? (
+              {viewerStatus === 'loading' ? (
                 <div style={placeholderPanelStyle}>Running secured viewer queries…</div>
               ) : null}
-              {bundle ? (
-                <SupersubsetRenderer
-                  definition={publishedDashboard}
-                  registry={registry}
-                  theme={resolvedTheme as unknown as Record<string, unknown>}
-                  cssVariables={cssVariables}
-                  filterOptions={bundle.filterOptions ?? workbenchFilterOptions}
-                  onFilterChange={setFilterState}
-                />
-              ) : null}
+              <SupersubsetRenderer
+                definition={publishedDashboard}
+                registry={registry}
+                theme={resolvedTheme as unknown as Record<string, unknown>}
+                cssVariables={cssVariables}
+                queryAdapter={queryAdapter}
+                filterOptions={workbenchFilterOptions}
+                onFilterChange={setFilterState}
+              />
             </div>
           )}
           {showCode ? (
@@ -565,7 +563,7 @@ export function WorkbenchHost() {
               color: '#16324f',
             }}
           >
-            {bundle?.queryLog.join('\n\n') ?? 'Viewer queries will appear here after publish.'}
+            {queryLog.join('\n\n') || 'Viewer queries will appear here after publish.'}
           </pre>
         </aside>
       </section>

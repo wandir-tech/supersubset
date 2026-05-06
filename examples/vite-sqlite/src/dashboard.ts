@@ -1,4 +1,5 @@
 import type { DashboardDefinition } from '@supersubset/schema';
+import { SQLITE_DATASET_ID, sqliteDataModel } from './sqlite-model';
 
 export const defaultDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
@@ -6,13 +7,14 @@ export const defaultDashboard: DashboardDefinition = {
   title: 'SQLite Analytics Workbench',
   description:
     'A Vite host app that re-queries an in-browser SQLite database based on Supersubset filter state.',
+  dataModel: sqliteDataModel,
   filters: [
     {
       id: 'filter-region',
       title: 'Region',
       type: 'select',
       fieldRef: 'region',
-      datasetRef: 'sqlite-orders',
+      datasetRef: SQLITE_DATASET_ID,
       operator: 'equals',
       scope: { type: 'global' },
     },
@@ -21,7 +23,7 @@ export const defaultDashboard: DashboardDefinition = {
       title: 'Category',
       type: 'select',
       fieldRef: 'category',
-      datasetRef: 'sqlite-orders',
+      datasetRef: SQLITE_DATASET_ID,
       operator: 'equals',
       scope: { type: 'global' },
     },
@@ -30,7 +32,7 @@ export const defaultDashboard: DashboardDefinition = {
       title: 'Order Date',
       type: 'date',
       fieldRef: 'ordered_at',
-      datasetRef: 'sqlite-orders',
+      datasetRef: SQLITE_DATASET_ID,
       operator: 'between',
       scope: { type: 'global' },
     },
@@ -160,7 +162,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'kpi-card',
           title: 'Revenue',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
+            datasetRef: SQLITE_DATASET_ID,
             fields: [
               { role: 'value', fieldRef: 'revenue' },
               { role: 'comparison', fieldRef: 'previousRevenue' },
@@ -178,7 +180,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'kpi-card',
           title: 'Orders',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
+            datasetRef: SQLITE_DATASET_ID,
             fields: [
               { role: 'value', fieldRef: 'orders' },
               { role: 'comparison', fieldRef: 'previousOrders' },
@@ -191,7 +193,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'kpi-card',
           title: 'Average Order Value',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
+            datasetRef: SQLITE_DATASET_ID,
             fields: [
               { role: 'value', fieldRef: 'aov' },
               { role: 'comparison', fieldRef: 'previousAov' },
@@ -209,7 +211,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'line-chart',
           title: 'Monthly Revenue + Orders',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
+            datasetRef: SQLITE_DATASET_ID,
             fields: [
               { role: 'x-axis', fieldRef: 'month' },
               { role: 'y-axis', fieldRef: 'revenue' },
@@ -226,7 +228,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'bar-chart',
           title: 'Revenue by Category',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
+            datasetRef: SQLITE_DATASET_ID,
             fields: [
               { role: 'x-axis', fieldRef: 'category' },
               { role: 'y-axis', fieldRef: 'revenue' },
@@ -241,8 +243,13 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'table',
           title: 'Top Products',
           dataBinding: {
-            datasetRef: 'sqlite-orders',
-            fields: [],
+            datasetRef: SQLITE_DATASET_ID,
+            fields: [
+              { role: 'name', fieldRef: 'product_name' },
+              { role: 'value', fieldRef: 'units' },
+              { role: 'comparison', fieldRef: 'revenue' },
+              { role: 'category', fieldRef: 'region' },
+            ],
           },
           config: { columns: ['product_name', 'units', 'revenue', 'region'] },
         },

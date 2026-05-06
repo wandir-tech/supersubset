@@ -15,6 +15,28 @@ export interface ShipmentPerformanceRow {
   load_factor: number;
 }
 
+export function buildShipmentAlertTitle(row: ShipmentPerformanceRow): string {
+  return `${row.region}: ${row.carrier} on ${row.lane}`;
+}
+
+export function buildShipmentAlertMessage(row: ShipmentPerformanceRow): string {
+  return `${row.delayed_shipments} delayed shipments, avg ${row.average_delay_hours.toFixed(1)}h from ${row.hub}`;
+}
+
+export function buildShipmentAlertSeverity(
+  row: ShipmentPerformanceRow,
+): 'info' | 'warning' | 'danger' {
+  if (row.delayed_shipments >= 12 || row.average_delay_hours >= 4) {
+    return 'danger';
+  }
+
+  if (row.delayed_shipments >= 9 || row.average_delay_hours >= 2.5) {
+    return 'warning';
+  }
+
+  return 'info';
+}
+
 export const shipmentPerformanceRows: ShipmentPerformanceRow[] = [
   {
     id: 1,

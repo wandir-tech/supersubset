@@ -46,6 +46,32 @@ const aggregation = {
   ],
 };
 
+const structuredAlertRuleAggregation = {
+  type: 'select' as const,
+  label: 'Rule Aggregation',
+  options: [
+    { label: 'Sum', value: 'sum' },
+    { label: 'Average', value: 'avg' },
+    { label: 'Count', value: 'count' },
+    { label: 'Count Distinct', value: 'count_distinct' },
+    { label: 'Min', value: 'min' },
+    { label: 'Max', value: 'max' },
+  ],
+};
+
+const structuredAlertRuleOperator = {
+  type: 'select' as const,
+  label: 'Rule Operator',
+  options: [
+    { label: 'Greater Than or Equal', value: 'gte' },
+    { label: 'Greater Than', value: 'gt' },
+    { label: 'Less Than or Equal', value: 'lte' },
+    { label: 'Less Than', value: 'lt' },
+    { label: 'Equal', value: 'eq' },
+    { label: 'Not Equal', value: 'neq' },
+  ],
+};
+
 // ─── Shared Visual Fields (Superset parity) ──────────────────
 
 const colorSchemeField = {
@@ -87,7 +113,10 @@ const legendPositionField = {
 const showValuesField = {
   type: 'radio' as const,
   label: 'Show Values',
-  options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }],
+  options: [
+    { label: 'Yes', value: 'true' },
+    { label: 'No', value: 'false' },
+  ],
 };
 
 const numberFormatField = {
@@ -141,13 +170,19 @@ const yAxisMaxField = {
 const logAxisField = {
   type: 'radio' as const,
   label: 'Log Scale (Y)',
-  options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }],
+  options: [
+    { label: 'Yes', value: 'true' },
+    { label: 'No', value: 'false' },
+  ],
 };
 
 const zoomableField = {
   type: 'radio' as const,
   label: 'Zoomable',
-  options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }],
+  options: [
+    { label: 'Yes', value: 'true' },
+    { label: 'No', value: 'false' },
+  ],
 };
 
 /** Shared visual fields for Cartesian charts (with x/y axes) */
@@ -221,16 +256,41 @@ export const LineChart: ComponentConfig = {
     yAxisField: yAxisFieldRef,
     seriesField: seriesFieldRef,
     aggregation,
-    smooth: { type: 'radio', label: 'Smooth', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    showMarkers: { type: 'radio', label: 'Show Markers', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    smooth: {
+      type: 'radio',
+      label: 'Smooth',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    showMarkers: {
+      type: 'radio',
+      label: 'Show Markers',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     markerSize: { type: 'number' as const, label: 'Marker Size' },
-    step: { type: 'select' as const, label: 'Step Interpolation', options: [
-      { label: 'None', value: '' },
-      { label: 'Start', value: 'start' },
-      { label: 'Middle', value: 'middle' },
-      { label: 'End', value: 'end' },
-    ] },
-    connectNulls: { type: 'radio', label: 'Connect Nulls', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    step: {
+      type: 'select' as const,
+      label: 'Step Interpolation',
+      options: [
+        { label: 'None', value: '' },
+        { label: 'Start', value: 'start' },
+        { label: 'Middle', value: 'middle' },
+        { label: 'End', value: 'end' },
+      ],
+    },
+    connectNulls: {
+      type: 'radio',
+      label: 'Connect Nulls',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {
@@ -262,23 +322,41 @@ export const BarChart: ComponentConfig = {
     orientation: {
       type: 'radio' as const,
       label: 'Orientation',
-      options: [{ label: 'Vertical', value: 'vertical' }, { label: 'Horizontal', value: 'horizontal' }],
+      options: [
+        { label: 'Vertical', value: 'vertical' },
+        { label: 'Horizontal', value: 'horizontal' },
+      ],
     },
-    stacked: { type: 'radio', label: 'Stacked', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    barWidth: { type: 'select' as const, label: 'Bar Width', options: [
-      { label: 'Auto', value: '' },
-      { label: 'Slim', value: '20%' },
-      { label: 'Medium', value: '40%' },
-      { label: 'Wide', value: '60%' },
-      { label: 'Full', value: '80%' },
-    ] },
-    barGap: { type: 'select' as const, label: 'Bar Gap', options: [
-      { label: 'Default', value: '' },
-      { label: 'None', value: '0%' },
-      { label: 'Small', value: '10%' },
-      { label: 'Medium', value: '30%' },
-      { label: 'Large', value: '50%' },
-    ] },
+    stacked: {
+      type: 'radio',
+      label: 'Stacked',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    barWidth: {
+      type: 'select' as const,
+      label: 'Bar Width',
+      options: [
+        { label: 'Auto', value: '' },
+        { label: 'Slim', value: '20%' },
+        { label: 'Medium', value: '40%' },
+        { label: 'Wide', value: '60%' },
+        { label: 'Full', value: '80%' },
+      ],
+    },
+    barGap: {
+      type: 'select' as const,
+      label: 'Bar Gap',
+      options: [
+        { label: 'Default', value: '' },
+        { label: 'None', value: '0%' },
+        { label: 'Small', value: '10%' },
+        { label: 'Medium', value: '30%' },
+        { label: 'Large', value: '50%' },
+      ],
+    },
     borderRadius: { type: 'number' as const, label: 'Corner Radius' },
     barMinHeight: { type: 'number' as const, label: 'Bar Min Height (px)' },
     ...cartesianVisualFields,
@@ -320,12 +398,16 @@ export const PieChart: ComponentConfig = {
     },
     innerRadius: { type: 'number' as const, label: 'Inner Radius (%)' },
     outerRadius: { type: 'number' as const, label: 'Outer Radius (%)' },
-    labelPosition: { type: 'select' as const, label: 'Label Position', options: [
-      { label: 'Outside', value: 'outside' },
-      { label: 'Inside', value: 'inside' },
-      { label: 'Center', value: 'center' },
-      { label: 'None', value: 'none' },
-    ] },
+    labelPosition: {
+      type: 'select' as const,
+      label: 'Label Position',
+      options: [
+        { label: 'Outside', value: 'outside' },
+        { label: 'Inside', value: 'inside' },
+        { label: 'Center', value: 'center' },
+        { label: 'None', value: 'none' },
+      ],
+    },
     padAngle: { type: 'number' as const, label: 'Pad Angle (°)' },
     ...categoricalVisualFields,
   },
@@ -355,13 +437,17 @@ export const ScatterChart: ComponentConfig = {
     sizeField: createFieldRefField('Size Field', ['measure']),
     colorGroupField: createFieldRefField('Color Group Field', ['dimension']),
     symbolSize: { type: 'number' as const, label: 'Symbol Size' },
-    opacity: { type: 'select' as const, label: 'Opacity', options: [
-      { label: '100%', value: '1' },
-      { label: '80%', value: '0.8' },
-      { label: '60%', value: '0.6' },
-      { label: '40%', value: '0.4' },
-      { label: '20%', value: '0.2' },
-    ] },
+    opacity: {
+      type: 'select' as const,
+      label: 'Opacity',
+      options: [
+        { label: '100%', value: '1' },
+        { label: '80%', value: '0.8' },
+        { label: '60%', value: '0.6' },
+        { label: '40%', value: '0.4' },
+        { label: '20%', value: '0.2' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {
@@ -387,22 +473,51 @@ export const AreaChart: ComponentConfig = {
     yAxisField: yAxisFieldRef,
     seriesField: seriesFieldRef,
     aggregation,
-    stacked: { type: 'radio', label: 'Stacked', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    areaOpacity: { type: 'select' as const, label: 'Area Opacity', options: [
-      { label: '100%', value: '1' },
-      { label: '70%', value: '0.7' },
-      { label: '50%', value: '0.5' },
-      { label: '30%', value: '0.3' },
-      { label: '10%', value: '0.1' },
-    ] },
-    showMarkers: { type: 'radio', label: 'Show Markers', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    step: { type: 'select' as const, label: 'Step Interpolation', options: [
-      { label: 'None', value: '' },
-      { label: 'Start', value: 'start' },
-      { label: 'Middle', value: 'middle' },
-      { label: 'End', value: 'end' },
-    ] },
-    connectNulls: { type: 'radio', label: 'Connect Nulls', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    stacked: {
+      type: 'radio',
+      label: 'Stacked',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    areaOpacity: {
+      type: 'select' as const,
+      label: 'Area Opacity',
+      options: [
+        { label: '100%', value: '1' },
+        { label: '70%', value: '0.7' },
+        { label: '50%', value: '0.5' },
+        { label: '30%', value: '0.3' },
+        { label: '10%', value: '0.1' },
+      ],
+    },
+    showMarkers: {
+      type: 'radio',
+      label: 'Show Markers',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    step: {
+      type: 'select' as const,
+      label: 'Step Interpolation',
+      options: [
+        { label: 'None', value: '' },
+        { label: 'Start', value: 'start' },
+        { label: 'Middle', value: 'middle' },
+        { label: 'End', value: 'end' },
+      ],
+    },
+    connectNulls: {
+      type: 'radio',
+      label: 'Connect Nulls',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {
@@ -431,7 +546,14 @@ export const ComboChart: ComponentConfig = {
     barField: createFieldRefField('Bar Field', ['measure']),
     lineField: createFieldRefField('Line Field', ['measure']),
     aggregation,
-    lineSmooth: { type: 'radio', label: 'Smooth Lines', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    lineSmooth: {
+      type: 'radio',
+      label: 'Smooth Lines',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     barBorderRadius: { type: 'number' as const, label: 'Bar Corner Radius' },
     ...cartesianVisualFields,
   },
@@ -492,11 +614,22 @@ export const RadarChart: ComponentConfig = {
     categoryField: categoryFieldRef,
     valueField: valueFieldRef,
     seriesField: seriesFieldRef,
-    shape: { type: 'radio' as const, label: 'Shape', options: [
-      { label: 'Polygon', value: 'polygon' },
-      { label: 'Circle', value: 'circle' },
-    ] },
-    areaFill: { type: 'radio', label: 'Area Fill', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    shape: {
+      type: 'radio' as const,
+      label: 'Shape',
+      options: [
+        { label: 'Polygon', value: 'polygon' },
+        { label: 'Circle', value: 'circle' },
+      ],
+    },
+    areaFill: {
+      type: 'radio',
+      label: 'Area Fill',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     ...categoricalVisualFields,
   },
   defaultProps: {
@@ -519,23 +652,35 @@ export const FunnelChart: ComponentConfig = {
     datasetRef: datasetRefField,
     categoryField: categoryFieldRef,
     valueField: valueFieldRef,
-    sort: { type: 'select' as const, label: 'Sort', options: [
-      { label: 'Descending', value: 'descending' },
-      { label: 'Ascending', value: 'ascending' },
-      { label: 'None', value: 'none' },
-    ] },
-    funnelAlign: { type: 'radio' as const, label: 'Alignment', options: [
-      { label: 'Center', value: 'center' },
-      { label: 'Left', value: 'left' },
-      { label: 'Right', value: 'right' },
-    ] },
+    sort: {
+      type: 'select' as const,
+      label: 'Sort',
+      options: [
+        { label: 'Descending', value: 'descending' },
+        { label: 'Ascending', value: 'ascending' },
+        { label: 'None', value: 'none' },
+      ],
+    },
+    funnelAlign: {
+      type: 'radio' as const,
+      label: 'Alignment',
+      options: [
+        { label: 'Center', value: 'center' },
+        { label: 'Left', value: 'left' },
+        { label: 'Right', value: 'right' },
+      ],
+    },
     gap: { type: 'number' as const, label: 'Gap (px)' },
-    labelPosition: { type: 'select' as const, label: 'Label Position', options: [
-      { label: 'Inside', value: 'inside' },
-      { label: 'Outside', value: 'outside' },
-      { label: 'Left', value: 'left' },
-      { label: 'Right', value: 'right' },
-    ] },
+    labelPosition: {
+      type: 'select' as const,
+      label: 'Label Position',
+      options: [
+        { label: 'Inside', value: 'inside' },
+        { label: 'Outside', value: 'outside' },
+        { label: 'Left', value: 'left' },
+        { label: 'Right', value: 'right' },
+      ],
+    },
     ...categoricalVisualFields,
   },
   defaultProps: {
@@ -560,7 +705,14 @@ export const TreemapChart: ComponentConfig = {
     nameField: createFieldRefField('Name Field', ['dimension']),
     valueField: valueFieldRef,
     parentField: createFieldRefField('Parent Field', ['dimension']),
-    showUpperLabel: { type: 'radio', label: 'Show Parent Labels', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    showUpperLabel: {
+      type: 'radio',
+      label: 'Show Parent Labels',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     maxDepth: { type: 'number' as const, label: 'Max Depth' },
     borderWidth: { type: 'number' as const, label: 'Border Width' },
     ...categoricalVisualFields,
@@ -589,10 +741,14 @@ export const SankeyChart: ComponentConfig = {
     valueField: valueFieldRef,
     nodeWidth: { type: 'number' as const, label: 'Node Width' },
     nodeGap: { type: 'number' as const, label: 'Node Gap' },
-    orient: { type: 'radio' as const, label: 'Orientation', options: [
-      { label: 'Horizontal', value: 'horizontal' },
-      { label: 'Vertical', value: 'vertical' },
-    ] },
+    orient: {
+      type: 'radio' as const,
+      label: 'Orientation',
+      options: [
+        { label: 'Horizontal', value: 'horizontal' },
+        { label: 'Vertical', value: 'vertical' },
+      ],
+    },
     ...categoricalVisualFields,
   },
   defaultProps: {
@@ -667,12 +823,16 @@ export const BoxPlotChart: ComponentConfig = {
     datasetRef: datasetRefField,
     categoryField: categoryFieldRef,
     valueField: valueFieldRef,
-    boxWidth: { type: 'select' as const, label: 'Box Width', options: [
-      { label: 'Auto', value: '' },
-      { label: 'Narrow', value: '15' },
-      { label: 'Medium', value: '30' },
-      { label: 'Wide', value: '50' },
-    ] },
+    boxWidth: {
+      type: 'select' as const,
+      label: 'Box Width',
+      options: [
+        { label: 'Auto', value: '' },
+        { label: 'Narrow', value: '15' },
+        { label: 'Medium', value: '30' },
+        { label: 'Wide', value: '50' },
+      ],
+    },
     ...cartesianVisualFields,
   },
   defaultProps: {
@@ -697,8 +857,22 @@ export const GaugeChart: ComponentConfig = {
     startAngle: { type: 'number' as const, label: 'Start Angle (°)' },
     endAngle: { type: 'number' as const, label: 'End Angle (°)' },
     splitCount: { type: 'number' as const, label: 'Split Count' },
-    roundCap: { type: 'radio', label: 'Round Cap', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    progressMode: { type: 'radio', label: 'Progress Mode', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
+    roundCap: {
+      type: 'radio',
+      label: 'Round Cap',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    progressMode: {
+      type: 'radio',
+      label: 'Progress Mode',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
     colorScheme: colorSchemeField,
     numberFormat: numberFormatField,
   },
@@ -726,10 +900,43 @@ export const AlertsWidgetBlock: ComponentConfig = {
   fields: {
     title: titleField,
     datasetRef: datasetRefField,
+    alertMode: {
+      type: 'select' as const,
+      label: 'Alert Source',
+      options: [
+        { label: 'Data Binding', value: 'data-binding' },
+        { label: 'Structured Rule', value: 'structured' },
+      ],
+    },
     titleField: createFieldRefField('Alert Title Field', ['dimension']),
     messageField: messageFieldRef,
     severityField: severityFieldRef,
     timestampField: timestampFieldRef,
+    ruleMetricField: createFieldRefField('Rule Metric Field', ['measure']),
+    ruleAggregation: structuredAlertRuleAggregation,
+    ruleOperator: structuredAlertRuleOperator,
+    ruleThreshold: {
+      type: 'number' as const,
+      label: 'Rule Threshold',
+    },
+    ruleTitle: {
+      type: 'text' as const,
+      label: 'Rule Alert Title',
+    },
+    ruleMessage: {
+      type: 'textarea' as const,
+      label: 'Rule Alert Message',
+    },
+    ruleSeverity: {
+      type: 'select' as const,
+      label: 'Rule Alert Severity',
+      options: [
+        { label: 'Info', value: 'info' },
+        { label: 'Success', value: 'success' },
+        { label: 'Warning', value: 'warning' },
+        { label: 'Danger', value: 'danger' },
+      ],
+    },
     layout: {
       type: 'select' as const,
       label: 'Layout',
@@ -773,10 +980,18 @@ export const AlertsWidgetBlock: ComponentConfig = {
   defaultProps: {
     title: 'Operational Alerts',
     datasetRef: 'ds-alerts',
+    alertMode: 'data-binding',
     titleField: 'alert_title',
     messageField: 'alert_message',
     severityField: 'severity',
     timestampField: 'detected_at',
+    ruleMetricField: '',
+    ruleAggregation: 'sum',
+    ruleOperator: 'gte',
+    ruleThreshold: 1000,
+    ruleTitle: 'Threshold breached',
+    ruleMessage: 'The metric crossed the configured threshold.',
+    ruleSeverity: 'warning',
     layout: 'stack',
     maxItems: 3,
     emptyState: 'placeholder',
@@ -792,19 +1007,48 @@ export const Table: ComponentConfig = {
     title: titleField,
     datasetRef: datasetRefField,
     pageSize: { type: 'number' as const, label: 'Page Size' },
-    striped: { type: 'radio', label: 'Striped', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    showRowNumbers: { type: 'radio', label: 'Row Numbers', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    showTotals: { type: 'radio', label: 'Show Totals', options: [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] },
-    headerAlign: { type: 'select' as const, label: 'Header Alignment', options: [
-      { label: 'Left', value: 'left' },
-      { label: 'Center', value: 'center' },
-      { label: 'Right', value: 'right' },
-    ] },
-    cellAlign: { type: 'select' as const, label: 'Cell Alignment', options: [
-      { label: 'Left', value: 'left' },
-      { label: 'Center', value: 'center' },
-      { label: 'Right', value: 'right' },
-    ] },
+    striped: {
+      type: 'radio',
+      label: 'Striped',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    showRowNumbers: {
+      type: 'radio',
+      label: 'Row Numbers',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    showTotals: {
+      type: 'radio',
+      label: 'Show Totals',
+      options: [
+        { label: 'Yes', value: 'true' },
+        { label: 'No', value: 'false' },
+      ],
+    },
+    headerAlign: {
+      type: 'select' as const,
+      label: 'Header Alignment',
+      options: [
+        { label: 'Left', value: 'left' },
+        { label: 'Center', value: 'center' },
+        { label: 'Right', value: 'right' },
+      ],
+    },
+    cellAlign: {
+      type: 'select' as const,
+      label: 'Cell Alignment',
+      options: [
+        { label: 'Left', value: 'left' },
+        { label: 'Center', value: 'center' },
+        { label: 'Right', value: 'right' },
+      ],
+    },
   },
   defaultProps: {
     title: 'Table',
@@ -830,15 +1074,23 @@ export const KPICard: ComponentConfig = {
     suffix: { type: 'text' as const, label: 'Suffix (e.g. %)' },
     comparisonField: createFieldRefField('Comparison Field', ['measure']),
     subtitleField: createFieldRefField('Subtitle Field', ['dimension']),
-    fontSize: { type: 'select' as const, label: 'Font Size', options: [
-      { label: 'Small', value: 'sm' },
-      { label: 'Medium', value: 'md' },
-      { label: 'Large', value: 'lg' },
-    ] },
-    trendDirection: { type: 'radio' as const, label: 'Trend Direction', options: [
-      { label: 'Up = Good', value: 'up-good' },
-      { label: 'Down = Good', value: 'down-good' },
-    ] },
+    fontSize: {
+      type: 'select' as const,
+      label: 'Font Size',
+      options: [
+        { label: 'Small', value: 'sm' },
+        { label: 'Medium', value: 'md' },
+        { label: 'Large', value: 'lg' },
+      ],
+    },
+    trendDirection: {
+      type: 'radio' as const,
+      label: 'Trend Direction',
+      options: [
+        { label: 'Up = Good', value: 'up-good' },
+        { label: 'Down = Good', value: 'down-good' },
+      ],
+    },
     numberFormat: numberFormatField,
     colorScheme: colorSchemeField,
   },
@@ -904,5 +1156,5 @@ export const PUCK_NAME_TO_WIDGET_TYPE: Record<string, string> = {
 
 /** Map canonical widget type → Puck component name */
 export const WIDGET_TYPE_TO_PUCK_NAME: Record<string, string> = Object.fromEntries(
-  Object.entries(PUCK_NAME_TO_WIDGET_TYPE).map(([k, v]) => [v, k])
+  Object.entries(PUCK_NAME_TO_WIDGET_TYPE).map(([k, v]) => [v, k]),
 );

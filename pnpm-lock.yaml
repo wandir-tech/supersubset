@@ -455,6 +455,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@supersubset/data-model':
+        specifier: workspace:*
+        version: link:../data-model
       '@supersubset/schema':
         specifier: workspace:*
         version: link:../schema

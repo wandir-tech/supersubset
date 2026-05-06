@@ -19,6 +19,12 @@ import alerts_inline_layout_callout from '../../../assets/screenshots/widgets/al
 import alerts_no_timestamp_before from '../../../assets/screenshots/widgets/alerts-no-timestamp-before-viewer.png';
 import alerts_no_timestamp_after from '../../../assets/screenshots/widgets/alerts-no-timestamp-viewer.png';
 import alerts_no_timestamp_callout from '../../../assets/screenshots/widgets/alerts-no-timestamp-callout-designer.png';
+import alerts_query_default from '../../../assets/screenshots/widgets/alerts-query-default-viewer.png';
+import alerts_query_filtered from '../../../assets/screenshots/widgets/alerts-query-filtered-viewer.png';
+import alerts_query_loading from '../../../assets/screenshots/widgets/alerts-query-loading-viewer.png';
+import alerts_query_error from '../../../assets/screenshots/widgets/alerts-query-error-viewer.png';
+import alerts_query_empty from '../../../assets/screenshots/widgets/alerts-query-empty-viewer.png';
+import alerts_query_unavailable from '../../../assets/screenshots/widgets/alerts-query-unavailable-viewer.png';
 
 # Alerts
 
@@ -136,6 +142,46 @@ What to show when there are no alerts: `placeholder` (friendly message) or `hidd
   src={alerts_props_scrolled_designer}
   alt="Empty state behavior"
   caption="Configure empty state behavior in the property panel"
+/>
+
+## Query-Backed Runtime States
+
+When the Alerts widget is bound to a dataset and rendered through a host query adapter, the viewer distinguishes normal query results, filter-driven refreshes, loading, empty, error, and unavailable states. These are runtime behaviors rather than authored properties, but they materially change what viewers see.
+
+<FeatureScreenshot
+  src={alerts_query_default}
+  alt="Alerts widget with query-backed results"
+  caption="Default query-backed alerts state in the viewer"
+/>
+
+<FeatureScreenshot
+  src={alerts_query_filtered}
+  alt="Alerts widget after a viewer filter refresh"
+  caption="Changing the Region filter re-queries the widget and shows only North-region alerts"
+/>
+
+<FeatureScreenshot
+  src={alerts_query_loading}
+  alt="Alerts widget loading query-backed data"
+  caption="Loading state while the host query is still in flight"
+/>
+
+<FeatureScreenshot
+  src={alerts_query_error}
+  alt="Alerts widget showing a host query error"
+  caption="Error state when the host query fails"
+/>
+
+<FeatureScreenshot
+  src={alerts_query_empty}
+  alt="Alerts widget showing a successful empty result"
+  caption="Empty state after a successful query returns zero active alerts"
+/>
+
+<FeatureScreenshot
+  src={alerts_query_unavailable}
+  alt="Alerts widget showing unavailable alert data"
+  caption="Unavailable state when the viewer is not connected to a host query adapter"
 />
 
 ## Tips
