@@ -1,6 +1,5 @@
 import type { WidgetProps } from '@supersubset/runtime';
-
-type AlertSeverity = 'info' | 'success' | 'warning' | 'danger';
+import { isAlertRuleSeverity, type AlertRuleSeverity } from '@supersubset/schema';
 
 const LAYOUT_STYLES: Record<'stack' | 'wrap' | 'inline', React.CSSProperties> = {
   stack: {
@@ -23,7 +22,7 @@ const LAYOUT_STYLES: Record<'stack' | 'wrap' | 'inline', React.CSSProperties> = 
 };
 
 const FALLBACK_SEVERITY_STYLES: Record<
-  AlertSeverity,
+  AlertRuleSeverity,
   { accent: string; background: string; border: string }
 > = {
   info: {
@@ -70,7 +69,9 @@ export function AlertsWidget({
   const maxItems = toPositiveInteger(config.maxItems);
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
   const showTimestamp = config.showTimestamp !== false && config.showTimestamp !== 'false';
-  const defaultSeverity = isAlertSeverity(config.defaultSeverity) ? config.defaultSeverity : 'info';
+  const defaultSeverity = isAlertRuleSeverity(config.defaultSeverity)
+    ? config.defaultSeverity
+    : 'info';
   const visibleRows = maxItems ? rows.slice(0, maxItems) : rows;
   const borderColor = getThemeColor(theme, 'border', '#d9d9d9');
   const isDataUnavailable = datasetRef !== undefined && data === undefined && !loading && !error;
@@ -140,7 +141,7 @@ export function AlertsWidget({
         <div style={LAYOUT_STYLES[layout]}>
           {visibleRows.map((row, index) => {
             const severityValue = row[severityField];
-            const severity = isAlertSeverity(severityValue) ? severityValue : defaultSeverity;
+            const severity = isAlertRuleSeverity(severityValue) ? severityValue : defaultSeverity;
             const severityStyle = resolveSeverityStyle(theme, severity);
             const alertTitle =
               typeof row[titleField] === 'string' && row[titleField].trim().length > 0
@@ -261,7 +262,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function getThemeColor(
   theme: Record<string, unknown> | undefined,
-  token: AlertSeverity | 'border',
+  token: AlertRuleSeverity | 'border',
   fallback: string,
 ): string {
   if (!isRecord(theme)) {
@@ -277,7 +278,10 @@ function getThemeColor(
   return typeof color === 'string' && color.trim().length > 0 ? color : fallback;
 }
 
-function resolveSeverityStyle(theme: Record<string, unknown> | undefined, severity: AlertSeverity) {
+function resolveSeverityStyle(
+  theme: Record<string, unknown> | undefined,
+  severity: AlertRuleSeverity,
+) {
   const fallback = FALLBACK_SEVERITY_STYLES[severity];
   const accent = getThemeColor(theme, severity, fallback.accent);
 
@@ -298,10 +302,6 @@ function toPositiveInteger(value: unknown): number | null {
     return null;
   }
   return Math.floor(parsed);
-}
-
-function isAlertSeverity(value: unknown): value is AlertSeverity {
-  return value === 'info' || value === 'success' || value === 'warning' || value === 'danger';
 }
 
 function withAlpha(color: string, alpha: number): string | null {

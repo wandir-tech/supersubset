@@ -163,6 +163,17 @@ export interface FieldBinding {
 
 export type AlertRuleSeverity = 'info' | 'success' | 'warning' | 'danger';
 
+export function isAlertRuleSeverity(value: unknown): value is AlertRuleSeverity {
+  return value === 'info' || value === 'success' || value === 'warning' || value === 'danger';
+}
+
+export function normalizeAlertRuleSeverity(
+  value: unknown,
+  fallback: AlertRuleSeverity = 'info',
+): AlertRuleSeverity {
+  return isAlertRuleSeverity(value) ? value : fallback;
+}
+
 export type StructuredAlertRuleAggregation =
   | 'sum'
   | 'avg'
