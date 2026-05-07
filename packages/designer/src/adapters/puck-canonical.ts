@@ -17,6 +17,11 @@ import { PUCK_NAME_TO_WIDGET_TYPE, WIDGET_TYPE_TO_PUCK_NAME } from '../blocks/ch
 import { CONTENT_PUCK_NAME_TO_TYPE } from '../blocks/content';
 import { CONTROL_PUCK_NAME_TO_TYPE } from '../blocks/controls';
 import { LAYOUT_PUCK_NAME_TO_TYPE } from '../blocks/layout';
+import {
+  ALERT_RULE_DESIGNER_KEYS,
+  buildStructuredAlertRuleConfig,
+  buildStructuredAlertRuleDraft,
+} from './alert-rule-helpers';
 
 // All component type maps merged
 const puckNameToType: Record<string, string> = {
@@ -448,17 +453,6 @@ const NUMERIC_CONFIG_KEYS = new Set([
 
 const PUCK_STRING_NUMERIC_CONFIG_KEYS = new Set(['xAxisLabelRotate', 'areaOpacity', 'opacity']);
 
-const ALERT_RULE_DESIGNER_KEYS = [
-  'alertMode',
-  'ruleMetricField',
-  'ruleAggregation',
-  'ruleOperator',
-  'ruleThreshold',
-  'ruleTitle',
-  'ruleMessage',
-  'ruleSeverity',
-] as const;
-
 function normalizeBooleanRadioValue(value: unknown): unknown {
   if (value === 'true') return true;
   if (value === 'false') return false;
@@ -642,108 +636,6 @@ function buildWidgetDefinition(
   }
 
   return widget;
-}
-
-function buildStructuredAlertRuleConfig(
-  config: Record<string, unknown>,
-): Record<string, unknown> | null {
-  if (config.alertMode !== 'structured') {
-    return null;
-  }
-
-  const metricFieldRef =
-    typeof config.ruleMetricField === 'string' && config.ruleMetricField.trim().length > 0
-      ? config.ruleMetricField
-      : null;
-  const aggregation =
-    typeof config.ruleAggregation === 'string' && config.ruleAggregation.trim().length > 0
-      ? config.ruleAggregation
-      : null;
-  const operator =
-    typeof config.ruleOperator === 'string' && config.ruleOperator.trim().length > 0
-      ? config.ruleOperator
-      : null;
-  const threshold =
-    typeof config.ruleThreshold === 'number' && Number.isFinite(config.ruleThreshold)
-      ? config.ruleThreshold
-      : null;
-  const title =
-    typeof config.ruleTitle === 'string' && config.ruleTitle.trim().length > 0
-      ? config.ruleTitle
-      : null;
-  const message =
-    typeof config.ruleMessage === 'string' && config.ruleMessage.trim().length > 0
-      ? config.ruleMessage
-      : null;
-  const severity =
-    typeof config.ruleSeverity === 'string' && config.ruleSeverity.trim().length > 0
-      ? config.ruleSeverity
-      : undefined;
-
-  if (!metricFieldRef || !aggregation || !operator || threshold == null || !title || !message) {
-    return null;
-  }
-
-  return {
-    mode: 'structured',
-    metricFieldRef,
-    aggregation,
-    operator,
-    threshold,
-    alert: {
-      title,
-      message,
-      ...(severity ? { severity } : {}),
-    },
-  };
-}
-
-function buildStructuredAlertRuleDraft(
-  config: Record<string, unknown>,
-): Record<string, unknown> | null {
-  if (config.alertMode !== 'structured') {
-    return null;
-  }
-
-  const draft: Record<string, unknown> = {
-    mode: 'structured',
-  };
-
-  if (typeof config.ruleMetricField === 'string' && config.ruleMetricField.trim().length > 0) {
-    draft.metricFieldRef = config.ruleMetricField;
-  }
-
-  if (typeof config.ruleAggregation === 'string' && config.ruleAggregation.trim().length > 0) {
-    draft.aggregation = config.ruleAggregation;
-  }
-
-  if (typeof config.ruleOperator === 'string' && config.ruleOperator.trim().length > 0) {
-    draft.operator = config.ruleOperator;
-  }
-
-  if (typeof config.ruleThreshold === 'number' && Number.isFinite(config.ruleThreshold)) {
-    draft.threshold = config.ruleThreshold;
-  }
-
-  const alert: Record<string, unknown> = {};
-
-  if (typeof config.ruleTitle === 'string' && config.ruleTitle.trim().length > 0) {
-    alert.title = config.ruleTitle;
-  }
-
-  if (typeof config.ruleMessage === 'string' && config.ruleMessage.trim().length > 0) {
-    alert.message = config.ruleMessage;
-  }
-
-  if (typeof config.ruleSeverity === 'string' && config.ruleSeverity.trim().length > 0) {
-    alert.severity = config.ruleSeverity;
-  }
-
-  if (Object.keys(alert).length > 0) {
-    draft.alert = alert;
-  }
-
-  return draft;
 }
 
 function buildContentMeta(

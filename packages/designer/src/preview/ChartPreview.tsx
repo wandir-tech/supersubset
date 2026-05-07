@@ -9,6 +9,11 @@
  */
 import React, { useMemo, useState, useEffect, type ComponentType } from 'react';
 import type { WidgetProps } from '@supersubset/runtime';
+import { normalizeAlertRuleSeverity, type AlertRuleSeverity } from '@supersubset/schema';
+import {
+  buildStructuredAlertRuleConfig,
+  buildStructuredAlertRuleDraft,
+} from '../adapters/alert-rule-helpers';
 import { getSampleData } from '../data/sample-data';
 import { usePreviewData, type PreviewDataRequest } from '../context/PreviewDataContext';
 
@@ -117,7 +122,6 @@ function normalizePuckProps(puckProps: Record<string, unknown>): Record<string, 
   );
 }
 
-type AlertSeverity = 'info' | 'success' | 'warning' | 'danger';
 type AlertLayout = 'stack' | 'wrap' | 'inline';
 
 const ALERT_LAYOUT_STYLES: Record<AlertLayout, React.CSSProperties> = {
@@ -141,7 +145,7 @@ const ALERT_LAYOUT_STYLES: Record<AlertLayout, React.CSSProperties> = {
 };
 
 const ALERT_SEVERITY_STYLES: Record<
-  AlertSeverity,
+  AlertRuleSeverity,
   { accent: string; background: string; border: string }
 > = {
   info: {
@@ -165,14 +169,6 @@ const ALERT_SEVERITY_STYLES: Record<
     border: '#fecaca',
   },
 };
-
-function normalizeAlertSeverity(value: unknown, fallback: AlertSeverity = 'info'): AlertSeverity {
-  if (value === 'info' || value === 'success' || value === 'warning' || value === 'danger') {
-    return value;
-  }
-
-  return fallback;
-}
 
 function readAlertText(row: Record<string, unknown>, fieldName: unknown): string {
   if (typeof fieldName !== 'string' || fieldName.length === 0) {
@@ -203,7 +199,7 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
     typeof config.maxItems === 'number' && config.maxItems > 0 ? config.maxItems : data.length;
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
   const showTimestamp = config.showTimestamp !== false;
-  const defaultSeverity = normalizeAlertSeverity(config.defaultSeverity, 'info');
+  const defaultSeverity = normalizeAlertRuleSeverity(config.defaultSeverity, 'info');
   const structuredAlertRule = readStructuredAlertRulePreview(config);
   const isStructuredAlertMode = config.alertMode === 'structured' || !!structuredAlertRule;
   const previewAlerts = structuredAlertRule
@@ -271,7 +267,7 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
       ) : (
         <div style={ALERT_LAYOUT_STYLES[layout]}>
           {visibleAlerts.map((row, index) => {
-            const severity = normalizeAlertSeverity(row[severityField], defaultSeverity);
+            const severity = normalizeAlertRuleSeverity(row[severityField], defaultSeverity);
             const severityStyle = ALERT_SEVERITY_STYLES[severity];
             const alertTitle = readAlertText(row, titleField) || `Alert ${index + 1}`;
             const alertMessage = readAlertText(row, messageField) || 'No alert message configured.';
@@ -564,143 +560,6 @@ function buildWidgetConfig(
   if (s(normalizedPuckProps.format)) config.format = normalizedPuckProps.format;
 
   return config;
-}
-
-function buildStructuredAlertRuleConfig(
-  normalizedPuckProps: Record<string, unknown>,
-): Record<string, unknown> | null {
-  if (normalizedPuckProps.alertMode !== 'structured') {
-    return null;
-  }
-
-  const metricFieldRef =
-    typeof normalizedPuckProps.ruleMetricField === 'string' &&
-    normalizedPuckProps.ruleMetricField.trim().length > 0
-      ? normalizedPuckProps.ruleMetricField
-      : null;
-  const aggregation =
-    typeof normalizedPuckProps.ruleAggregation === 'string' &&
-    normalizedPuckProps.ruleAggregation.trim().length > 0
-      ? normalizedPuckProps.ruleAggregation
-      : null;
-  const operator =
-    typeof normalizedPuckProps.ruleOperator === 'string' &&
-    normalizedPuckProps.ruleOperator.trim().length > 0
-      ? normalizedPuckProps.ruleOperator
-      : null;
-  const threshold =
-    normalizedPuckProps.ruleThreshold != null && normalizedPuckProps.ruleThreshold !== ''
-      ? Number(normalizedPuckProps.ruleThreshold)
-      : null;
-  const title =
-    typeof normalizedPuckProps.ruleTitle === 'string' &&
-    normalizedPuckProps.ruleTitle.trim().length > 0
-      ? normalizedPuckProps.ruleTitle
-      : null;
-  const message =
-    typeof normalizedPuckProps.ruleMessage === 'string' &&
-    normalizedPuckProps.ruleMessage.trim().length > 0
-      ? normalizedPuckProps.ruleMessage
-      : null;
-  const severity =
-    typeof normalizedPuckProps.ruleSeverity === 'string' &&
-    normalizedPuckProps.ruleSeverity.trim().length > 0
-      ? normalizedPuckProps.ruleSeverity
-      : undefined;
-
-  if (
-    !metricFieldRef ||
-    !aggregation ||
-    !operator ||
-    threshold == null ||
-    !Number.isFinite(threshold) ||
-    !title ||
-    !message
-  ) {
-    return null;
-  }
-
-  return {
-    mode: 'structured',
-    metricFieldRef,
-    aggregation,
-    operator,
-    threshold,
-    alert: {
-      title,
-      message,
-      ...(severity ? { severity } : {}),
-    },
-  };
-}
-
-function buildStructuredAlertRuleDraft(
-  normalizedPuckProps: Record<string, unknown>,
-): Record<string, unknown> | null {
-  if (normalizedPuckProps.alertMode !== 'structured') {
-    return null;
-  }
-
-  const draft: Record<string, unknown> = {
-    mode: 'structured',
-  };
-
-  if (
-    typeof normalizedPuckProps.ruleMetricField === 'string' &&
-    normalizedPuckProps.ruleMetricField.trim().length > 0
-  ) {
-    draft.metricFieldRef = normalizedPuckProps.ruleMetricField;
-  }
-
-  if (
-    typeof normalizedPuckProps.ruleAggregation === 'string' &&
-    normalizedPuckProps.ruleAggregation.trim().length > 0
-  ) {
-    draft.aggregation = normalizedPuckProps.ruleAggregation;
-  }
-
-  if (
-    typeof normalizedPuckProps.ruleOperator === 'string' &&
-    normalizedPuckProps.ruleOperator.trim().length > 0
-  ) {
-    draft.operator = normalizedPuckProps.ruleOperator;
-  }
-
-  if (normalizedPuckProps.ruleThreshold != null && normalizedPuckProps.ruleThreshold !== '') {
-    const threshold = Number(normalizedPuckProps.ruleThreshold);
-    if (Number.isFinite(threshold)) {
-      draft.threshold = threshold;
-    }
-  }
-
-  const alert: Record<string, unknown> = {};
-
-  if (
-    typeof normalizedPuckProps.ruleTitle === 'string' &&
-    normalizedPuckProps.ruleTitle.trim().length > 0
-  ) {
-    alert.title = normalizedPuckProps.ruleTitle;
-  }
-
-  if (
-    typeof normalizedPuckProps.ruleMessage === 'string' &&
-    normalizedPuckProps.ruleMessage.trim().length > 0
-  ) {
-    alert.message = normalizedPuckProps.ruleMessage;
-  }
-
-  if (
-    typeof normalizedPuckProps.ruleSeverity === 'string' &&
-    normalizedPuckProps.ruleSeverity.trim().length > 0
-  ) {
-    alert.severity = normalizedPuckProps.ruleSeverity;
-  }
-
-  if (Object.keys(alert).length > 0) {
-    draft.alert = alert;
-  }
-
-  return draft;
 }
 
 function readStructuredAlertRulePreview(
