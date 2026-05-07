@@ -1,6 +1,9 @@
 import type { DashboardDefinition } from '@supersubset/schema';
 import { SQLITE_DATASET_ID, sqliteDataModel } from './sqlite-model';
 
+const REGION_OPTIONS = ['North America', 'Europe', 'APAC'];
+const CATEGORY_OPTIONS = ['Footwear', 'Accessories', 'Apparel', 'Hydration'];
+
 export const defaultDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'vite-sqlite-dashboard',
@@ -16,15 +19,25 @@ export const defaultDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: SQLITE_DATASET_ID,
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: REGION_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
       id: 'filter-category',
       title: 'Category',
-      type: 'select',
+      type: 'multi-select',
       fieldRef: 'category',
       datasetRef: SQLITE_DATASET_ID,
-      operator: 'equals',
+      operator: 'in',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: CATEGORY_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
@@ -84,7 +97,7 @@ export const defaultDashboard: DashboardDefinition = {
           type: 'widget',
           parentId: 'row-filter-bars',
           children: [],
-          meta: { widgetRef: 'filters-all', width: 12, height: 88 },
+          meta: { widgetRef: 'filters-all', width: 12, height: 128 },
         },
         'row-kpis': {
           id: 'row-kpis',

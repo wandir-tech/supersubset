@@ -1,5 +1,5 @@
 import type { DashboardDefinition } from '@supersubset/schema';
-import { WORKBENCH_DATASET_ID } from './workbench-shared';
+import { WORKBENCH_DATASET_ID, workbenchFilterOptions } from './workbench-shared';
 
 export const workbenchStarterDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
@@ -15,6 +15,11 @@ export const workbenchStarterDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: WORKBENCH_DATASET_ID,
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: workbenchFilterOptions['filter-region'].map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
@@ -24,6 +29,11 @@ export const workbenchStarterDashboard: DashboardDefinition = {
       fieldRef: 'carrier',
       datasetRef: WORKBENCH_DATASET_ID,
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: workbenchFilterOptions['filter-carrier'].map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {

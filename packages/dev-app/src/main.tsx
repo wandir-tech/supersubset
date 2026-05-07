@@ -13,12 +13,10 @@ import {
   ImportExportPanel,
   CodeViewPanel,
   LivePreviewPane,
+  SlideOverPanel,
   type FetchPreviewData,
   useUndoRedo,
-  UndoRedoToolbar,
   useUndoRedoKeyboard,
-  FilterBuilderPanel,
-  SlideOverPanel,
   InteractionEditorPanel,
 } from '@supersubset/designer';
 import type { DashboardDefinition, InlineThemeDefinition } from '@supersubset/schema';
@@ -572,11 +570,7 @@ function App() {
   );
   const [savedDashboard, setSavedDashboard] = useState<DashboardDefinition | null>(null);
   const [showCode, setShowCode] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [showInteractions, setShowInteractions] = useState(false);
-  const [demoFilters, setDemoFilters] = useState<FilterDefinition[]>(
-    (demoDashboard.filters ?? []) as FilterDefinition[],
-  );
   const [demoInteractions, setDemoInteractions] = useState<
     import('@supersubset/designer').InteractionDefinition[]
   >((demoDashboard.interactions ?? []) as import('@supersubset/designer').InteractionDefinition[]);
@@ -979,7 +973,7 @@ function App() {
                   value={currentDashboard}
                   onChange={undoRedo.push}
                   onPublish={handlePublish}
-                  headerTitle="Supersubset Designer"
+                  headerTitle="Designer"
                   height="100%"
                   datasets={demoDatasets}
                   fetchPreviewData={fetchLocalPreviewData}
@@ -997,14 +991,6 @@ function App() {
                         minWidth: 0,
                       }}
                     >
-                      <UndoRedoToolbar
-                        canUndo={undoRedo.canUndo}
-                        canRedo={undoRedo.canRedo}
-                        onUndo={undoRedo.undo}
-                        onRedo={undoRedo.redo}
-                        undoCount={undoRedo.undoCount}
-                        redoCount={undoRedo.redoCount}
-                      />
                       <ImportExportPanel
                         dashboard={currentDashboard}
                         onImport={(d) => {
@@ -1032,30 +1018,9 @@ function App() {
                       <span
                         style={{ width: 1, height: 20, background: '#d1d5db', margin: '0 4px' }}
                       />
-                      {/* Dashboard Config Group */}
-                      <button
-                        onClick={() => {
-                          setShowFilters(!showFilters);
-                          setShowInteractions(false);
-                        }}
-                        data-testid="filters-toggle"
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: 4,
-                          border: '1px solid #ccc',
-                          background: showFilters ? '#e0edff' : '#fff',
-                          color: '#333',
-                          cursor: 'pointer',
-                          fontSize: 13,
-                          fontWeight: showFilters ? 600 : 400,
-                        }}
-                      >
-                        ⛶ Filters{demoFilters.length > 0 ? ` (${demoFilters.length})` : ''}
-                      </button>
                       <button
                         onClick={() => {
                           setShowInteractions(!showInteractions);
-                          setShowFilters(false);
                         }}
                         data-testid="interactions-toggle"
                         style={{
@@ -1082,22 +1047,6 @@ function App() {
                 </div>
               )}
             </div>
-            {/* Slide-over: Filters */}
-            <SlideOverPanel
-              open={showFilters}
-              onClose={() => setShowFilters(false)}
-              title="Dashboard Filters"
-              subtitle="Define filters that users can interact with at runtime"
-              width={420}
-            >
-              <FilterBuilderPanel
-                filters={demoFilters}
-                onChange={setDemoFilters}
-                datasets={demoDatasets}
-                pageIds={currentPages.map((p) => p.id)}
-                widgetIds={currentPages.flatMap((p) => p.widgets?.map((w) => w.id) ?? [])}
-              />
-            </SlideOverPanel>
             {/* Slide-over: Interactions */}
             <SlideOverPanel
               open={showInteractions}
@@ -1334,7 +1283,6 @@ function App() {
               cssVariables={viewerCssVars}
               activePage={viewerActivePage}
               initialFilterValues={viewerInitialFilterValues}
-              filterOptions={FILTER_OPTIONS}
               onNavigate={handleViewerNavigate}
               onFilterChange={handleViewerFilterChange}
               onWidgetEvent={(event) => {

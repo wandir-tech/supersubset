@@ -1,5 +1,8 @@
 import type { DashboardDefinition } from '@supersubset/schema';
 
+const REGION_OPTIONS = ['North', 'South', 'East', 'West'];
+const CATEGORY_OPTIONS = ['Electronics', 'Clothing', 'Food', 'Home'];
+
 /**
  * Demo dashboard with sample data for the dev app.
  * Uses fixture data inline so the dev app has no backend dependency.
@@ -17,6 +20,11 @@ export const demoDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: REGION_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
@@ -26,6 +34,11 @@ export const demoDashboard: DashboardDefinition = {
       fieldRef: 'category',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: CATEGORY_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {

@@ -11,6 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const devAppPort = Number(process.env.SUPERSUBSET_DEV_APP_PORT ?? '3000');
 const devAppBaseUrl = `http://localhost:${devAppPort}`;
+const reuseExistingServer = Boolean(process.env.SUPERSUBSET_DEV_APP_PORT);
 
 export default defineConfig({
   testDir: './capture',
@@ -37,7 +38,7 @@ export default defineConfig({
   webServer: {
     command: `pnpm --filter @supersubset/dev-app dev -- --host localhost --port ${devAppPort}`,
     url: devAppBaseUrl,
-    reuseExistingServer: true,
+    reuseExistingServer,
     timeout: 120_000,
   },
 });

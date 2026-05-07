@@ -6,7 +6,7 @@ import { registerEssentialWidgets } from '@supersubset/charts-echarts/essentials
 import { resolveTheme, themeToCssVariables } from '@supersubset/theme';
 import type { InlineThemeDefinition } from '@supersubset/schema';
 import { ecommerceDashboard } from '../lib/dashboard';
-import { ecommerceFilterOptions, ecommerceWidgetData } from '../lib/fixtures';
+import { ecommerceWidgetData } from '../lib/fixtures';
 
 const warmTheme: InlineThemeDefinition = ecommerceDashboard.theme as InlineThemeDefinition;
 const coolTheme: InlineThemeDefinition = {
@@ -148,7 +148,6 @@ export function EcommerceHost() {
           registry={registry}
           theme={resolvedTheme as unknown as Record<string, unknown>}
           cssVariables={cssVariables}
-          filterOptions={ecommerceFilterOptions}
         />
       </section>
     </main>

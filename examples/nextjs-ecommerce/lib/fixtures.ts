@@ -47,8 +47,3 @@ export const ecommerceWidgetData: Record<string, WidgetFixture> = {
     ],
   },
 };
-
-export const ecommerceFilterOptions: Record<string, string[]> = {
-  'filter-region': ['North America', 'Europe', 'APAC'],
-  'filter-channel': ['Direct', 'Marketplace', 'Retail Partners', 'Email Campaigns'],
-};
