@@ -3,6 +3,7 @@
  * Host apps mount this component with a DashboardDefinition and widget registry.
  */
 import { createElement, useMemo } from 'react';
+import type { QueryAdapter } from '@supersubset/data-model';
 import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
 import type { WidgetRegistry, WidgetEvent } from '../widgets/registry';
 import { LayoutRenderer } from '../layout/LayoutRenderer';
@@ -27,6 +28,8 @@ export interface SupersubsetRendererProps {
   theme?: Record<string, unknown>;
   /** CSS variables to apply to the container */
   cssVariables?: Record<string, string>;
+  /** Host-owned query adapter for resolving widget data */
+  queryAdapter?: QueryAdapter;
   /** Which page to render (defaults to first page or defaults.activePage) */
   activePage?: string;
   /** Initial filter values */
@@ -43,7 +46,7 @@ export interface SupersubsetRendererProps {
   onDrill?: (fieldRef: string, targetWidgetId?: string) => void;
   /** Callback for errors */
   onError?: (error: Error) => void;
-  /** Static option values per filter ID for FilterBar dropdowns */
+  /** Legacy static option values per filter ID for FilterBar dropdowns */
   filterOptions?: Record<string, string[]>;
   /** Additional CSS class on the container */
   className?: string;
@@ -64,6 +67,7 @@ export function SupersubsetRenderer({
   registry,
   theme,
   cssVariables,
+  queryAdapter,
   activePage,
   initialFilterValues,
   onFilterChange,
@@ -132,6 +136,7 @@ export function SupersubsetRenderer({
             page,
             registry,
             theme,
+            queryAdapter,
             filterOptions,
           }),
         }),
@@ -147,6 +152,7 @@ interface DashboardContentProps {
   page: PageDefinition;
   registry: WidgetRegistry;
   theme?: Record<string, unknown>;
+  queryAdapter?: QueryAdapter;
   filterOptions?: Record<string, string[]>;
 }
 
@@ -155,6 +161,7 @@ function DashboardContent({
   page,
   registry,
   theme,
+  queryAdapter,
   filterOptions,
 }: DashboardContentProps) {
   const { state } = useFilters();
@@ -182,6 +189,7 @@ function DashboardContent({
       widgets: page.widgets,
       registry,
       theme,
+      queryAdapter,
       filters,
       datasets: definition.dataModel?.datasets,
       filterOptions,

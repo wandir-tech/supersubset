@@ -15,6 +15,7 @@ description: 'Run browser tests against Supersubset using Chrome MCP. Use when v
 - Verifying renderer output against saved definitions
 - Checking filter propagation across widgets
 - Verifying that host-owned query refresh actually changes visible dashboard output
+- Checking whether schema-first behavior still works without undocumented host-only helper props
 - Detecting console errors and rendering regressions
 - Responsive mode testing
 - Running release-oriented blocker discovery sweeps in real host examples
@@ -89,23 +90,33 @@ The workspace has Chrome MCP configured in `.vscode/mcp.json`:
 ## Procedure
 
 1. Decide first whether browser automation is the right layer by reading `.github/skills/testing-strategy/SKILL.md`
-2. If multiple agents or checkouts share the machine, lease ports first:
+2. List any helper props or seeded globals the target flow relies on, such as `filterOptions`, preview data injectors, or test-only defaults
+3. If the feature is supposed to be schema-driven, remove or neutralize those helpers for at least one proof run before treating the browser result as a pass
+4. If multiple agents or checkouts share the machine, lease ports first:
    `mapfile -t LEASED_PORTS < <(node scripts/find-free-port.mjs --start 3110 --end 3199 --count 3)`
-3. Export explicit origins before starting servers or Playwright-backed flows:
+5. Export explicit origins before starting servers or Playwright-backed flows:
    `SUPERSUBSET_DEV_APP_PORT`, `SUPERSUBSET_EXAMPLE_NEXTJS_PORT`, `SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT`
-4. Start the target app or stack on the leased ports, or reuse the configured Playwright web server
-5. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default
-6. Take an initial screenshot for baseline
-7. Execute test plan steps using Chrome MCP tools:
-   - `chr_navigate_page` — navigate to URLs
-   - `chr_click` — click elements
-   - `chr_fill` — fill input fields
-   - `chr_take_screenshot` — capture visual state
-   - `chr_take_snapshot` — capture DOM state
-   - `chr_list_console_messages` — check for errors
-   - `chr_evaluate_script` — run assertions in browser
-8. Compare screenshots and DOM state to expected outcomes
-9. Report results with evidence, including the leased local origin that was tested
+6. Start the target app or stack on the leased ports, or reuse the configured Playwright web server
+7. Use Chrome MCP to navigate to the explicit app URL, not an assumed shared default
+8. Take an initial screenshot for baseline
+9. If the change affects a user-visible property or authoring surface, capture a matching "after" screenshot once the changed state is reached
+10. If the property is something dashboard authors configure, prefer a pair that shows both:
+
+- the designer or authoring surface with the changed setting visible
+- the viewer or preview result after the change
+
+11. Execute test plan steps using Chrome MCP tools:
+
+- `chr_navigate_page` — navigate to URLs
+- `chr_click` — click elements
+- `chr_fill` — fill input fields
+- `chr_take_screenshot` — capture visual state
+- `chr_take_snapshot` — capture DOM state
+- `chr_list_console_messages` — check for errors
+- `chr_evaluate_script` — run assertions in browser
+
+12. Compare screenshots and DOM state to expected outcomes
+13. Report results with evidence, including the leased local origin that was tested, whether the proof depended on any helper props, and whether docs screenshot artifacts should be refreshed
 
 ## Agent Run Hygiene
 
@@ -126,13 +137,19 @@ For BI workflows, do not stop at screenshots or control values when a stronger p
 - legend, series, or mark count changed in the rendered chart
 - network request payload reflects the expected filter or interaction state
 
+Do not let the test harness manufacture the semantic state being tested. If a control needs option values, field metadata, or defaults, prove where they come from and whether that source is part of the intended contract.
+
+For property-level UI changes, screenshots are not just decoration. If a human reviewer should be able to see the difference, capture before/after evidence and route to `.github/skills/document-feature/SKILL.md` when the docs artifacts should be updated in the same change.
+
 ## Verification Checklist
 
 - [ ] No console errors during test
 - [ ] All widgets render without visual defects
 - [ ] Drag-and-drop produces correct layout changes
 - [ ] Property edits reflect immediately in preview
+- [ ] User-visible property or layout changes have before/after screenshot evidence when a reviewer would need to see the difference
 - [ ] Filter changes propagate to all bound widgets
+- [ ] Schema-authored controls still function without undocumented host-only semantic helpers, or the dependency is explicitly documented as intentional
 - [ ] When the host owns query refresh, filter changes mutate the expected query or request payload
 - [ ] Filter or interaction changes produce an obvious analytical outcome, not only a control-state update
 - [ ] Export/import produces semantically identical schema

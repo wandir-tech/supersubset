@@ -24,6 +24,9 @@ export const workbenchDatasets: NormalizedDataset[] = [
       { id: 'carrier', label: 'Carrier', dataType: 'string', role: 'dimension' },
       { id: 'lane', label: 'Lane', dataType: 'string', role: 'dimension' },
       { id: 'service_level', label: 'Service Level', dataType: 'string', role: 'dimension' },
+      { id: 'alert_title', label: 'Alert Title', dataType: 'string', role: 'dimension' },
+      { id: 'alert_message', label: 'Alert Message', dataType: 'string', role: 'dimension' },
+      { id: 'alert_severity', label: 'Alert Severity', dataType: 'string', role: 'dimension' },
       {
         id: 'revenue',
         label: 'Revenue',

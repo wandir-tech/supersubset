@@ -17,6 +17,11 @@ import { PUCK_NAME_TO_WIDGET_TYPE, WIDGET_TYPE_TO_PUCK_NAME } from '../blocks/ch
 import { CONTENT_PUCK_NAME_TO_TYPE } from '../blocks/content';
 import { CONTROL_PUCK_NAME_TO_TYPE } from '../blocks/controls';
 import { LAYOUT_PUCK_NAME_TO_TYPE } from '../blocks/layout';
+import {
+  ALERT_RULE_DESIGNER_KEYS,
+  buildStructuredAlertRuleConfig,
+  buildStructuredAlertRuleDraft,
+} from './alert-rule-helpers';
 
 // All component type maps merged
 const puckNameToType: Record<string, string> = {
@@ -421,6 +426,7 @@ const BOOLEAN_CONFIG_KEYS = new Set([
 
 const NUMERIC_CONFIG_KEYS = new Set([
   'maxItems',
+  'ruleThreshold',
   'xAxisLabelRotate',
   'yAxisMin',
   'yAxisMax',
@@ -607,6 +613,28 @@ function buildWidgetDefinition(
     }
   }
 
+  if (widgetType === 'alerts') {
+    const isStructuredAlertMode = widget.config.alertMode === 'structured';
+    const structuredAlertRuleDraft = buildStructuredAlertRuleDraft(widget.config);
+    const structuredAlertRule = buildStructuredAlertRuleConfig(widget.config);
+
+    for (const key of ALERT_RULE_DESIGNER_KEYS) {
+      delete widget.config[key];
+    }
+
+    if (isStructuredAlertMode) {
+      widget.config.alertMode = 'structured';
+
+      if (structuredAlertRuleDraft) {
+        widget.config.alertRuleDraft = structuredAlertRuleDraft;
+      }
+
+      if (structuredAlertRule) {
+        widget.config.alertRule = structuredAlertRule;
+      }
+    }
+  }
+
   return widget;
 }
 
@@ -717,6 +745,13 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
 
   // Spread config props
   for (const [key, value] of Object.entries(widget.config)) {
+    if (
+      widget.type === 'alerts' &&
+      (key === 'alertMode' || key === 'alertRule' || key === 'alertRuleDraft')
+    ) {
+      continue;
+    }
+
     if (key === 'filterIds') {
       const filterIds = normalizeStringArray(value);
 
@@ -761,7 +796,51 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
     props[key] = value;
   }
 
+  if (widget.type === 'alerts') {
+    const alertRule = widget.config.alertRule;
+    const alertRuleDraft = widget.config.alertRuleDraft;
+    const structuredAlertRule =
+      isRecord(alertRule) && alertRule.mode === 'structured' ? alertRule : null;
+    const structuredAlertRuleDraft =
+      isRecord(alertRuleDraft) && alertRuleDraft.mode === 'structured' ? alertRuleDraft : null;
+    const structuredAlertState = structuredAlertRuleDraft ?? structuredAlertRule;
+    const isStructuredAlertMode =
+      widget.config.alertMode === 'structured' || !!structuredAlertState;
+
+    props.alertMode = isStructuredAlertMode ? 'structured' : 'data-binding';
+
+    if (structuredAlertState) {
+      if (typeof structuredAlertState.metricFieldRef === 'string') {
+        props.ruleMetricField = structuredAlertState.metricFieldRef;
+      }
+      if (typeof structuredAlertState.aggregation === 'string') {
+        props.ruleAggregation = structuredAlertState.aggregation;
+      }
+      if (typeof structuredAlertState.operator === 'string') {
+        props.ruleOperator = structuredAlertState.operator;
+      }
+      if (typeof structuredAlertState.threshold === 'number') {
+        props.ruleThreshold = structuredAlertState.threshold;
+      }
+
+      const alert = isRecord(structuredAlertState.alert) ? structuredAlertState.alert : null;
+      if (alert && typeof alert.title === 'string') {
+        props.ruleTitle = alert.title;
+      }
+      if (alert && typeof alert.message === 'string') {
+        props.ruleMessage = alert.message;
+      }
+      if (alert && typeof alert.severity === 'string') {
+        props.ruleSeverity = alert.severity;
+      }
+    }
+  }
+
   return props;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function layoutMetaToPuckProps(node: LayoutComponent): Record<string, unknown> {

@@ -54,6 +54,17 @@ const minimalDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'test-dash',
   title: 'Test Dashboard',
+  filters: [
+    {
+      id: 'filter-region',
+      title: 'Region',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    },
+  ],
   pages: [
     {
       id: 'page-1',
@@ -78,6 +89,7 @@ const multiPageDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'multi-page-dash',
   title: 'Multi Page Dashboard',
+  filters: [],
   pages: [
     {
       id: 'page-overview',
@@ -127,6 +139,17 @@ const multiPageDashboard: DashboardDefinition = {
     },
   ],
 };
+
+const minimalDatasets = [
+  {
+    id: 'orders',
+    label: 'Orders',
+    source: { type: 'table' as const, ref: 'orders' },
+    fields: [
+      { id: 'region', label: 'Region', dataType: 'string' as const, role: 'dimension' as const },
+    ],
+  },
+];
 
 describe('SupersubsetDesigner', () => {
   afterEach(() => {
@@ -235,6 +258,21 @@ describe('SupersubsetDesigner', () => {
     render(React.createElement(SupersubsetDesigner, {}));
     // headerActions is undefined, but the override still renders children
     expect(screen.getByTestId('default-actions')).toBeDefined();
+  });
+
+  it('renders a built-in Filters action and opens the filter drawer', () => {
+    render(
+      React.createElement(SupersubsetDesigner, {
+        value: minimalDashboard,
+        datasets: minimalDatasets,
+      }),
+    );
+
+    fireEvent.click(screen.getByTestId('designer-filters-toggle'));
+
+    expect(screen.getByText('Dashboard Filters')).toBeDefined();
+    expect(screen.getByTestId('filter-builder-panel')).toBeDefined();
+    expect(screen.getByTestId('designer-filters-toggle').textContent).toBe('Dashboard Filters (1)');
   });
 
   it('decorates the Puck viewport zoom control for accessibility', async () => {

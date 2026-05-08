@@ -14,6 +14,8 @@ import { puckToCanonical, canonicalToPuck } from '../adapters/puck-canonical';
 import { getComponentIcon } from '../icons/component-icons';
 import { DatasetProvider } from '../context/DatasetContext';
 import { PreviewDataProvider, type FetchPreviewData } from '../context/PreviewDataContext';
+import { FilterBuilderPanel } from './FilterBuilderPanel';
+import { SlideOverPanel } from './SlideOverPanel';
 
 // Import Puck's CSS
 import '@puckeditor/core/puck.css';
@@ -31,7 +33,7 @@ const SIDEBAR_CSS = `\
 [data-supersubset-designer-root] [class*="PuckHeader-inner"]{grid-template-columns:auto auto 1fr}\
 [data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0}\
 }\
-@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}}\
+@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}[data-testid="designer-header-controls"]{gap:8px!important;row-gap:6px!important}[data-testid="designer-page-controls"]{flex:1 0 100%!important}[data-supersubset-header-metadata="true"]{flex:0 1 auto!important;flex-wrap:nowrap!important;align-items:center!important}[data-supersubset-header-metadata="true"] label{gap:0!important}[data-supersubset-header-metadata="true"] label>span{display:none!important}[data-testid="designer-page-title-input"]{width:150px!important}[data-testid="designer-dashboard-title-input"]{width:180px!important}[data-supersubset-built-in-actions="true"]{flex:0 0 auto!important}[data-testid="designer-host-actions"]{flex:1 1 220px!important;justify-content:flex-start!important;min-width:0!important;overflow:hidden!important}}\
 `;
 
 let sidebarStyleInjected = false;
@@ -144,6 +146,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const [dashboardTitleDraft, setDashboardTitleDraft] = useState(
     sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE,
   );
+  const [showFilters, setShowFilters] = useState(false);
   const [pendingDeletePageId, setPendingDeletePageId] = useState<string | undefined>();
   const [controlledSyncRevision, setControlledSyncRevision] = useState(0);
   const canMutateDashboard = !isControlled || !!onChange;
@@ -356,6 +359,17 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     });
   }, [canMutateDashboard, dashboardTitleDraft, emitDashboardChange, sourceDashboard]);
 
+  const handleFiltersChange = useCallback(
+    (nextFilters: DashboardDefinition['filters']) => {
+      const baseDashboard = sourceDashboard ?? createEmptyDashboard();
+      emitDashboardChange({
+        ...baseDashboard,
+        filters: nextFilters,
+      });
+    },
+    [emitDashboardChange, sourceDashboard],
+  );
+
   // Sidebar icon overrides + header actions wrapper
   const overrides = useMemo(
     () => ({
@@ -551,12 +565,13 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         const metadataControls = React.createElement(
           'div',
           {
+            'data-supersubset-header-metadata': 'true',
             style: {
               display: 'flex',
               gap: 12,
-              flexWrap: 'nowrap',
+              flexWrap: 'wrap',
               alignItems: 'flex-start',
-              flex: '0 0 auto',
+              flex: '1 1 360px',
               minWidth: 0,
             },
           },
@@ -632,6 +647,36 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
           ),
         );
 
+        const builtInActions = React.createElement(
+          'div',
+          {
+            'data-supersubset-built-in-actions': 'true',
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 8,
+              flex: '0 0 auto',
+            },
+          },
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              onClick: () => setShowFilters(true),
+              'data-testid': 'designer-filters-toggle',
+              style: {
+                ...actionButtonStyle('#fff', '#0f172a', '#cbd5e1'),
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                whiteSpace: 'nowrap',
+              },
+            },
+            `Dashboard Filters${sourceDashboard?.filters?.length ? ` (${sourceDashboard.filters.length})` : ''}`,
+          ),
+        );
+
         const headerControlLayout =
           pages.length > 0 || canMutateDashboard
             ? React.createElement(
@@ -642,12 +687,13 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   style: {
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 16,
-                    marginRight: 12,
+                    alignContent: 'flex-start',
+                    gap: 12,
+                    rowGap: 12,
                     flex: '1 1 auto',
-                    flexWrap: 'nowrap',
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
+                    flexWrap: 'wrap',
+                    overflowX: 'visible',
+                    overflowY: 'visible',
                     minWidth: 0,
                     maxWidth: '100%',
                   },
@@ -681,6 +727,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   deletePrompt,
                 ),
                 metadataControls,
+                builtInActions,
                 headerActionsRef.current
                   ? React.createElement(
                       'div',
@@ -691,7 +738,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                           minWidth: 0,
                           display: 'flex',
                           alignItems: 'center',
-                          overflow: 'hidden',
+                          justifyContent: 'flex-end',
+                          overflow: 'visible',
                         },
                       },
                       headerActionsRef.current,
@@ -826,11 +874,28 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     React.createElement(
       DatasetProvider,
       { datasets: datasets ?? [] },
-      fetchPreviewData
-        ? React.createElement(
-            PreviewDataProvider,
-            { fetchPreviewData },
-            React.createElement(Puck, {
+      React.createElement(
+        React.Fragment,
+        null,
+        fetchPreviewData
+          ? React.createElement(
+              PreviewDataProvider,
+              { fetchPreviewData },
+              React.createElement(Puck, {
+                key: editorKey,
+                config,
+                data: initialData,
+                onChange: canMutateDashboard ? handleChange : undefined,
+                onPublish: onPublish ? handlePublish : undefined,
+                headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
+                height,
+                iframe: { enabled: !disableIframe },
+                metadata: metadata ?? {},
+                plugins,
+                overrides: overrides as never,
+              }),
+            )
+          : React.createElement(Puck, {
               key: editorKey,
               config,
               data: initialData,
@@ -843,20 +908,21 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               plugins,
               overrides: overrides as never,
             }),
-          )
-        : React.createElement(Puck, {
-            key: editorKey,
-            config,
-            data: initialData,
-            onChange: canMutateDashboard ? handleChange : undefined,
-            onPublish: onPublish ? handlePublish : undefined,
-            headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
-            height,
-            iframe: { enabled: !disableIframe },
-            metadata: metadata ?? {},
-            plugins,
-            overrides: overrides as never,
+        React.createElement(SlideOverPanel, {
+          open: showFilters,
+          onClose: () => setShowFilters(false),
+          title: 'Dashboard Filters',
+          subtitle: 'Define filter controls, option sources, and runtime scope',
+          width: 480,
+          children: React.createElement(FilterBuilderPanel, {
+            filters: sourceDashboard?.filters ?? [],
+            onChange: handleFiltersChange,
+            datasets: datasets ?? [],
+            pageIds: pages.map((page) => page.id),
+            widgetIds: pages.flatMap((page) => page.widgets?.map((widget) => widget.id) ?? []),
           }),
+        }),
+      ),
     ),
   );
 }
@@ -964,7 +1030,8 @@ function smallSectionLabelStyle(): React.CSSProperties {
 
 function headerInputStyle(canEdit: boolean, minWidth = 180): React.CSSProperties {
   return {
-    minWidth,
+    width: `${minWidth}px`,
+    maxWidth: '100%',
     padding: '6px 10px',
     borderRadius: 999,
     border: '1px solid #cbd5e1',

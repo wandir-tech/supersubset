@@ -1,5 +1,8 @@
 import type { DashboardDefinition } from '@supersubset/schema';
 
+const REGION_OPTIONS = ['North', 'South', 'East', 'West'];
+const CATEGORY_OPTIONS = ['Electronics', 'Clothing', 'Food', 'Home'];
+
 export interface DashboardSwitchingDemo {
   dashboards: DashboardDefinition[];
   initialDashboardId: string;
@@ -46,6 +49,11 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: REGION_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
@@ -55,6 +63,11 @@ export const pageNavigationDemoDashboard: DashboardDefinition = {
       fieldRef: 'category',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: CATEGORY_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'page', pageId: 'page-overview' },
     },
   ],
@@ -337,6 +350,11 @@ const executiveDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: REGION_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
   ],
@@ -476,6 +494,11 @@ const operationsDashboard: DashboardDefinition = {
       fieldRef: 'category',
       datasetRef: 'ds-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: CATEGORY_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
   ],

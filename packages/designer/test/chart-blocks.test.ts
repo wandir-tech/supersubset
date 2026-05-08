@@ -90,7 +90,10 @@ describe('Chart blocks — universal properties', () => {
   });
 
   it.each(CHART_BLOCK_NAMES)('%s render function produces output', (name) => {
-    const block = ALL_BLOCKS[name].block as { render: (props: Record<string, unknown>) => unknown; defaultProps?: Record<string, unknown> };
+    const block = ALL_BLOCKS[name].block as {
+      render: (props: Record<string, unknown>) => unknown;
+      defaultProps?: Record<string, unknown>;
+    };
     const result = block.render({ ...block.defaultProps, puck: { isEditing: false } });
     expect(result).toBeDefined();
   });
@@ -113,7 +116,9 @@ describe('XY chart blocks — specific fields', () => {
   });
 
   it.each(XY_CHARTS)('%s has aggregation', (name) => {
-    const block = ALL_BLOCKS[name].block as { fields?: Record<string, { type: string; options?: unknown[] }> };
+    const block = ALL_BLOCKS[name].block as {
+      fields?: Record<string, { type: string; options?: unknown[] }>;
+    };
     expect(block.fields!.aggregation).toBeDefined();
     expect(block.fields!.aggregation.type).toBe('select');
     expect(block.fields!.aggregation.options).toBeDefined();
@@ -234,20 +239,27 @@ describe('GaugeChart — specific fields', () => {
 
 describe('AlertsWidgetBlock — specific fields', () => {
   it('has data-driven alert field bindings', () => {
+    expect(AlertsWidgetBlock.fields!.alertMode).toBeDefined();
     expect(AlertsWidgetBlock.fields!.titleField).toBeDefined();
     expect(AlertsWidgetBlock.fields!.messageField).toBeDefined();
     expect(AlertsWidgetBlock.fields!.severityField).toBeDefined();
     expect(AlertsWidgetBlock.fields!.timestampField).toBeDefined();
+    expect(AlertsWidgetBlock.fields!.ruleMetricField).toBeDefined();
+    expect(AlertsWidgetBlock.fields!.ruleThreshold).toBeDefined();
   });
 
   it('defaults to stack layout with timestamps enabled', () => {
+    expect(AlertsWidgetBlock.defaultProps!.alertMode).toBe('data-binding');
     expect(AlertsWidgetBlock.defaultProps!.layout).toBe('stack');
     expect(AlertsWidgetBlock.defaultProps!.showTimestamp).toBe('true');
     expect(AlertsWidgetBlock.defaultProps!.defaultSeverity).toBe('info');
   });
 
   it('supports stack, wrap, and inline layouts', () => {
-    const layout = AlertsWidgetBlock.fields!.layout as { type: string; options: Array<{ value: string }> };
+    const layout = AlertsWidgetBlock.fields!.layout as {
+      type: string;
+      options: Array<{ value: string }>;
+    };
     expect(layout.type).toBe('select');
     expect(layout.options.map((option) => option.value)).toEqual(['stack', 'wrap', 'inline']);
   });
@@ -321,7 +333,14 @@ const FIELD_REF_FIELDS: Record<string, string[]> = {
   WaterfallChart: ['datasetRef', 'categoryField', 'valueField'],
   BoxPlotChart: ['datasetRef', 'categoryField', 'valueField'],
   GaugeChart: ['datasetRef', 'valueField'],
-  AlertsWidgetBlock: ['datasetRef', 'titleField', 'messageField', 'severityField', 'timestampField'],
+  AlertsWidgetBlock: [
+    'datasetRef',
+    'titleField',
+    'messageField',
+    'severityField',
+    'timestampField',
+    'ruleMetricField',
+  ],
   Table: ['datasetRef'],
   KPICard: ['datasetRef', 'valueField', 'comparisonField', 'subtitleField'],
 };

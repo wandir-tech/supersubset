@@ -159,6 +159,49 @@ export interface FieldBinding {
   sort?: 'asc' | 'desc';
 }
 
+// ─── Authored Alert Rules ───────────────────────────────────
+
+export type AlertRuleSeverity = 'info' | 'success' | 'warning' | 'danger';
+
+export function isAlertRuleSeverity(value: unknown): value is AlertRuleSeverity {
+  return value === 'info' || value === 'success' || value === 'warning' || value === 'danger';
+}
+
+export function normalizeAlertRuleSeverity(
+  value: unknown,
+  fallback: AlertRuleSeverity = 'info',
+): AlertRuleSeverity {
+  return isAlertRuleSeverity(value) ? value : fallback;
+}
+
+export type StructuredAlertRuleAggregation =
+  | 'sum'
+  | 'avg'
+  | 'count'
+  | 'count_distinct'
+  | 'min'
+  | 'max';
+
+export type StructuredAlertRuleOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte';
+
+export interface AlertRuleAlertDefinition {
+  title: string;
+  message: string;
+  severity?: AlertRuleSeverity;
+}
+
+export interface StructuredAlertRuleDefinition {
+  mode: 'structured';
+  datasetRef?: string;
+  metricFieldRef: string;
+  aggregation: StructuredAlertRuleAggregation;
+  operator: StructuredAlertRuleOperator;
+  threshold: number;
+  alert: AlertRuleAlertDefinition;
+}
+
+export type AlertRuleDefinition = StructuredAlertRuleDefinition;
+
 // ─── Filters ─────────────────────────────────────────────────
 
 export interface FilterDefinition {
@@ -169,8 +212,28 @@ export interface FilterDefinition {
   datasetRef: string;
   operator: string;
   defaultValue?: unknown;
+  optionSource?: FilterOptionSource;
   scope: FilterScope;
 }
+
+export interface FilterOptionDefinition {
+  value: string;
+  label?: string;
+  disabled?: boolean;
+}
+
+export type FilterOptionSource =
+  | {
+      kind: 'static';
+      options: FilterOptionDefinition[];
+      completeness?: 'complete' | 'curated';
+    }
+  | {
+      kind: 'field';
+      strategy: 'preload' | 'search';
+      maxOptions?: number;
+      minSearchChars?: number;
+    };
 
 export type FilterScope =
   | { type: 'global' }

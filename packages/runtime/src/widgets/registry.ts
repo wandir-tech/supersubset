@@ -36,7 +36,7 @@ export interface WidgetProps {
   dashboardFilters?: FilterDefinition[];
   /** Inline dataset metadata referenced by control widgets */
   datasets?: DatasetDefinition[];
-  /** Static option values for authored filters */
+  /** Legacy static option values for authored filters */
   filterOptions?: Record<string, string[]>;
   /** Callback for widget interactions (click, hover, etc.) */
   onEvent?: (event: WidgetEvent) => void;

@@ -70,7 +70,7 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     await page.waitForTimeout(2000);
 
     // Open Filters panel via toolbar button
-    await page.getByTestId('filters-toggle').click();
+    await page.getByTestId('designer-filters-toggle').click();
     await page.waitForTimeout(500);
 
     await page.screenshot({
@@ -80,7 +80,7 @@ test.describe('Test Plan A — Designer Happy Path', () => {
 
     // Verify slide-over panel is visible
     await expect(page.getByTestId('slide-over-panel')).toBeVisible();
-    await expect(page.getByText('Dashboard Filters')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard Filters' })).toBeVisible();
 
     // Close via Done button
     await page.getByTestId('slide-over-done').click();
@@ -146,7 +146,10 @@ test.describe('Test Plan A — Designer Happy Path', () => {
 
     // Try to publish
     const publishBtn = page.locator('button', { hasText: /Publish/i });
-    const hasPublish = await publishBtn.first().isVisible().catch(() => false);
+    const hasPublish = await publishBtn
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     if (hasPublish) {
       // Dismiss any dialogs
@@ -165,7 +168,10 @@ test.describe('Test Plan A — Designer Happy Path', () => {
 
       // Verify saved dashboard message
       const savedMsg = page.getByText('Last saved:');
-      const hasSaved = await savedMsg.first().isVisible().catch(() => false);
+      const hasSaved = await savedMsg
+        .first()
+        .isVisible()
+        .catch(() => false);
       if (hasSaved) {
         expect(consoleMessages.length).toBeGreaterThanOrEqual(1);
       }

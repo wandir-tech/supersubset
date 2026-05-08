@@ -5,9 +5,11 @@ import { test } from '@playwright/test';
 import {
   switchToViewer,
   switchToDesigner,
+  openDashboardFiltersPanel,
   waitForChartsReady,
   captureFullPage,
   captureElement,
+  screenshotPath,
   setupConsoleErrorCapture,
   assertNoConsoleErrors,
 } from './helpers';
@@ -64,7 +66,7 @@ test.describe('Filter screenshots', () => {
     }
     // Crop the filter bar and the first widget row below it
     await page.screenshot({
-      path: 'src/assets/screenshots/filters/select-filter-default-viewer.png',
+      path: screenshotPath('filters', 'select-filter', 'default', 'viewer'),
       clip: { x: 0, y: 0, width: 1440, height: 900 },
       animations: 'disabled',
     });
@@ -96,12 +98,7 @@ test.describe('Filter screenshots', () => {
     await switchToDesigner(page);
     await waitForChartsReady(page);
 
-    // Open the filters slide-over
-    const filtersBtn = page.locator('[data-testid="filters-toggle"]');
-    if (await filtersBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await filtersBtn.click();
-      await page.waitForTimeout(500);
-    }
+    await openDashboardFiltersPanel(page);
     await captureFullPage(page, 'filters', 'filter-builder', 'default', 'designer');
   });
 

@@ -9,6 +9,11 @@
  */
 import React, { useMemo, useState, useEffect, type ComponentType } from 'react';
 import type { WidgetProps } from '@supersubset/runtime';
+import { normalizeAlertRuleSeverity, type AlertRuleSeverity } from '@supersubset/schema';
+import {
+  buildStructuredAlertRuleConfig,
+  buildStructuredAlertRuleDraft,
+} from '../adapters/alert-rule-helpers';
 import { getSampleData } from '../data/sample-data';
 import { usePreviewData, type PreviewDataRequest } from '../context/PreviewDataContext';
 
@@ -117,7 +122,6 @@ function normalizePuckProps(puckProps: Record<string, unknown>): Record<string, 
   );
 }
 
-type AlertSeverity = 'info' | 'success' | 'warning' | 'danger';
 type AlertLayout = 'stack' | 'wrap' | 'inline';
 
 const ALERT_LAYOUT_STYLES: Record<AlertLayout, React.CSSProperties> = {
@@ -141,7 +145,7 @@ const ALERT_LAYOUT_STYLES: Record<AlertLayout, React.CSSProperties> = {
 };
 
 const ALERT_SEVERITY_STYLES: Record<
-  AlertSeverity,
+  AlertRuleSeverity,
   { accent: string; background: string; border: string }
 > = {
   info: {
@@ -165,14 +169,6 @@ const ALERT_SEVERITY_STYLES: Record<
     border: '#fecaca',
   },
 };
-
-function normalizeAlertSeverity(value: unknown, fallback: AlertSeverity = 'info'): AlertSeverity {
-  if (value === 'info' || value === 'success' || value === 'warning' || value === 'danger') {
-    return value;
-  }
-
-  return fallback;
-}
 
 function readAlertText(row: Record<string, unknown>, fieldName: unknown): string {
   if (typeof fieldName !== 'string' || fieldName.length === 0) {
@@ -203,8 +199,24 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
     typeof config.maxItems === 'number' && config.maxItems > 0 ? config.maxItems : data.length;
   const emptyState = config.emptyState === 'hide' ? 'hide' : 'placeholder';
   const showTimestamp = config.showTimestamp !== false;
-  const defaultSeverity = normalizeAlertSeverity(config.defaultSeverity, 'info');
-  const visibleAlerts = data.slice(0, maxItems);
+  const defaultSeverity = normalizeAlertRuleSeverity(config.defaultSeverity, 'info');
+  const structuredAlertRule = readStructuredAlertRulePreview(config);
+  const isStructuredAlertMode = config.alertMode === 'structured' || !!structuredAlertRule;
+  const previewAlerts = structuredAlertRule
+    ? [
+        {
+          [titleField]: structuredAlertRule.alert.title,
+          [messageField]: structuredAlertRule.alert.message,
+          [severityField]: structuredAlertRule.alert.severity ?? defaultSeverity,
+        },
+      ]
+    : isStructuredAlertMode
+      ? []
+      : data;
+  const visibleAlerts = previewAlerts.slice(0, maxItems);
+  const emptyMessage = isStructuredAlertMode
+    ? 'Complete the structured rule to preview an alert.'
+    : 'No alerts are firing in the sample feed.';
 
   if (visibleAlerts.length === 0 && emptyState === 'hide') {
     return null;
@@ -250,12 +262,12 @@ function AlertsPreview({ title, data, config, fallbackIcon }: AlertsPreviewProps
           }}
         >
           <span style={{ fontSize: 28 }}>{fallbackIcon}</span>
-          <span style={{ fontSize: 13 }}>No alerts are firing in the sample feed.</span>
+          <span style={{ fontSize: 13 }}>{emptyMessage}</span>
         </div>
       ) : (
         <div style={ALERT_LAYOUT_STYLES[layout]}>
           {visibleAlerts.map((row, index) => {
-            const severity = normalizeAlertSeverity(row[severityField], defaultSeverity);
+            const severity = normalizeAlertRuleSeverity(row[severityField], defaultSeverity);
             const severityStyle = ALERT_SEVERITY_STYLES[severity];
             const alertTitle = readAlertText(row, titleField) || `Alert ${index + 1}`;
             const alertMessage = readAlertText(row, messageField) || 'No alert message configured.';
@@ -399,6 +411,14 @@ function buildWidgetConfig(
   else if (normalizedPuckProps.showTimestamp === 'false') config.showTimestamp = false;
   if (s(normalizedPuckProps.defaultSeverity))
     config.defaultSeverity = normalizedPuckProps.defaultSeverity;
+  if (normalizedPuckProps.alertMode === 'structured') {
+    config.alertMode = 'structured';
+    config.alertRuleDraft = buildStructuredAlertRuleDraft(normalizedPuckProps);
+  }
+  const structuredAlertRule = buildStructuredAlertRuleConfig(normalizedPuckProps);
+  if (structuredAlertRule) {
+    config.alertRule = structuredAlertRule;
+  }
   if (normalizedPuckProps.smooth === 'true') config.smooth = true;
   else if (normalizedPuckProps.smooth === 'false') config.smooth = false;
   if (normalizedPuckProps.stacked === 'true') config.stacked = true;
@@ -540,6 +560,60 @@ function buildWidgetConfig(
   if (s(normalizedPuckProps.format)) config.format = normalizedPuckProps.format;
 
   return config;
+}
+
+function readStructuredAlertRulePreview(
+  config: Record<string, unknown>,
+): { alert: { title: string; message: string; severity?: string } } | null {
+  const alertRuleCandidate =
+    config.alertRule && typeof config.alertRule === 'object'
+      ? config.alertRule
+      : config.alertRuleDraft && typeof config.alertRuleDraft === 'object'
+        ? config.alertRuleDraft
+        : null;
+
+  if (!alertRuleCandidate || (alertRuleCandidate as { mode?: unknown }).mode !== 'structured') {
+    return null;
+  }
+
+  const metricFieldRef = (alertRuleCandidate as { metricFieldRef?: unknown }).metricFieldRef;
+  const aggregation = (alertRuleCandidate as { aggregation?: unknown }).aggregation;
+  const operator = (alertRuleCandidate as { operator?: unknown }).operator;
+  const threshold = (alertRuleCandidate as { threshold?: unknown }).threshold;
+
+  if (
+    typeof metricFieldRef !== 'string' ||
+    metricFieldRef.trim().length === 0 ||
+    typeof aggregation !== 'string' ||
+    aggregation.trim().length === 0 ||
+    typeof operator !== 'string' ||
+    operator.trim().length === 0 ||
+    typeof threshold !== 'number' ||
+    !Number.isFinite(threshold)
+  ) {
+    return null;
+  }
+
+  const alert = (alertRuleCandidate as { alert?: unknown }).alert;
+  if (!alert || typeof alert !== 'object') {
+    return null;
+  }
+
+  const title = (alert as { title?: unknown }).title;
+  const message = (alert as { message?: unknown }).message;
+  const severity = (alert as { severity?: unknown }).severity;
+
+  if (typeof title !== 'string' || typeof message !== 'string') {
+    return null;
+  }
+
+  return {
+    alert: {
+      title,
+      message,
+      ...(typeof severity === 'string' ? { severity } : {}),
+    },
+  };
 }
 
 // ─── Sample Data Remapping ───────────────────────────────────
