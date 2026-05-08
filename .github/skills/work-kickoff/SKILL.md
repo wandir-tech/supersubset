@@ -24,6 +24,7 @@ Turn a described work item into a **self-contained GitHub issue** so a fresh age
 3. Read **`docs/status/master-plan.md`** — note current phase, related tasks, and human checkpoints (HC-N) if any.
 4. Skim **`docs/status/risk-register.md`** when the change affects stability, compatibility, or release timing.
 5. Explore code in the affected packages; find patterns to extend, not reinvent.
+6. For schema-first work, perform a contract-closure audit: can the feature work from `DashboardDefinition` plus explicit host-owned boundaries only, or is the current design sneaking authored semantics into extra props/callbacks?
 
 ### Step 2: Tier the skills (and agents)
 
@@ -42,7 +43,7 @@ Always evaluate **`orchestration`** for multi-package delivery and **`browser-te
 Structure:
 
 1. **Context** — Problem, user-visible outcome, link to master-plan task if applicable.
-2. **Design decisions** — Choices + rationale (schema vs UI-only, adapter boundaries, etc.).
+2. **Design decisions** — Choices + rationale (schema vs UI-only, adapter boundaries, etc.). Name every required host-owned seam and justify any sidecar input that carries authored semantics.
 3. **Phases** — Ordered steps (e.g. schema/types → runtime → designer → tests → docs/screenshots).
 4. **Key files** — Table: path → one-line intent.
 5. **Testing** — Unit targets, `pnpm test`, Playwright / Chrome MCP plans (`docs/testing/`), Storybook if relevant.
@@ -81,6 +82,7 @@ After approval, implementers: follow the issue, load essential skills, respect a
 - Duplicate issues for the same workstream.
 - Vague “fix the designer” without files, acceptance criteria, or test expectations.
 - Plans that omit **`pnpm lint` / `pnpm typecheck` / `pnpm test`** verification.
+- Treating an undocumented host sidecar prop as acceptable completion for a schema-first feature.
 
 ## See also
 

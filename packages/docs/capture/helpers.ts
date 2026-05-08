@@ -90,6 +90,34 @@ export async function switchToDesigner(page: Page): Promise<void> {
 }
 
 /**
+ * Open the dashboard filters authoring panel from the designer header.
+ * Supports the packaged designer's current selector and the dev-app's legacy fallback.
+ */
+export async function openDashboardFiltersPanel(page: Page): Promise<void> {
+  const candidateLocators = [
+    page.locator('[data-testid="designer-filters-toggle"]'),
+    page.locator('[data-testid="filters-toggle"]'),
+    page.getByRole('button', { name: /dashboard filters/i }),
+    page.getByRole('button', { name: /filters/i }),
+  ];
+
+  for (const locator of candidateLocators) {
+    if (
+      await locator
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
+      await locator.first().click();
+      await page.waitForTimeout(500);
+      return;
+    }
+  }
+
+  throw new Error('Could not find a dashboard filters toggle in the designer header.');
+}
+
+/**
  * Navigate to a specific page tab in the viewer.
  * Works with both viewer nav tabs and designer page tabs.
  */

@@ -6,6 +6,8 @@
  * the concrete adapters — Supersubset never connects to databases directly.
  */
 import type {
+  FilterOptionRequest,
+  FilterOptionResponse,
   LogicalQuery,
   QueryResult,
   QueryAdapter,
@@ -18,6 +20,8 @@ import type {
 
 // Re-export key data-model types for convenience
 export type {
+  FilterOptionRequest,
+  FilterOptionResponse,
   LogicalQuery,
   QueryResult,
   QueryAdapter,
@@ -79,6 +83,14 @@ export class QueryClient<TSource = unknown> {
     if (this.queryAdapter.cancel) {
       return this.queryAdapter.cancel(queryId);
     }
+  }
+
+  /** Resolve filter options via the host adapter (if supported) */
+  async resolveFilterOptions(request: FilterOptionRequest): Promise<FilterOptionResponse> {
+    if (!this.queryAdapter.resolveFilterOptions) {
+      throw new Error('Query adapter does not support filter option resolution');
+    }
+    return this.queryAdapter.resolveFilterOptions(request);
   }
 
   /** Get all datasets from metadata adapter (cached) */

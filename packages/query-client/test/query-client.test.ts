@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryBuilder } from '../src/index';
 import type {
+  FilterOptionResponse,
   QueryAdapter,
   MetadataAdapter,
   NormalizedDataset,
@@ -16,7 +17,13 @@ const mockDatasets: NormalizedDataset[] = [
     label: 'Orders',
     fields: [
       { id: 'id', label: 'ID', dataType: 'integer', role: 'key' },
-      { id: 'total', label: 'Total', dataType: 'number', role: 'measure', defaultAggregation: 'sum' },
+      {
+        id: 'total',
+        label: 'Total',
+        dataType: 'number',
+        role: 'measure',
+        defaultAggregation: 'sum',
+      },
       { id: 'status', label: 'Status', dataType: 'string', role: 'dimension' },
     ],
   },
@@ -43,18 +50,29 @@ const mockResult: QueryResult = {
 };
 
 function createMockAdapters() {
+  const mockFilterOptionResponse: FilterOptionResponse = {
+    options: [
+      { value: 'delivered', label: 'Delivered' },
+      { value: 'shipped', label: 'Shipped' },
+    ],
+    complete: true,
+  };
+
   const queryAdapter: QueryAdapter = {
     name: 'mock-query',
     execute: vi.fn().mockResolvedValue(mockResult),
     cancel: vi.fn().mockResolvedValue(undefined),
+    resolveFilterOptions: vi.fn().mockResolvedValue(mockFilterOptionResponse),
   };
 
   const metadataAdapter: MetadataAdapter<string> = {
     name: 'mock-metadata',
     getDatasets: vi.fn().mockResolvedValue(mockDatasets),
-    getDataset: vi.fn().mockImplementation(async (_source: string, id: string) =>
-      mockDatasets.find((d) => d.id === id)
-    ),
+    getDataset: vi
+      .fn()
+      .mockImplementation(async (_source: string, id: string) =>
+        mockDatasets.find((d) => d.id === id),
+      ),
   };
 
   return { queryAdapter, metadataAdapter };
@@ -93,12 +111,48 @@ describe('QueryClient', () => {
     const controller = new AbortController();
     controller.abort();
     const query: LogicalQuery = { datasetId: 'orders', fields: [{ fieldId: 'status' }] };
-    await expect(client.execute(query, { signal: controller.signal })).rejects.toThrow('Query aborted');
+    await expect(client.execute(query, { signal: controller.signal })).rejects.toThrow(
+      'Query aborted',
+    );
   });
 
   it('cancels a query via the adapter', async () => {
     await client.cancel('query-123');
     expect(queryAdapter.cancel).toHaveBeenCalledWith('query-123');
+  });
+
+  it('resolves filter options via the adapter', async () => {
+    const response = await client.resolveFilterOptions({
+      filterId: 'status-filter',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'sh',
+      limit: 25,
+    });
+
+    expect(queryAdapter.resolveFilterOptions).toHaveBeenCalledWith({
+      filterId: 'status-filter',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'sh',
+      limit: 25,
+    });
+    expect(response.options).toHaveLength(2);
+    expect(response.complete).toBe(true);
+  });
+
+  it('throws when filter option resolution is not supported', async () => {
+    const clientNoResolver = new QueryClient({
+      queryAdapter: { name: 'no-resolver', execute: vi.fn().mockResolvedValue(mockResult) },
+    });
+
+    await expect(
+      clientNoResolver.resolveFilterOptions({
+        filterId: 'status-filter',
+        datasetId: 'orders',
+        fieldId: 'status',
+      }),
+    ).rejects.toThrow('Query adapter does not support filter option resolution');
   });
 
   it('cancel is a no-op when adapter has no cancel', async () => {
@@ -148,7 +202,9 @@ describe('QueryClient', () => {
 
   it('throws when getDataset called without metadataAdapter', async () => {
     const clientNoMeta = new QueryClient({ queryAdapter });
-    await expect(clientNoMeta.getDataset('orders')).rejects.toThrow('No metadataAdapter configured');
+    await expect(clientNoMeta.getDataset('orders')).rejects.toThrow(
+      'No metadataAdapter configured',
+    );
   });
 });
 
@@ -165,15 +221,15 @@ describe('QueryBuilder', () => {
   });
 
   it('builds a basic query', () => {
-    const query = client
-      .buildQuery('orders')
-      .select('status')
-      .select('total', 'sum')
-      .toQuery();
+    const query = client.buildQuery('orders').select('status').select('total', 'sum').toQuery();
 
     expect(query.datasetId).toBe('orders');
     expect(query.fields).toHaveLength(2);
-    expect(query.fields[0]).toEqual({ fieldId: 'status', aggregation: undefined, alias: undefined });
+    expect(query.fields[0]).toEqual({
+      fieldId: 'status',
+      aggregation: undefined,
+      alias: undefined,
+    });
     expect(query.fields[1]).toEqual({ fieldId: 'total', aggregation: 'sum', alias: undefined });
   });
 
@@ -203,10 +259,7 @@ describe('QueryBuilder', () => {
   });
 
   it('executes the built query', async () => {
-    const result = await client
-      .buildQuery('orders')
-      .select('status')
-      .execute();
+    const result = await client.buildQuery('orders').select('status').execute();
 
     expect(queryAdapter.execute).toHaveBeenCalled();
     expect(result.rows).toHaveLength(2);
@@ -224,10 +277,7 @@ describe('QueryBuilder', () => {
   });
 
   it('supports field alias', () => {
-    const query = client
-      .buildQuery('orders')
-      .select('total', 'sum', 'revenue')
-      .toQuery();
+    const query = client.buildQuery('orders').select('total', 'sum', 'revenue').toQuery();
 
     expect(query.fields[0].alias).toBe('revenue');
   });

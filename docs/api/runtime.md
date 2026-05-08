@@ -46,7 +46,7 @@ Important props:
 - `onExternalAction`: host callback for external interaction actions
 - `onDrill`: host callback for drill actions
 - `onError`: runtime error boundary callback
-- `filterOptions`: static option lists for filter controls
+- `filterOptions`: legacy static fallback option lists for select filter controls when authored filters do not already declare static options
 
 ## Widget Registry
 
@@ -90,6 +90,10 @@ Use the provider and hook exports only if you are building custom shells around 
 - `InteractionProvider` and `useInteractions()` execute click, hover, and select interactions
 - `NavigateRequest` carries `target` plus the current `filterState`
 - `DrillProvider` and `useDrill()` manage drill breadcrumbs and active drill state
+
+Current limitation:
+
+- Authored select filters can now declare static options in the dashboard schema. Field-backed dynamic option resolution is defined at the query-contract layer, but the runtime does not yet consume that capability directly; hosts still need a fallback strategy for that case.
 
 ## State Persistence Helpers
 

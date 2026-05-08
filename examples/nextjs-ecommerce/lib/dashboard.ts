@@ -1,5 +1,8 @@
 import type { DashboardDefinition } from '@supersubset/schema';
 
+const REGION_OPTIONS = ['North America', 'Europe', 'APAC'];
+const CHANNEL_OPTIONS = ['Direct', 'Marketplace', 'Retail Partners', 'Email Campaigns'];
+
 export const ecommerceDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
   id: 'nextjs-ecommerce-dashboard',
@@ -13,6 +16,11 @@ export const ecommerceDashboard: DashboardDefinition = {
       fieldRef: 'region',
       datasetRef: 'sales-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: REGION_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
     {
@@ -22,6 +30,11 @@ export const ecommerceDashboard: DashboardDefinition = {
       fieldRef: 'channel',
       datasetRef: 'sales-orders',
       operator: 'equals',
+      optionSource: {
+        kind: 'static',
+        completeness: 'complete',
+        options: CHANNEL_OPTIONS.map((value) => ({ value })),
+      },
       scope: { type: 'global' },
     },
   ],
@@ -129,7 +142,12 @@ export const ecommerceDashboard: DashboardDefinition = {
               { role: 'comparison', fieldRef: 'previousGmv' },
             ],
           },
-          config: { valueField: 'gmv', comparisonField: 'previousGmv', format: 'currency', prefix: '$' },
+          config: {
+            valueField: 'gmv',
+            comparisonField: 'previousGmv',
+            format: 'currency',
+            prefix: '$',
+          },
         },
         {
           id: 'kpi-orders',
@@ -155,7 +173,12 @@ export const ecommerceDashboard: DashboardDefinition = {
               { role: 'comparison', fieldRef: 'previousAov' },
             ],
           },
-          config: { valueField: 'aov', comparisonField: 'previousAov', format: 'currency', prefix: '$' },
+          config: {
+            valueField: 'aov',
+            comparisonField: 'previousAov',
+            format: 'currency',
+            prefix: '$',
+          },
         },
         {
           id: 'chart-revenue-trend',
