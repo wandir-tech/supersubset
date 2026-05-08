@@ -1,5 +1,17 @@
 # @supersubset/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/schema@0.1.3
+  - @supersubset/data-model@0.1.3
+  - @supersubset/adapter-prisma@0.1.3
+  - @supersubset/adapter-sql@0.1.3
+  - @supersubset/adapter-json@0.1.3
+  - @supersubset/adapter-dbt@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

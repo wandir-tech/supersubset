@@ -1,5 +1,12 @@
 # @supersubset/adapter-json
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/data-model@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
