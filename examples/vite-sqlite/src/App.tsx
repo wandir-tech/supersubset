@@ -7,10 +7,10 @@ import type { DashboardDefinition } from '@supersubset/schema';
 import { defaultDashboard } from './dashboard';
 import {
   compileSqliteLogicalQuery,
+  ensureSqliteReady,
   executeSqliteLogicalQuery,
   fetchDesignerPreviewData,
   formatSqliteQueryLogEntry,
-  loadSqliteFilterOptions,
 } from './sqlite';
 import './styles.css';
 
@@ -48,7 +48,7 @@ export default function App() {
     return defaultDashboard;
   });
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
-  const [filterOptions, setFilterOptions] = useState<Record<string, string[]> | null>(null);
+  const [sqliteReady, setSqliteReady] = useState(false);
   const [queryLog, setQueryLog] = useState<string[]>([]);
   const [viewerStatus, setViewerStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -61,10 +61,10 @@ export default function App() {
   useEffect(() => {
     let active = true;
     setError(null);
-    loadSqliteFilterOptions()
-      .then((result) => {
+    ensureSqliteReady()
+      .then(() => {
         if (!active) return;
-        setFilterOptions(result);
+        setSqliteReady(true);
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -77,7 +77,7 @@ export default function App() {
   }, []);
 
   useLayoutEffect(() => {
-    if (!filterOptions || mode !== 'viewer') {
+    if (!sqliteReady || mode !== 'viewer') {
       if (mode !== 'viewer') {
         setViewerStatus('idle');
       }
@@ -92,7 +92,7 @@ export default function App() {
     setQueryLog([]);
     setViewerStatus('loading');
     setError(null);
-  }, [dashboard, filterOptions, filterState.values, mode]);
+  }, [dashboard, filterState.values, mode, sqliteReady]);
 
   const resolvedTheme = useMemo(
     () =>
@@ -135,7 +135,7 @@ export default function App() {
   }, []);
 
   const queryAdapter = useMemo<QueryAdapter | undefined>(() => {
-    if (!filterOptions || mode !== 'viewer') {
+    if (!sqliteReady || mode !== 'viewer') {
       return undefined;
     }
 
@@ -167,7 +167,7 @@ export default function App() {
         }
       },
     };
-  }, [filterOptions, mode]);
+  }, [mode, sqliteReady]);
 
   return (
     <div className={mode === 'designer' ? 'shell shell--designer' : 'shell'}>
@@ -212,9 +212,7 @@ export default function App() {
         </div>
       </section>
 
-      {status === 'error' ? (
-        <div className="error-panel">SQLite bootstrap failed: {error}</div>
-      ) : null}
+      {error ? <div className="error-panel">SQLite bootstrap failed: {error}</div> : null}
 
       <main className="workspace">
         <section className="canvas-area">
@@ -232,17 +230,16 @@ export default function App() {
             </Suspense>
           ) : (
             <div className="viewer-shell">
-              {filterOptions == null || viewerStatus === 'loading' ? (
+              {!sqliteReady || viewerStatus === 'loading' ? (
                 <div className="loading-panel">Running SQLite queries…</div>
               ) : null}
-              {filterOptions ? (
+              {sqliteReady ? (
                 <SupersubsetRenderer
                   definition={dashboard}
                   registry={registry}
                   theme={resolvedTheme as unknown as Record<string, unknown>}
                   cssVariables={cssVariables}
                   queryAdapter={queryAdapter}
-                  filterOptions={filterOptions}
                   onFilterChange={setFilterState}
                 />
               ) : null}

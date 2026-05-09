@@ -635,6 +635,10 @@ export async function executeSqliteLogicalQuery(
   };
 }
 
+export async function ensureSqliteReady(): Promise<void> {
+  await getDatabase();
+}
+
 export async function loadSqliteFilterOptions(): Promise<Record<string, string[]>> {
   const db = await getDatabase();
 

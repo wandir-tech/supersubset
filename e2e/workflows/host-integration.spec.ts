@@ -120,4 +120,39 @@ test.describe('Host Integration Workflow', () => {
     expect(requestUrls.some((url) => /superset|lightdash|rill/i.test(url))).toBe(false);
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
+
+  test('Vite host shows an explicit unavailable state when Region is authored with field-backed options', async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(VITE_SQLITE_EXAMPLE_ORIGIN);
+
+    await expect(page.getByText('Vite + SQLite host example')).toBeVisible();
+    await page.getByRole('button', { name: 'Designer' }).click();
+    await expect(page.getByTestId('designer-filters-toggle')).toBeVisible();
+
+    await page.getByTestId('designer-filters-toggle').click();
+    await expect(page.getByTestId('filter-builder-panel')).toBeVisible();
+    await page.getByTestId('filter-option-source-kind-filter-region').selectOption('field');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('slide-over-panel')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Viewer' }).click();
+
+    const regionFilter = page.getByLabel('Region');
+    await expect(regionFilter).toBeDisabled();
+    await expect(regionFilter.locator('option')).toHaveCount(1);
+    await expect(regionFilter.locator('option').first()).toHaveText(
+      'Field-backed options require host support',
+    );
+
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
 });

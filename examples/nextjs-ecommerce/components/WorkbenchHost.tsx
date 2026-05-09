@@ -27,7 +27,6 @@ import {
 } from '../lib/workbench-client';
 import { WORKBENCH_LOGIN_EMAIL, WORKBENCH_LOGIN_PASSWORD } from '../lib/workbench-auth';
 import { workbenchStarterDashboard } from '../lib/workbench-dashboard';
-import { workbenchFilterOptions } from '../lib/workbench-shared';
 
 export function WorkbenchHost() {
   const [email, setEmail] = useState(WORKBENCH_LOGIN_EMAIL);
@@ -522,7 +521,6 @@ export function WorkbenchHost() {
                 theme={resolvedTheme as unknown as Record<string, unknown>}
                 cssVariables={cssVariables}
                 queryAdapter={queryAdapter}
-                filterOptions={workbenchFilterOptions}
                 onFilterChange={setFilterState}
               />
             </div>
