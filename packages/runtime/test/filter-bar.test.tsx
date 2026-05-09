@@ -160,6 +160,32 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['Options unavailable']);
   });
 
+  it('does not fall back to legacy filterOptions for field-backed select filters', () => {
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: {
+            kind: 'field',
+            strategy: 'search',
+            minSearchChars: 2,
+          },
+        },
+      ],
+      {
+        filterOptions: { 'f-status': ['open', 'closed'] },
+      },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(select.disabled).toBe(true);
+    expect(optionLabels).toEqual(['Field-backed options require host support']);
+  });
+
   it('renders a multi-select control for multi-select filters', () => {
     const { container } = renderFilterBar([multiSelectFilter]);
 
