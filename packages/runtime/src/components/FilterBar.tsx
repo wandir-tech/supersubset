@@ -587,10 +587,6 @@ function resolveFilterOptions(
       : { options: [], unavailableMessage: 'No options configured' };
   }
 
-  if (legacyOptions && legacyOptions.length > 0) {
-    return { options: legacyOptions.map((option) => ({ value: option, label: option })) };
-  }
-
   if (filter.optionSource?.kind === 'field') {
     const fieldOptions = getFieldOptions(filter, datasets);
     if (fieldOptions.length > 0) {
@@ -602,6 +598,10 @@ function resolveFilterOptions(
       options: [],
       unavailableMessage: 'Field-backed options require host support',
     };
+  }
+
+  if (legacyOptions && legacyOptions.length > 0) {
+    return { options: legacyOptions.map((option) => ({ value: option, label: option })) };
   }
 
   return { options: [], unavailableMessage: 'Options unavailable' };
