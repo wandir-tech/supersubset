@@ -21,6 +21,23 @@ test.describe('Filter Cascade Workflow', () => {
     await expect(page.getByRole('button', { name: 'Overview' })).toBeVisible();
   }
 
+  async function clickOverviewRegionDatum(page: import('@playwright/test').Page) {
+    const canvas = page.locator('[data-ss-node="pages-region-chart-host"] canvas').first();
+    await expect(canvas).toBeVisible();
+
+    const bounds = await canvas.boundingBox();
+    if (!bounds) {
+      throw new Error('Expected overview region chart canvas bounds');
+    }
+
+    await canvas.click({
+      position: {
+        x: bounds.width * 0.68,
+        y: bounds.height * 0.24,
+      },
+    });
+  }
+
   test('dashboard renders with filter bar and all widgets', async ({ page }) => {
     // Verify the dashboard renders
     const dashboard = page.locator('[data-ss-dashboard]');
@@ -99,6 +116,41 @@ test.describe('Filter Cascade Workflow', () => {
 
     await page.getByRole('button', { name: 'Overview' }).click();
     await expect(page.locator('.ss-filter-bar').getByLabel('Region')).toHaveValue('East');
+  });
+
+  test('real overview chart clicks navigate to the detail page', async ({ page }) => {
+    await openPagesWorkbook(page);
+
+    await page.evaluate(() => {
+      const debugWindow = window as Window & {
+        __SUPERSUBSET_WIDGET_EVENTS__?: Array<Record<string, unknown>>;
+      };
+      debugWindow.__SUPERSUBSET_WIDGET_EVENTS__ = [];
+    });
+
+    const dashboard = page.locator('[data-ss-dashboard]');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-overview');
+
+    await clickOverviewRegionDatum(page);
+
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-detail');
+
+    const lastEvent = await page.evaluate(() => {
+      const debugWindow = window as Window & {
+        __SUPERSUBSET_WIDGET_EVENTS__?: Array<Record<string, unknown>>;
+      };
+      const events = debugWindow.__SUPERSUBSET_WIDGET_EVENTS__ ?? [];
+      return events[events.length - 1];
+    });
+
+    expect(lastEvent).toMatchObject({
+      type: 'click',
+      widgetId: 'pages-chart-region-sales',
+      payload: expect.objectContaining({
+        region: expect.any(String),
+        revenue: expect.any(Number),
+      }),
+    });
   });
 
   test('page-scoped category filter changes overview widgets without leaking into detail widgets', async ({
