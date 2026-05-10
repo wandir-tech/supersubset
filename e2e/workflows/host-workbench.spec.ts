@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import type { DashboardDefinition } from '@supersubset/schema';
 import { workbenchStarterDashboard } from '../../examples/nextjs-ecommerce/lib/workbench-dashboard';
 import { WORKBENCH_DATASET_ID } from '../../examples/nextjs-ecommerce/lib/workbench-shared';
@@ -87,6 +87,20 @@ function buildFieldBackedFilterWorkbenchDashboard() {
   };
 
   return JSON.stringify(dashboard, null, 2);
+}
+
+async function ensureDesignerMenuBarExpanded(page: Page) {
+  const dashboardTitleInput = page.getByTestId('designer-dashboard-title-input');
+  if (await dashboardTitleInput.isVisible()) {
+    return;
+  }
+
+  const toggleMenuBarButton = page.getByRole('button', { name: 'Toggle menu bar' });
+  if (await toggleMenuBarButton.isVisible()) {
+    await toggleMenuBarButton.click();
+  }
+
+  await expect(dashboardTitleInput).toBeVisible();
 }
 
 test.describe('Next.js Real Host Workbench', () => {
@@ -284,6 +298,52 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/datasets'))).toBe(
       true,
     );
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
+
+  test('publishes an edited dashboard title and reloads the persisted workbench state without another login', async ({
+    page,
+  }) => {
+    const editedDashboardTitle = 'Northstar Logistics Persisted Host Workflow';
+    const consoleErrors: string[] = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+    await page.getByTestId('workbench-login-submit').click();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      'Northstar Logistics Control Tower',
+    );
+    await page.getByTestId('designer-dashboard-title-input').fill(editedDashboardTitle);
+    await page.getByTestId('designer-dashboard-title-input').blur();
+    await page.getByText('Publish', { exact: true }).click();
+
+    await expect(page.getByTestId('workbench-query-log')).toContainText(
+      '"datasetId": "ops-shipments"',
+    );
+
+    await page.reload();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await expect(page.getByTestId('workbench-login-form')).toHaveCount(0);
+    await page.getByTestId('workbench-mode-designer').click();
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      editedDashboardTitle,
+    );
+
+    await page.getByTestId('workbench-code-toggle').click();
+    await expect(page.getByTestId('code-view-content')).toContainText(editedDashboardTitle);
+
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 });
