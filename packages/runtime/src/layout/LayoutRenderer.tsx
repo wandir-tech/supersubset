@@ -591,6 +591,8 @@ const VALID_AGGREGATIONS = new Set<AggregationType>([
   'none',
 ]);
 
+const CROSS_FILTER_PREFIX = 'cross-filter:';
+
 function buildWidgetQuery(
   widgetDef: WidgetDefinition,
   filters: FilterDefinition[] | undefined,
@@ -819,19 +821,29 @@ function compileActiveFiltersForQuery(
   filters: FilterDefinition[] | undefined,
   activeFilters: FilterValue[] | undefined,
 ): NonNullable<LogicalQuery['filters']> {
-  if (!filters || !activeFilters || activeFilters.length === 0) {
+  if (!activeFilters || activeFilters.length === 0) {
     return [];
   }
 
-  const filterDefinitions = new Map(filters.map((filter) => [filter.id, filter]));
+  const filterDefinitions = new Map((filters ?? []).map((filter) => [filter.id, filter]));
 
   return activeFilters.flatMap((activeFilter) => {
     const definition = filterDefinitions.get(activeFilter.filterId);
-    if (!definition || definition.datasetRef !== datasetId) {
+    if (definition) {
+      if (definition.datasetRef !== datasetId) {
+        return [];
+      }
+
+      const compiledFilter = compileFilterValue(definition, activeFilter.value);
+      return compiledFilter ? [compiledFilter] : [];
+    }
+
+    const crossFilter = parseCrossFilterId(activeFilter.filterId);
+    if (!crossFilter) {
       return [];
     }
 
-    const compiledFilter = compileFilterValue(definition, activeFilter.value);
+    const compiledFilter = compileCrossFilterValue(crossFilter.fieldRef, activeFilter.value);
     return compiledFilter ? [compiledFilter] : [];
   });
 }
@@ -888,6 +900,53 @@ function compileFilterValue(
   };
 }
 
+function compileCrossFilterValue(
+  fieldRef: string,
+  value: unknown,
+): NonNullable<LogicalQuery['filters']>[number] | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    const values = value.filter((entry) => entry != null && entry !== '');
+    if (values.length === 0) {
+      return null;
+    }
+
+    return {
+      fieldId: fieldRef,
+      operator: 'in',
+      value: values,
+    };
+  }
+
+  if (isBetweenValue(value)) {
+    const lower = value.start ?? value.min;
+    const upper = value.end ?? value.max;
+
+    if (lower == null && upper == null) {
+      return null;
+    }
+
+    return {
+      fieldId: fieldRef,
+      operator: 'between',
+      value: [lower, upper],
+    };
+  }
+
+  if (typeof value === 'string' && value.length === 0) {
+    return null;
+  }
+
+  return {
+    fieldId: fieldRef,
+    operator: 'eq',
+    value,
+  };
+}
+
 function normalizeFilterOperator(operator: string): QueryFilterOperator | null {
   if (DIRECT_QUERY_OPERATORS.has(operator as QueryFilterOperator)) {
     return operator as QueryFilterOperator;
@@ -930,21 +989,53 @@ function computeActiveFilters(
   activeFilterValues: FilterValue[] | undefined,
   activePageId: string | undefined,
 ): FilterValue[] {
-  if (!filters || !activeFilterValues || activeFilterValues.length === 0) return [];
+  if (!activeFilterValues || activeFilterValues.length === 0) return [];
 
-  const activeMap = new Map(activeFilterValues.map((fv) => [fv.filterId, fv]));
   const result: FilterValue[] = [];
+  const seenFilterIds = new Set<string>();
 
-  for (const filter of filters) {
-    const fv = activeMap.get(filter.id);
-    if (!fv) continue;
+  if (filters && filters.length > 0) {
+    const activeMap = new Map(activeFilterValues.map((fv) => [fv.filterId, fv]));
 
-    if (filterAppliesToWidget(filter.scope, widgetId, activePageId)) {
-      result.push(fv);
+    for (const filter of filters) {
+      const fv = activeMap.get(filter.id);
+      if (!fv) continue;
+
+      if (filterAppliesToWidget(filter.scope, widgetId, activePageId)) {
+        result.push(fv);
+        seenFilterIds.add(fv.filterId);
+      }
+    }
+  }
+
+  for (const activeFilter of activeFilterValues) {
+    if (seenFilterIds.has(activeFilter.filterId)) {
+      continue;
+    }
+
+    if (parseCrossFilterId(activeFilter.filterId)) {
+      result.push(activeFilter);
     }
   }
 
   return result;
+}
+
+function parseCrossFilterId(filterId: string): { sourceWidgetId: string; fieldRef: string } | null {
+  if (!filterId.startsWith(CROSS_FILTER_PREFIX)) {
+    return null;
+  }
+
+  const remainder = filterId.slice(CROSS_FILTER_PREFIX.length);
+  const separatorIndex = remainder.lastIndexOf(':');
+  if (separatorIndex <= 0 || separatorIndex === remainder.length - 1) {
+    return null;
+  }
+
+  return {
+    sourceWidgetId: remainder.slice(0, separatorIndex),
+    fieldRef: remainder.slice(separatorIndex + 1),
+  };
 }
 
 function renderTabs(
