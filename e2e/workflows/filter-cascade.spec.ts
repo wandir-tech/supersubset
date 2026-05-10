@@ -21,6 +21,15 @@ test.describe('Filter Cascade Workflow', () => {
     await expect(page.getByRole('button', { name: 'Overview' })).toBeVisible();
   }
 
+  async function openSeparateDashboardsDemo(page: import('@playwright/test').Page) {
+    const dashboardsScenarioButton = page.getByRole('button', {
+      name: 'Two separate dashboards',
+    });
+    await expect(dashboardsScenarioButton).toBeVisible();
+    await dashboardsScenarioButton.click();
+    await expect(page.getByRole('button', { name: 'Executive Overview' })).toBeVisible();
+  }
+
   async function clickOverviewRegionDatum(page: import('@playwright/test').Page) {
     const canvas = page.locator('[data-ss-node="pages-region-chart-host"] canvas').first();
     await expect(canvas).toBeVisible();
@@ -151,6 +160,35 @@ test.describe('Filter Cascade Workflow', () => {
         revenue: expect.any(Number),
       }),
     });
+  });
+
+  test('separate dashboards switch document identity instead of preserving workbook state', async ({
+    page,
+  }) => {
+    await openSeparateDashboardsDemo(page);
+
+    const dashboard = page.locator('[data-ss-dashboard]');
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-executive');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-executive');
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard 1: Executive Overview' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Fulfillment Ops' }).click();
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-operations');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-operations');
+    await expect(page.getByRole('heading', { name: 'Dashboard 2: Fulfillment Ops' })).toBeVisible();
+    await expect(page.locator('.ss-table tbody tr')).toHaveCount(8);
+
+    await page.getByRole('button', { name: 'Executive Overview' }).click();
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-executive');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-executive');
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard 1: Executive Overview' }),
+    ).toBeVisible();
   });
 
   test('page-scoped category filter changes overview widgets without leaking into detail widgets', async ({

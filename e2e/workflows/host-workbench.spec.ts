@@ -72,6 +72,23 @@ function buildStructuredAlertsWorkbenchDashboard() {
   return JSON.stringify(dashboard, null, 2);
 }
 
+function buildFieldBackedFilterWorkbenchDashboard() {
+  const dashboard = structuredClone(workbenchStarterDashboard) as DashboardDefinition;
+  const regionFilter = dashboard.filters?.find((filter) => filter.id === 'filter-region');
+  if (!regionFilter) {
+    throw new Error('Expected filter-region in workbench starter dashboard');
+  }
+
+  dashboard.title = 'Northstar Field-backed Filters Workbench';
+  regionFilter.optionSource = {
+    kind: 'field',
+    strategy: 'search',
+    minSearchChars: 2,
+  };
+
+  return JSON.stringify(dashboard, null, 2);
+}
+
 test.describe('Next.js Real Host Workbench', () => {
   test('logs in, loads datasets, and re-queries a query-backed alerts tile in viewer mode', async ({
     page,
@@ -214,6 +231,59 @@ test.describe('Next.js Real Host Workbench', () => {
       true,
     );
     expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/query'))).toBe(true);
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
+
+  test('imports a field-backed filter dashboard and shows the explicit unavailable state in viewer mode', async ({
+    page,
+  }) => {
+    const fieldBackedDashboard = buildFieldBackedFilterWorkbenchDashboard();
+    const requestUrls: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('request', (request) => requestUrls.push(request.url()));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+    await page.getByTestId('workbench-login-submit').click();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await expect(page.getByTestId('workbench-dataset-status')).toContainText('1 dataset(s)');
+
+    await page.getByTestId('import-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toBeVisible();
+    await page.getByTestId('import-textarea').fill(fieldBackedDashboard);
+    await page.getByTestId('import-submit-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toHaveCount(0);
+
+    await page.getByTestId('workbench-code-toggle').click();
+    await expect(page.getByTestId('code-view-panel')).toContainText(
+      'Northstar Field-backed Filters Workbench',
+    );
+    await expect(page.getByTestId('code-view-content')).toContainText('"kind": "field"');
+
+    await page.getByTestId('workbench-mode-viewer').click();
+
+    const regionFilter = page.getByLabel('Region');
+    const carrierFilter = page.getByLabel('Carrier');
+
+    await expect(regionFilter).toBeDisabled();
+    await expect(regionFilter.locator('option')).toHaveText([
+      'Field-backed options require host support',
+    ]);
+    await expect(carrierFilter).toBeEnabled();
+    await expect(carrierFilter.locator('option')).toContainText(['All', 'Atlas Air']);
+
+    expect(requestUrls.some((url) => url.includes('/api/graphql'))).toBe(true);
+    expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/datasets'))).toBe(
+      true,
+    );
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 });
