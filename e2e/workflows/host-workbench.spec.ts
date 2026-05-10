@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import type { DashboardDefinition } from '@supersubset/schema';
 import { workbenchStarterDashboard } from '../../examples/nextjs-ecommerce/lib/workbench-dashboard';
 import { WORKBENCH_DATASET_ID } from '../../examples/nextjs-ecommerce/lib/workbench-shared';
@@ -70,6 +70,37 @@ function buildStructuredAlertsWorkbenchDashboard() {
   };
 
   return JSON.stringify(dashboard, null, 2);
+}
+
+function buildFieldBackedFilterWorkbenchDashboard() {
+  const dashboard = structuredClone(workbenchStarterDashboard) as DashboardDefinition;
+  const regionFilter = dashboard.filters?.find((filter) => filter.id === 'filter-region');
+  if (!regionFilter) {
+    throw new Error('Expected filter-region in workbench starter dashboard');
+  }
+
+  dashboard.title = 'Northstar Field-backed Filters Workbench';
+  regionFilter.optionSource = {
+    kind: 'field',
+    strategy: 'search',
+    minSearchChars: 2,
+  };
+
+  return JSON.stringify(dashboard, null, 2);
+}
+
+async function ensureDesignerMenuBarExpanded(page: Page) {
+  const dashboardTitleInput = page.getByTestId('designer-dashboard-title-input');
+  if (await dashboardTitleInput.isVisible()) {
+    return;
+  }
+
+  const toggleMenuBarButton = page.getByRole('button', { name: 'Toggle menu bar' });
+  if (await toggleMenuBarButton.isVisible()) {
+    await toggleMenuBarButton.click();
+  }
+
+  await expect(dashboardTitleInput).toBeVisible();
 }
 
 test.describe('Next.js Real Host Workbench', () => {
@@ -214,6 +245,105 @@ test.describe('Next.js Real Host Workbench', () => {
       true,
     );
     expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/query'))).toBe(true);
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
+
+  test('imports a field-backed filter dashboard and shows the explicit unavailable state in viewer mode', async ({
+    page,
+  }) => {
+    const fieldBackedDashboard = buildFieldBackedFilterWorkbenchDashboard();
+    const requestUrls: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('request', (request) => requestUrls.push(request.url()));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+    await page.getByTestId('workbench-login-submit').click();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await expect(page.getByTestId('workbench-dataset-status')).toContainText('1 dataset(s)');
+
+    await page.getByTestId('import-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toBeVisible();
+    await page.getByTestId('import-textarea').fill(fieldBackedDashboard);
+    await page.getByTestId('import-submit-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toHaveCount(0);
+
+    await page.getByTestId('workbench-code-toggle').click();
+    await expect(page.getByTestId('code-view-panel')).toContainText(
+      'Northstar Field-backed Filters Workbench',
+    );
+    await expect(page.getByTestId('code-view-content')).toContainText('"kind": "field"');
+
+    await page.getByTestId('workbench-mode-viewer').click();
+
+    const regionFilter = page.getByLabel('Region');
+    const carrierFilter = page.getByLabel('Carrier');
+
+    await expect(regionFilter).toBeDisabled();
+    await expect(regionFilter.locator('option')).toHaveText([
+      'Field-backed options require host support',
+    ]);
+    await expect(carrierFilter).toBeEnabled();
+    await expect(carrierFilter.locator('option')).toContainText(['All', 'Atlas Air']);
+
+    expect(requestUrls.some((url) => url.includes('/api/graphql'))).toBe(true);
+    expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/datasets'))).toBe(
+      true,
+    );
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
+
+  test('publishes an edited dashboard title and reloads the persisted workbench state without another login', async ({
+    page,
+  }) => {
+    const editedDashboardTitle = 'Northstar Logistics Persisted Host Workflow';
+    const consoleErrors: string[] = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+    await page.getByTestId('workbench-login-submit').click();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      'Northstar Logistics Control Tower',
+    );
+    await page.getByTestId('designer-dashboard-title-input').fill(editedDashboardTitle);
+    await page.getByTestId('designer-dashboard-title-input').blur();
+    await page.getByText('Publish', { exact: true }).click();
+
+    await expect(page.getByTestId('workbench-query-log')).toContainText(
+      '"datasetId": "ops-shipments"',
+    );
+
+    await page.reload();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await expect(page.getByTestId('workbench-login-form')).toHaveCount(0);
+    await page.getByTestId('workbench-mode-designer').click();
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      editedDashboardTitle,
+    );
+
+    await page.getByTestId('workbench-code-toggle').click();
+    await expect(page.getByTestId('code-view-content')).toContainText(editedDashboardTitle);
+
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 });

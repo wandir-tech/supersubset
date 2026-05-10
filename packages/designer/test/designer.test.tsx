@@ -33,6 +33,19 @@ vi.mock('@puckeditor/core', () => ({
             children: React.createElement('span', { 'data-testid': 'default-actions' }),
           })
         : null,
+      typeof props.onPublish === 'function'
+        ? React.createElement(
+            'button',
+            {
+              type: 'button',
+              'data-testid': 'mock-puck-publish',
+              onClick: () => {
+                (props.onPublish as (data: unknown) => void)(props.data);
+              },
+            },
+            'Publish',
+          )
+        : null,
       React.createElement('iframe', { 'data-testid': 'mock-preview-iframe' }),
       React.createElement(
         'select',
@@ -202,6 +215,26 @@ describe('SupersubsetDesigner', () => {
     render(React.createElement(SupersubsetDesigner, { onPublish }));
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-has-on-publish')).toBe('true');
+  });
+
+  it('publishes the current dashboard title draft without waiting for blur', () => {
+    const onPublish = vi.fn();
+
+    render(
+      React.createElement(SupersubsetDesigner, {
+        value: minimalDashboard,
+        onChange: vi.fn(),
+        onPublish,
+      }),
+    );
+
+    const titleInput = screen.getByTestId('designer-dashboard-title-input');
+    fireEvent.change(titleInput, { target: { value: 'Executive Dashboard' } });
+    fireEvent.click(screen.getByTestId('mock-puck-publish'));
+
+    expect(onPublish).toHaveBeenCalledTimes(1);
+    const nextDashboard = onPublish.mock.calls[0]?.[0] as DashboardDefinition;
+    expect(nextDashboard.title).toBe('Executive Dashboard');
   });
 
   it('wires onChange callback', () => {

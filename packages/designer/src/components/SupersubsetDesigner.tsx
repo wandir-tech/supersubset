@@ -370,6 +370,20 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     [emitDashboardChange, sourceDashboard],
   );
 
+  const effectiveDashboardTitle = useMemo(
+    () =>
+      normalizePageTitle(dashboardTitleDraft, sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE),
+    [dashboardTitleDraft, sourceDashboard?.title],
+  );
+
+  const effectivePageTitle = useMemo(() => {
+    if (!activePage) {
+      return undefined;
+    }
+
+    return normalizePageTitle(pageTitleDraft, activePage.title);
+  }, [activePage, pageTitleDraft]);
+
   // Sidebar icon overrides + header actions wrapper
   const overrides = useMemo(
     () => ({
@@ -791,20 +805,20 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     (puckData: Data) => {
       const dashboard = puckToCanonical(puckData, {
         dashboardId: dashboardIdRef.current,
-        dashboardTitle: sourceDashboard?.title ?? dashboardTitleDraft ?? DEFAULT_DASHBOARD_TITLE,
+        dashboardTitle: effectiveDashboardTitle,
         baseDashboard: sourceDashboard,
         pageIndex: activePageIndex,
         pageId: activePage?.id,
-        pageTitle: activePage?.title,
+        pageTitle: effectivePageTitle,
       });
       emitDashboardChange(dashboard);
     },
     [
       activePage?.id,
-      activePage?.title,
       activePageIndex,
-      dashboardTitleDraft,
       emitDashboardChange,
+      effectiveDashboardTitle,
+      effectivePageTitle,
       sourceDashboard,
     ],
   );
@@ -814,20 +828,20 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       if (onPublish) {
         const dashboard = puckToCanonical(puckData, {
           dashboardId: dashboardIdRef.current,
-          dashboardTitle: sourceDashboard?.title ?? dashboardTitleDraft ?? DEFAULT_DASHBOARD_TITLE,
+          dashboardTitle: effectiveDashboardTitle,
           baseDashboard: sourceDashboard,
           pageIndex: activePageIndex,
           pageId: activePage?.id,
-          pageTitle: activePage?.title,
+          pageTitle: effectivePageTitle,
         });
         onPublish(dashboard);
       }
     },
     [
       activePage?.id,
-      activePage?.title,
       activePageIndex,
-      dashboardTitleDraft,
+      effectiveDashboardTitle,
+      effectivePageTitle,
       onPublish,
       sourceDashboard,
     ],
