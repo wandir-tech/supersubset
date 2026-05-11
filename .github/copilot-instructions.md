@@ -67,5 +67,6 @@ It is NOT a full BI platform. It is a library-first, schema-first toolkit.
 - **`github-cli`** — Prefer `gh` for issues, PRs, Actions runs, and API (`gh auth status` first)
 - **`work-kickoff`** — Plan/spec → GitHub issue before implementation
 - **`branch-ci-promotion`** — Branch model (feature→develop→staging→main), CI checks, merge gates
+- **`ai-code-cleanup`** — Continuous AI-code cleanup: drift detection, duplicate removal, bounded refactors, and standards updates
 - **`maintaining-ai-context`** — Keep skills, agents, and entry points lean and cross-linked
 - **`parallel-agent-environments`** — Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing
