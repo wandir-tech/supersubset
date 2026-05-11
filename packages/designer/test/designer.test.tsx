@@ -237,6 +237,39 @@ describe('SupersubsetDesigner', () => {
     expect(nextDashboard.title).toBe('Executive Dashboard');
   });
 
+  it('reports uncommitted header drafts before blur and clears them after commit', async () => {
+    const draftStates: boolean[] = [];
+
+    function Harness() {
+      const [dashboard, setDashboard] = React.useState(minimalDashboard);
+
+      return React.createElement(SupersubsetDesigner, {
+        value: dashboard,
+        onChange: setDashboard,
+        onDraftStateChange: (hasDraft) => {
+          draftStates.push(hasDraft);
+        },
+      });
+    }
+
+    render(React.createElement(Harness));
+
+    const titleInput = screen.getByTestId('designer-dashboard-title-input');
+    await waitFor(() => {
+      expect(draftStates.at(-1)).toBe(false);
+    });
+
+    fireEvent.change(titleInput, { target: { value: 'Executive Dashboard' } });
+    await waitFor(() => {
+      expect(draftStates.at(-1)).toBe(true);
+    });
+
+    fireEvent.blur(titleInput);
+    await waitFor(() => {
+      expect(draftStates.at(-1)).toBe(false);
+    });
+  });
+
   it('wires onChange callback', () => {
     const onChange = vi.fn();
     render(

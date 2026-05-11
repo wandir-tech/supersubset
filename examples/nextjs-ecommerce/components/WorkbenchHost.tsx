@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CodeViewPanel,
   ImportExportPanel,
@@ -40,12 +40,31 @@ export function WorkbenchHost() {
   const [mode, setMode] = useState<'designer' | 'viewer'>('designer');
   const [showCode, setShowCode] = useState(false);
   const [designerRevision, setDesignerRevision] = useState(0);
+  const [designerHasUncommittedDrafts, setDesignerHasUncommittedDrafts] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged-out' | 'ready'>('checking');
   const [viewerStatus, setViewerStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState('');
   const [queryLog, setQueryLog] = useState<string[]>([]);
   const queryCycleRef = useRef({ generation: 0, pending: 0, failed: false });
+  const dashboardRef = useRef(dashboard);
+  const publishedDashboardRef = useRef(publishedDashboard);
+  const designerHasUncommittedDraftsRef = useRef(designerHasUncommittedDrafts);
+
+  const setDashboardState = useCallback((nextDashboard: DashboardDefinition) => {
+    dashboardRef.current = nextDashboard;
+    setDashboard(nextDashboard);
+  }, []);
+
+  const setPublishedDashboardState = useCallback((nextDashboard: DashboardDefinition) => {
+    publishedDashboardRef.current = nextDashboard;
+    setPublishedDashboard(nextDashboard);
+  }, []);
+
+  const setDesignerDraftState = useCallback((hasUncommittedDrafts: boolean) => {
+    designerHasUncommittedDraftsRef.current = hasUncommittedDrafts;
+    setDesignerHasUncommittedDrafts(hasUncommittedDrafts);
+  }, []);
 
   function rehydratePublishedDashboardFromStorage() {
     const storedDashboard = readStoredWorkbenchDashboard();
@@ -53,8 +72,9 @@ export function WorkbenchHost() {
       return;
     }
 
-    setDashboard(storedDashboard);
-    setPublishedDashboard(storedDashboard);
+    setDesignerDraftState(false);
+    setDashboardState(storedDashboard);
+    setPublishedDashboardState(storedDashboard);
     setMode('viewer');
   }
 
@@ -62,6 +82,7 @@ export function WorkbenchHost() {
     clearStoredWorkbenchToken();
     setToken('');
     setDatasets([]);
+    setDesignerDraftState(false);
     setFilterState({ values: {} });
     setQueryLog([]);
     setAuthStatus('logged-out');
@@ -99,9 +120,13 @@ export function WorkbenchHost() {
         return;
       }
 
-      setPublishedDashboard(storedDashboard);
-      if (mode !== 'designer') {
-        setDashboard(storedDashboard);
+      const hasLocalDesignerChanges =
+        dashboardRef.current !== publishedDashboardRef.current ||
+        designerHasUncommittedDraftsRef.current;
+
+      setPublishedDashboardState(storedDashboard);
+      if (!hasLocalDesignerChanges) {
+        setDashboardState(storedDashboard);
       }
     }
 
@@ -109,7 +134,7 @@ export function WorkbenchHost() {
     return () => {
       window.removeEventListener('storage', handleStorage);
     };
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -276,16 +301,18 @@ export function WorkbenchHost() {
   }
 
   function handlePublish(nextDashboard: DashboardDefinition) {
-    setDashboard(nextDashboard);
-    setPublishedDashboard(nextDashboard);
+    setDesignerDraftState(false);
+    setDashboardState(nextDashboard);
+    setPublishedDashboardState(nextDashboard);
     persistWorkbenchDashboard(nextDashboard);
     setMode('viewer');
     setError('');
   }
 
   function handleImport(nextDashboard: DashboardDefinition) {
-    setDashboard(nextDashboard);
-    setPublishedDashboard(nextDashboard);
+    setDesignerDraftState(false);
+    setDashboardState(nextDashboard);
+    setPublishedDashboardState(nextDashboard);
     persistWorkbenchDashboard(nextDashboard);
     setDesignerRevision((current) => current + 1);
   }
@@ -528,7 +555,8 @@ export function WorkbenchHost() {
             <SupersubsetDesigner
               key={designerRevision}
               value={dashboard}
-              onChange={setDashboard}
+              onChange={setDashboardState}
+              onDraftStateChange={setDesignerDraftState}
               onPublish={handlePublish}
               headerTitle="Northstar Logistics Workbench"
               height="720px"
