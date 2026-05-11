@@ -4,7 +4,7 @@
  * Provides consistent navigation, element selection, and screenshot capture
  * across all feature documentation scripts.
  */
-import { type Page, type Locator, expect } from '@playwright/test';
+import { type Page, type Locator } from '@playwright/test';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -36,57 +36,32 @@ export function screenshotPath(
   return path.join(dir, `${slug}-${variant}-${view}.png`);
 }
 
+async function switchMode(page: Page, roleLabel: RegExp, textLabel: string): Promise<void> {
+  const button = page.getByRole('button', { name: roleLabel }).first();
+  if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await button.click();
+  } else {
+    const textButton = page.getByText(textLabel).first();
+    if (await textButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await textButton.click();
+    }
+  }
+
+  await page.waitForTimeout(800);
+}
+
 /**
  * Switch the dev app to viewer mode.
  */
 export async function switchToViewer(page: Page): Promise<void> {
-  // Try button role first, then fall back to text matching
-  const btn = page.getByRole('button', { name: /viewer/i });
-  if (
-    await btn
-      .first()
-      .isVisible({ timeout: 2000 })
-      .catch(() => false)
-  ) {
-    await btn.first().click();
-  } else {
-    const textBtn = page.getByText('Viewer');
-    if (
-      await textBtn
-        .first()
-        .isVisible({ timeout: 2000 })
-        .catch(() => false)
-    ) {
-      await textBtn.first().click();
-    }
-  }
-  await page.waitForTimeout(800);
+  await switchMode(page, /viewer/i, 'Viewer');
 }
 
 /**
  * Switch the dev app to designer mode.
  */
 export async function switchToDesigner(page: Page): Promise<void> {
-  const btn = page.getByRole('button', { name: /designer/i });
-  if (
-    await btn
-      .first()
-      .isVisible({ timeout: 2000 })
-      .catch(() => false)
-  ) {
-    await btn.first().click();
-  } else {
-    const textBtn = page.getByText('Designer');
-    if (
-      await textBtn
-        .first()
-        .isVisible({ timeout: 2000 })
-        .catch(() => false)
-    ) {
-      await textBtn.first().click();
-    }
-  }
-  await page.waitForTimeout(800);
+  await switchMode(page, /designer/i, 'Designer');
 }
 
 /**
