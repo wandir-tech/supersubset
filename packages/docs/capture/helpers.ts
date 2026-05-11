@@ -305,37 +305,6 @@ export function assertNoConsoleErrors(errors: string[]): void {
 }
 
 /**
- * Select a widget in the designer by clicking inside the Puck canvas iframe.
- * Uses the Layers panel to verify selection.
- *
- * @param page - Playwright page
- * @param widgetLabel - The label shown in the Layers panel (e.g., "Line Chart", "Bar Chart", "KPI Card")
- * @param clickY - Relative Y position (0–1) within the iframe to click
- */
-export async function selectWidgetViaCanvas(
-  page: Page,
-  widgetLabel: string,
-  clickY: number,
-): Promise<void> {
-  // Switch to Layers tab so we can see which widget is selected
-  const layersBtn = page.getByText('Layers').first();
-  if (await layersBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await layersBtn.click();
-    await page.waitForTimeout(300);
-  }
-
-  // Click inside the iframe at the specified Y position
-  const iframe = page.locator('iframe');
-  if (await iframe.isVisible({ timeout: 3000 })) {
-    const box = await iframe.boundingBox();
-    if (box) {
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height * clickY);
-      await page.waitForTimeout(800);
-    }
-  }
-}
-
-/**
  * Select a widget in the designer by clicking its stable `data-puck-component`
  * wrapper inside the canvas iframe.
  */
