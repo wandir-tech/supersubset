@@ -20,6 +20,8 @@ For BI-facing features, add one more rule: do not stop at proving that a control
 
 For schema-first features, add another rule: do not treat a test as sufficient when it only passes because the harness injects authored semantics through helper props, static option maps, or other sidecar data that is not part of the intended product contract.
 
+Current note: the Playwright suite has converged away from the older `e2e/renderer/`, `e2e/designer/`, and `e2e/integration/` split. Treat the current `e2e/` topology described below as authoritative for new work. Historical task tables later in this document preserve the earlier planning vocabulary for phase context.
+
 ---
 
 ## Test Layers and Ownership
@@ -39,16 +41,14 @@ For schema-first features, add another rule: do not treat a test as sufficient w
 
 ### Layer 2: Playwright E2E Tests (incremental, per-feature)
 
-| What                               | When Written                 | Where               | Runs            |
-| ---------------------------------- | ---------------------------- | ------------------- | --------------- |
-| Renderer renders fixture dashboard | Task 1.16 (dev app scaffold) | `e2e/renderer/`     | CI + pre-commit |
-| Each chart type renders            | Tasks 1.11–1.14 (each chart) | `e2e/charts/`       | CI              |
-| Designer loads empty state         | Task 2.1 (editor shell)      | `e2e/designer/`     | CI              |
-| Drag-and-drop adds widget          | Task 2.2 (first block)       | `e2e/designer/`     | CI              |
-| Property edit updates widget       | Task 2.5 (property panels)   | `e2e/designer/`     | CI              |
-| Import/export round-trip           | Task 2.10 (import/export)    | `e2e/designer/`     | CI              |
-| Cross-filter propagates            | Task 4.2 (cross-filtering)   | `e2e/interactions/` | CI              |
-| Host mount works                   | Task 5.5 (host examples)     | `e2e/integration/`  | CI              |
+| What                                   | When Written                        | Where                                                                                   | Runs            |
+| -------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------- | --------------- |
+| Dev app loads and basic shell renders  | Task 1.16 (dev app scaffold)        | `e2e/smoke.spec.ts`                                                                     | CI + pre-commit |
+| Chart and widget browser proof         | Tasks 1.11–1.14 and later hardening | `e2e/visual/` + `e2e/workflows/designer-chart-matrix.spec.ts`                           | CI              |
+| Designer authoring happy path          | Task 2.x shell and editing work     | `e2e/plan-a-designer-happy-path.spec.ts` + `e2e/workflows/designer-to-renderer.spec.ts` | CI              |
+| Import/export round-trip               | Task 2.10 (import/export)           | `e2e/workflows/import-export-cycle.spec.ts`                                             | CI              |
+| Cross-filter and filter cascade        | Task 4.x interactions               | `e2e/interactions/dashboard-filter.spec.ts` + `e2e/workflows/filter-cascade.spec.ts`    | CI              |
+| Host mount and host workbench behavior | Task 5.5 (host examples)            | `e2e/workflows/host-integration.spec.ts` + `e2e/workflows/host-workbench.spec.ts`       | CI              |
 
 **Rule**: Every UI-visible feature ships WITH its Playwright test, not after.
 
@@ -132,50 +132,29 @@ Use the real host examples whenever they provide stronger proof than the dev-app
 
 ```
 e2e/
-├── playwright.config.ts
-├── fixtures/
-│   ├── sample-dashboard.json      # Canonical dashboard for renderer tests
-│   ├── sample-dashboard.yaml      # Same in YAML
-│   ├── prisma-schema.prisma       # Sample Prisma model
-│   ├── metadata-model.json        # Pre-normalized metadata
-│   └── query-results/             # Mock query responses
-│       ├── sales-by-month.json
-│       ├── products-table.json
-│       └── kpi-revenue.json
-├── helpers/
-│   ├── dev-app.ts                 # Start/stop dev app
-│   ├── screenshot.ts              # Screenshot capture + naming
-│   └── schema-assertions.ts       # Canonical schema validation helpers
-├── renderer/
-│   ├── basic-render.spec.ts       # Fixture dashboard renders all widgets
-│   ├── chart-types.spec.ts        # Each chart type renders correctly
-│   ├── loading-states.spec.ts     # Loading/error/empty states
-│   └── responsive.spec.ts         # Viewport resize behavior
-├── designer/
-│   ├── editor-load.spec.ts        # Designer mounts and loads
-│   ├── drag-drop.spec.ts          # Drag widget to canvas
-│   ├── property-edit.spec.ts      # Edit properties, verify update
-│   ├── field-binding.spec.ts      # Bind data fields to widgets
-│   ├── import-export.spec.ts      # JSON/YAML import/export
-│   ├── undo-redo.spec.ts          # Undo/redo across operations
-│   └── code-view.spec.ts          # Code view shows valid schema
+├── smoke.spec.ts                  # Base dev-app smoke coverage
+├── plan-a-designer-happy-path.spec.ts # Designer smoke and milestone happy path
 ├── interactions/
-│   ├── dashboard-filter.spec.ts   # Dashboard-level filter
-│   ├── cross-filter.spec.ts       # Click chart → other widgets update
-│   ├── drill-action.spec.ts       # Drill-to-detail behavior
-│   └── state-persistence.spec.ts  # Saved filter/interaction state
-├── integration/
-│   ├── host-mount.spec.ts         # Mount in host app container
-│   ├── multiple-instances.spec.ts # Two renderers on same page
-│   ├── no-backend.spec.ts         # Verify no external API calls
-│   └── bundle-size.spec.ts        # Bundle size regression check
+│   └── dashboard-filter.spec.ts   # Dashboard-level filter browser proof
+├── visual/
+│   └── chart-header-layout.spec.ts # Focused visual regression proof
 └── workflows/
+    ├── alerts-widget.spec.ts
+    ├── backend-probe.spec.ts
+    ├── designer-chart-matrix.spec.ts
+    ├── designer-page-management.spec.ts
     ├── designer-to-renderer.spec.ts
+    ├── filter-cascade.spec.ts
+    ├── host-integration.spec.ts
+    ├── host-workbench.spec.ts
     ├── import-export-cycle.spec.ts
     ├── metadata-to-dashboard.spec.ts
-    ├── filter-cascade.spec.ts
-    └── host-integration.spec.ts
+    ├── markdown-widget.spec.ts
+    ├── persistence-regression.spec.ts
+    └── probe-metadata-paste.spec.ts
 ```
+
+Historical task-to-test tables below keep the original phase wording, but when an older row mentions `e2e/renderer/`, `e2e/designer/`, or `e2e/integration/`, map that work onto the current suites above rather than recreating those retired directories.
 
 ---
 
