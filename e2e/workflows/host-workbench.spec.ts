@@ -346,4 +346,229 @@ test.describe('Next.js Real Host Workbench', () => {
 
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
+
+  test('keeps the published dashboard across logout while discarding an unpublished draft after re-login', async ({
+    page,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Published Session Boundary';
+    const unpublishedDraftTitle = 'Northstar Unpublished Logout Probe';
+    const consoleErrors: string[] = [];
+
+    await page.addInitScript(() => {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+    await page.getByTestId('workbench-login-submit').click();
+
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await ensureDesignerMenuBarExpanded(page);
+    await page.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+    await page.getByTestId('designer-dashboard-title-input').blur();
+    await page.getByText('Publish', { exact: true }).click();
+
+    await expect(page.getByTestId('workbench-query-log')).toContainText(
+      '"datasetId": "ops-shipments"',
+    );
+
+    await page.getByTestId('workbench-mode-designer').click();
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      publishedDashboardTitle,
+    );
+    await page.getByTestId('designer-dashboard-title-input').fill(unpublishedDraftTitle);
+
+    await page.getByTestId('workbench-logout').click();
+    await expect(page.getByTestId('workbench-login-form')).toBeVisible();
+
+    await page.getByTestId('workbench-login-submit').click();
+    await expect(page.getByTestId('workbench-shell')).toBeVisible();
+    await expect(page.getByTestId('workbench-login-form')).toHaveCount(0);
+    await ensureDesignerMenuBarExpanded(page);
+    await expect(page.getByTestId('designer-dashboard-title-input')).toHaveValue(
+      publishedDashboardTitle,
+    );
+    await expect(page.getByTestId('designer-dashboard-title-input')).not.toHaveValue(
+      unpublishedDraftTitle,
+    );
+
+    await page.getByTestId('workbench-code-toggle').click();
+    await expect(page.getByTestId('code-view-content')).toContainText(publishedDashboardTitle);
+    await expect(page.getByTestId('code-view-content')).not.toContainText(unpublishedDraftTitle);
+
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
+  });
+
+  test('requires login in a second tab while rehydrating the published dashboard after login', async ({
+    browser,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Cross Tab Probe';
+    const firstContext = await browser.newContext();
+    const firstPage = await firstContext.newPage();
+    const secondPage = await firstContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await firstPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toHaveCount(0);
+
+      await secondPage.getByTestId('workbench-login-submit').click();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        publishedDashboardTitle,
+      );
+    } finally {
+      await firstContext.close();
+    }
+  });
+
+  test('rehydrates a newer publish when a second tab logs in after mounting before the publish', async ({
+    browser,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Cross Tab Rehydrate On Login';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await expect(secondPage.getByTestId('workbench-shell')).toHaveCount(0);
+      await secondPage.getByTestId('workbench-login-submit').click();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        publishedDashboardTitle,
+      );
+    } finally {
+      await sharedContext.close();
+    }
+  });
+
+  test('rehydrates a newer publish in an already-authenticated second tab without a reload', async ({
+    browser,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Live Cross Tab Sync';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await secondPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+      await secondPage.getByTestId('workbench-mode-viewer').click();
+
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        publishedDashboardTitle,
+      );
+      await expect(secondPage.getByTestId('workbench-login-form')).toHaveCount(0);
+    } finally {
+      await sharedContext.close();
+    }
+  });
+
+  test('preserves an unpublished draft in a second tab while syncing the newer published dashboard', async ({
+    browser,
+  }) => {
+    const draftDashboardTitle = 'Northstar Draft Should Survive';
+    const publishedDashboardTitle = 'Northstar External Publish Wins';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await secondPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await secondPage.getByTestId('designer-dashboard-title-input').fill(draftDashboardTitle);
+
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        draftDashboardTitle,
+      );
+      await expect(secondPage.getByTestId('workbench-login-form')).toHaveCount(0);
+    } finally {
+      await sharedContext.close();
+    }
+  });
 });
