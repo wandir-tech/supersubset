@@ -46,6 +46,17 @@ export function WorkbenchHost() {
   const [queryLog, setQueryLog] = useState<string[]>([]);
   const queryCycleRef = useRef({ generation: 0, pending: 0, failed: false });
 
+  function rehydratePublishedDashboardFromStorage() {
+    const storedDashboard = readStoredWorkbenchDashboard();
+    if (!storedDashboard) {
+      return;
+    }
+
+    setDashboard(storedDashboard);
+    setPublishedDashboard(storedDashboard);
+    setMode('viewer');
+  }
+
   function resetSession(nextError = '') {
     clearStoredWorkbenchToken();
     setToken('');
@@ -58,12 +69,7 @@ export function WorkbenchHost() {
   }
 
   useEffect(() => {
-    const storedDashboard = readStoredWorkbenchDashboard();
-    if (storedDashboard) {
-      setDashboard(storedDashboard);
-      setPublishedDashboard(storedDashboard);
-      setMode('viewer');
-    }
+    rehydratePublishedDashboardFromStorage();
 
     const storedToken = readStoredWorkbenchToken();
     if (!storedToken) {
@@ -229,6 +235,7 @@ export function WorkbenchHost() {
 
     try {
       const nextToken = await loginToWorkbench(email, password);
+      rehydratePublishedDashboardFromStorage();
       persistWorkbenchToken(nextToken);
       setToken(nextToken);
     } catch (nextError) {
