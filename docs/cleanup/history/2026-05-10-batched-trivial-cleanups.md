@@ -34,16 +34,18 @@ The cleanup loop was moving too slowly because trivial one-line changes were bei
 
 ## PR
 
-- pending
+- open: PR #144
+- url: https://github.com/wandir-tech/supersubset/pull/144
 
 ## Cloud CI
 
-- pending
+- pending at PR creation time
+- initial observed checks: `CI/Detect Changes`, `CI/Format Check`
 
 ## Human Check
 
-- not required before local validation, PR creation, and green required CI
+- not started; blocked until PR #144 required CI is green
 
 ## Next Step
 
-- open one batched cleanup PR instead of separate docs/process PRs
+- wait for PR #144 required CI to finish, then merge or address any failures
