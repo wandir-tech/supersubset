@@ -99,6 +99,7 @@ Before ending a cleanup session, promote anything another agent must know into r
 - Extracting an abstraction from a single call site with speculative flags.
 - Keeping dead branches, stale props, or compatibility aliases after the caller set is known.
 - Bundling behavior changes, formatting churn, and cleanup in the same PR.
+- Opening one PR per trivial lint-only cleanup when a same-class batch would stay readable and share the same proof.
 - Relaxing CI, tests, or types to make a generated diff pass.
 - Writing tests that prove a click happened but not that the dashboard meaning changed.
 - Treating cleanup as a monthly refactor sprint instead of continuous garbage collection.
@@ -117,6 +118,14 @@ Before ending a cleanup session, promote anything another agent must know into r
 - Keep each cleanup task inside one package or one explicit shared contract whenever possible.
 - Split local simplification from architecture decisions.
 - Prefer several small cleanup tasks over one omnibus "AI cleanup" branch.
+
+### 2.5 Batch trivial slices
+
+- Batch trivial cleanup changes into one PR when they are the same class of change, carry the same risk, and share the same proof standard.
+- Good batch candidates: several unused imports or dead locals in one package, several stale path references in one docs area, or several adjacent lint-only simplifications that do not change behavior.
+- A trivial batch should still stay small enough to review quickly. Prefer one cleanup class per PR, usually across roughly 3 to 10 low-risk edits.
+- Stop batching when the next edit changes package ownership, needs a different validation method, touches hot files, or changes runtime behavior.
+- For trivial batches, run one local verification gate for the whole batch and then one PR plus CI cycle. Do not open a separate PR for every single unused import or stale path fix.
 
 ### 3. Route through the orchestrator
 
@@ -157,6 +166,7 @@ Before ending a cleanup session, promote anything another agent must know into r
 ### 7. Merge or escalate
 
 - Small, reversible cleanup with strong proof can merge quickly.
+- Trivial same-class cleanup may merge as a batched PR when the review surface is still tight and the validation is shared.
 - Cleanup that changes public API, package boundaries, schema contracts, or behavior requires explicit review and often `architecture` involvement.
 - Never weaken CI or coverage gates just to land a cleanup PR.
 
