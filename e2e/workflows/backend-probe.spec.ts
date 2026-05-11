@@ -485,4 +485,58 @@ test.describe('Backend probe live discovery', () => {
     );
     await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
   });
+
+  test('restores remembered probe settings after reload', async ({ page }) => {
+    const metadataJson = JSON.stringify(DISCOVERY_FIXTURE);
+    const rememberCheckbox = page.getByRole('checkbox', {
+      name: 'Remember settings in sessionStorage for this browser session',
+    });
+
+    await openProbe(page);
+
+    await page.getByTestId('probe-metadata-mode').selectOption('paste-json');
+    await page.getByTestId('probe-metadata-json-input').fill(metadataJson);
+    await page.getByTestId('probe-query-url-input').fill('https://probe.example/query');
+    await rememberCheckbox.check();
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+
+    await page.reload();
+    await page.getByTestId('mode-probe').click();
+    await expect(page.getByTestId('probe-connect-button')).toBeVisible();
+    await expect(page.getByTestId('probe-metadata-mode')).toHaveValue('paste-json');
+    await expect(page.getByTestId('probe-metadata-json-input')).toHaveValue(metadataJson);
+    await expect(page.getByTestId('probe-query-url-input')).toHaveValue(
+      'https://probe.example/query',
+    );
+    await expect(rememberCheckbox).toBeChecked();
+  });
+
+  test('clears probe settings after reload when remember session is left unchecked', async ({
+    page,
+  }) => {
+    const metadataJson = JSON.stringify(DISCOVERY_FIXTURE);
+    const rememberCheckbox = page.getByRole('checkbox', {
+      name: 'Remember settings in sessionStorage for this browser session',
+    });
+
+    await openProbe(page);
+
+    await page.getByTestId('probe-metadata-mode').selectOption('paste-json');
+    await page.getByTestId('probe-metadata-json-input').fill(metadataJson);
+    await page.getByTestId('probe-query-url-input').fill('https://probe.example/query');
+    await expect(rememberCheckbox).not.toBeChecked();
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+
+    await page.reload();
+    await page.getByTestId('mode-probe').click();
+    await expect(page.getByTestId('probe-connect-button')).toBeVisible();
+    await expect(page.getByTestId('probe-metadata-mode')).toHaveValue('discovery-url');
+    await expect(page.getByTestId('probe-metadata-json-input')).toHaveCount(0);
+    await expect(page.getByTestId('probe-query-url-input')).toHaveValue('');
+    await expect(rememberCheckbox).not.toBeChecked();
+  });
 });
