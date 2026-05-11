@@ -85,6 +85,7 @@ For testing work, pair the `testing` agent with `.github/skills/testing-strategy
 | `github-cli`                  | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser                                 |
 | `work-kickoff`                | Turning an idea into a reviewed GitHub issue + implementation plan                                        |
 | `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
+| `ai-code-cleanup`             | Continuous AI-code cleanup: drift detection, duplicate removal, bounded refactors, and standards updates  |
 | `release-runbook`             | End-to-end release execution: candidate validation, changesets, branch promotion, publish, downstream PRs |
 | `maintaining-ai-context`      | Adding or auditing `.github/skills`, agents, `AGENTS.md`, `copilot-instructions`                          |
 | `parallel-agent-environments` | Coordinate parallel agent work: branch isolation, file-scope ownership, port assignment, merge sequencing |

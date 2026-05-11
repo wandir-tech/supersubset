@@ -110,6 +110,7 @@ For domain-specific knowledge, read the relevant skill file:
 - **GitHub CLI usage**: `.github/skills/github-cli/SKILL.md`
 - **Work kickoff**: `.github/skills/work-kickoff/SKILL.md`
 - **Branch/CI promotion**: `.github/skills/branch-ci-promotion/SKILL.md`
+- **AI code cleanup**: `.github/skills/ai-code-cleanup/SKILL.md`
 - **Release runbook**: `.github/skills/release-runbook/SKILL.md`
 - **Document a feature**: `.github/skills/document-feature/SKILL.md`
 - **AI context maintenance**: `.github/skills/maintaining-ai-context/SKILL.md`
