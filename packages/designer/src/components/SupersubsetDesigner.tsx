@@ -81,6 +81,8 @@ export interface SupersubsetDesignerProps {
   value?: DashboardDefinition;
   /** Controlled mode: called when dashboard changes */
   onChange?: (dashboard: DashboardDefinition) => void;
+  /** Called when local title drafts differ from the canonical dashboard value */
+  onDraftStateChange?: (hasUncommittedDraft: boolean) => void;
   /** Uncontrolled mode: initial dashboard definition */
   defaultValue?: DashboardDefinition;
   /** Called when user clicks "Publish" / Save */
@@ -117,6 +119,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const {
     value,
     onChange,
+    onDraftStateChange,
     defaultValue,
     onPublish,
     headerTitle,
@@ -151,6 +154,10 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const [controlledSyncRevision, setControlledSyncRevision] = useState(0);
   const canMutateDashboard = !isControlled || !!onChange;
   const pendingDeletePage = pages.find((page) => page.id === pendingDeletePageId);
+  const hasUncommittedDraftChanges =
+    canMutateDashboard &&
+    (pageTitleDraft !== (activePage?.title ?? '') ||
+      dashboardTitleDraft !== (sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE));
 
   const config = useMemo(
     () => createPuckConfig({ filterDefinitions: sourceDashboard?.filters ?? [] }),
@@ -177,10 +184,15 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const a11yInstanceIdRef = useRef(nextDesignerA11yInstanceId++);
   const lastHandledControlledSignatureRef = useRef<string | undefined>(undefined);
   const lastEmittedControlledSignatureRef = useRef<string | undefined>(undefined);
+  const draftStateChangeRef = useRef(onDraftStateChange);
   const controlledValueSignature = useMemo(
     () => (isControlled ? createDashboardSyncSignature(value) : undefined),
     [isControlled, value],
   );
+
+  useEffect(() => {
+    draftStateChangeRef.current = onDraftStateChange;
+  }, [onDraftStateChange]);
 
   useEffect(() => {
     const nextActivePageId = activePage?.id;
@@ -196,6 +208,16 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   useEffect(() => {
     setDashboardTitleDraft(sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE);
   }, [sourceDashboard?.title]);
+
+  useEffect(() => {
+    draftStateChangeRef.current?.(hasUncommittedDraftChanges);
+  }, [hasUncommittedDraftChanges]);
+
+  useEffect(() => {
+    return () => {
+      draftStateChangeRef.current?.(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isControlled) {
@@ -234,6 +256,17 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       onChange?.(dashboard);
     },
     [isControlled, onChange],
+  );
+
+  const reportDraftState = useCallback(
+    (nextDashboardTitleDraft: string, nextPageTitleDraft: string) => {
+      draftStateChangeRef.current?.(
+        canMutateDashboard &&
+          (nextPageTitleDraft !== (activePage?.title ?? '') ||
+            nextDashboardTitleDraft !== (sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE)),
+      );
+    },
+    [activePage?.title, canMutateDashboard, sourceDashboard?.title],
   );
 
   const handleAddPage = useCallback(() => {
@@ -604,7 +637,9 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                   type: 'text',
                   value: pageTitleDraft,
                   onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                    setPageTitleDraft(event.target.value);
+                    const nextValue = event.target.value;
+                    setPageTitleDraft(nextValue);
+                    reportDraftState(dashboardTitleDraft, nextValue);
                   },
                   onBlur: commitPageTitle,
                   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -639,7 +674,9 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               type: 'text',
               value: dashboardTitleDraft,
               onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                setDashboardTitleDraft(event.target.value);
+                const nextValue = event.target.value;
+                setDashboardTitleDraft(nextValue);
+                reportDraftState(nextValue, pageTitleDraft);
               },
               onBlur: commitDashboardTitle,
               onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {

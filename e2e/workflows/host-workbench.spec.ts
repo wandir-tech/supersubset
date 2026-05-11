@@ -528,6 +528,44 @@ test.describe('Next.js Real Host Workbench', () => {
     }
   });
 
+  test('rehydrates a newer publish in a clean designer tab without a reload', async ({
+    browser,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Clean Designer Sync Probe';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await secondPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await ensureDesignerMenuBarExpanded(secondPage);
+
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        publishedDashboardTitle,
+      );
+    } finally {
+      await sharedContext.close();
+    }
+  });
+
   test('preserves an unpublished draft in a second tab while syncing the newer published dashboard', async ({
     browser,
   }) => {
