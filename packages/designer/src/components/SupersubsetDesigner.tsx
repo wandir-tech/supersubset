@@ -14,67 +14,17 @@ import { puckToCanonical, canonicalToPuck } from '../adapters/puck-canonical';
 import { getComponentIcon } from '../icons/component-icons';
 import { DatasetProvider } from '../context/DatasetContext';
 import { PreviewDataProvider, type FetchPreviewData } from '../context/PreviewDataContext';
+import { DesignerHeaderControls } from './DesignerHeaderControls';
+import {
+  createDesignerA11yInstanceId,
+  decorateDesignerShell,
+  injectDesignerSidebarStyles,
+} from './designer-shell-utils';
 import { FilterBuilderPanel } from './FilterBuilderPanel';
 import { SlideOverPanel } from './SlideOverPanel';
 
 // Import Puck's CSS
 import '@puckeditor/core/puck.css';
-
-// Sidebar style overrides — injected as inline <style> to avoid CSS extraction issues
-const SIDEBAR_CSS = `\
-[class*="DrawerItem-draggable"]{padding-left:0!important;padding-top:8px!important;padding-bottom:8px!important;min-height:42px!important}\
-.ss-drawer-icon{transition:color 100ms ease-in}\
-[class*="DrawerItem"]:hover .ss-drawer-icon{color:var(--puck-color-azure-04,#3b82f6)}\
-[data-supersubset-scroll-inline="true"]{-ms-overflow-style:none;scrollbar-width:none}\
-[data-supersubset-scroll-inline="true"]::-webkit-scrollbar{display:none;width:0;height:0}\
-@media (min-width:638px){\
-[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-frame-width:minmax(0,1fr)}\
-[data-supersubset-designer-root] [class*="PuckCanvas"]{min-width:0}\
-[data-supersubset-designer-root] [class*="PuckHeader-inner"]{grid-template-columns:auto auto 1fr}\
-[data-supersubset-designer-root] [class*="PuckHeader-tools"]{min-width:0}\
-}\
-@media (min-width:638px) and (max-width:1024px){[data-supersubset-designer-root] [class*="PuckLayout-inner"]{--puck-user-left-side-bar-width:212px;--puck-user-right-side-bar-width:168px;--puck-frame-width:minmax(320px,1fr)}[data-testid="designer-header-controls"]{gap:8px!important;row-gap:6px!important}[data-testid="designer-page-controls"]{flex:1 0 100%!important}[data-supersubset-header-metadata="true"]{flex:0 1 auto!important;flex-wrap:nowrap!important;align-items:center!important}[data-supersubset-header-metadata="true"] label{gap:0!important}[data-supersubset-header-metadata="true"] label>span{display:none!important}[data-testid="designer-page-title-input"]{width:150px!important}[data-testid="designer-dashboard-title-input"]{width:180px!important}[data-supersubset-built-in-actions="true"]{flex:0 0 auto!important}[data-testid="designer-host-actions"]{flex:1 1 220px!important;justify-content:flex-start!important;min-width:0!important;overflow:hidden!important}}\
-`;
-
-let sidebarStyleInjected = false;
-function injectSidebarStyles() {
-  if (sidebarStyleInjected || typeof document === 'undefined') return;
-  const style = document.createElement('style');
-  style.setAttribute('data-supersubset', 'sidebar');
-  style.textContent = SIDEBAR_CSS;
-  document.head.appendChild(style);
-  sidebarStyleInjected = true;
-}
-
-let nextDesignerA11yInstanceId = 1;
-
-function decorateViewportZoomSelects(root: ParentNode, instanceId: number) {
-  const zoomSelects = root.querySelectorAll<HTMLSelectElement>(
-    'select[class*="ViewportControls-zoomSelect"]',
-  );
-
-  zoomSelects.forEach((select, index) => {
-    if (!select.id) {
-      select.id = `ss-puck-viewport-zoom-${instanceId}-${index}`;
-    }
-    if (!select.name) {
-      select.name = `viewportZoom-${instanceId}-${index}`;
-    }
-    if (!select.getAttribute('aria-label')) {
-      select.setAttribute('aria-label', 'Viewport zoom');
-    }
-  });
-}
-
-function decoratePreviewIframes(root: ParentNode) {
-  const previewIframes = root.querySelectorAll<HTMLIFrameElement>('iframe');
-
-  previewIframes.forEach((iframe) => {
-    if (!iframe.getAttribute('title')) {
-      iframe.setAttribute('title', 'Supersubset designer preview');
-    }
-  });
-}
 
 export interface SupersubsetDesignerProps {
   /** Controlled mode: current dashboard definition */
@@ -165,7 +115,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   );
 
   // Inject sidebar CSS overrides once
-  useMemo(() => injectSidebarStyles(), []);
+  useMemo(() => injectDesignerSidebarStyles(), []);
 
   // Rename sidebar tabs: "Blocks" → "Components", "Outline" → "Layers"
   // Puck merges plugins by name key — same name overrides the default
@@ -181,7 +131,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const headerActionsRef = useRef<React.ReactNode>(null);
   headerActionsRef.current = headerActions;
   const designerRootRef = useRef<HTMLDivElement | null>(null);
-  const a11yInstanceIdRef = useRef(nextDesignerA11yInstanceId++);
+  const a11yInstanceIdRef = useRef(createDesignerA11yInstanceId());
   const lastHandledControlledSignatureRef = useRef<string | undefined>(undefined);
   const lastEmittedControlledSignatureRef = useRef<string | undefined>(undefined);
   const draftStateChangeRef = useRef(onDraftStateChange);
@@ -268,6 +218,34 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     },
     [activePage?.title, canMutateDashboard, sourceDashboard?.title],
   );
+
+  const handlePageTitleDraftChange = useCallback(
+    (nextValue: string) => {
+      setPageTitleDraft(nextValue);
+      reportDraftState(dashboardTitleDraft, nextValue);
+    },
+    [dashboardTitleDraft, reportDraftState],
+  );
+
+  const handleDashboardTitleDraftChange = useCallback(
+    (nextValue: string) => {
+      setDashboardTitleDraft(nextValue);
+      reportDraftState(nextValue, pageTitleDraft);
+    },
+    [pageTitleDraft, reportDraftState],
+  );
+
+  const handleResetPageTitleDraft = useCallback(() => {
+    if (!activePage) {
+      return;
+    }
+
+    setPageTitleDraft(activePage.title);
+  }, [activePage]);
+
+  const handleResetDashboardTitleDraft = useCallback(() => {
+    setDashboardTitleDraft(sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE);
+  }, [sourceDashboard?.title]);
 
   const handleAddPage = useCallback(() => {
     if (!canMutateDashboard) {
@@ -456,350 +434,33 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
         );
       },
       headerActions: ({ children }: { children: React.ReactNode }) => {
-        const pageChips = React.createElement(
-          'div',
-          {
-            'data-supersubset-scroll-inline': 'true',
-            style: {
-              display: 'flex',
-              flexWrap: 'nowrap',
-              gap: 8,
-              alignItems: 'center',
-              overflowX: 'auto',
-              overflowY: 'hidden',
-              minWidth: 0,
-              maxWidth: '100%',
-            },
-          },
-          ...pages.map((page) => {
-            const isActivePage = activePage?.id === page.id;
-            return React.createElement(
-              'div',
-              {
-                key: page.id,
-                style: {
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  borderRadius: 999,
-                  border: `1px solid ${isActivePage ? '#0f172a' : '#cbd5e1'}`,
-                  background: isActivePage ? '#0f172a' : '#fff',
-                  overflow: 'hidden',
-                },
-              },
-              React.createElement(
-                'button',
-                {
-                  type: 'button',
-                  onClick: () => handleSelectPage(page.id),
-                  'data-testid': `designer-page-tab-${page.id}`,
-                  style: {
-                    padding: '6px 12px',
-                    border: 'none',
-                    background: 'transparent',
-                    color: isActivePage ? '#fff' : '#0f172a',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                  },
-                },
-                page.title,
-              ),
-              pages.length > 1
-                ? React.createElement(
-                    'button',
-                    {
-                      type: 'button',
-                      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-                        event.stopPropagation();
-                        handleRequestDeletePage(page.id);
-                      },
-                      'aria-label': `Delete page ${page.title}`,
-                      'data-testid': `designer-page-delete-trigger-${page.id}`,
-                      disabled: !canMutateDashboard,
-                      style: {
-                        padding: '6px 10px',
-                        border: 'none',
-                        borderLeft: `1px solid ${isActivePage ? 'rgba(255,255,255,0.18)' : '#e2e8f0'}`,
-                        background: 'transparent',
-                        color: isActivePage ? '#cbd5e1' : '#64748b',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: canMutateDashboard ? 'pointer' : 'not-allowed',
-                        opacity: canMutateDashboard ? 1 : 0.5,
-                      },
-                    },
-                    '×',
-                  )
-                : null,
-            );
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(DesignerHeaderControls, {
+            activePage,
+            canMutateDashboard,
+            dashboardTitleDraft,
+            filtersCount: sourceDashboard?.filters?.length ?? 0,
+            hostHeaderActions: headerActionsRef.current,
+            onAddPage: handleAddPage,
+            onCancelDeletePage: handleCancelDeletePage,
+            onCommitDashboardTitle: commitDashboardTitle,
+            onCommitPageTitle: commitPageTitle,
+            onConfirmDeletePage: handleConfirmDeletePage,
+            onDashboardTitleDraftChange: handleDashboardTitleDraftChange,
+            onOpenFilters: () => setShowFilters(true),
+            onPageTitleDraftChange: handlePageTitleDraftChange,
+            onRequestDeletePage: handleRequestDeletePage,
+            onResetDashboardTitle: handleResetDashboardTitleDraft,
+            onResetPageTitle: handleResetPageTitleDraft,
+            onSelectPage: handleSelectPage,
+            pageTitleDraft,
+            pages,
+            pendingDeletePage,
           }),
-          React.createElement(
-            'button',
-            {
-              type: 'button',
-              onClick: handleAddPage,
-              'data-testid': 'designer-page-add',
-              disabled: !canMutateDashboard,
-              style: {
-                padding: '6px 10px',
-                borderRadius: 999,
-                border: '1px solid #94a3b8',
-                background: '#f8fafc',
-                color: '#0f172a',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: canMutateDashboard ? 'pointer' : 'not-allowed',
-                opacity: canMutateDashboard ? 1 : 0.6,
-                whiteSpace: 'nowrap',
-              },
-            },
-            'Add Page',
-          ),
+          children,
         );
-
-        const deletePrompt = pendingDeletePage
-          ? React.createElement(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  borderRadius: 14,
-                  border: '1px solid #fecaca',
-                  background: '#fff1f2',
-                  maxWidth: 'fit-content',
-                },
-              },
-              React.createElement(
-                'span',
-                {
-                  'data-testid': 'designer-page-delete-prompt',
-                  style: {
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: '#9f1239',
-                    whiteSpace: 'nowrap',
-                  },
-                },
-                `Delete ${pendingDeletePage.title}?`,
-              ),
-              React.createElement(
-                'button',
-                {
-                  type: 'button',
-                  onClick: handleCancelDeletePage,
-                  'data-testid': 'designer-page-delete-cancel',
-                  style: actionButtonStyle('#fff', '#be123c', '#fecaca'),
-                },
-                'Cancel',
-              ),
-              React.createElement(
-                'button',
-                {
-                  type: 'button',
-                  onClick: handleConfirmDeletePage,
-                  'data-testid': 'designer-page-delete-confirm',
-                  style: actionButtonStyle('#be123c', '#fff', '#be123c'),
-                },
-                'Delete',
-              ),
-            )
-          : null;
-
-        const metadataControls = React.createElement(
-          'div',
-          {
-            'data-supersubset-header-metadata': 'true',
-            style: {
-              display: 'flex',
-              gap: 12,
-              flexWrap: 'wrap',
-              alignItems: 'flex-start',
-              flex: '1 1 360px',
-              minWidth: 0,
-            },
-          },
-          activePage
-            ? React.createElement(
-                'label',
-                {
-                  style: {
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  },
-                },
-                React.createElement('span', { style: smallSectionLabelStyle() }, 'Page Title'),
-                React.createElement('input', {
-                  type: 'text',
-                  value: pageTitleDraft,
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                    const nextValue = event.target.value;
-                    setPageTitleDraft(nextValue);
-                    reportDraftState(dashboardTitleDraft, nextValue);
-                  },
-                  onBlur: commitPageTitle,
-                  onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
-                    if (event.key === 'Enter') {
-                      commitPageTitle();
-                      event.currentTarget.blur();
-                    }
-                    if (event.key === 'Escape') {
-                      setPageTitleDraft(activePage.title);
-                      event.currentTarget.blur();
-                    }
-                  },
-                  placeholder: 'Page title',
-                  'aria-label': 'Page title',
-                  'data-testid': 'designer-page-title-input',
-                  disabled: !canMutateDashboard,
-                  style: headerInputStyle(canMutateDashboard, 180),
-                }),
-              )
-            : null,
-          React.createElement(
-            'label',
-            {
-              style: {
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-              },
-            },
-            React.createElement('span', { style: smallSectionLabelStyle() }, 'Dashboard Title'),
-            React.createElement('input', {
-              type: 'text',
-              value: dashboardTitleDraft,
-              onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                const nextValue = event.target.value;
-                setDashboardTitleDraft(nextValue);
-                reportDraftState(nextValue, pageTitleDraft);
-              },
-              onBlur: commitDashboardTitle,
-              onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
-                if (event.key === 'Enter') {
-                  commitDashboardTitle();
-                  event.currentTarget.blur();
-                }
-                if (event.key === 'Escape') {
-                  setDashboardTitleDraft(sourceDashboard?.title ?? DEFAULT_DASHBOARD_TITLE);
-                  event.currentTarget.blur();
-                }
-              },
-              placeholder: 'Dashboard title',
-              'aria-label': 'Dashboard title',
-              'data-testid': 'designer-dashboard-title-input',
-              disabled: !canMutateDashboard,
-              style: headerInputStyle(canMutateDashboard, 220),
-            }),
-          ),
-        );
-
-        const builtInActions = React.createElement(
-          'div',
-          {
-            'data-supersubset-built-in-actions': 'true',
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 8,
-              flex: '0 0 auto',
-            },
-          },
-          React.createElement(
-            'button',
-            {
-              type: 'button',
-              onClick: () => setShowFilters(true),
-              'data-testid': 'designer-filters-toggle',
-              style: {
-                ...actionButtonStyle('#fff', '#0f172a', '#cbd5e1'),
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                whiteSpace: 'nowrap',
-              },
-            },
-            `Dashboard Filters${sourceDashboard?.filters?.length ? ` (${sourceDashboard.filters.length})` : ''}`,
-          ),
-        );
-
-        const headerControlLayout =
-          pages.length > 0 || canMutateDashboard
-            ? React.createElement(
-                'div',
-                {
-                  'data-testid': 'designer-header-controls',
-                  'data-supersubset-scroll-inline': 'true',
-                  style: {
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    alignContent: 'flex-start',
-                    gap: 12,
-                    rowGap: 12,
-                    flex: '1 1 auto',
-                    flexWrap: 'wrap',
-                    overflowX: 'visible',
-                    overflowY: 'visible',
-                    minWidth: 0,
-                    maxWidth: '100%',
-                  },
-                },
-                React.createElement(
-                  'div',
-                  {
-                    'data-testid': 'designer-page-controls',
-                    style: {
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                      flex: '0 0 auto',
-                      minWidth: 0,
-                    },
-                  },
-                  React.createElement(
-                    'span',
-                    {
-                      style: {
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: '#64748b',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                      },
-                    },
-                    'Pages',
-                  ),
-                  pageChips,
-                  deletePrompt,
-                ),
-                metadataControls,
-                builtInActions,
-                headerActionsRef.current
-                  ? React.createElement(
-                      'div',
-                      {
-                        'data-testid': 'designer-host-actions',
-                        style: {
-                          flex: '1 1 auto',
-                          minWidth: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          overflow: 'visible',
-                        },
-                      },
-                      headerActionsRef.current,
-                    )
-                  : null,
-              )
-            : headerActionsRef.current;
-
-        return React.createElement(React.Fragment, null, headerControlLayout, children);
       },
     }),
     [
@@ -810,12 +471,17 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
       dashboardTitleDraft,
       handleAddPage,
       handleCancelDeletePage,
+      handleDashboardTitleDraftChange,
       handleConfirmDeletePage,
+      handlePageTitleDraftChange,
+      handleResetDashboardTitleDraft,
+      handleResetPageTitleDraft,
       handleRequestDeletePage,
       handleSelectPage,
       pageTitleDraft,
       pages,
       pendingDeletePage,
+      sourceDashboard?.filters?.length,
       sourceDashboard?.title,
     ],
   );
@@ -891,8 +557,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     if (!root) return;
 
     const applyViewportControlA11y = () => {
-      decorateViewportZoomSelects(root, a11yInstanceIdRef.current);
-      decoratePreviewIframes(root);
+      decorateDesignerShell(root, a11yInstanceIdRef.current);
     };
 
     applyViewportControlA11y();
@@ -1067,45 +732,4 @@ function slugify(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
-
-function smallSectionLabelStyle(): React.CSSProperties {
-  return {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-  };
-}
-
-function headerInputStyle(canEdit: boolean, minWidth = 180): React.CSSProperties {
-  return {
-    width: `${minWidth}px`,
-    maxWidth: '100%',
-    padding: '6px 10px',
-    borderRadius: 999,
-    border: '1px solid #cbd5e1',
-    fontSize: 12,
-    color: '#0f172a',
-    background: '#fff',
-    opacity: canEdit ? 1 : 0.7,
-  };
-}
-
-function actionButtonStyle(
-  background: string,
-  color: string,
-  borderColor: string,
-): React.CSSProperties {
-  return {
-    padding: '6px 10px',
-    borderRadius: 999,
-    border: `1px solid ${borderColor}`,
-    background,
-    color,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: 'pointer',
-  };
 }
