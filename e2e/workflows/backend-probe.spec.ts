@@ -409,4 +409,80 @@ test.describe('Backend probe live discovery', () => {
       fields: [{ fieldId: 'region' }, { fieldId: 'revenue' }],
     });
   });
+
+  test('shows empty preview fallback status when a connected query returns no rows', async ({
+    page,
+  }) => {
+    const importedDashboard = buildProbePreviewDashboard();
+
+    await page.route('**/probe-preview-empty/supersubset/query', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          columns: [
+            { fieldId: 'region', label: 'Region', dataType: 'string' },
+            { fieldId: 'revenue', label: 'Revenue', dataType: 'number' },
+          ],
+          rows: [],
+        }),
+      });
+    });
+
+    await openProbe(page);
+    const origin = new URL(page.url()).origin;
+
+    await page.getByTestId('probe-metadata-mode').selectOption('paste-json');
+    await page.getByTestId('probe-metadata-json-input').fill(JSON.stringify(DISCOVERY_FIXTURE));
+    await page.getByTestId('probe-query-url-input').fill(`${origin}/probe-preview-empty`);
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+
+    await page.getByTestId('import-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toBeVisible();
+    await page.getByTestId('import-textarea').fill(importedDashboard);
+    await page.getByTestId('import-submit-btn').click();
+
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText(
+      'Empty result (falling back to sample data)',
+    );
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText('0 rows');
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+  });
+
+  test('shows error preview fallback status when a connected query fails', async ({ page }) => {
+    const importedDashboard = buildProbePreviewDashboard();
+
+    await page.route('**/probe-preview-error/supersubset/query', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Preview exploded' }),
+      });
+    });
+
+    await openProbe(page);
+    const origin = new URL(page.url()).origin;
+
+    await page.getByTestId('probe-metadata-mode').selectOption('paste-json');
+    await page.getByTestId('probe-metadata-json-input').fill(JSON.stringify(DISCOVERY_FIXTURE));
+    await page.getByTestId('probe-query-url-input').fill(`${origin}/probe-preview-error`);
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+
+    await page.getByTestId('import-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toBeVisible();
+    await page.getByTestId('import-textarea').fill(importedDashboard);
+    await page.getByTestId('import-submit-btn').click();
+
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText(
+      'Failed (falling back to sample data)',
+    );
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText(
+      'Probe request failed (500): Preview exploded',
+    );
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+  });
 });
