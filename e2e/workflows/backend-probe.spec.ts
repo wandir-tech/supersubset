@@ -539,4 +539,32 @@ test.describe('Backend probe live discovery', () => {
     await expect(page.getByTestId('probe-query-url-input')).toHaveValue('');
     await expect(rememberCheckbox).not.toBeChecked();
   });
+
+  test('returns to the probe form and reconnects with the current in-memory settings', async ({
+    page,
+  }) => {
+    const metadataJson = JSON.stringify(DISCOVERY_FIXTURE);
+
+    await openProbe(page);
+
+    await page.getByTestId('probe-metadata-mode').selectOption('paste-json');
+    await page.getByTestId('probe-metadata-json-input').fill(metadataJson);
+    await page.getByTestId('probe-query-url-input').fill('https://probe.example/query');
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+    await page.getByRole('button', { name: 'Reconnect' }).click();
+
+    await expect(page.getByTestId('probe-connect-button')).toBeVisible();
+    await expect(page.getByTestId('probe-metadata-mode')).toHaveValue('paste-json');
+    await expect(page.getByTestId('probe-metadata-json-input')).toHaveValue(metadataJson);
+    await expect(page.getByTestId('probe-query-url-input')).toHaveValue(
+      'https://probe.example/query',
+    );
+    await expect(page.getByTestId('probe-connect-log')).toHaveCount(0);
+    await expect(page.getByTestId('probe-error')).toHaveCount(0);
+
+    await page.getByTestId('probe-connect-button').click();
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+  });
 });
