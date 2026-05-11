@@ -26,6 +26,7 @@ import {
   readStoredWorkbenchToken,
 } from '../lib/workbench-client';
 import { WORKBENCH_LOGIN_EMAIL, WORKBENCH_LOGIN_PASSWORD } from '../lib/workbench-auth';
+import { WORKBENCH_DASHBOARD_STORAGE_KEY } from '../lib/workbench-shared';
 import { workbenchStarterDashboard } from '../lib/workbench-dashboard';
 
 export function WorkbenchHost() {
@@ -79,6 +80,36 @@ export function WorkbenchHost() {
 
     setToken(storedToken);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    function handleStorage(event: StorageEvent) {
+      if (
+        event.storageArea !== window.localStorage ||
+        event.key !== WORKBENCH_DASHBOARD_STORAGE_KEY
+      ) {
+        return;
+      }
+
+      const storedDashboard = readStoredWorkbenchDashboard();
+      if (!storedDashboard) {
+        return;
+      }
+
+      setPublishedDashboard(storedDashboard);
+      if (mode !== 'designer') {
+        setDashboard(storedDashboard);
+      }
+    }
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [mode]);
 
   useEffect(() => {
     if (!token) {

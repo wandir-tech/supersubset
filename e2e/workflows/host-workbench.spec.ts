@@ -485,4 +485,90 @@ test.describe('Next.js Real Host Workbench', () => {
       await sharedContext.close();
     }
   });
+
+  test('rehydrates a newer publish in an already-authenticated second tab without a reload', async ({
+    browser,
+  }) => {
+    const publishedDashboardTitle = 'Northstar Live Cross Tab Sync';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await secondPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+      await secondPage.getByTestId('workbench-mode-viewer').click();
+
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        publishedDashboardTitle,
+      );
+      await expect(secondPage.getByTestId('workbench-login-form')).toHaveCount(0);
+    } finally {
+      await sharedContext.close();
+    }
+  });
+
+  test('preserves an unpublished draft in a second tab while syncing the newer published dashboard', async ({
+    browser,
+  }) => {
+    const draftDashboardTitle = 'Northstar Draft Should Survive';
+    const publishedDashboardTitle = 'Northstar External Publish Wins';
+    const sharedContext = await browser.newContext();
+    const firstPage = await sharedContext.newPage();
+    const secondPage = await sharedContext.newPage();
+
+    try {
+      await firstPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+      await secondPage.goto(`${NEXTJS_WORKBENCH_ORIGIN}/workbench`);
+
+      await expect(firstPage.getByTestId('workbench-login-form')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-login-form')).toBeVisible();
+
+      await firstPage.getByTestId('workbench-login-submit').click();
+      await secondPage.getByTestId('workbench-login-submit').click();
+
+      await expect(firstPage.getByTestId('workbench-shell')).toBeVisible();
+      await expect(secondPage.getByTestId('workbench-shell')).toBeVisible();
+
+      await secondPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(secondPage);
+      await secondPage.getByTestId('designer-dashboard-title-input').fill(draftDashboardTitle);
+
+      await firstPage.getByTestId('workbench-mode-designer').click();
+      await ensureDesignerMenuBarExpanded(firstPage);
+      await firstPage.getByTestId('designer-dashboard-title-input').fill(publishedDashboardTitle);
+      await firstPage.getByTestId('designer-dashboard-title-input').blur();
+      await firstPage.getByText('Publish', { exact: true }).click();
+      await expect(firstPage.getByTestId('workbench-query-log')).toContainText(
+        '"datasetId": "ops-shipments"',
+      );
+
+      await expect(secondPage.getByTestId('designer-dashboard-title-input')).toHaveValue(
+        draftDashboardTitle,
+      );
+      await expect(secondPage.getByTestId('workbench-login-form')).toHaveCount(0);
+    } finally {
+      await sharedContext.close();
+    }
+  });
 });
