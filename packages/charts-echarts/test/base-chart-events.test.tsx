@@ -329,6 +329,23 @@ describe('BaseChart interaction events', () => {
     });
   });
 
+  it('skips unregistering listeners after the chart has already been disposed', () => {
+    const { unmount } = render(
+      React.createElement(BaseChart, {
+        option: {},
+        widgetId: 'chart-disposed-cleanup',
+        onEvent: vi.fn(),
+      }),
+    );
+
+    chartInstance.off.mockClear();
+    chartInstance.isDisposed.mockReturnValue(true);
+
+    unmount();
+
+    expect(chartInstance.off).not.toHaveBeenCalled();
+  });
+
   it('does not emit duplicate events when echarts click fires for the same interaction', async () => {
     const onEvent = vi.fn();
 

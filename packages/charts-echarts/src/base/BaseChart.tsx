@@ -92,7 +92,9 @@ export function BaseChart({
     return () => {
       observer.disconnect();
       chartRef.current = null;
-      chart.dispose();
+      if (!isChartDisposed(chart)) {
+        chart.dispose();
+      }
     };
   }, [echartsTheme]);
 
@@ -178,9 +180,11 @@ export function BaseChart({
     container.addEventListener('click', handleNativeClick, true);
     container.addEventListener('mouseleave', clearPointerHover);
     return () => {
-      chart.off('click', handleClick);
-      chart.off('mouseover', handlePointerHover);
-      chart.off('updateAxisPointer', handleAxisPointer);
+      if (!isChartDisposed(chart)) {
+        chart.off('click', handleClick);
+        chart.off('mouseover', handlePointerHover);
+        chart.off('updateAxisPointer', handleAxisPointer);
+      }
       container.removeEventListener('click', handleNativeClick, true);
       container.removeEventListener('mouseleave', clearPointerHover);
     };
