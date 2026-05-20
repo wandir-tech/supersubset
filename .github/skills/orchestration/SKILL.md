@@ -171,6 +171,7 @@ If resuming work after a context reset:
 
 - `.github/skills/github-cli/SKILL.md` — Issues, PRs, Actions via `gh`
 - `.github/skills/work-kickoff/SKILL.md` — Spec and GitHub issue before large implementation
+- `.github/skills/ai-code-cleanup/SKILL.md` — Continuous cleanup of AI-generated drift, duplication, and weak validation
 - `.github/skills/branch-ci-promotion/SKILL.md` — `pnpm lint` / `typecheck` / `test` merge readiness
 - `.github/skills/maintaining-ai-context/SKILL.md` — Editing or auditing skills and agents
 - `.github/skills/parallel-agent-environments/SKILL.md` — Parallel work: branch isolation, file ownership, ports, merge order

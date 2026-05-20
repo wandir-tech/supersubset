@@ -4,12 +4,17 @@ import {
   isValidWorkbenchCredentials,
   WORKBENCH_LOGIN_MUTATION,
 } from '../../lib/workbench-auth';
+import { handleLocalDevCors } from '../../lib/dev-cors';
 
 function normalizeGraphqlDocument(document: string): string {
   return document.replace(/\s+/g, ' ').trim();
 }
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (handleLocalDevCors(req, res, ['POST'])) {
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ errors: [{ message: 'Method not allowed.' }] });

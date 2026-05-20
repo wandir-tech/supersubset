@@ -85,8 +85,16 @@ pnpm test:e2e
 - [ ] **`pnpm typecheck`** — strict TS clean across workspace.
 - [ ] **`pnpm test`** — unit/integration tests for changed packages pass.
 - [ ] **E2E** — run when behavior crosses packages or host mounting (`e2e/`).
+- [ ] **PR opened** — the branch has an open PR before requesting manual QA, a checkpoint, or a human sign-off.
+- [ ] **PR CI green** — required cloud CI checks on that PR are green before the human checkpoint starts.
 - [ ] **ADRs** — significant architecture/schema/deps decisions recorded under `docs/adr/` per orchestrator rules in `AGENTS.md`.
 - [ ] **`docs/status/`** — if the project tracks phased work, update `master-plan.md` / phase summary when the issue completes a planned slice.
+
+## Human check timing
+
+- Human checkpoints, QA sign-off, and manual review requests happen after local verification is green and the branch has an open PR.
+- Treat required cloud CI as a gate before the human checkpoint, not as a follow-up after manual review.
+- Use the human check for product judgment and boundary review, not to discover failures that local checks or CI should have caught first.
 
 ## CI expectations (when workflows exist)
 
@@ -107,6 +115,7 @@ If **no workflows** yet, this skill still applies: **run the same commands local
 
 - Merging with “CI will catch it” when you have not run `lint` / `typecheck` / `test` locally for the touched surface.
 - Skipping E2E when the diff changes Playwright-covered flows or `webServer` ports.
+- Requesting manual QA or a human checkpoint before the PR exists or while required CI is still red.
 - Silent cross-package refactors without ADR/orchestrator alignment when `AGENTS.md` requires it.
 
 ## See also

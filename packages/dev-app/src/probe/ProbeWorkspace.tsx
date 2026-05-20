@@ -1,14 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 
-import {
-  SupersubsetDesigner,
-  ImportExportPanel,
-  CodeViewPanel,
-  type FetchPreviewData,
-  useUndoRedo,
-  UndoRedoToolbar,
-  useUndoRedoKeyboard,
-} from '@supersubset/designer';
+import { type FetchPreviewData, useUndoRedo, useUndoRedoKeyboard } from '@supersubset/designer';
 import type { DashboardDefinition } from '@supersubset/schema';
 import type { NormalizedDataset } from '@supersubset/data-model';
 
@@ -26,26 +18,10 @@ import {
 import { toProbeErrorMessage } from './errors';
 import { HttpMetadataAdapter, HttpQueryAdapter } from './http-adapters';
 import { buildPreviewQuery, deriveQueryEndpointInput, parseProbeMetadataJson } from './metadata';
-
-interface PreviewStatus {
-  kind: 'idle' | 'loading' | 'success' | 'empty' | 'error';
-  url?: string;
-  datasetRef?: string;
-  rowCount?: number;
-  errorMessage?: string;
-  timestamp?: number;
-  requestBody?: string;
-  fieldBindings?: string;
-}
-
-type ConnectStageStatus = 'pending' | 'success' | 'error';
-
-interface ConnectStage {
-  id: string;
-  label: string;
-  status: ConnectStageStatus;
-  detail?: string;
-}
+import { ProbeConnectionPanel } from './ProbeConnectionPanel';
+import { ProbeDesignerWorkspace } from './ProbeDesignerWorkspace';
+import { resolveProbeDatasets } from './probe-connection';
+import { type ConnectStage, type PreviewStatus } from './probe-workspace-types';
 
 function summarizeFieldBindings(fields: Record<string, string | string[] | undefined>): string {
   const parts: string[] = [];
@@ -293,101 +269,30 @@ export function ProbeWorkspace(): ReactElement {
     setConnectStages([]);
 
     try {
-      let effectiveAuthHeader = authHeader;
+      const result = await resolveProbeDatasets(
+        {
+          metadataSourceMode,
+          normalizedDiscoveryUrl,
+          metadataJsonInput,
+          authMode,
+          authHeader,
+          loginUrlInput,
+          loginMutationInput,
+          loginEmailInput,
+          loginPasswordInput,
+          loginTokenPathInput,
+          jwtInput,
+          customHeaderName,
+          customHeaderValue,
+        },
+        { pushStage, updateStage },
+      );
 
-      if (authMode === 'login') {
-        pushStage({
-          id: 'login',
-          label: `Login: POST ${loginUrlInput.trim() || '(no URL)'}`,
-          status: 'pending',
-          detail: `User: ${loginEmailInput || '(empty)'}`,
-        });
-        console.info('[Supersubset Probe] Attempting login', {
-          url: loginUrlInput.trim(),
-          email: loginEmailInput,
-          tokenPath: loginTokenPathInput,
-        });
-
-        try {
-          const { token } = await performProbeLogin({
-            loginUrl: loginUrlInput,
-            loginMutation: loginMutationInput,
-            loginEmail: loginEmailInput,
-            loginPassword: loginPasswordInput,
-            loginTokenPath: loginTokenPathInput,
-          });
-          setLoginToken(token);
-          effectiveAuthHeader = toAuthHeader(
-            'login',
-            jwtInput,
-            customHeaderName,
-            customHeaderValue,
-            token,
-          );
-          const tokenPreview = `${token.slice(0, 12)}…${token.slice(-6)} (${token.length} chars)`;
-          updateStage('login', {
-            status: 'success',
-            detail: `Token captured: ${tokenPreview}`,
-          });
-          console.info('[Supersubset Probe] Login succeeded', { tokenPreview });
-        } catch (loginError) {
-          const message = toProbeErrorMessage(loginError);
-          updateStage('login', { status: 'error', detail: message });
-          console.warn('[Supersubset Probe] Login failed', loginError);
-          throw loginError;
-        }
+      if (result.loginToken) {
+        setLoginToken(result.loginToken);
       }
 
-      if (metadataSourceMode === 'discovery-url') {
-        pushStage({
-          id: 'metadata',
-          label: `Metadata: GET ${normalizedDiscoveryUrl}`,
-          status: 'pending',
-        });
-        console.info('[Supersubset Probe] Fetching metadata', {
-          url: normalizedDiscoveryUrl,
-          authHeader: effectiveAuthHeader?.name,
-        });
-      } else {
-        pushStage({
-          id: 'metadata',
-          label: 'Metadata: parsing pasted JSON',
-          status: 'pending',
-        });
-      }
-
-      let nextDatasets;
-      try {
-        nextDatasets =
-          metadataSourceMode === 'discovery-url'
-            ? await new HttpMetadataAdapter({ authHeader: effectiveAuthHeader }).getDatasets(
-                normalizedDiscoveryUrl,
-              )
-            : await parseProbeMetadataJson(metadataJsonInput);
-      } catch (metadataError) {
-        const message = toProbeErrorMessage(metadataError);
-        updateStage('metadata', { status: 'error', detail: message });
-        console.warn('[Supersubset Probe] Metadata fetch failed', metadataError);
-        throw metadataError;
-      }
-
-      if (nextDatasets.length === 0) {
-        const emptyMessage = 'Metadata loaded successfully, but no datasets were discovered.';
-        updateStage('metadata', { status: 'error', detail: emptyMessage });
-        console.warn('[Supersubset Probe]', emptyMessage);
-        throw new Error(emptyMessage);
-      }
-
-      updateStage('metadata', {
-        status: 'success',
-        detail: `${nextDatasets.length} dataset(s) discovered`,
-      });
-      console.info('[Supersubset Probe] Metadata loaded', {
-        datasetCount: nextDatasets.length,
-        datasetIds: nextDatasets.map((dataset) => dataset.id),
-      });
-
-      setDatasets(nextDatasets);
+      setDatasets(result.datasets);
       undoRedo.reset(createBlankDashboardDefinition());
 
       if (!rememberSession) {
@@ -453,841 +358,79 @@ export function ProbeWorkspace(): ReactElement {
       </div>
 
       {!isConnected ? (
-        <section
-          style={{
-            border: '1px solid #d6dee8',
-            borderRadius: 14,
-            padding: 20,
-            background: '#fff',
-            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.07)',
+        <ProbeConnectionPanel
+          metadataModeId={metadataModeId}
+          discoveryUrlInputId={discoveryUrlInputId}
+          metadataJsonInputId={metadataJsonInputId}
+          queryUrlInputId={queryUrlInputId}
+          authModeId={authModeId}
+          jwtInputId={jwtInputId}
+          customHeaderNameId={customHeaderNameId}
+          customHeaderValueId={customHeaderValueId}
+          loginUrlInputId={loginUrlInputId}
+          loginEmailInputId={loginEmailInputId}
+          loginPasswordInputId={loginPasswordInputId}
+          loginMutationInputId={loginMutationInputId}
+          loginTokenPathInputId={loginTokenPathInputId}
+          metadataSourceMode={metadataSourceMode}
+          authMode={authMode}
+          discoveryUrlInput={discoveryUrlInput}
+          metadataJsonInput={metadataJsonInput}
+          queryUrlInput={queryUrlInput}
+          jwtInput={jwtInput}
+          customHeaderName={customHeaderName}
+          customHeaderValue={customHeaderValue}
+          loginUrlInput={loginUrlInput}
+          loginEmailInput={loginEmailInput}
+          loginPasswordInput={loginPasswordInput}
+          loginMutationInput={loginMutationInput}
+          loginTokenPathInput={loginTokenPathInput}
+          rememberSession={rememberSession}
+          connectStages={connectStages}
+          probeError={probeError}
+          isConnecting={isConnecting}
+          setMetadataSourceMode={setMetadataSourceMode}
+          setAuthMode={setAuthMode}
+          setDiscoveryUrlInput={setDiscoveryUrlInput}
+          setMetadataJsonInput={setMetadataJsonInput}
+          setQueryUrlInput={setQueryUrlInput}
+          setJwtInput={setJwtInput}
+          setCustomHeaderName={setCustomHeaderName}
+          setCustomHeaderValue={setCustomHeaderValue}
+          setLoginUrlInput={setLoginUrlInput}
+          setLoginEmailInput={setLoginEmailInput}
+          setLoginPasswordInput={setLoginPasswordInput}
+          setLoginMutationInput={setLoginMutationInput}
+          setLoginTokenPathInput={setLoginTokenPathInput}
+          setRememberSession={setRememberSession}
+          onConnect={() => {
+            void handleProbeConnect();
           }}
-        >
-          <h2 style={{ marginTop: 0, marginBottom: 10, color: '#0f172a' }}>Backend Probe</h2>
-          <p style={{ margin: '0 0 18px', color: '#475569' }}>
-            Load metadata from a discovery endpoint or pasted JSON, then optionally use a live query
-            endpoint for preview data while building charts.
-          </p>
-
-          <label
-            htmlFor={metadataModeId}
-            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-          >
-            Metadata source
-          </label>
-          <select
-            id={metadataModeId}
-            data-testid="probe-metadata-mode"
-            value={metadataSourceMode}
-            onChange={(event) =>
-              setMetadataSourceMode(event.target.value as ProbeMetadataSourceMode)
-            }
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              marginBottom: 14,
-              borderRadius: 8,
-              border: '1px solid #cbd5e1',
-              fontSize: 14,
-            }}
-          >
-            <option value="discovery-url">Discovery URL</option>
-            <option value="paste-json">Paste metadata JSON</option>
-          </select>
-
-          {metadataSourceMode === 'discovery-url' ? (
-            <>
-              <label
-                htmlFor={discoveryUrlInputId}
-                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-              >
-                Discovery URL or backend base URL
-              </label>
-              <input
-                id={discoveryUrlInputId}
-                data-testid="probe-url-input"
-                value={discoveryUrlInput}
-                onChange={(event) => setDiscoveryUrlInput(event.target.value)}
-                placeholder="https://api.example.com"
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: 8,
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 14,
-                }}
-              />
-              <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-                Metadata is loaded from <code>GET {'{base}/supersubset/datasets'}</code> unless the
-                URL already ends with <code>/supersubset/datasets</code>. Prefer an API-segment base
-                (for example Tripmatch: <code>http://localhost:PORT/api/analytics</code>) so an
-                empty query field below can reuse the same base for{' '}
-                <code>POST {'{base}/supersubset/query'}</code>.
-              </p>
-            </>
-          ) : (
-            <>
-              <label
-                htmlFor={metadataJsonInputId}
-                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-              >
-                Metadata JSON
-              </label>
-              <textarea
-                id={metadataJsonInputId}
-                data-testid="probe-metadata-json-input"
-                value={metadataJsonInput}
-                onChange={(event) => setMetadataJsonInput(event.target.value)}
-                placeholder='{"datasets":[{"id":"orders","label":"Orders","fields":[...]}]}'
-                rows={8}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: 14,
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 13,
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                }}
-              />
-            </>
-          )}
-
-          <label
-            htmlFor={queryUrlInputId}
-            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-          >
-            Query endpoint URL or backend base URL (optional)
-          </label>
-          <input
-            id={queryUrlInputId}
-            data-testid="probe-query-url-input"
-            value={queryUrlInput}
-            onChange={(event) => setQueryUrlInput(event.target.value)}
-            placeholder="https://api.example.com"
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              marginBottom: 8,
-              borderRadius: 8,
-              border: '1px solid #cbd5e1',
-              fontSize: 14,
-            }}
-          />
-          <p style={{ margin: '0 0 14px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-            Leave this blank to reuse the discovery URL for live preview when possible. When using
-            pasted metadata, you can still provide a query endpoint for chart preview data.
-          </p>
-
-          <label
-            htmlFor={authModeId}
-            style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-          >
-            Auth mode
-          </label>
-          <select
-            id={authModeId}
-            data-testid="probe-auth-mode"
-            value={authMode}
-            onChange={(event) => setAuthMode(event.target.value as ProbeAuthMode)}
-            style={{
-              width: '100%',
-              padding: '10px 12px',
-              marginBottom: 14,
-              borderRadius: 8,
-              border: '1px solid #cbd5e1',
-              fontSize: 14,
-            }}
-          >
-            <option value="bearer">Bearer JWT</option>
-            <option value="custom">Custom header</option>
-            <option value="login">Login with email + password</option>
-          </select>
-
-          {authMode === 'bearer' && (
-            <>
-              <label
-                htmlFor={jwtInputId}
-                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-              >
-                JWT token (optional)
-              </label>
-              <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-                Paste the raw JWT only — <code>Bearer</code> is added for you. A leading{' '}
-                <code>Bearer</code> prefix is stripped if you paste it anyway.
-              </p>
-              <textarea
-                id={jwtInputId}
-                data-testid="probe-jwt-input"
-                value={jwtInput}
-                onChange={(event) => setJwtInput(event.target.value)}
-                placeholder="eyJhbGciOi..."
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: 14,
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 13,
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                }}
-              />
-            </>
-          )}
-
-          {authMode === 'custom' && (
-            <>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 2fr',
-                  gap: 10,
-                  marginBottom: 6,
-                }}
-              >
-                <label
-                  htmlFor={customHeaderNameId}
-                  style={{ display: 'block', fontWeight: 600, color: '#0f172a' }}
-                >
-                  Header name
-                </label>
-                <label
-                  htmlFor={customHeaderValueId}
-                  style={{ display: 'block', fontWeight: 600, color: '#0f172a' }}
-                >
-                  Header value
-                </label>
-              </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 2fr',
-                  gap: 10,
-                  marginBottom: 14,
-                }}
-              >
-                <input
-                  id={customHeaderNameId}
-                  data-testid="probe-header-name"
-                  value={customHeaderName}
-                  onChange={(event) => setCustomHeaderName(event.target.value)}
-                  placeholder="X-API-Key"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid #cbd5e1',
-                    fontSize: 14,
-                  }}
-                />
-                <input
-                  id={customHeaderValueId}
-                  data-testid="probe-header-value"
-                  value={customHeaderValue}
-                  onChange={(event) => setCustomHeaderValue(event.target.value)}
-                  placeholder="my-dev-key"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid #cbd5e1',
-                    fontSize: 14,
-                  }}
-                />
-              </div>
-            </>
-          )}
-
-          {authMode === 'login' && (
-            <>
-              <p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-                The probe will POST a GraphQL mutation to the login URL with{' '}
-                <code>{'{ query, variables: { email, password } }'}</code> and then use the returned
-                token as <code>Authorization: Bearer &lt;token&gt;</code> for discovery and preview
-                requests. Defaults match the tripmatch / bi-data-mart GraphQL schema.
-              </p>
-
-              <label
-                htmlFor={loginUrlInputId}
-                style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-              >
-                Login URL
-              </label>
-              <input
-                id={loginUrlInputId}
-                data-testid="probe-login-url"
-                value={loginUrlInput}
-                onChange={(event) => setLoginUrlInput(event.target.value)}
-                placeholder="http://localhost:3009/graphql"
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  marginBottom: 10,
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 14,
-                }}
-              />
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 10,
-                  marginBottom: 10,
-                }}
-              >
-                <div>
-                  <label
-                    htmlFor={loginEmailInputId}
-                    style={{
-                      display: 'block',
-                      marginBottom: 6,
-                      fontWeight: 600,
-                      color: '#0f172a',
-                    }}
-                  >
-                    Email / user ID
-                  </label>
-                  <input
-                    id={loginEmailInputId}
-                    data-testid="probe-login-email"
-                    value={loginEmailInput}
-                    onChange={(event) => setLoginEmailInput(event.target.value)}
-                    placeholder="dev@example.com"
-                    autoComplete="username"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      border: '1px solid #cbd5e1',
-                      fontSize: 14,
-                    }}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor={loginPasswordInputId}
-                    style={{
-                      display: 'block',
-                      marginBottom: 6,
-                      fontWeight: 600,
-                      color: '#0f172a',
-                    }}
-                  >
-                    Password
-                  </label>
-                  <input
-                    id={loginPasswordInputId}
-                    data-testid="probe-login-password"
-                    type="password"
-                    value={loginPasswordInput}
-                    onChange={(event) => setLoginPasswordInput(event.target.value)}
-                    placeholder="dev password"
-                    autoComplete="current-password"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      border: '1px solid #cbd5e1',
-                      fontSize: 14,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <details style={{ marginBottom: 10 }}>
-                <summary
-                  style={{
-                    cursor: 'pointer',
-                    color: '#334155',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    marginBottom: 8,
-                  }}
-                >
-                  Advanced: login mutation and token path
-                </summary>
-                <label
-                  htmlFor={loginMutationInputId}
-                  style={{
-                    display: 'block',
-                    marginTop: 10,
-                    marginBottom: 6,
-                    fontWeight: 600,
-                    color: '#0f172a',
-                  }}
-                >
-                  Login mutation
-                </label>
-                <p style={{ margin: '0 0 6px', color: '#64748b', fontSize: 12, lineHeight: 1.5 }}>
-                  Must accept <code>$email</code> and <code>$password</code> variables.
-                </p>
-                <textarea
-                  id={loginMutationInputId}
-                  data-testid="probe-login-mutation"
-                  value={loginMutationInput}
-                  onChange={(event) => setLoginMutationInput(event.target.value)}
-                  rows={6}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    marginBottom: 10,
-                    borderRadius: 8,
-                    border: '1px solid #cbd5e1',
-                    fontSize: 13,
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                  }}
-                />
-                <label
-                  htmlFor={loginTokenPathInputId}
-                  style={{ display: 'block', marginBottom: 6, fontWeight: 600, color: '#0f172a' }}
-                >
-                  Token path in response
-                </label>
-                <input
-                  id={loginTokenPathInputId}
-                  data-testid="probe-login-token-path"
-                  value={loginTokenPathInput}
-                  onChange={(event) => setLoginTokenPathInput(event.target.value)}
-                  placeholder="data.login.accessToken"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid #cbd5e1',
-                    fontSize: 13,
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                  }}
-                />
-              </details>
-            </>
-          )}
-
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 14,
-              color: '#334155',
-              fontSize: 14,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={rememberSession}
-              onChange={(event) => setRememberSession(event.target.checked)}
-            />
-            Remember settings in sessionStorage for this browser session
-          </label>
-
-          <ConnectStageList stages={connectStages} />
-
-          {probeError && (
-            <div
-              data-testid="probe-error"
-              style={{
-                marginBottom: 14,
-                borderRadius: 8,
-                border: '1px solid #fecaca',
-                background: '#fef2f2',
-                color: '#991b1b',
-                padding: '10px 12px',
-                fontSize: 13,
-              }}
-            >
-              {probeError}
-            </div>
-          )}
-
-          <button
-            data-testid="probe-connect-button"
-            onClick={() => {
-              void handleProbeConnect();
-            }}
-            disabled={isConnecting}
-            style={{
-              padding: '10px 14px',
-              borderRadius: 8,
-              border: 'none',
-              cursor: isConnecting ? 'wait' : 'pointer',
-              background: '#1d4ed8',
-              color: '#fff',
-              fontWeight: 700,
-            }}
-          >
-            {isConnecting ? 'Connecting...' : 'Load metadata and open designer'}
-          </button>
-        </section>
+        />
       ) : (
-        <section>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 12,
-              flexWrap: 'wrap',
-            }}
-          >
-            <span
-              data-testid="probe-metadata-source-summary"
-              style={{
-                borderRadius: 999,
-                background: '#dcfce7',
-                color: '#14532d',
-                padding: '4px 10px',
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Metadata: {metadataSourceSummary}
-            </span>
-            <span data-testid="probe-dataset-count" style={{ color: '#334155', fontSize: 13 }}>
-              {datasets.length} dataset(s) discovered
-            </span>
-            <span
-              data-testid="probe-preview-status"
-              style={{
-                borderRadius: 999,
-                background: fetchPreviewData ? '#dbeafe' : '#fef3c7',
-                color: fetchPreviewData ? '#1d4ed8' : '#92400e',
-                padding: '4px 10px',
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              {fetchPreviewData
-                ? `Preview: ${effectiveQueryEndpoint}`
-                : 'Preview: disabled (metadata only)'}
-            </span>
-            <button
-              onClick={() => setShowCode((value) => !value)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: 6,
-                border: '1px solid #cbd5e1',
-                cursor: 'pointer',
-                background: showCode ? '#e2e8f0' : '#fff',
-              }}
-            >
-              {'</>'} Code
-            </button>
-            <button
-              onClick={() => {
-                void handleExportJson();
-              }}
-              style={{
-                padding: '6px 10px',
-                borderRadius: 6,
-                border: '1px solid #1d4ed8',
-                color: '#1d4ed8',
-                background: '#eff6ff',
-                cursor: 'pointer',
-                fontWeight: 700,
-              }}
-            >
-              Export JSON
-            </button>
-            <button
-              onClick={handleDisconnect}
-              style={{
-                padding: '6px 10px',
-                borderRadius: 6,
-                border: '1px solid #fca5a5',
-                color: '#b91c1c',
-                background: '#fef2f2',
-                cursor: 'pointer',
-              }}
-            >
-              Reconnect
-            </button>
-          </div>
-
-          <PreviewStatusBanner status={previewStatus} fallbackUrl={effectiveQueryEndpoint} />
-
-          <div style={{ display: 'flex', height: 'calc(100vh - 140px)' }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <div
-                style={{
-                  flex: showCode ? '1 1 64%' : '1 1 100%',
-                  overflow: 'hidden',
-                  minHeight: 0,
-                }}
-              >
-                <SupersubsetDesigner
-                  value={currentDashboard}
-                  onChange={undoRedo.push}
-                  onPublish={undoRedo.push}
-                  headerTitle="Supersubset Probe Designer"
-                  height="100%"
-                  datasets={datasets}
-                  fetchPreviewData={fetchPreviewData}
-                  headerActions={
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        flexWrap: 'nowrap',
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        minWidth: 0,
-                      }}
-                    >
-                      <UndoRedoToolbar
-                        canUndo={undoRedo.canUndo}
-                        canRedo={undoRedo.canRedo}
-                        onUndo={undoRedo.undo}
-                        onRedo={undoRedo.redo}
-                        undoCount={undoRedo.undoCount}
-                        redoCount={undoRedo.redoCount}
-                      />
-                      <ImportExportPanel dashboard={currentDashboard} onImport={undoRedo.reset} />
-                    </div>
-                  }
-                />
-              </div>
-              {showCode && (
-                <div style={{ flex: '0 0 280px', borderTop: '2px solid #e2e8f0' }}>
-                  <CodeViewPanel dashboard={currentDashboard} height="280px" />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-const CONNECT_STAGE_STYLES: Record<
-  ConnectStageStatus,
-  { icon: string; color: string; border: string; background: string }
-> = {
-  pending: {
-    icon: '…',
-    color: '#1d4ed8',
-    border: '#bfdbfe',
-    background: '#eff6ff',
-  },
-  success: {
-    icon: '✓',
-    color: '#14532d',
-    border: '#86efac',
-    background: '#dcfce7',
-  },
-  error: {
-    icon: '✕',
-    color: '#991b1b',
-    border: '#fecaca',
-    background: '#fef2f2',
-  },
-};
-
-function ConnectStageList({ stages }: { stages: ConnectStage[] }): ReactElement | null {
-  if (stages.length === 0) return null;
-
-  return (
-    <div
-      data-testid="probe-connect-log"
-      style={{
-        marginBottom: 14,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-      }}
-    >
-      {stages.map((stage) => {
-        const style = CONNECT_STAGE_STYLES[stage.status];
-        return (
-          <div
-            key={stage.id}
-            data-testid={`probe-connect-stage-${stage.id}`}
-            data-status={stage.status}
-            style={{
-              borderRadius: 8,
-              border: `1px solid ${style.border}`,
-              background: style.background,
-              color: style.color,
-              padding: '8px 12px',
-              fontSize: 13,
-              lineHeight: 1.5,
-              display: 'flex',
-              gap: 10,
-              alignItems: 'flex-start',
-            }}
-          >
-            <span
-              aria-hidden
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 20,
-                height: 20,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.6)',
-                fontWeight: 700,
-                fontSize: 13,
-                flexShrink: 0,
-              }}
-            >
-              {style.icon}
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600 }}>{stage.label}</div>
-              {stage.detail ? (
-                <div
-                  style={{
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                    fontSize: 12,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {stage.detail}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const PREVIEW_STATUS_STYLES: Record<
-  PreviewStatus['kind'],
-  { background: string; border: string; color: string; label: string }
-> = {
-  idle: {
-    background: '#f1f5f9',
-    border: '#cbd5e1',
-    color: '#475569',
-    label: 'Idle',
-  },
-  loading: {
-    background: '#eff6ff',
-    border: '#bfdbfe',
-    color: '#1d4ed8',
-    label: 'Loading…',
-  },
-  success: {
-    background: '#dcfce7',
-    border: '#86efac',
-    color: '#14532d',
-    label: 'Live data',
-  },
-  empty: {
-    background: '#fef3c7',
-    border: '#fde68a',
-    color: '#92400e',
-    label: 'Empty result (falling back to sample data)',
-  },
-  error: {
-    background: '#fef2f2',
-    border: '#fecaca',
-    color: '#991b1b',
-    label: 'Failed (falling back to sample data)',
-  },
-};
-
-function PreviewStatusBanner({
-  status,
-  fallbackUrl,
-}: {
-  status: PreviewStatus;
-  fallbackUrl: string;
-}): ReactElement | null {
-  if (status.kind === 'idle' && !status.url) {
-    return null;
-  }
-
-  const style = PREVIEW_STATUS_STYLES[status.kind];
-  const url = status.url ?? fallbackUrl;
-
-  return (
-    <div
-      data-testid="probe-preview-query-status"
-      style={{
-        marginBottom: 12,
-        borderRadius: 8,
-        border: `1px solid ${style.border}`,
-        background: style.background,
-        color: style.color,
-        padding: '8px 12px',
-        fontSize: 12,
-        lineHeight: 1.5,
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: 10,
-      }}
-    >
-      <span style={{ fontWeight: 700 }}>Last preview query: {style.label}</span>
-      {status.datasetRef ? (
-        <code style={{ background: 'rgba(0,0,0,0.05)', padding: '1px 6px', borderRadius: 4 }}>
-          {status.datasetRef}
-        </code>
-      ) : null}
-      {typeof status.rowCount === 'number' ? (
-        <span>
-          {status.rowCount} row{status.rowCount === 1 ? '' : 's'}
-        </span>
-      ) : null}
-      {url ? (
-        <span style={{ opacity: 0.85 }}>
-          POST <code>{url}</code>
-        </span>
-      ) : null}
-      {status.fieldBindings ? (
-        <span style={{ flexBasis: '100%', fontSize: 11, opacity: 0.9 }}>
-          Bindings: <code>{status.fieldBindings}</code>
-        </span>
-      ) : null}
-      {status.errorMessage ? (
-        <span style={{ flexBasis: '100%', fontFamily: 'ui-monospace, Menlo, monospace' }}>
-          {status.errorMessage}
-        </span>
-      ) : null}
-      {status.requestBody ? (
-        <details
-          style={{
-            flexBasis: '100%',
-            marginTop: 4,
-            fontFamily: 'ui-monospace, Menlo, monospace',
-            fontSize: 11,
+        <ProbeDesignerWorkspace
+          metadataSourceSummary={metadataSourceSummary}
+          datasets={datasets}
+          fetchPreviewData={fetchPreviewData}
+          effectiveQueryEndpoint={effectiveQueryEndpoint}
+          previewStatus={previewStatus}
+          showCode={showCode}
+          currentDashboard={currentDashboard}
+          canUndo={undoRedo.canUndo}
+          canRedo={undoRedo.canRedo}
+          undoCount={undoRedo.undoCount}
+          redoCount={undoRedo.redoCount}
+          onToggleCode={() => setShowCode((value) => !value)}
+          onExportJson={() => {
+            void handleExportJson();
           }}
-        >
-          <summary
-            style={{
-              cursor: 'pointer',
-              userSelect: 'none',
-              fontFamily: 'sans-serif',
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            Request body (click to expand)
-          </summary>
-          <pre
-            style={{
-              margin: '6px 0 0',
-              padding: 10,
-              background: 'rgba(15, 23, 42, 0.05)',
-              borderRadius: 6,
-              overflow: 'auto',
-              maxHeight: 220,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
-          >
-            {status.requestBody}
-          </pre>
-        </details>
-      ) : null}
+          onDisconnect={handleDisconnect}
+          onDashboardChange={undoRedo.push}
+          onDashboardImport={undoRedo.reset}
+          onUndo={undoRedo.undo}
+          onRedo={undoRedo.redo}
+        />
+      )}
     </div>
   );
 }

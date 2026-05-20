@@ -194,9 +194,7 @@ describe('SqlAdapter', () => {
           {
             name: 'exotic',
             type: 'TABLE',
-            columns: [
-              { name: 'data', dataType: 'GEOMETRY', nullable: true, isPrimaryKey: false },
-            ],
+            columns: [{ name: 'data', dataType: 'GEOMETRY', nullable: true, isPrimaryKey: false }],
           },
         ],
       });
@@ -228,9 +226,7 @@ describe('SqlAdapter', () => {
     it('rejects table with invalid type', async () => {
       await expect(
         adapter.getDatasets({
-          tables: [
-            { name: 'x', type: 'MATERIALIZED' as never, columns: [] },
-          ],
+          tables: [{ name: 'x', type: 'MATERIALIZED' as never, columns: [] }],
         }),
       ).rejects.toThrow('type "TABLE" or "VIEW"');
     });

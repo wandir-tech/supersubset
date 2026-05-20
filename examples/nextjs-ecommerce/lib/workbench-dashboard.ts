@@ -1,5 +1,8 @@
 import type { DashboardDefinition } from '@supersubset/schema';
-import { WORKBENCH_DATASET_ID, workbenchFilterOptions } from './workbench-shared';
+import { WORKBENCH_DATASET_ID } from './workbench-shared';
+
+const REGION_OPTIONS = ['APAC', 'Europe', 'Latin America', 'North America'];
+const CARRIER_OPTIONS = ['Atlas Air', 'Horizon Freight', 'Meridian Cargo'];
 
 export const workbenchStarterDashboard: DashboardDefinition = {
   schemaVersion: '0.2.0',
@@ -18,7 +21,7 @@ export const workbenchStarterDashboard: DashboardDefinition = {
       optionSource: {
         kind: 'static',
         completeness: 'complete',
-        options: workbenchFilterOptions['filter-region'].map((value) => ({ value })),
+        options: REGION_OPTIONS.map((value) => ({ value })),
       },
       scope: { type: 'global' },
     },
@@ -32,7 +35,7 @@ export const workbenchStarterDashboard: DashboardDefinition = {
       optionSource: {
         kind: 'static',
         completeness: 'complete',
-        options: workbenchFilterOptions['filter-carrier'].map((value) => ({ value })),
+        options: CARRIER_OPTIONS.map((value) => ({ value })),
       },
       scope: { type: 'global' },
     },

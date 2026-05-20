@@ -21,6 +21,32 @@ test.describe('Filter Cascade Workflow', () => {
     await expect(page.getByRole('button', { name: 'Overview' })).toBeVisible();
   }
 
+  async function openSeparateDashboardsDemo(page: import('@playwright/test').Page) {
+    const dashboardsScenarioButton = page.getByRole('button', {
+      name: 'Two separate dashboards',
+    });
+    await expect(dashboardsScenarioButton).toBeVisible();
+    await dashboardsScenarioButton.click();
+    await expect(page.getByRole('button', { name: 'Executive Overview' })).toBeVisible();
+  }
+
+  async function clickOverviewRegionDatum(page: import('@playwright/test').Page) {
+    const canvas = page.locator('[data-ss-node="pages-region-chart-host"] canvas').first();
+    await expect(canvas).toBeVisible();
+
+    const bounds = await canvas.boundingBox();
+    if (!bounds) {
+      throw new Error('Expected overview region chart canvas bounds');
+    }
+
+    await canvas.click({
+      position: {
+        x: bounds.width * 0.68,
+        y: bounds.height * 0.24,
+      },
+    });
+  }
+
   test('dashboard renders with filter bar and all widgets', async ({ page }) => {
     // Verify the dashboard renders
     const dashboard = page.locator('[data-ss-dashboard]');
@@ -99,6 +125,70 @@ test.describe('Filter Cascade Workflow', () => {
 
     await page.getByRole('button', { name: 'Overview' }).click();
     await expect(page.locator('.ss-filter-bar').getByLabel('Region')).toHaveValue('East');
+  });
+
+  test('real overview chart clicks navigate to the detail page', async ({ page }) => {
+    await openPagesWorkbook(page);
+
+    await page.evaluate(() => {
+      const debugWindow = window as Window & {
+        __SUPERSUBSET_WIDGET_EVENTS__?: Array<Record<string, unknown>>;
+      };
+      debugWindow.__SUPERSUBSET_WIDGET_EVENTS__ = [];
+    });
+
+    const dashboard = page.locator('[data-ss-dashboard]');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-overview');
+
+    await clickOverviewRegionDatum(page);
+
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-detail');
+
+    const lastEvent = await page.evaluate(() => {
+      const debugWindow = window as Window & {
+        __SUPERSUBSET_WIDGET_EVENTS__?: Array<Record<string, unknown>>;
+      };
+      const events = debugWindow.__SUPERSUBSET_WIDGET_EVENTS__ ?? [];
+      return events[events.length - 1];
+    });
+
+    expect(lastEvent).toMatchObject({
+      type: 'click',
+      widgetId: 'pages-chart-region-sales',
+      payload: expect.objectContaining({
+        region: expect.any(String),
+        revenue: expect.any(Number),
+      }),
+    });
+  });
+
+  test('separate dashboards switch document identity instead of preserving workbook state', async ({
+    page,
+  }) => {
+    await openSeparateDashboardsDemo(page);
+
+    const dashboard = page.locator('[data-ss-dashboard]');
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-executive');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-executive');
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard 1: Executive Overview' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Fulfillment Ops' }).click();
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-operations');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-operations');
+    await expect(page.getByRole('heading', { name: 'Dashboard 2: Fulfillment Ops' })).toBeVisible();
+    await expect(page.locator('.ss-table tbody tr')).toHaveCount(8);
+
+    await page.getByRole('button', { name: 'Executive Overview' }).click();
+
+    await expect(dashboard).toHaveAttribute('data-ss-dashboard', 'dashboard-executive');
+    await expect(dashboard).toHaveAttribute('data-ss-page', 'page-executive');
+    await expect(
+      page.getByRole('heading', { name: 'Dashboard 1: Executive Overview' }),
+    ).toBeVisible();
   });
 
   test('page-scoped category filter changes overview widgets without leaking into detail widgets', async ({

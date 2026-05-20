@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AggregationType, LogicalQuery, QueryFilterOperator } from '@supersubset/data-model';
+import { handleLocalDevCors } from '../../../../lib/dev-cors';
 import { requireWorkbenchAuthorization } from '../../../../lib/workbench-auth';
 import { executeWorkbenchQuery } from '../../../../lib/workbench-query';
 
@@ -98,6 +99,10 @@ function isLogicalQuery(value: unknown): value is LogicalQuery {
 }
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (handleLocalDevCors(req, res, ['POST'])) {
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ message: 'Method not allowed.' });

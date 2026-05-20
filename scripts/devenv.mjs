@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -178,8 +178,26 @@ function buildEnv(ports) {
   };
 }
 
-function getPnpmCommand() {
-  return process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+function commandExists(command, args = ['--version']) {
+  const result = spawnSync(command, args, {
+    stdio: 'ignore',
+  });
+
+  return !result.error && result.status === 0;
+}
+
+function getPnpmInvocation() {
+  const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+  if (commandExists(pnpmCommand)) {
+    return { command: pnpmCommand, argsPrefix: [] };
+  }
+
+  const corepackCommand = process.platform === 'win32' ? 'corepack.cmd' : 'corepack';
+  if (commandExists(corepackCommand, ['pnpm', '--version'])) {
+    return { command: corepackCommand, argsPrefix: ['pnpm'] };
+  }
+
+  throw new Error('Could not find pnpm or corepack on PATH for DevEnv launcher');
 }
 
 function runTarget(targetName) {
@@ -192,7 +210,8 @@ function runTarget(targetName) {
   const ports = getPorts();
   process.stdout.write(`Starting ${target.label} at ${target.url(ports)}\n`);
 
-  const child = spawn(getPnpmCommand(), target.args, {
+  const pnpmInvocation = getPnpmInvocation();
+  const child = spawn(pnpmInvocation.command, [...pnpmInvocation.argsPrefix, ...target.args], {
     cwd: ROOT_DIR,
     env: buildEnv(ports),
     stdio: 'inherit',

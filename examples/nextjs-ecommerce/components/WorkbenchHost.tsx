@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   CodeViewPanel,
   ImportExportPanel,
@@ -26,8 +26,8 @@ import {
   readStoredWorkbenchToken,
 } from '../lib/workbench-client';
 import { WORKBENCH_LOGIN_EMAIL, WORKBENCH_LOGIN_PASSWORD } from '../lib/workbench-auth';
+import { WORKBENCH_DASHBOARD_STORAGE_KEY } from '../lib/workbench-shared';
 import { workbenchStarterDashboard } from '../lib/workbench-dashboard';
-import { workbenchFilterOptions } from '../lib/workbench-shared';
 
 export function WorkbenchHost() {
   const [email, setEmail] = useState(WORKBENCH_LOGIN_EMAIL);
@@ -40,17 +40,49 @@ export function WorkbenchHost() {
   const [mode, setMode] = useState<'designer' | 'viewer'>('designer');
   const [showCode, setShowCode] = useState(false);
   const [designerRevision, setDesignerRevision] = useState(0);
+  const [designerHasUncommittedDrafts, setDesignerHasUncommittedDrafts] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>({ values: {} });
   const [authStatus, setAuthStatus] = useState<'checking' | 'logged-out' | 'ready'>('checking');
   const [viewerStatus, setViewerStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [error, setError] = useState('');
   const [queryLog, setQueryLog] = useState<string[]>([]);
   const queryCycleRef = useRef({ generation: 0, pending: 0, failed: false });
+  const dashboardRef = useRef(dashboard);
+  const publishedDashboardRef = useRef(publishedDashboard);
+  const designerHasUncommittedDraftsRef = useRef(designerHasUncommittedDrafts);
+
+  const setDashboardState = useCallback((nextDashboard: DashboardDefinition) => {
+    dashboardRef.current = nextDashboard;
+    setDashboard(nextDashboard);
+  }, []);
+
+  const setPublishedDashboardState = useCallback((nextDashboard: DashboardDefinition) => {
+    publishedDashboardRef.current = nextDashboard;
+    setPublishedDashboard(nextDashboard);
+  }, []);
+
+  const setDesignerDraftState = useCallback((hasUncommittedDrafts: boolean) => {
+    designerHasUncommittedDraftsRef.current = hasUncommittedDrafts;
+    setDesignerHasUncommittedDrafts(hasUncommittedDrafts);
+  }, []);
+
+  function rehydratePublishedDashboardFromStorage() {
+    const storedDashboard = readStoredWorkbenchDashboard();
+    if (!storedDashboard) {
+      return;
+    }
+
+    setDesignerDraftState(false);
+    setDashboardState(storedDashboard);
+    setPublishedDashboardState(storedDashboard);
+    setMode('viewer');
+  }
 
   function resetSession(nextError = '') {
     clearStoredWorkbenchToken();
     setToken('');
     setDatasets([]);
+    setDesignerDraftState(false);
     setFilterState({ values: {} });
     setQueryLog([]);
     setAuthStatus('logged-out');
@@ -59,12 +91,7 @@ export function WorkbenchHost() {
   }
 
   useEffect(() => {
-    const storedDashboard = readStoredWorkbenchDashboard();
-    if (storedDashboard) {
-      setDashboard(storedDashboard);
-      setPublishedDashboard(storedDashboard);
-      setMode('viewer');
-    }
+    rehydratePublishedDashboardFromStorage();
 
     const storedToken = readStoredWorkbenchToken();
     if (!storedToken) {
@@ -73,6 +100,40 @@ export function WorkbenchHost() {
     }
 
     setToken(storedToken);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    function handleStorage(event: StorageEvent) {
+      if (
+        event.storageArea !== window.localStorage ||
+        event.key !== WORKBENCH_DASHBOARD_STORAGE_KEY
+      ) {
+        return;
+      }
+
+      const storedDashboard = readStoredWorkbenchDashboard();
+      if (!storedDashboard) {
+        return;
+      }
+
+      const hasLocalDesignerChanges =
+        dashboardRef.current !== publishedDashboardRef.current ||
+        designerHasUncommittedDraftsRef.current;
+
+      setPublishedDashboardState(storedDashboard);
+      if (!hasLocalDesignerChanges) {
+        setDashboardState(storedDashboard);
+      }
+    }
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   useEffect(() => {
@@ -230,6 +291,7 @@ export function WorkbenchHost() {
 
     try {
       const nextToken = await loginToWorkbench(email, password);
+      rehydratePublishedDashboardFromStorage();
       persistWorkbenchToken(nextToken);
       setToken(nextToken);
     } catch (nextError) {
@@ -239,16 +301,18 @@ export function WorkbenchHost() {
   }
 
   function handlePublish(nextDashboard: DashboardDefinition) {
-    setDashboard(nextDashboard);
-    setPublishedDashboard(nextDashboard);
+    setDesignerDraftState(false);
+    setDashboardState(nextDashboard);
+    setPublishedDashboardState(nextDashboard);
     persistWorkbenchDashboard(nextDashboard);
     setMode('viewer');
     setError('');
   }
 
   function handleImport(nextDashboard: DashboardDefinition) {
-    setDashboard(nextDashboard);
-    setPublishedDashboard(nextDashboard);
+    setDesignerDraftState(false);
+    setDashboardState(nextDashboard);
+    setPublishedDashboardState(nextDashboard);
     persistWorkbenchDashboard(nextDashboard);
     setDesignerRevision((current) => current + 1);
   }
@@ -491,7 +555,8 @@ export function WorkbenchHost() {
             <SupersubsetDesigner
               key={designerRevision}
               value={dashboard}
-              onChange={setDashboard}
+              onChange={setDashboardState}
+              onDraftStateChange={setDesignerDraftState}
               onPublish={handlePublish}
               headerTitle="Northstar Logistics Workbench"
               height="720px"
@@ -522,7 +587,6 @@ export function WorkbenchHost() {
                 theme={resolvedTheme as unknown as Record<string, unknown>}
                 cssVariables={cssVariables}
                 queryAdapter={queryAdapter}
-                filterOptions={workbenchFilterOptions}
                 onFilterChange={setFilterState}
               />
             </div>
