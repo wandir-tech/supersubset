@@ -1,8 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { handleLocalDevCors } from '../../../../lib/dev-cors';
 import { requireWorkbenchAuthorization } from '../../../../lib/workbench-auth';
 import { workbenchDatasets } from '../../../../lib/workbench-shared';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (handleLocalDevCors(req, res, ['GET'])) {
+    return;
+  }
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ message: 'Method not allowed.' });

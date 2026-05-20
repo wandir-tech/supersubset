@@ -1,4 +1,11 @@
 import { expect, test } from '@playwright/test';
+import {
+  WORKBENCH_LOGIN_EMAIL,
+  WORKBENCH_LOGIN_PASSWORD,
+} from '../../examples/nextjs-ecommerce/lib/workbench-auth';
+import { WORKBENCH_DATASET_ID } from '../../examples/nextjs-ecommerce/lib/workbench-shared';
+
+const NEXTJS_EXAMPLE_ORIGIN = `http://localhost:${process.env.SUPERSUBSET_EXAMPLE_NEXTJS_PORT ?? '3001'}`;
 
 const DISCOVERY_FIXTURE = {
   protocolVersion: 'v1',
@@ -63,6 +70,58 @@ function buildProbePreviewDashboard() {
               title: 'Probe Revenue by Region',
               dataBinding: {
                 datasetRef: 'orders',
+                fields: [
+                  { role: 'x-axis', fieldRef: 'region' },
+                  { role: 'y-axis', fieldRef: 'revenue' },
+                ],
+              },
+              config: { horizontal: true },
+            },
+          ],
+        },
+      ],
+      defaults: { activePage: 'page-1' },
+    },
+    null,
+    2,
+  );
+}
+
+function buildWorkbenchProbePreviewDashboard() {
+  return JSON.stringify(
+    {
+      schemaVersion: '0.2.0',
+      id: 'probe-workbench-preview-dashboard',
+      title: 'Workbench Probe Preview Dashboard',
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Page 1',
+          rootNodeId: 'root',
+          layout: {
+            root: { id: 'root', type: 'root', children: ['grid-main'], meta: {} },
+            'grid-main': {
+              id: 'grid-main',
+              type: 'grid',
+              children: ['probe-bar-host'],
+              parentId: 'root',
+              meta: { columns: 12 },
+            },
+            'probe-bar-host': {
+              id: 'probe-bar-host',
+              type: 'widget',
+              children: [],
+              parentId: 'grid-main',
+              meta: { widgetRef: 'probe-bar', width: 12, height: 320 },
+            },
+          },
+          widgets: [
+            {
+              id: 'probe-bar',
+              type: 'bar-chart',
+              title: 'Workbench Revenue by Region',
+              dataBinding: {
+                datasetRef: WORKBENCH_DATASET_ID,
                 fields: [
                   { role: 'x-axis', fieldRef: 'region' },
                   { role: 'y-axis', fieldRef: 'revenue' },
@@ -221,6 +280,64 @@ test.describe('Backend probe live discovery', () => {
       },
     });
     expect(authorizationHeader).toBe('Bearer probe-login-token-12345');
+  });
+
+  test('connects to the real Next.js workbench backend and runs a live preview query', async ({
+    page,
+  }) => {
+    const importedDashboard = buildWorkbenchProbePreviewDashboard();
+    const requestUrls: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('request', (request) => {
+      const url = request.url();
+      if (
+        url.includes('/api/graphql') ||
+        url.includes('/api/analytics/supersubset/datasets') ||
+        url.includes('/api/analytics/supersubset/query')
+      ) {
+        requestUrls.push(url);
+      }
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await openProbe(page);
+
+    await page.getByTestId('probe-url-input').fill(`${NEXTJS_EXAMPLE_ORIGIN}/api/analytics`);
+    await page.getByTestId('probe-auth-mode').selectOption('login');
+    await page.getByTestId('probe-login-url').fill(`${NEXTJS_EXAMPLE_ORIGIN}/api/graphql`);
+    await page.getByTestId('probe-login-email').fill(WORKBENCH_LOGIN_EMAIL);
+    await page.getByTestId('probe-login-password').fill(WORKBENCH_LOGIN_PASSWORD);
+    await page.getByTestId('probe-connect-button').click();
+
+    await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
+    await expect(page.getByTestId('probe-dataset-count')).toHaveText('1 dataset(s) discovered');
+
+    await page.getByTestId('import-btn').click();
+    await expect(page.getByTestId('import-export-dialog')).toBeVisible();
+    await page.getByTestId('import-textarea').fill(importedDashboard);
+    await page.getByTestId('import-submit-btn').click();
+
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText('Live data');
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText(
+      WORKBENCH_DATASET_ID,
+    );
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText('4 rows');
+    await expect(page.getByTestId('probe-preview-query-status')).toContainText(
+      `${NEXTJS_EXAMPLE_ORIGIN}/api/analytics/supersubset/query`,
+    );
+
+    expect(requestUrls.some((url) => url.includes('/api/graphql'))).toBe(true);
+    expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/datasets'))).toBe(
+      true,
+    );
+    expect(requestUrls.some((url) => url.includes('/api/analytics/supersubset/query'))).toBe(true);
+    expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
   test('stays on the probe form and shows an error when login fails', async ({ page }) => {
