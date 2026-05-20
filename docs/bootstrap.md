@@ -20,6 +20,8 @@
 10. **`.github/skills/release-runbook/SKILL.md`** — End-to-end release path: candidate validation, changesets, promotion, publish, downstream upgrade
 11. **`.github/skills/designer-design/SKILL.md`** — Designer-shell UX, theme usage, Storybook expectations, and visual QA guidance
 12. **`.github/skills/testing-strategy/SKILL.md`** — Test layer selection, live-backend probe validation, and evidence expectations
+13. **`.github/skills/ai-code-cleanup/SKILL.md`** — Continuous cleanup of AI-generated drift, duplication, stale instructions, and weak validation
+14. **`docs/cleanup/history/README.md`** — Cleanup campaign history conventions, gate tracking, and next-step handoffs
 
 ### Where Things Are
 
@@ -34,6 +36,9 @@ docs/
 ├── dev/              # Local multi-agent / port / worktree notes
 ├── adr/              # Architecture Decision Records
 ├── api/              # Public package reference docs
+├── cleanup/
+│   └── history/      # Cleanup campaign logs, PR state, CI state, next-step handoffs
+├── getting-started.md # Onboarding walkthrough for a fresh checkout
 ├── guides/           # Task-focused how-to guides
 ├── status/
 │   ├── master-plan.md
@@ -49,18 +54,17 @@ docs/
 └── research/
 
 e2e/                  # Playwright E2E tests (created in Phase 0)
-├── renderer/         # Chart/widget rendering tests
-├── designer/         # Editor UI tests
 ├── interactions/     # Filter/cross-filter tests
-├── integration/      # Host app mount tests
+├── visual/           # Focused visual regression checks
 ├── workflows/        # Full user journey tests
-└── fixtures/         # Test data
+├── smoke.spec.ts     # Workspace smoke coverage
+└── plan-a-designer-happy-path.spec.ts # Authoring happy path coverage
 
 screenshots/          # Visual verification evidence
 ├── phase-N/          # Milestone screenshots
 └── baselines/        # Approved baselines for regression
 
-packages/             # Monorepo packages (once created)
+packages/             # Monorepo packages
 ```
 
 ## How to Resume Work

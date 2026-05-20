@@ -31,34 +31,58 @@ jobs:
     name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.filter.outputs.code }}
+      docs_package_ci: ${{ steps.filter.outputs.docs_package_ci }}
+      full_ci: ${{ steps.filter.outputs.full_ci }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # Run the expensive matrix unless every changed file is docs or agent context.
+          predicate-quantifier: every
           filters: |
-            code:
-              - 'packages/**'
+            docs_package_ci:
+              - 'packages/docs/**'
+            full_ci:
+              - '**'
+              - '!docs/**'
+              - '!.github/skills/**'
+              - '!.github/instructions/**'
+              - '!.github/agents/**'
+              - '!.github/copilot-instructions.md'
+              - '!AGENTS.md'
+              - '!CLAUDE.md'
+              - '!README.md'
+              - '!LICENSE'
+              - '!NOTICE'
+              - '!initial-spec.md'
               - '!packages/docs/**'
-              - 'examples/**'
-              - 'e2e/**'
-              - 'src/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'tsconfig.json'
-              - 'nx.json'
-              - 'eslint.config.*'
-              - 'playwright.config.*'
-              - '.github/workflows/**'
-              - '.github/actions/**'
+              - '!screenshots/**'
+
+  # ── Docs Package Validation ───────────────────────────────
+  docs-build:
+    name: Docs Build
+    needs: changes
+    if: needs.changes.outputs.docs_package_ci == 'true' && needs.changes.outputs.full_ci != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @supersubset/docs build
 
   # ── Build ──────────────────────────────────────────────────
   build:
     name: Build
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -79,7 +103,7 @@ jobs:
   lint:
     name: Lint
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -122,7 +146,7 @@ jobs:
   typecheck:
     name: Typecheck
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -147,7 +171,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -172,7 +196,7 @@ jobs:
   e2e:
     name: E2E Tests
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -218,7 +242,7 @@ jobs:
   security:
     name: Security Scan
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.full_ci == 'true'
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -247,13 +271,13 @@ jobs:
   ci-gate:
     name: CI Gate
     if: always()
-    needs: [changes, build, lint, format, typecheck, unit-tests, e2e, security]
+    needs: [changes, docs-build, build, lint, format, typecheck, unit-tests, e2e, security]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
           # If code changed, all code jobs must have succeeded
-          if [[ "${{ needs.changes.outputs.code }}" == "true" ]]; then
+          if [[ "${{ needs.changes.outputs.full_ci }}" == "true" ]]; then
             results=(
               "${{ needs.build.result }}"
               "${{ needs.lint.result }}"
@@ -268,5 +292,10 @@ jobs:
                 exit 1
               fi
             done
+          elif [[ "${{ needs.changes.outputs.docs_package_ci }}" == "true" ]]; then
+            if [[ "${{ needs.docs-build.result }}" != "success" ]]; then
+              echo "❌ Docs build failed or was cancelled: ${{ needs.docs-build.result }}"
+              exit 1
+            fi
           fi
-          echo "✅ All required checks passed (or the product-code pipeline was skipped)"
+          echo "✅ All required checks passed (or CI was reduced for docs-only changes)"

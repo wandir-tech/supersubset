@@ -4,7 +4,7 @@
  * Provides consistent navigation, element selection, and screenshot capture
  * across all feature documentation scripts.
  */
-import { type Page, type Locator, expect } from '@playwright/test';
+import { type Page, type Locator } from '@playwright/test';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -36,57 +36,32 @@ export function screenshotPath(
   return path.join(dir, `${slug}-${variant}-${view}.png`);
 }
 
+async function switchMode(page: Page, roleLabel: RegExp, textLabel: string): Promise<void> {
+  const button = page.getByRole('button', { name: roleLabel }).first();
+  if (await button.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await button.click();
+  } else {
+    const textButton = page.getByText(textLabel).first();
+    if (await textButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await textButton.click();
+    }
+  }
+
+  await page.waitForTimeout(800);
+}
+
 /**
  * Switch the dev app to viewer mode.
  */
 export async function switchToViewer(page: Page): Promise<void> {
-  // Try button role first, then fall back to text matching
-  const btn = page.getByRole('button', { name: /viewer/i });
-  if (
-    await btn
-      .first()
-      .isVisible({ timeout: 2000 })
-      .catch(() => false)
-  ) {
-    await btn.first().click();
-  } else {
-    const textBtn = page.getByText('Viewer');
-    if (
-      await textBtn
-        .first()
-        .isVisible({ timeout: 2000 })
-        .catch(() => false)
-    ) {
-      await textBtn.first().click();
-    }
-  }
-  await page.waitForTimeout(800);
+  await switchMode(page, /viewer/i, 'Viewer');
 }
 
 /**
  * Switch the dev app to designer mode.
  */
 export async function switchToDesigner(page: Page): Promise<void> {
-  const btn = page.getByRole('button', { name: /designer/i });
-  if (
-    await btn
-      .first()
-      .isVisible({ timeout: 2000 })
-      .catch(() => false)
-  ) {
-    await btn.first().click();
-  } else {
-    const textBtn = page.getByText('Designer');
-    if (
-      await textBtn
-        .first()
-        .isVisible({ timeout: 2000 })
-        .catch(() => false)
-    ) {
-      await textBtn.first().click();
-    }
-  }
-  await page.waitForTimeout(800);
+  await switchMode(page, /designer/i, 'Designer');
 }
 
 /**
@@ -301,37 +276,6 @@ export function assertNoConsoleErrors(errors: string[]): void {
   if (errors.length > 0) {
     console.warn('Console errors detected:', errors);
     // Warn but don't fail — some errors may be expected in dev mode
-  }
-}
-
-/**
- * Select a widget in the designer by clicking inside the Puck canvas iframe.
- * Uses the Layers panel to verify selection.
- *
- * @param page - Playwright page
- * @param widgetLabel - The label shown in the Layers panel (e.g., "Line Chart", "Bar Chart", "KPI Card")
- * @param clickY - Relative Y position (0–1) within the iframe to click
- */
-export async function selectWidgetViaCanvas(
-  page: Page,
-  widgetLabel: string,
-  clickY: number,
-): Promise<void> {
-  // Switch to Layers tab so we can see which widget is selected
-  const layersBtn = page.getByText('Layers').first();
-  if (await layersBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await layersBtn.click();
-    await page.waitForTimeout(300);
-  }
-
-  // Click inside the iframe at the specified Y position
-  const iframe = page.locator('iframe');
-  if (await iframe.isVisible({ timeout: 3000 })) {
-    const box = await iframe.boundingBox();
-    if (box) {
-      await page.mouse.click(box.x + box.width / 2, box.y + box.height * clickY);
-      await page.waitForTimeout(800);
-    }
   }
 }
 
