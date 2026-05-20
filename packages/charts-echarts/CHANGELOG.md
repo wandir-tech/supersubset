@@ -1,5 +1,16 @@
 # @supersubset/charts-echarts
 
+## 0.1.4
+
+### Patch Changes
+
+- [#153](https://github.com/wandir-tech/supersubset/pull/153) [`5b31e8b`](https://github.com/wandir-tech/supersubset/commit/5b31e8be4d6dbac5169238cdde301c143c007d6b) Thanks [@kokokenada](https://github.com/kokokenada)! - Guard BaseChart cleanup against disposed ECharts instances so consumer apps do not emit disposed-instance warnings during unmount and remount flows.
+
+- Updated dependencies []:
+  - @supersubset/schema@0.1.4
+  - @supersubset/runtime@0.1.4
+  - @supersubset/theme@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

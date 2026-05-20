@@ -1,5 +1,13 @@
 # @supersubset/query-client
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/schema@0.1.4
+  - @supersubset/data-model@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
