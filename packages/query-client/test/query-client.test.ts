@@ -96,7 +96,7 @@ describe('QueryClient', () => {
     });
   });
 
-  it('executes a query via the adapter', async () => {
+  it('[query-and-probe.QUERY_CLIENT.1] executes a query via the adapter', async () => {
     const query: LogicalQuery = {
       datasetId: 'orders',
       fields: [{ fieldId: 'status' }, { fieldId: 'total', aggregation: 'sum' }],
@@ -116,12 +116,12 @@ describe('QueryClient', () => {
     );
   });
 
-  it('cancels a query via the adapter', async () => {
+  it('[query-and-probe.QUERY_CLIENT.2] cancels a query via the adapter', async () => {
     await client.cancel('query-123');
     expect(queryAdapter.cancel).toHaveBeenCalledWith('query-123');
   });
 
-  it('resolves filter options via the adapter', async () => {
+  it('[query-and-probe.QUERY_CLIENT.3] resolves filter options via the adapter', async () => {
     const response = await client.resolveFilterOptions({
       filterId: 'status-filter',
       datasetId: 'orders',
@@ -163,7 +163,7 @@ describe('QueryClient', () => {
     await clientNoCancel.cancel('query-123');
   });
 
-  it('fetches datasets from metadata adapter', async () => {
+  it('[query-and-probe.QUERY_CLIENT.4] fetches datasets from metadata adapter', async () => {
     const datasets = await client.getDatasets();
     expect(metadataAdapter.getDatasets).toHaveBeenCalledWith('test-source');
     expect(datasets).toHaveLength(2);
@@ -220,7 +220,7 @@ describe('QueryBuilder', () => {
     client = new QueryClient({ queryAdapter });
   });
 
-  it('builds a basic query', () => {
+  it('[query-and-probe.QUERY_CLIENT.1] builds a basic query', () => {
     const query = client.buildQuery('orders').select('status').select('total', 'sum').toQuery();
 
     expect(query.datasetId).toBe('orders');

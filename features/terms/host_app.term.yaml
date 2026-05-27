@@ -1,0 +1,16 @@
+term:
+  id: host_app
+  definition: >
+    The embedding React application that mounts Supersubset designer and runtime
+    components, supplies metadata and query adapters, and persists dashboard
+    definitions. Auth, storage, and row-level security remain host responsibilities.
+  aliases:
+    - host application
+    - embedding app
+  references:
+    docs:
+      - packages/schema/README.md
+    ui:
+      shared:
+        - packages/dev-app/src
+        - examples/vite-sqlite/src

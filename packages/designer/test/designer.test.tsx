@@ -169,7 +169,7 @@ describe('SupersubsetDesigner', () => {
     cleanup();
   });
 
-  it('renders the Puck editor', () => {
+  it('[designer-authoring.PUCK_SHELL.1] renders the Puck editor', () => {
     render(React.createElement(SupersubsetDesigner, {}));
     expect(screen.getByTestId('puck-editor')).toBeDefined();
   });
@@ -210,7 +210,7 @@ describe('SupersubsetDesigner', () => {
     expect(editor.getAttribute('data-header-title')).toBe('Test Dashboard');
   });
 
-  it('wires onPublish callback', () => {
+  it('[designer-authoring.IMPORT_EXPORT.1] wires onPublish callback', () => {
     const onPublish = vi.fn();
     render(React.createElement(SupersubsetDesigner, { onPublish }));
     const editor = screen.getByTestId('puck-editor');
@@ -302,7 +302,7 @@ describe('SupersubsetDesigner', () => {
     expect(editor.getAttribute('data-header-title')).toBe('Default Title');
   });
 
-  it('passes renamed sidebar plugins (Components + Layers)', () => {
+  it('[designer-authoring.PALETTE.1] passes renamed sidebar plugins (Components + Layers)', () => {
     render(React.createElement(SupersubsetDesigner, {}));
     const editor = screen.getByTestId('puck-editor');
     expect(editor.getAttribute('data-plugin-labels')).toBe('Components,Layers');
@@ -326,7 +326,7 @@ describe('SupersubsetDesigner', () => {
     expect(screen.getByTestId('default-actions')).toBeDefined();
   });
 
-  it('renders a built-in Filters action and opens the filter drawer', () => {
+  it('[designer-authoring.PROPERTY_PANELS.1] renders a built-in Filters action and opens the filter drawer', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         value: minimalDashboard,
@@ -362,7 +362,7 @@ describe('SupersubsetDesigner', () => {
     });
   });
 
-  it('renders page tabs for multi-page dashboards and switches the edited page', () => {
+  it('[designer-authoring.PAGE_NAVIGATION.1] renders page tabs for multi-page dashboards and switches the edited page', () => {
     render(
       React.createElement(SupersubsetDesigner, {
         value: multiPageDashboard,

@@ -14,14 +14,18 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await page.goto('/');
   });
 
-  test('app loads with mode toggle buttons', async ({ page }) => {
+  test('[host-integration.DESIGNER_MODES.1] app loads with mode toggle buttons', async ({
+    page,
+  }) => {
     // The dev app has Viewer/Designer/Preview mode buttons
     await expect(page.getByText('Viewer')).toBeVisible();
     await expect(page.getByText('Designer')).toBeVisible();
     await expect(page.getByText('Preview')).toBeVisible();
   });
 
-  test('viewer mode renders charts without errors', async ({ page }) => {
+  test('[runtime-rendering.RENDER_MODES.1] viewer mode renders charts without errors', async ({
+    page,
+  }) => {
     const errors: string[] = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error') errors.push(msg.text());
@@ -42,7 +46,7 @@ test.describe('Designer-to-Renderer Workflow', () => {
     expect(errors.filter((e) => !e.includes('React'))).toHaveLength(0);
   });
 
-  test('designer mode loads Puck editor', async ({ page }) => {
+  test('[designer-authoring.PUCK_SHELL.2] designer mode loads Puck editor', async ({ page }) => {
     await page.getByText('Designer').click();
 
     // Puck editor should load — look for its main container
@@ -53,7 +57,9 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await expect(designerFrame.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('preview mode shows responsive viewport switcher', async ({ page }) => {
+  test('[runtime-rendering.RENDER_MODES.2] preview mode shows responsive viewport switcher', async ({
+    page,
+  }) => {
     await page.getByText('Preview').click();
 
     // LivePreviewPane has viewport buttons
@@ -62,7 +68,9 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await expect(page.locator('[data-testid="viewport-mobile"]')).toBeVisible();
   });
 
-  test('mode switching preserves state', async ({ page }) => {
+  test('[runtime-rendering.STATE_PERSISTENCE.1] mode switching preserves state', async ({
+    page,
+  }) => {
     // Start in viewer
     await expect(page.getByText('Viewer')).toBeVisible();
 
@@ -84,7 +92,9 @@ test.describe('Designer-to-Renderer Workflow', () => {
     expect(count).toBeGreaterThanOrEqual(1);
   });
 
-  test('designer toolbar shows undo/redo and dashboard filters', async ({ page }) => {
+  test('[designer-authoring.UNDO_REDO.1] designer toolbar shows undo/redo and dashboard filters', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);
 
@@ -96,7 +106,7 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await expect(page.getByText('Interactions')).toBeVisible();
   });
 
-  test('designer canvas preserves authored row spans from the canonical dashboard', async ({
+  test('[runtime-rendering.LAYOUT_ENGINE.1] designer canvas preserves authored row spans from the canonical dashboard', async ({
     page,
   }) => {
     await page.getByText('Designer').click();
@@ -154,7 +164,9 @@ test.describe('Designer-to-Renderer Workflow', () => {
     );
   });
 
-  test('filters panel opens as slide-over', async ({ page }) => {
+  test('[filters-and-interactions.FILTER_BAR.2] filters panel opens as slide-over', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);
 
@@ -167,7 +179,9 @@ test.describe('Designer-to-Renderer Workflow', () => {
     await expect(page.getByRole('heading', { name: 'Dashboard Filters' })).toBeVisible();
   });
 
-  test('adding a dashboard filter updates the drawer immediately', async ({ page }) => {
+  test('[designer-authoring.PROPERTY_PANELS.2] adding a dashboard filter updates the drawer immediately', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1000);
 

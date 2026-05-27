@@ -1,0 +1,7 @@
+platforms:
+  web:
+    name: Web
+    description: Web app behavior.
+  native_app:
+    name: Native app
+    description: Expo React Native app behavior.

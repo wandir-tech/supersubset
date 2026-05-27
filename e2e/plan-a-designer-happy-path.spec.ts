@@ -14,7 +14,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     await page.goto('/');
   });
 
-  test('Step 1: Launch & initial load — viewer renders without errors', async ({ page }) => {
+  test('[interface-behavior.LOADING_STATES.1] Step 1: Launch & initial load — viewer renders without errors', async ({
+    page,
+  }) => {
     const errors: string[] = [];
     page.on('console', (msg) => {
       if (msg.type() === 'error' && !msg.text().includes('React')) {
@@ -31,7 +33,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     expect(errors).toHaveLength(0);
   });
 
-  test('Step 2: Multi-page navigation works', async ({ page }) => {
+  test('[navigation-and-alerts.PAGE_NAVIGATION.1] Step 2: Multi-page navigation works', async ({
+    page,
+  }) => {
     // Should have page tabs for the demo dashboard
     await page.waitForTimeout(1000);
 
@@ -51,7 +55,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     });
   });
 
-  test('Step 3: Designer loads with Puck editor', async ({ page }) => {
+  test('[designer-authoring.PUCK_SHELL.1] Step 3: Designer loads with Puck editor', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(3000);
 
@@ -65,7 +71,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     await expect(puckContainer.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('Step 4: Filters slide-over panel opens from toolbar', async ({ page }) => {
+  test('[filters-and-interactions.FILTER_BAR.2] Step 4: Filters slide-over panel opens from toolbar', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(2000);
 
@@ -87,7 +95,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     await expect(page.getByTestId('slide-over-panel')).not.toBeVisible();
   });
 
-  test('Step 5: Code view shows canonical schema', async ({ page }) => {
+  test('[designer-authoring.CODE_VIEW.1] Step 5: Code view shows canonical schema', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(2000);
 
@@ -104,7 +114,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     await expect(page.getByText('schemaVersion').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('Step 6: Preview mode with responsive viewport', async ({ page }) => {
+  test('[designer-authoring.CONTROL_MODES.1] Step 6: Preview mode with responsive viewport', async ({
+    page,
+  }) => {
     await page.getByText('Preview').click();
     await page.waitForTimeout(2000);
 
@@ -132,7 +144,9 @@ test.describe('Test Plan A — Designer Happy Path', () => {
     });
   });
 
-  test('Step 7: Full round-trip — designer → publish → viewer', async ({ page }) => {
+  test('[designer-authoring.IMPORT_EXPORT.2] Step 7: Full round-trip — designer → publish → viewer', async ({
+    page,
+  }) => {
     const consoleMessages: string[] = [];
     page.on('console', (msg) => {
       if (msg.text().includes('[Supersubset]')) {

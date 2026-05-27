@@ -41,7 +41,7 @@ test.describe('Designer chart matrix certification', () => {
     await page.setViewportSize(VIEWPORT);
   });
 
-  test('shared chart engine proves legend placement, formatted values, and click payload propagation', async ({
+  test('[charts-and-visualization.ROUND_TRIP.1] shared chart engine proves legend placement, formatted values, and click payload propagation', async ({
     page,
   }) => {
     await openDesigner(page);
@@ -156,7 +156,7 @@ test.describe('Designer chart matrix certification', () => {
     );
   });
 
-  test('line chart viewer preserves axis titles and rotated labels from designer controls', async ({
+  test('[charts-and-visualization.ROUND_TRIP.2] line chart viewer preserves axis titles and rotated labels from designer controls', async ({
     page,
   }) => {
     await openDesigner(page);
@@ -254,7 +254,9 @@ test.describe('Designer chart matrix certification', () => {
     });
   });
 
-  test('pie chart viewer preserves donut layout after designer edits', async ({ page }) => {
+  test('[charts-and-visualization.FIELD_BINDING.1] pie chart viewer preserves donut layout after designer edits', async ({
+    page,
+  }) => {
     await openDesigner(page);
     await openDesignerPage(page, 'page-gallery');
     await selectDesignerWidget(page, 'chart-pie');
@@ -303,7 +305,9 @@ test.describe('Designer chart matrix certification', () => {
     );
   });
 
-  test('scatter chart viewer preserves mark sizing after designer edits', async ({ page }) => {
+  test('[charts-and-visualization.SCATTER.1] scatter chart viewer preserves mark sizing after designer edits', async ({
+    page,
+  }) => {
     await openDesigner(page);
     await openDesignerPage(page, 'page-gallery');
     await selectDesignerWidget(page, 'chart-scatter');
@@ -685,7 +689,7 @@ test.describe('Designer chart matrix certification', () => {
     );
   });
 
-  test('waterfall chart viewer preserves colors and total labeling after designer edits', async ({
+  test('[charts-and-visualization.THEMES.2] waterfall chart viewer preserves colors and total labeling after designer edits', async ({
     page,
   }) => {
     await openDesigner(page);
@@ -793,7 +797,7 @@ test.describe('Designer chart matrix certification', () => {
     });
   });
 
-  test('gauge chart viewer preserves semicircle progress geometry after designer edits', async ({
+  test('[charts-and-visualization.VISUALIZATION_SCOPE.1] gauge chart viewer preserves semicircle progress geometry after designer edits', async ({
     page,
   }) => {
     await openDesigner(page);
@@ -840,7 +844,7 @@ test.describe('Designer chart matrix certification', () => {
     await expect(totalsRow).toContainText('16,255');
   });
 
-  test('table designer controls change row numbering, page size, and striping in viewer', async ({
+  test('[charts-and-visualization.FIELD_BINDING.3] table designer controls change row numbering, page size, and striping in viewer', async ({
     page,
   }) => {
     await openDesigner(page);
@@ -876,7 +880,7 @@ test.describe('Designer chart matrix certification', () => {
     await expect(kpi).toContainText('(↓ is good)');
   });
 
-  test('kpi designer controls change suffix, value sizing, and comparison rendering in viewer', async ({
+  test('[charts-and-visualization.FIELD_BINDING.2] kpi designer controls change suffix, value sizing, and comparison rendering in viewer', async ({
     page,
   }) => {
     await openDesigner(page);

@@ -1,0 +1,14 @@
+feature:
+  name: extra-top-level
+  product: supersubset
+components:
+  DEMO:
+    requirements:
+      1:
+        requirement: Baseline requirement.
+constraints:
+  PLATFORM:
+    requirements:
+      1:
+        requirement: Default platform scope applies.
+terms: {}

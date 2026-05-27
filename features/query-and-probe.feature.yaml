@@ -1,0 +1,91 @@
+feature:
+  name: query-and-probe
+  product: supersubset
+  description: Logical query client, HTTP probe contract, preview data execution,
+    and structured probe error envelopes for host-owned backends.
+  version: 0.1.0
+  draft: false
+components:
+  QUERY_CLIENT:
+    name: Query Client
+    description: Host-supplied adapter execution and fluent logical query building.
+    requirements:
+      1:
+        requirement: The *logical query* client accepts a host-provided *adapter*
+          pair for metadata normalization and query execution without binding to a
+          specific database or ORM.
+      2:
+        requirement: QueryClient exposes dataset discovery through getDatasets()
+          and getDataset(datasetId) using normalized *dataset* metadata from the
+          metadata *adapter*.
+      3:
+        requirement: QueryClient.execute() and buildQuery().execute() run a
+          *logical query* with select, filter, sort, limit, and offset clauses and
+          return column and row results keyed by requested field aliases.
+      4:
+        requirement: QueryClient supports cancellation, cache invalidation, and
+          configurable cache TTL so the *designer* and *runtime* can share one
+          client instance without stale preview data.
+  PROBE_DISCOVERY:
+    name: Probe Discovery
+    description: HTTP dataset discovery for probe and workbench validation flows.
+    requirements:
+      1:
+        requirement: Probe-compatible hosts expose GET {base}/supersubset/datasets
+          and return normalized *dataset* metadata for the *designer* catalog.
+      2:
+        requirement: Canonical discovery responses use ProbeDatasetsResponse with
+          protocolVersion, capabilities, and datasets; the *probe* accepts legacy
+          { datasets } and bare dataset arrays during migration.
+      3:
+        requirement: Discovery capabilities advertise supported filter operators,
+          aggregations, source types, and row limits so the *host app* and *probe*
+          can negotiate feature support before authoring widgets.
+  PROBE_QUERY:
+    name: Probe Query
+    description: HTTP logical query execution for preview and validation.
+    requirements:
+      1:
+        requirement: Probe-compatible hosts expose POST {base}/supersubset/query
+          and accept ProbeQueryRequest payloads containing a *logical query*.
+      2:
+        requirement: Successful query responses return ProbeQueryResponse or an
+          equivalent columns-and-rows shape consumable by preview widgets in the
+          *designer* and *runtime*.
+      3:
+        requirement: Query execution remains host-owned; the *probe* forwards
+          transport-level auth headers supplied by the *host app* rather than
+          implementing its own login flow.
+  PREVIEW_DATA:
+    name: Preview Data
+    description: Designer and probe preview execution against live host data.
+    requirements:
+      1:
+        requirement: The *designer* preview path executes widget-bound *logical
+          query* definitions through the configured query *adapter* or *probe*
+          connection and renders live result rows in the canvas.
+      2:
+        requirement: Preview execution honors active dashboard *filter* values
+          and widget-scoped filter bindings so authors see the same query shape
+          the *runtime* will execute.
+  ERROR_ENVELOPE:
+    name: Error Envelope
+    description: Structured probe and query failure responses.
+    requirements:
+      1:
+        requirement: Invalid *logical query* requests, unsupported capabilities,
+          and unavailable datasets return ProbeErrorResponse with a stable error
+          code and human-readable message.
+      2:
+        requirement: ProbeErrorResponse must not leak host implementation secrets;
+          diagnostic detail belongs in host logs while the *designer* and *probe*
+          surface actionable recovery copy.
+constraints:
+  BACKEND_AGNOSTIC:
+    name: Backend Agnostic
+    description: Query and probe boundaries stay adapter-driven.
+    requirements:
+      1:
+        requirement: The query-and-probe contract defines transport envelopes and
+          *logical query* shapes only; SQL generation, ORM choice, and row-level
+          security remain *host app* responsibilities.

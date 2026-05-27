@@ -43,7 +43,7 @@ describe('JSON Schema generation', () => {
 });
 
 describe('YAML serialization', () => {
-  it('round-trips fixture through YAML', () => {
+  it('[schema-and-serialization.SERIALIZATION.1] round-trips fixture through YAML', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const yaml = serializeToYAML(parsed);
     const reparsed = parseFromYAML(yaml);
@@ -54,7 +54,7 @@ describe('YAML serialization', () => {
     expect(reparsed.pages).toHaveLength(parsed.pages.length);
   });
 
-  it('preserves layout map structure', () => {
+  it('[schema-and-serialization.SERIALIZATION.2] preserves layout map structure', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const yaml = serializeToYAML(parsed);
     const reparsed = parseFromYAML(yaml);
@@ -83,7 +83,7 @@ pages: []
     expect(() => parseFromYAML(badYaml)).toThrow();
   });
 
-  it('JSON and YAML are semantically equivalent', () => {
+  it('[schema-and-serialization.LIBRARY_SCOPE.1] JSON and YAML are semantically equivalent', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const yamlStr = serializeToYAML(parsed);
     const fromYaml = parseFromYAML(yamlStr);

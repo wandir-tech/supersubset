@@ -128,7 +128,7 @@ const dashboard: DashboardDefinition = {
 };
 
 describe('SupersubsetRenderer interactions', () => {
-  it('routes widget click events through the interaction engine', () => {
+  it('[filters-and-interactions.CLICK_TO_FILTER.1] routes widget click events through the interaction engine', () => {
     const onNavigate = vi.fn();
     const onWidgetEvent = vi.fn();
     const registry = createWidgetRegistry([['clickable-widget', ClickableWidget]]);
@@ -157,7 +157,7 @@ describe('SupersubsetRenderer interactions', () => {
     );
   });
 
-  it('re-executes query-bound widgets when a chart click sets a cross-filter', async () => {
+  it('[filters-and-interactions.CROSS_WIDGET_FILTERS.1] re-executes query-bound widgets when a chart click sets a cross-filter', async () => {
     const execute = vi.fn<QueryAdapter['execute']>().mockImplementation(async (query) => {
       const activeRegion = query.filters?.find((filter) => filter.fieldId === 'region')?.value;
       return createQueryResult(activeRegion === 'North' ? 6400 : 23000);
