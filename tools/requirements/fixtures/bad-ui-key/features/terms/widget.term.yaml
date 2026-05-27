@@ -1,0 +1,7 @@
+term:
+  id: widget
+  definition: A UI widget reference fixture.
+  references:
+    ui:
+      native_app:
+        - packages/mobile-app/src/screens/Example.tsx

@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Markdown widget workflow', () => {
-  test('renders formatted copy and safe external links on the gallery page', async ({ page }) => {
+  test('[runtime-rendering.WIDGET_REGISTRY.2] renders formatted copy and safe external links on the gallery page', async ({
+    page,
+  }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Chart Gallery' }).click();
 

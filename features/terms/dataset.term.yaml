@@ -1,0 +1,15 @@
+term:
+  id: dataset
+  definition: >
+    A normalized logical table, view, or model exposed by a metadata adapter.
+    Widgets and filters bind to datasets through datasetRef and field bindings
+    defined in the dashboard schema.
+  aliases:
+    - normalized dataset
+  references:
+    server:
+      - packages/data-model/src/index.ts
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/designer/src/context/DatasetContext.tsx

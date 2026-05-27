@@ -1,0 +1,15 @@
+term:
+  id: metadata_model
+  definition: >
+    The normalized analytical catalog of datasets, fields, roles, aggregations, and
+    relationships that adapters produce from Prisma, SQL, dbt, or JSON sources.
+    Designer and runtime consume this model without source-specific coupling.
+  aliases:
+    - normalized metadata
+    - data model
+  references:
+    server:
+      - packages/data-model/src/index.ts
+      - packages/data-model/src/heuristics.ts
+    docs:
+      - packages/schema/README.md

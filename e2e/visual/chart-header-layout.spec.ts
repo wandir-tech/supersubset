@@ -7,7 +7,9 @@ test.describe('Chart Header Layout Visual Regression', () => {
     await page.waitForTimeout(1200);
   });
 
-  test('line chart header layout remains stable', async ({ page }) => {
+  test('[charts-and-visualization.ECHARTS_WRAPPERS.2] line chart header layout remains stable', async ({
+    page,
+  }) => {
     const chartCard = page.locator('[data-ss-node="w-line"]');
     await expect(chartCard).toBeVisible();
 

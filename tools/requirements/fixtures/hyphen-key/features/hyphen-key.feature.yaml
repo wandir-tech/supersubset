@@ -1,0 +1,13 @@
+feature:
+  name: hyphen-key
+  product: supersubset
+components:
+  DEMO:
+    requirements:
+      '1-1':
+        requirement: Nested numeric requirement keys must stay quoted in YAML.
+constraints:
+  PLATFORM:
+    requirements:
+      1:
+        requirement: Default platform scope applies.

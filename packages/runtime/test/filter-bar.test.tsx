@@ -92,7 +92,7 @@ const multiSelectFilter: FilterDefinition = {
 };
 
 describe('FilterBar', () => {
-  it('renders a control for each filter definition', () => {
+  it('[filters-and-interactions.FILTER_BAR.1] renders a control for each filter definition', () => {
     const { container } = renderFilterBar([selectFilter, textFilter, rangeFilter, dateFilter]);
 
     const controls = container.querySelectorAll('.ss-filter-control');
@@ -111,7 +111,7 @@ describe('FilterBar', () => {
     expect(select?.tagName).toBe('SELECT');
   });
 
-  it('renders authored static options without the legacy filterOptions prop', () => {
+  it('[filters-and-interactions.FILTER_OPTION_SOURCES.1] renders authored static options without the legacy filterOptions prop', () => {
     const { container } = renderFilterBar([selectFilter]);
 
     const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
@@ -148,7 +148,7 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['All', 'Pending', 'Resolved']);
   });
 
-  it('renders an unavailable select state when no option source is available', () => {
+  it('[filters-and-interactions.FILTER_OPTION_SOURCES.3] renders an unavailable select state when no option source is available', () => {
     const { container } = renderFilterBar([{ ...selectFilter, optionSource: undefined }]);
 
     const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
@@ -278,7 +278,7 @@ describe('FilterBar', () => {
     expect(lastCall.values['f-category']).toEqual(['footwear', 'hydration']);
   });
 
-  it('renders Clear filters button when filters are active', () => {
+  it('[filters-and-interactions.FILTER_BAR.3] renders Clear filters button when filters are active', () => {
     const onFilterChange = vi.fn();
     const { container } = renderFilterBar([textFilter], {
       initialValues: { 'f-search': 'existing' },

@@ -1,0 +1,16 @@
+term:
+  id: interaction
+  definition: >
+    A declarative link from a widget trigger (click, hover, change) to an action
+    such as filter update, page navigation, drilldown, or cross-dashboard routing.
+    The runtime InteractionEngine executes authored interaction rules.
+  aliases:
+    - cross-filter
+    - navigation action
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/interactions/InteractionEngine.tsx
+        - packages/designer/src/components/InteractionEditorPanel.tsx

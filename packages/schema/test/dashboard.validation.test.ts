@@ -70,7 +70,7 @@ describe('dashboardDefinitionSchema alert rules', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts structured alert rules on alerts widgets', () => {
+  it('[navigation-and-alerts.ALERT_RULES.1] accepts structured alert rules on alerts widgets', () => {
     const result = dashboardDefinitionSchema.safeParse(
       createAlertsDashboard({
         mode: 'structured',
@@ -108,7 +108,7 @@ describe('dashboardDefinitionSchema alert rules', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects malformed structured alert rules on alerts widgets', () => {
+  it('[navigation-and-alerts.ALERT_RULES.2] rejects malformed structured alert rules on alerts widgets', () => {
     const result = dashboardDefinitionSchema.safeParse(
       createAlertsDashboard({
         mode: 'structured',
@@ -133,7 +133,7 @@ describe('dashboardDefinitionSchema alert rules', () => {
     ).toBe(true);
   });
 
-  it('rejects unknown keys in structured alert rules on alerts widgets', () => {
+  it('[navigation-and-alerts.ALERT_RULES.3] rejects unknown keys in structured alert rules on alerts widgets', () => {
     const result = dashboardDefinitionSchema.safeParse(
       createAlertsDashboard({
         mode: 'structured',

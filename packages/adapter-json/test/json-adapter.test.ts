@@ -43,7 +43,7 @@ describe('JsonAdapter', () => {
   });
 
   describe('getDatasets', () => {
-    it('returns all datasets', async () => {
+    it('[metadata-adapters.ADAPTER_JSON.1] returns all datasets', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       expect(datasets).toHaveLength(2);
       expect(datasets[0].id).toBe('orders');
@@ -91,7 +91,7 @@ describe('JsonAdapter', () => {
       expect(nameField?.label).toBe('Customer Name');
     });
 
-    it('preserves relationships', async () => {
+    it('[metadata-adapters.ADAPTER_JSON.2] preserves relationships', async () => {
       const [orders] = await adapter.getDatasets(FIXTURE);
       expect(orders.relationships).toHaveLength(1);
       expect(orders.relationships![0].targetDatasetId).toBe('customers');

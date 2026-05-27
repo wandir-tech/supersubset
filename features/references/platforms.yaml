@@ -1,0 +1,14 @@
+platforms:
+  web:
+    name: Web
+    description: >
+      Embeddable React designer and runtime surfaces delivered in a host
+      application browser context, including dev-app, examples, and docs.
+    package_roots:
+      - packages/designer
+      - packages/runtime
+      - packages/charts-echarts
+      - packages/schema
+      - packages/dev-app
+      - packages/docs
+      - e2e

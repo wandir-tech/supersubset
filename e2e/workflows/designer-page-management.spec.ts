@@ -7,14 +7,18 @@ async function openDesigner(page: import('@playwright/test').Page) {
 }
 
 test.describe('Designer page management', () => {
-  test('avoids outer header overflow at wide desktop widths', async ({ page }) => {
+  test('[designer-authoring.PUCK_SHELL.3] avoids outer header overflow at wide desktop widths', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1600, height: 900 });
     await openDesigner(page);
 
-    const headerMetrics = await page.getByTestId('designer-header-controls').evaluate((element) => ({
-      clientWidth: element.clientWidth,
-      scrollWidth: element.scrollWidth,
-    }));
+    const headerMetrics = await page
+      .getByTestId('designer-header-controls')
+      .evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
 
     expect(headerMetrics.scrollWidth - headerMetrics.clientWidth).toBeLessThan(2);
   });
@@ -39,7 +43,9 @@ test.describe('Designer page management', () => {
     expect(canvasBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(viewportHeight - 120);
   });
 
-  test('adds and renames a page from the header controls', async ({ page }) => {
+  test('[designer-authoring.PAGE_NAVIGATION.1] adds and renames a page from the header controls', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openDesigner(page);
 
@@ -53,7 +59,9 @@ test.describe('Designer page management', () => {
     await expect(page.getByTestId('designer-page-tab-page-3')).toHaveText('Regional Detail');
   });
 
-  test('deletes the explicitly targeted page without changing the current page', async ({ page }) => {
+  test('[navigation-and-alerts.PAGE_NAVIGATION.3] deletes the explicitly targeted page without changing the current page', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openDesigner(page);
 
@@ -67,7 +75,9 @@ test.describe('Designer page management', () => {
     await expect(page.getByTestId('designer-page-title-input')).toHaveValue('Overview');
   });
 
-  test('falls back to the previous page when deleting the active page', async ({ page }) => {
+  test('[navigation-and-alerts.PAGE_NAVIGATION.2] falls back to the previous page when deleting the active page', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await openDesigner(page);
 

@@ -1,0 +1,15 @@
+term:
+  id: layout
+  definition: >
+    A flat, ID-keyed map of layout components that positions widgets on a page.
+    The renderer walks from rootNodeId through children to produce the grid-based
+    dashboard chrome.
+  aliases:
+    - layout map
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/layout/LayoutRenderer.tsx
+        - packages/designer/src/blocks/layout

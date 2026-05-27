@@ -17,7 +17,9 @@ function buildImportedHostDashboard() {
 }
 
 test.describe('Host Integration Workflow', () => {
-  test('Next.js runtime host stays runtime-only and uses host-owned theming', async ({ page }) => {
+  test('[host-integration.EMBEDDING_CONTRACT.1] Next.js runtime host stays runtime-only and uses host-owned theming', async ({
+    page,
+  }) => {
     const requestUrls: string[] = [];
     const consoleErrors: string[] = [];
 
@@ -60,7 +62,7 @@ test.describe('Host Integration Workflow', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('Vite host persists imported schema through host-owned localStorage and reload', async ({
+  test('[host-integration.HOST_OWNERSHIP.1] Vite host persists imported schema through host-owned localStorage and reload', async ({
     page,
   }) => {
     const requestUrls: string[] = [];
@@ -121,7 +123,7 @@ test.describe('Host Integration Workflow', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('Vite host shows an explicit unavailable state when Region is authored with field-backed options', async ({
+  test('[interface-behavior.EMPTY_STATES.2] Vite host shows an explicit unavailable state when Region is authored with field-backed options', async ({
     page,
   }) => {
     const consoleErrors: string[] = [];

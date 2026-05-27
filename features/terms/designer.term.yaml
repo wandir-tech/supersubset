@@ -1,0 +1,16 @@
+term:
+  id: designer
+  definition: >
+    The Puck-based visual editor that authors DashboardDefinition documents through
+    drag-and-drop layout, property panels, and live preview. It emits schema the
+    host app persists; it does not execute production queries on its own.
+  aliases:
+    - SupersubsetDesigner
+    - analytics builder
+  references:
+    ui:
+      shared:
+        - packages/designer/src/components/SupersubsetDesigner.tsx
+        - packages/designer/src/config/puck-config.ts
+    server:
+      - packages/schema/src/types/dashboard.ts

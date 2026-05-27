@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CURRENT_SCHEMA_VERSION, isSupportedSchemaVersion, migrateDashboardDefinition } from '../src/migrations';
+import {
+  CURRENT_SCHEMA_VERSION,
+  isSupportedSchemaVersion,
+  migrateDashboardDefinition,
+} from '../src/migrations';
 import { parseFromJSON } from '../src/serializers';
 import { parseFromYAML } from '../src/serializers/yaml';
 
@@ -118,14 +122,16 @@ describe('schema migrations', () => {
     expect(isSupportedSchemaVersion('9.9.9')).toBe(false);
   });
 
-  it('migrates a 0.1.0 recursive-layout dashboard into the current schema', () => {
+  it('[schema-and-serialization.MIGRATIONS.1] migrates a 0.1.0 recursive-layout dashboard into the current schema', () => {
     const migrated = migrateDashboardDefinition(legacyRecursiveDashboard);
 
     expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.dataModel).toEqual({ type: 'external', externalRef: 'catalog://sales' });
     expect(migrated.pages[0].rootNodeId).toBeTruthy();
     expect(migrated.pages[0].layout[migrated.pages[0].rootNodeId].type).toBe('root');
-    expect(migrated.pages[0].layout[migrated.pages[0].rootNodeId].children).toContain('legacy-grid');
+    expect(migrated.pages[0].layout[migrated.pages[0].rootNodeId].children).toContain(
+      'legacy-grid',
+    );
     expect(migrated.pages[0].layout['legacy-widget-node'].parentId).toBe('legacy-row');
     expect(migrated.pages[0].layout['legacy-widget-node'].meta.widgetRef).toBe('widget-revenue');
     expect(migrated.pages[0].layout['legacy-header-node'].meta.text).toBe('Legacy Header');
@@ -136,7 +142,7 @@ describe('schema migrations', () => {
     });
   });
 
-  it('normalizes legacy navigate actions on current-version documents', () => {
+  it('[schema-and-serialization.MIGRATIONS.2] normalizes legacy navigate actions on current-version documents', () => {
     const migrated = migrateDashboardDefinition(legacyCurrentNavigateDashboard);
 
     expect(migrated.interactions?.[0].action).toEqual({
@@ -204,7 +210,7 @@ interactions:
     });
   });
 
-  it('rejects unsupported schema versions before validation', () => {
+  it('[schema-and-serialization.MIGRATIONS.3] rejects unsupported schema versions before validation', () => {
     expect(() =>
       migrateDashboardDefinition({
         schemaVersion: '9.9.9',

@@ -24,7 +24,11 @@
     "prepare": "husky",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "node scripts/sync-package-docs.mjs && pnpm -r --filter='./packages/*' --filter='!@supersubset/dev-app' --filter='!@supersubset/docs' build && changeset publish"
+    "release": "node scripts/sync-package-docs.mjs && pnpm -r --filter='./packages/*' --filter='!@supersubset/dev-app' --filter='!@supersubset/docs' build && changeset publish",
+    "validate:requirements": "node tools/requirements/validate-feature-specs.mjs",
+    "requirements:coverage": "node tools/requirements/validate-feature-specs.mjs --coverage",
+    "requirements:coverage:json": "node tools/requirements/validate-feature-specs.mjs --coverage --json",
+    "test:requirements-validator": "node --test tools/requirements/validate-feature-specs.spec.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
@@ -43,7 +47,8 @@
     "prettier": "^3.8.2",
     "storybook": "^8.6.0",
     "typescript": "^5.5.0",
-    "typescript-eslint": "^8.58.2"
+    "typescript-eslint": "^8.58.2",
+    "yaml": "^2.9.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

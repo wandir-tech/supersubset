@@ -72,7 +72,7 @@ describe('probe auth helpers', () => {
     expect(toAuthHeader('login', '', '', '')).toBeUndefined();
   });
 
-  it('persists and restores session config', () => {
+  it('[query-and-probe.PROBE_DISCOVERY.2] persists and restores session config', () => {
     saveProbeSession({
       metadataSourceMode: 'discovery-url',
       discoveryUrl: 'https://api.example.com/supersubset/datasets',
@@ -211,7 +211,7 @@ describe('extractByPath', () => {
 });
 
 describe('performProbeLogin', () => {
-  it('posts a GraphQL login mutation with variables and returns the extracted token', async () => {
+  it('[query-and-probe.PROBE_QUERY.3] posts a GraphQL login mutation with variables and returns the extracted token', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify({ data: { login: { accessToken: 'jwt-abc' } } }), {
@@ -242,7 +242,7 @@ describe('performProbeLogin', () => {
     expect(body.variables).toEqual({ email: 'dev@example.com', password: 'secret' });
   });
 
-  it('throws a descriptive error when the response contains GraphQL errors', async () => {
+  it('[query-and-probe.ERROR_ENVELOPE.1] throws a descriptive error when the response contains GraphQL errors', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify({ errors: [{ message: 'Invalid credentials' }] }), {
@@ -302,7 +302,7 @@ describe('performProbeLogin', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it('surfaces HTTP errors with status code', async () => {
+  it('[query-and-probe.ERROR_ENVELOPE.2] surfaces HTTP errors with status code', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify({ errors: [{ message: 'Boom' }] }), {

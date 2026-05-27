@@ -27,7 +27,17 @@ Instead, it answers four questions first:
 
 Use this skill before writing or expanding tests. Then route into the narrower skill or document that owns the implementation details.
 
-For BI-facing work, use this skill together with `.github/skills/bi-visualization-quality/SKILL.md`. Technical correctness is not enough if the resulting dashboard is misleading, unreadable, or hard to operate.
+## Acai ID Test Prefixes
+
+When a test primarily proves a durable requirement from `features/*.feature.yaml`, prefix the test name with the Acai ID:
+
+```ts
+it('[schema-and-serialization.SERIALIZATION.1] JSON round-trip preserves dashboard AST', () => { ... });
+```
+
+Read `.github/skills/requirements-test-tagging/SKILL.md` before broad tagging passes. Do not prefix exhaustive property-matrix tests (`per-chart-properties`, `adapter-properties`) unless they prove a named capability requirement. Run `pnpm run validate:requirements` after changing test prefixes.
+
+For BI-facing work, use this skill together with `.github/skills/bi-visualization-quality/SKILL.md`.
 
 ## AI Tester Agent Design Principles
 

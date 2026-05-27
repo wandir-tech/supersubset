@@ -84,6 +84,9 @@ For testing work, pair the `testing` agent with `.github/skills/testing-strategy
 | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `github-cli`                  | Issues, PRs, Actions runs, and API queries — prefer `gh` over the browser                                 |
 | `work-kickoff`                | Turning an idea into a reviewed GitHub issue + implementation plan                                        |
+| `requirements-intake`         | Creating or backfilling Acai-compatible feature specs and glossary terms                                  |
+| `requirements-driven-work`    | Implementing or reviewing against existing `features/*.feature.yaml` ACIDs                                |
+| `requirements-test-tagging`   | Prefixing tests with `[ACID]` evidence links                                                              |
 | `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
 | `ai-code-cleanup`             | Continuous AI-code cleanup: drift detection, duplicate removal, bounded refactors, and standards updates  |
 | `release-runbook`             | End-to-end release execution: candidate validation, changesets, branch promotion, publish, downstream PRs |
@@ -98,12 +101,14 @@ If you are a fresh agent session resuming work:
 2. Read `docs/status/risk-register.md` for active risks
 3. Read the latest file in `docs/status/phase-summaries/` for recent progress
 4. Read `docs/adr/` for architecture decisions made so far
-5. Check `git log --oneline -20` for recent commits
-6. Resume from the current phase's incomplete tasks
+5. Scan `features/*.feature.yaml` for durable product requirements (ADR-011)
+6. Check `git log --oneline -20` for recent commits
+7. Resume from the current phase's incomplete tasks
 
 ## File Organization
 
 ```
+features/                   # Acai-compatible product requirements (ADR-011)
 docs/
 ├── adr/                    # Architecture Decision Records
 ├── status/

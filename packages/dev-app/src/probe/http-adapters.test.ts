@@ -33,7 +33,7 @@ describe('http adapters', () => {
     }
   });
 
-  it('injects bearer auth header for metadata probe', async () => {
+  it('[query-and-probe.PROBE_DISCOVERY.3] injects bearer auth header for metadata probe', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify([]), {
@@ -116,7 +116,7 @@ describe('http adapters', () => {
     expect(url).toBe('https://example.com/v2/datasets');
   });
 
-  it('posts logical query to query endpoint with custom header', async () => {
+  it('[query-and-probe.PROBE_QUERY.2] posts logical query to query endpoint with custom header', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(
@@ -186,7 +186,7 @@ describe('http adapters', () => {
     expect(byId.country?.label).toBe('Country');
   });
 
-  it('accepts direct discovery endpoint URLs without appending another suffix', async () => {
+  it('[query-and-probe.BACKEND_AGNOSTIC.1] accepts direct discovery endpoint URLs without appending another suffix', async () => {
     const fetcher = vi.fn(
       async () =>
         new Response(JSON.stringify([]), {

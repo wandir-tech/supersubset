@@ -1,0 +1,85 @@
+feature:
+  name: interface-behavior
+  product: supersubset
+  description: Cross-cutting loading, empty, error, and retry UX shared by the
+    designer authoring surface and runtime viewing surface.
+  version: 0.1.0
+  draft: false
+components:
+  LOADING_STATES:
+    name: Loading States
+    description: Async feedback while metadata and query work is in flight.
+    requirements:
+      1:
+        requirement: The *designer* and *runtime* expose explicit loading states
+          for *dataset* catalog fetch, *widget* query execution, and preview refresh
+          without hiding previously rendered content that remains valid.
+      2:
+        requirement: Loading indicators appear at the *widget*, *page*, or shell
+          level appropriate to the async scope so partial *dashboard* layouts stay
+          usable during incremental query completion.
+      3:
+        requirement: Long-running *logical query* execution shows in-progress
+          affordances and respects cancellation when the host query *adapter*
+          supports abort signals.
+  EMPTY_STATES:
+    name: Empty States
+    description: Zero-data and not-yet-configured presentation.
+    requirements:
+      1:
+        requirement: Each *widget* empty state distinguishes query results with zero rows
+          from not-yet-configured bindings missing *dataset* or field selections.
+      2:
+        requirement: The *designer* canvas and *runtime* *page* surfaces show
+          actionable empty copy when a *dashboard* or *page* has no authored *widget*
+          content yet.
+      3:
+        requirement: Dashboard *filter* controls with no resolved options render an explicit
+          empty or unavailable state instead of failing silently at *runtime*.
+  ERROR_STATES:
+    name: Error States
+    description: User-visible failure handling for queries and authoring validation.
+    requirements:
+      1:
+        requirement: Query failures surface user-actionable error copy on the
+          affected *widget* while preserving diagnostic detail in host or browser
+          logs and structured ProbeErrorResponse payloads when applicable.
+      2:
+        requirement: Metadata or *adapter* initialization failures in the *designer*
+          block preview execution with a clear error state but keep the authored
+          *dashboard* definition editable.
+      3:
+        requirement: Schema validation errors in the *designer* appear in the
+          validation panel and prevent silent publish of invalid *widget*, *filter*,
+          *interaction*, or *alert_rule* configuration.
+  RETRY_RECOVERY:
+    name: Retry Recovery
+    description: Explicit recovery actions after transient failures.
+    requirements:
+      1:
+        requirement: Failed *widget* query errors expose an explicit retry action when
+          automatic reload cannot safely recover without user confirmation.
+      2:
+        requirement: The *runtime* retry path re-executes the same *logical query*
+          with current *filter* and *interaction* state rather than requiring a full
+          *page* reload.
+      3:
+        requirement: The *designer* preview retry reuses the configured query
+          *adapter* or *probe* connection and clears stale error chrome on success.
+  DESIGNER_RUNTIME_PARITY:
+    name: Designer Runtime Parity
+    description: Consistent UX semantics across authoring and viewing modes.
+    requirements:
+      1:
+        requirement: Shared async, empty, and error patterns apply to both *designer*
+          preview and *runtime* rendering so authors and viewers see equivalent
+          states for the same *dashboard* definition and query outcome.
+constraints:
+  NON_BLOCKING:
+    name: Non Blocking
+    description: Failures stay scoped to the affected surface.
+    requirements:
+      1:
+        requirement: A single *widget* query or *alert_rule* failure must not
+          prevent the surrounding *dashboard* shell, *filter* bar, or unrelated
+          *widget* instances from rendering available content.

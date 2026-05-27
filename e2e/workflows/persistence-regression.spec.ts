@@ -44,7 +44,9 @@ test.describe('Designer State Persistence Regressions', () => {
     await page.goto('/');
   });
 
-  test('imported dashboard survives designer, preview, and viewer mode switches', async ({ page }) => {
+  test('[runtime-rendering.STATE_PERSISTENCE.2] imported dashboard survives designer, preview, and viewer mode switches', async ({
+    page,
+  }) => {
     const importedDashboard = buildDashboardWithExtraLineChart();
 
     await page.getByText('Designer').click();
@@ -65,7 +67,9 @@ test.describe('Designer State Persistence Regressions', () => {
     await expect(page.getByText('chart-imported-line')).toBeVisible();
   });
 
-  test('active page recovers when imported dashboard removes the current page', async ({ page }) => {
+  test('[navigation-and-alerts.PAGE_NAVIGATION.1] active page recovers when imported dashboard removes the current page', async ({
+    page,
+  }) => {
     const singlePageDashboard = buildSinglePageDashboard();
 
     await page.getByText('Chart Gallery').click();

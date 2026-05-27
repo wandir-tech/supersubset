@@ -1,0 +1,94 @@
+# Imported from https://acai.sh/feature-yaml on 2026-05-23.
+# Reference copy only. Active Tripmatch requirements live under features/*.feature.yaml.
+feature:
+  name: feature-yaml
+  product: my-product.example.com
+  description: Describes the structure and semantics of a feature.yaml file
+    used by Acai to define product features, components, constraints, and
+    requirements.
+  version: 1.0.0
+  draft: true
+
+components:
+  METADATA:
+    description: Fields under the top-level "feature" section.
+    requirements:
+      1:
+        requirement: Feature metadata must have a `name` field.
+        note: Stable, human-readable feature identifier.
+      2:
+        requirement: Feature metadata must have a `product` field.
+        note: Product or repository the feature belongs to.
+      3:
+        requirement: Feature metadata may have a `version` field.
+        note: Semantic or project-local version string.
+      4:
+        requirement: Feature metadata may have a `description` field.
+      5:
+        requirement: Feature metadata may have a `draft` boolean.
+        note: Draft features are excluded by default unless requested.
+
+  COMPONENTS:
+    description: Functional parts of the feature.
+    requirements:
+      1:
+        requirement: Components are grouped under the top-level `components` map.
+      2:
+        requirement: Component keys should be stable uppercase identifiers.
+      3:
+        requirement: Each component may have a `name`.
+      4:
+        requirement: Each component may have a `description`.
+      5:
+        requirement: Each component may have a `requirements` map.
+      6:
+        requirement: Component requirements may be written as strings.
+      7:
+        requirement: Component requirements may be written as objects with a
+          `requirement` field.
+      8:
+        requirement: Requirement objects may include `note`, `deprecated`, and
+          `replaced_by`.
+
+  CONSTRAINTS:
+    description: Cross-cutting feature requirements or invariants.
+    requirements:
+      1:
+        requirement: Constraints are grouped under the top-level `constraints` map.
+      2:
+        requirement: Constraint keys should be stable uppercase identifiers.
+      3:
+        requirement: Each constraint group may have a `name`.
+      4:
+        requirement: Each constraint group may have a `description`.
+      5:
+        requirement: Each constraint group may have a `requirements` map.
+      6:
+        requirement: Constraint requirements follow the same string or object
+          shape as component requirements.
+
+constraints:
+  IDS:
+    description: Stable requirement identifiers inside feature.yaml.
+    requirements:
+      1:
+        requirement: Requirement keys may be numeric strings.
+      2:
+        requirement: Requirement keys may use hyphenated nested forms such as `1-1`.
+      3:
+        requirement: Acai IDs are composed as
+          `<feature-name>.<GROUP_KEY>.<requirement-key>`.
+      4:
+        requirement: IDs should remain stable once referenced externally.
+
+  DEPRECATION:
+    description: Marking requirements that should no longer be used.
+    requirements:
+      1:
+        requirement: 'Deprecated requirements should set `deprecated: true`.'
+      2:
+        requirement: Deprecated requirements may set `replaced_by` to another
+          Acai ID.
+      3:
+        requirement: Deprecated requirements should remain in the file so old
+          references can be resolved.

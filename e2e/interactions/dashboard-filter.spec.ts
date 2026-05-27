@@ -105,7 +105,9 @@ async function switchToViewer(page: Page) {
 }
 
 test.describe('Dashboard Filters', () => {
-  test('viewer renders placed filter-bar widgets without registry errors', async ({ page }) => {
+  test('[runtime-rendering.WIDGET_REGISTRY.3] viewer renders placed filter-bar widgets without registry errors', async ({
+    page,
+  }) => {
     const consoleErrors = trackConsoleErrors(page);
 
     await openViewerLiveDashboard(page);
@@ -150,7 +152,9 @@ test.describe('Dashboard Filters', () => {
     ).toHaveLength(0);
   });
 
-  test('placed filter-bar widgets share filter state and reset together', async ({ page }) => {
+  test('[filters-and-interactions.CROSS_WIDGET_FILTERS.1] placed filter-bar widgets share filter state and reset together', async ({
+    page,
+  }) => {
     await openViewerLiveDashboard(page);
 
     const allFiltersBar = filterBarWidget(page, 'w-filter-bar-all').locator('.ss-filter-bar');
@@ -174,7 +178,7 @@ test.describe('Dashboard Filters', () => {
     await expect(allFiltersBar.getByLabel('Region')).toHaveValue('');
   });
 
-  test('live dashboard filters update KPI and table data as well as control state', async ({
+  test('[filters-and-interactions.CROSS_WIDGET_FILTERS.3] live dashboard filters update KPI and table data as well as control state', async ({
     page,
   }) => {
     await openViewerLiveDashboard(page);
@@ -313,7 +317,7 @@ test.describe('Dashboard Filters', () => {
     await expect(ordersTable).toContainText('Wayne Ent');
   });
 
-  test('designer-edited filter bar widget preserves title, vertical layout, subset, and analytical behavior', async ({
+  test('[interface-behavior.DESIGNER_RUNTIME_PARITY.1] designer-edited filter bar widget preserves title, vertical layout, subset, and analytical behavior', async ({
     page,
   }) => {
     await page.setViewportSize(DESIGNER_VIEWPORT);
@@ -366,7 +370,9 @@ test.describe('Cross-Filtering', () => {
     await openViewerLiveDashboard(page);
   });
 
-  test('clicking a chart data point logs a widget event', async ({ page }) => {
+  test('[filters-and-interactions.CLICK_TO_FILTER.2] clicking a chart data point logs a widget event', async ({
+    page,
+  }) => {
     // Find a chart widget
     const chart = page.locator('.ss-widget').first();
     await expect(chart).toBeVisible();

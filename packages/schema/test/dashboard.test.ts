@@ -13,41 +13,41 @@ const fixturePath = resolve(__dirname, 'fixtures/sales-dashboard.json');
 const fixtureJSON = readFileSync(fixturePath, 'utf-8');
 
 describe('DashboardDefinition schema', () => {
-  it('validates the sales dashboard fixture', () => {
+  it('[schema-and-serialization.CANONICAL_SCHEMA.1] validates the sales dashboard fixture', () => {
     const raw = JSON.parse(fixtureJSON);
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(true);
   });
 
-  it('rejects missing schemaVersion', () => {
+  it('[schema-and-serialization.CANONICAL_SCHEMA.2] rejects missing schemaVersion', () => {
     const raw = JSON.parse(fixtureJSON);
     delete raw.schemaVersion;
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(false);
   });
 
-  it('rejects empty pages array', () => {
+  it('[schema-and-serialization.CANONICAL_SCHEMA.3] rejects empty pages array', () => {
     const raw = JSON.parse(fixtureJSON);
     raw.pages = [];
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(false);
   });
 
-  it('rejects missing widget id', () => {
+  it('[schema-and-serialization.STABLE_IDS.2] rejects missing widget id', () => {
     const raw = JSON.parse(fixtureJSON);
     delete raw.pages[0].widgets[0].id;
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(false);
   });
 
-  it('validates filter scope discriminated union', () => {
+  it('[schema-and-serialization.ZOD_VALIDATION.3] validates filter scope discriminated union', () => {
     const raw = JSON.parse(fixtureJSON);
     expect(raw.filters[0].scope.type).toBe('global');
     const result = dashboardDefinitionSchema.safeParse(raw);
     expect(result.success).toBe(true);
   });
 
-  it('validates interaction action discriminated union', () => {
+  it('[schema-and-serialization.ZOD_VALIDATION.3] validates interaction action discriminated union', () => {
     const raw = JSON.parse(fixtureJSON);
     expect(raw.interactions[0].action.type).toBe('filter');
     const result = dashboardDefinitionSchema.safeParse(raw);
@@ -116,7 +116,7 @@ describe('DashboardDefinition schema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects field-backed option sources with minSearchChars below 1', () => {
+  it('[schema-and-serialization.ZOD_VALIDATION.2] rejects field-backed option sources with minSearchChars below 1', () => {
     const raw = JSON.parse(fixtureJSON);
     raw.filters[0].optionSource = {
       kind: 'field',
@@ -192,7 +192,7 @@ describe('layout nesting validation', () => {
 });
 
 describe('JSON serialization round-trip', () => {
-  it('round-trips without semantic loss', () => {
+  it('[schema-and-serialization.SERIALIZATION.1] round-trips without semantic loss', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const serialized = serializeToJSON(parsed);
     const reparsed = parseFromJSON(serialized);
@@ -206,7 +206,7 @@ describe('JSON serialization round-trip', () => {
     expect(reparsed.interactions).toHaveLength(parsed.interactions!.length);
   });
 
-  it('round-trips layout map structure', () => {
+  it('[schema-and-serialization.STABLE_IDS.1] round-trips layout map structure', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const serialized = serializeToJSON(parsed);
     const reparsed = parseFromJSON(serialized);
@@ -217,7 +217,7 @@ describe('JSON serialization round-trip', () => {
     expect(reparsed.pages[0].rootNodeId).toBe(parsed.pages[0].rootNodeId);
   });
 
-  it('produces deterministic output (sorted keys)', () => {
+  it('[schema-and-serialization.SERIALIZATION.2] produces deterministic output (sorted keys)', () => {
     const parsed = parseFromJSON(fixtureJSON);
     const first = serializeToJSON(parsed);
     const second = serializeToJSON(parsed);
@@ -253,7 +253,7 @@ describe('JSON serialization round-trip', () => {
 });
 
 describe('minimal valid dashboard', () => {
-  it('accepts a dashboard with one page and flat layout map', () => {
+  it('[schema-and-serialization.ZOD_VALIDATION.1] accepts a dashboard with one page and flat layout map', () => {
     const minimal: DashboardDefinition = {
       schemaVersion: '0.2.0',
       id: 'test-min',
