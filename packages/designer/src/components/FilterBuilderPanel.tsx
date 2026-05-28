@@ -209,12 +209,17 @@ function asDateDefaultValue(value: unknown): { preset?: string; start?: string; 
   return {};
 }
 
-function getWeeklyPreviewLabels(config: DateFilterConfig): string[] {
+function getWeeklyPreview(config: DateFilterConfig): { labels: string[]; total: number } {
+  const options = generateWeeklyDateRangeOptions(config);
+
   // Preview only the newest few generated choices so the editor stays compact.
-  return generateWeeklyDateRangeOptions(config)
-    .reverse()
-    .slice(0, WEEKLY_PREVIEW_OPTION_COUNT)
-    .map((option) => option.label);
+  return {
+    labels: [...options]
+      .reverse()
+      .slice(0, WEEKLY_PREVIEW_OPTION_COUNT)
+      .map((option) => option.label),
+    total: options.length,
+  };
 }
 
 function normalizeFilterControlType(type: string): SupportedFilterControlType {
@@ -328,7 +333,7 @@ function FilterEditor({
   const dateDefaultOptions =
     dateMode === 'weekly' ? WEEKLY_DATE_DEFAULT_OPTIONS : DATE_DEFAULT_OPTIONS;
   const shouldShowDateDefaultRange = dateMode === 'range' || selectedDateDefault === 'custom';
-  const weeklyPreviewLabels = useMemo(() => getWeeklyPreviewLabels(dateConfig), [dateConfig]);
+  const weeklyPreview = useMemo(() => getWeeklyPreview(dateConfig), [dateConfig]);
 
   const handleChange = useCallback(
     (patch: Partial<FilterDefinition>) => {
@@ -725,12 +730,12 @@ function FilterEditor({
                 </div>
                 <div style={{ ...summaryStyle, display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <strong style={{ color: '#334155', fontSize: 12 }}>Dropdown preview</strong>
-                  {weeklyPreviewLabels.map((label) => (
+                  {weeklyPreview.labels.map((label) => (
                     <span key={label}>{label}</span>
                   ))}
                   <span style={{ color: '#64748b' }}>
-                    Showing {Math.min(weeklyPreviewLabels.length, WEEKLY_PREVIEW_OPTION_COUNT)} of{' '}
-                    {(dateConfig.weeksBack ?? 4) + (dateConfig.weeksForward ?? 0) + 1} weeks
+                    Showing {Math.min(weeklyPreview.labels.length, WEEKLY_PREVIEW_OPTION_COUNT)} of{' '}
+                    {weeklyPreview.total} weeks
                   </span>
                 </div>
               </>

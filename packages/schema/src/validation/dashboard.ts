@@ -148,7 +148,6 @@ const dateFilterConfigSchema = z
   .object({
     mode: z.enum(['range', 'preset', 'weekly']).optional(),
     presets: z.array(z.string().min(1)).optional(),
-    defaultPreset: z.string().min(1).optional(),
     allowCustomRange: z.boolean().optional(),
     weekStartsOn: z
       .union([
@@ -175,22 +174,6 @@ const dateFilterConfigSchema = z
         });
       }
     });
-
-    if (config.defaultPreset && !KNOWN_DATE_PRESET_VALUES.has(config.defaultPreset)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['defaultPreset'],
-        message: `Unknown default date preset: ${config.defaultPreset}`,
-      });
-    }
-
-    if (config.defaultPreset && config.presets && !config.presets.includes(config.defaultPreset)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['defaultPreset'],
-        message: 'defaultPreset must be included in presets when presets is set',
-      });
-    }
 
     if (config.mode === 'weekly' && generateWeeklyDateRangeOptions(config).length === 0) {
       ctx.addIssue({

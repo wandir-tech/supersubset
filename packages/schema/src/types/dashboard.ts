@@ -220,7 +220,6 @@ export interface FilterDefinition {
 export interface DateFilterConfig {
   mode?: 'range' | 'preset' | 'weekly';
   presets?: string[];
-  defaultPreset?: string;
   allowCustomRange?: boolean;
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   weeksBack?: number;

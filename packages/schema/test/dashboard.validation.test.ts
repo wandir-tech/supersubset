@@ -210,25 +210,6 @@ describe('dashboardDefinitionSchema date filters', () => {
     ).toBe(true);
   });
 
-  it('[filters-and-interactions.FILTER_BAR.4] rejects default presets outside the curated list', () => {
-    const result = dashboardDefinitionSchema.safeParse(
-      createDashboardWithDateConfig({
-        mode: 'preset',
-        presets: ['today'],
-        defaultPreset: 'last_7_days',
-      }),
-    );
-
-    expect(result.success).toBe(false);
-    expect(
-      result.success
-        ? false
-        : result.error.issues.some((issue) =>
-            issue.path.join('.').endsWith('dateConfig.defaultPreset'),
-          ),
-    ).toBe(true);
-  });
-
   it('[filters-and-interactions.FILTER_BAR.4] rejects weekly configs with no generated options', () => {
     const result = dashboardDefinitionSchema.safeParse(
       createDashboardWithDateConfig({

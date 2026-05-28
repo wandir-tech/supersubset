@@ -787,6 +787,27 @@ describe('FilterBuilderPanel', () => {
     expect(screen.getByTestId('filter-weeks-forward-f-date')).toBeTruthy();
   });
 
+  it('[filters-and-interactions.FILTER_BAR.4] counts weekly preview options after excluding current week', () => {
+    const filter: FilterDefinition = {
+      id: 'f-date',
+      type: 'date',
+      fieldRef: 'order_date',
+      datasetRef: 'ds-orders',
+      operator: 'between',
+      dateConfig: {
+        mode: 'weekly',
+        weeksBack: 1,
+        weeksForward: 1,
+        includeCurrentWeek: false,
+      },
+      scope: { type: 'global' },
+    };
+
+    render(<FilterBuilderPanel filters={[filter]} onChange={vi.fn()} datasets={[MOCK_DATASET]} />);
+
+    expect(screen.getByText('Showing 2 of 2 weeks')).toBeTruthy();
+  });
+
   it('lets authors choose a static option source and add authored options', () => {
     const onChange = vi.fn();
     const filter: FilterDefinition = {
