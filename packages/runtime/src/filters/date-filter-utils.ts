@@ -152,7 +152,8 @@ export function resolveRelativeDate(
     }
     case 'this_week': {
       const start = startOfWeek(today, weekStartsOn);
-      return { start: formatIsoDate(start), end: formatIsoDate(today) };
+      const end = config?.mode === 'weekly' ? addDays(start, 6) : today;
+      return { start: formatIsoDate(start), end: formatIsoDate(end) };
     }
     case 'last_week': {
       const currentStart = startOfWeek(today, weekStartsOn);
@@ -231,6 +232,12 @@ export function compileFilterDefinitionValue(
     return compileRangeLikeValue(definition.fieldRef, value);
   }
 
+  if (isDatePresetValue(value)) {
+    const resolved = resolveRelativeDate(value.preset, new Date(), definition.dateConfig);
+
+    return resolved ? compileRangeLikeValue(definition.fieldRef, resolved) : null;
+  }
+
   if (typeof value === 'string' && value.length === 0) {
     return null;
   }
@@ -255,9 +262,17 @@ export function isDateRangeLike(value: unknown): value is DateRangeValue {
   );
 }
 
+function isDatePresetValue(value: unknown): value is { preset: string } {
+  if (typeof value !== 'object' || value === null || !('preset' in value)) {
+    return false;
+  }
+
+  return typeof (value as { preset?: unknown }).preset === 'string';
+}
+
 function compileRangeLikeValue(fieldId: string, value: DateRangeValue): QueryFilter | null {
-  const lower = value.start ?? value.min;
-  const upper = value.end ?? value.max;
+  const lower = normalizeRangeBound(value.start ?? value.min);
+  const upper = normalizeRangeBound(value.end ?? value.max);
 
   if (lower == null && upper == null) {
     return null;
@@ -276,6 +291,16 @@ function compileRangeLikeValue(fieldId: string, value: DateRangeValue): QueryFil
     operator: lower != null ? 'gte' : 'lte',
     value: lower ?? upper,
   };
+}
+
+function normalizeRangeBound(
+  value: DateRangeValue['start'] | DateRangeValue['min'],
+): string | number | undefined {
+  if (value === '') {
+    return undefined;
+  }
+
+  return value;
 }
 
 function normalizeFilterOperator(operator: string): QueryFilterOperator | null {

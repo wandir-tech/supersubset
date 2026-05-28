@@ -90,9 +90,26 @@ const WEEKDAY_OPTIONS = [
 ] as const;
 
 const DATE_FILTER_MODE_OPTIONS = [
-  { value: 'preset', label: 'Preset or custom range' },
+  { value: 'preset', label: 'Relative date menu' },
   { value: 'range', label: 'Custom date range' },
   { value: 'weekly', label: 'Weekly range dropdown' },
+] as const;
+
+const DATE_DEFAULT_OPTIONS = [
+  { value: '', label: 'No default' },
+  { value: 'today', label: 'Today' },
+  { value: 'yesterday', label: 'Yesterday' },
+  { value: 'last_7_days', label: 'Last 7 days' },
+  { value: 'last_30_days', label: 'Last 30 days' },
+  { value: 'this_week', label: 'Current week' },
+  { value: 'last_week', label: 'Previous week' },
+  { value: 'custom', label: 'Specific date range' },
+] as const;
+
+const WEEKLY_DATE_DEFAULT_OPTIONS = [
+  { value: '', label: 'No default' },
+  { value: 'this_week', label: 'Current week' },
+  { value: 'last_week', label: 'Previous week' },
 ] as const;
 
 function isSelectFilterControlType(type: string): type is 'select' | 'multi-select' {
@@ -187,6 +204,59 @@ function asDateDefaultValue(value: unknown): { preset?: string; start?: string; 
   }
 
   return {};
+}
+
+function startOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, days: number): Date {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+function clampWeekday(
+  value: DateFilterConfig['weekStartsOn'] | undefined,
+): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
+  return value === 0 ||
+    value === 1 ||
+    value === 2 ||
+    value === 3 ||
+    value === 4 ||
+    value === 5 ||
+    value === 6
+    ? value
+    : 0;
+}
+
+function getWeekStart(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): Date {
+  const localDate = startOfLocalDay(date);
+  const dayOffset = (localDate.getDay() - weekStartsOn + 7) % 7;
+  return addDays(localDate, -dayOffset);
+}
+
+function formatShortDate(date: Date): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
+function getWeeklyPreviewLabels(config: DateFilterConfig): string[] {
+  const weekStartsOn = clampWeekday(config.weekStartsOn);
+  const currentWeekStart = getWeekStart(new Date(), weekStartsOn);
+  const weeksBack = config.weeksBack ?? 4;
+  const weeksForward = config.weeksForward ?? 0;
+  const labels: string[] = [];
+
+  for (let offset = -weeksBack; offset <= weeksForward; offset += 1) {
+    const start = addDays(currentWeekStart, offset * 7);
+    const end = addDays(start, 6);
+    labels.push(`${formatShortDate(start)} - ${formatShortDate(end)}`);
+  }
+
+  return labels.reverse().slice(0, 3);
 }
 
 function normalizeFilterControlType(type: string): SupportedFilterControlType {
@@ -286,15 +356,21 @@ function FilterEditor({
     () => normalizeFilterControlType(filter.type),
     [filter.type],
   );
-  const availableControlOptions = useMemo(
-    () =>
-      isDateField
-        ? FILTER_CONTROL_OPTIONS.filter((option) => option.value === 'date')
-        : FILTER_CONTROL_OPTIONS,
-    [isDateField],
-  );
   const dateConfig = filter.dateConfig ?? createDefaultDateConfig();
+  const dateMode = dateConfig.mode ?? 'preset';
   const defaultDateValue = asDateDefaultValue(filter.defaultValue);
+  const rawSelectedDateDefault =
+    defaultDateValue.start || defaultDateValue.end ? 'custom' : (defaultDateValue.preset ?? '');
+  const selectedDateDefault =
+    dateMode === 'weekly' &&
+    rawSelectedDateDefault !== 'this_week' &&
+    rawSelectedDateDefault !== 'last_week'
+      ? ''
+      : rawSelectedDateDefault;
+  const dateDefaultOptions =
+    dateMode === 'weekly' ? WEEKLY_DATE_DEFAULT_OPTIONS : DATE_DEFAULT_OPTIONS;
+  const shouldShowDateDefaultRange = dateMode === 'range' || selectedDateDefault === 'custom';
+  const weeklyPreviewLabels = useMemo(() => getWeeklyPreviewLabels(dateConfig), [dateConfig]);
 
   const handleChange = useCallback(
     (patch: Partial<FilterDefinition>) => {
@@ -335,6 +411,35 @@ function FilterEditor({
     fontWeight: 600,
     color: '#555',
     marginBottom: 2,
+  };
+  const sectionStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    padding: 10,
+    borderRadius: 6,
+    border: '1px solid #dbe4ee',
+    background: '#fff',
+  };
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: 0,
+    color: '#334155',
+  };
+  const hintStyle: React.CSSProperties = {
+    fontSize: 12,
+    lineHeight: 1.4,
+    color: '#64748b',
+  };
+  const summaryStyle: React.CSSProperties = {
+    padding: '7px 9px',
+    borderRadius: 4,
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    color: '#475569',
+    fontSize: 12,
+    lineHeight: 1.4,
   };
   const titleInputId = `ss-filter-title-${filter.id}`;
   const datasetSelectId = `ss-filter-dataset-${filter.id}`;
@@ -395,6 +500,33 @@ function FilterEditor({
       });
     },
     [filter.dateConfig, handleChange],
+  );
+
+  const handleDateModeChange = useCallback(
+    (mode: NonNullable<DateFilterConfig['mode']>) => {
+      const nextPatch: Partial<FilterDefinition> = {
+        type: 'date',
+        operator: 'between',
+        optionSource: undefined,
+        dateConfig: {
+          ...createDefaultDateConfig(mode),
+          ...(filter.dateConfig ?? {}),
+          mode,
+          allowCustomRange: mode !== 'weekly',
+        },
+      };
+
+      if (
+        mode === 'weekly' &&
+        defaultDateValue.preset !== 'this_week' &&
+        defaultDateValue.preset !== 'last_week'
+      ) {
+        nextPatch.defaultValue = undefined;
+      }
+
+      handleChange(nextPatch);
+    },
+    [defaultDateValue.preset, filter.dateConfig, handleChange],
   );
 
   const handleOptionSourceKindChange = useCallback(
@@ -555,139 +687,20 @@ function FilterEditor({
         </div>
       </div>
 
-      {/* Operator + Default value */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={operatorSelectId} style={labelStyle}>
-            Operator
-          </label>
-          <select
-            id={operatorSelectId}
-            name={`filter-operator-${filter.id}`}
-            value={filter.operator}
-            onChange={(e) => handleChange({ operator: e.target.value })}
-            data-testid={`filter-operator-${filter.id}`}
-            style={selectStyle}
-          >
-            {applicableOperators.map((op) => (
-              <option key={op.value} value={op.value}>
-                {op.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <label htmlFor={defaultInputId} style={labelStyle}>
-            Default value
-          </label>
-          {normalizedFilterType === 'date' ? (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <input
-                id={defaultInputId}
-                name={`filter-default-start-${filter.id}`}
-                aria-label="Default start date"
-                type="date"
-                value={defaultDateValue.start ?? ''}
-                onChange={(e) => {
-                  const nextStart = e.target.value || undefined;
-                  const nextValue = {
-                    ...defaultDateValue,
-                    start: nextStart,
-                  };
-                  handleChange({
-                    defaultValue:
-                      nextValue.start || nextValue.end || nextValue.preset ? nextValue : undefined,
-                  });
-                }}
-                data-testid={`filter-default-start-${filter.id}`}
-                style={selectStyle}
-              />
-              <input
-                name={`filter-default-end-${filter.id}`}
-                aria-label="Default end date"
-                type="date"
-                value={defaultDateValue.end ?? ''}
-                onChange={(e) => {
-                  const nextEnd = e.target.value || undefined;
-                  const nextValue = {
-                    ...defaultDateValue,
-                    end: nextEnd,
-                  };
-                  handleChange({
-                    defaultValue:
-                      nextValue.start || nextValue.end || nextValue.preset ? nextValue : undefined,
-                  });
-                }}
-                data-testid={`filter-default-end-${filter.id}`}
-                style={selectStyle}
-              />
-            </div>
-          ) : (
-            <input
-              id={defaultInputId}
-              name={`filter-default-${filter.id}`}
-              type="text"
-              value={filter.defaultValue != null ? String(filter.defaultValue) : ''}
-              onChange={(e) =>
-                handleChange({
-                  defaultValue: e.target.value || undefined,
-                })
-              }
-              placeholder="Optional default..."
-              data-testid={`filter-default-${filter.id}`}
-              style={selectStyle}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Filter type */}
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <label htmlFor={typeSelectId} style={labelStyle}>
-          Control type
-        </label>
-        <select
-          id={typeSelectId}
-          name={`filter-type-${filter.id}`}
-          value={normalizedFilterType}
-          onChange={(e) => handleControlTypeChange(e.target.value as SupportedFilterControlType)}
-          data-testid={`filter-type-${filter.id}`}
-          style={selectStyle}
-        >
-          {availableControlOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {normalizedFilterType === 'date' && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-            padding: 10,
-            borderRadius: 6,
-            border: '1px solid #dbe4ee',
-            background: '#fff',
-          }}
-        >
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {normalizedFilterType === 'date' ? (
+        <>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>End-user control</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               <label htmlFor={`ss-filter-date-mode-${filter.id}`} style={labelStyle}>
-                Date mode
+                Date filter style
               </label>
               <select
                 id={`ss-filter-date-mode-${filter.id}`}
                 name={`filter-date-mode-${filter.id}`}
-                value={dateConfig.mode ?? 'preset'}
+                value={dateMode}
                 onChange={(e) =>
-                  handleDateConfigChange({
-                    mode: e.target.value as NonNullable<DateFilterConfig['mode']>,
-                    allowCustomRange: e.target.value !== 'weekly',
-                  })
+                  handleDateModeChange(e.target.value as NonNullable<DateFilterConfig['mode']>)
                 }
                 data-testid={`filter-date-mode-${filter.id}`}
                 style={selectStyle}
@@ -699,90 +712,255 @@ function FilterEditor({
                 ))}
               </select>
             </div>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                gap: 6,
-                fontSize: 12,
-                color: '#475569',
-                paddingBottom: 5,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={dateConfig.allowCustomRange !== false}
-                onChange={(e) => handleDateConfigChange({ allowCustomRange: e.target.checked })}
-                data-testid={`filter-date-allow-custom-${filter.id}`}
-              />
-              Allow custom
-            </label>
+
+            {dateMode === 'weekly' && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <label htmlFor={`ss-filter-week-start-${filter.id}`} style={labelStyle}>
+                      Week starts on
+                    </label>
+                    <select
+                      id={`ss-filter-week-start-${filter.id}`}
+                      name={`filter-week-start-${filter.id}`}
+                      value={dateConfig.weekStartsOn ?? 0}
+                      onChange={(e) =>
+                        handleDateConfigChange({
+                          weekStartsOn: Number(e.target.value) as DateFilterConfig['weekStartsOn'],
+                        })
+                      }
+                      data-testid={`filter-week-start-${filter.id}`}
+                      style={selectStyle}
+                    >
+                      {WEEKDAY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label htmlFor={`ss-filter-weeks-back-${filter.id}`} style={labelStyle}>
+                        Weeks back
+                      </label>
+                      <input
+                        id={`ss-filter-weeks-back-${filter.id}`}
+                        name={`filter-weeks-back-${filter.id}`}
+                        type="number"
+                        min={0}
+                        value={dateConfig.weeksBack ?? 4}
+                        onChange={(e) =>
+                          handleDateConfigChange({
+                            weeksBack: coerceNonNegativeInteger(e.target.value),
+                          })
+                        }
+                        data-testid={`filter-weeks-back-${filter.id}`}
+                        style={selectStyle}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <label htmlFor={`ss-filter-weeks-forward-${filter.id}`} style={labelStyle}>
+                        Weeks forward
+                      </label>
+                      <input
+                        id={`ss-filter-weeks-forward-${filter.id}`}
+                        name={`filter-weeks-forward-${filter.id}`}
+                        type="number"
+                        min={0}
+                        value={dateConfig.weeksForward ?? 0}
+                        onChange={(e) =>
+                          handleDateConfigChange({
+                            weeksForward: coerceNonNegativeInteger(e.target.value),
+                          })
+                        }
+                        data-testid={`filter-weeks-forward-${filter.id}`}
+                        style={selectStyle}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ ...summaryStyle, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <strong style={{ color: '#334155', fontSize: 12 }}>Dropdown preview</strong>
+                  {weeklyPreviewLabels.map((label) => (
+                    <span key={label}>{label}</span>
+                  ))}
+                  <span style={{ color: '#64748b' }}>
+                    Showing {Math.min(weeklyPreviewLabels.length, 3)} of{' '}
+                    {(dateConfig.weeksBack ?? 4) + (dateConfig.weeksForward ?? 0) + 1} weeks
+                  </span>
+                </div>
+              </>
+            )}
+
+            {dateMode === 'preset' && (
+              <div style={hintStyle}>
+                End users choose from common relative ranges and, when enabled by the runtime, a
+                custom range.
+              </div>
+            )}
+
+            {dateMode === 'range' && (
+              <div style={hintStyle}>End users enter a start and end date.</div>
+            )}
           </div>
 
-          {(dateConfig.mode ?? 'preset') === 'weekly' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label htmlFor={`ss-filter-week-start-${filter.id}`} style={labelStyle}>
-                  Week starts on
-                </label>
-                <select
-                  id={`ss-filter-week-start-${filter.id}`}
-                  name={`filter-week-start-${filter.id}`}
-                  value={dateConfig.weekStartsOn ?? 0}
-                  onChange={(e) =>
-                    handleDateConfigChange({
-                      weekStartsOn: Number(e.target.value) as DateFilterConfig['weekStartsOn'],
-                    })
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>Default selection</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor={defaultInputId} style={labelStyle}>
+                Initial value
+              </label>
+              <select
+                id={defaultInputId}
+                name={`filter-default-preset-${filter.id}`}
+                value={selectedDateDefault}
+                onChange={(e) => {
+                  const nextDefault = e.target.value;
+
+                  if (!nextDefault) {
+                    handleChange({ defaultValue: undefined });
+                    return;
                   }
-                  data-testid={`filter-week-start-${filter.id}`}
-                  style={selectStyle}
-                >
-                  {WEEKDAY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label htmlFor={`ss-filter-weeks-back-${filter.id}`} style={labelStyle}>
-                  Weeks back
-                </label>
-                <input
-                  id={`ss-filter-weeks-back-${filter.id}`}
-                  name={`filter-weeks-back-${filter.id}`}
-                  type="number"
-                  min={0}
-                  value={dateConfig.weeksBack ?? 4}
-                  onChange={(e) =>
-                    handleDateConfigChange({ weeksBack: coerceNonNegativeInteger(e.target.value) })
+
+                  if (nextDefault === 'custom') {
+                    handleChange({
+                      defaultValue: {
+                        start: defaultDateValue.start,
+                        end: defaultDateValue.end,
+                      },
+                    });
+                    return;
                   }
-                  data-testid={`filter-weeks-back-${filter.id}`}
-                  style={selectStyle}
-                />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label htmlFor={`ss-filter-weeks-forward-${filter.id}`} style={labelStyle}>
-                  Weeks forward
-                </label>
-                <input
-                  id={`ss-filter-weeks-forward-${filter.id}`}
-                  name={`filter-weeks-forward-${filter.id}`}
-                  type="number"
-                  min={0}
-                  value={dateConfig.weeksForward ?? 0}
-                  onChange={(e) =>
-                    handleDateConfigChange({
-                      weeksForward: coerceNonNegativeInteger(e.target.value),
-                    })
-                  }
-                  data-testid={`filter-weeks-forward-${filter.id}`}
-                  style={selectStyle}
-                />
-              </div>
+
+                  handleChange({ defaultValue: { preset: nextDefault } });
+                }}
+                data-testid={`filter-date-default-${filter.id}`}
+                style={selectStyle}
+              >
+                {dateDefaultOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
-        </div>
+
+            {shouldShowDateDefaultRange && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  name={`filter-default-start-${filter.id}`}
+                  aria-label="Default start date"
+                  type="date"
+                  value={defaultDateValue.start ?? ''}
+                  onChange={(e) => {
+                    const nextStart = e.target.value || undefined;
+                    const nextValue = {
+                      ...defaultDateValue,
+                      preset: undefined,
+                      start: nextStart,
+                    };
+                    handleChange({
+                      defaultValue: nextValue.start || nextValue.end ? nextValue : undefined,
+                    });
+                  }}
+                  data-testid={`filter-default-start-${filter.id}`}
+                  style={selectStyle}
+                />
+                <input
+                  name={`filter-default-end-${filter.id}`}
+                  aria-label="Default end date"
+                  type="date"
+                  value={defaultDateValue.end ?? ''}
+                  onChange={(e) => {
+                    const nextEnd = e.target.value || undefined;
+                    const nextValue = {
+                      ...defaultDateValue,
+                      preset: undefined,
+                      end: nextEnd,
+                    };
+                    handleChange({
+                      defaultValue: nextValue.start || nextValue.end ? nextValue : undefined,
+                    });
+                  }}
+                  data-testid={`filter-default-end-${filter.id}`}
+                  style={selectStyle}
+                />
+              </div>
+            )}
+          </div>
+
+          <div style={summaryStyle} data-testid={`filter-date-query-behavior-${filter.id}`}>
+            Applies as: {field?.label ?? filter.fieldRef} between start and end.
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Operator + Default value */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor={operatorSelectId} style={labelStyle}>
+                Operator
+              </label>
+              <select
+                id={operatorSelectId}
+                name={`filter-operator-${filter.id}`}
+                value={filter.operator}
+                onChange={(e) => handleChange({ operator: e.target.value })}
+                data-testid={`filter-operator-${filter.id}`}
+                style={selectStyle}
+              >
+                {applicableOperators.map((op) => (
+                  <option key={op.value} value={op.value}>
+                    {op.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor={defaultInputId} style={labelStyle}>
+                Default value
+              </label>
+              <input
+                id={defaultInputId}
+                name={`filter-default-${filter.id}`}
+                type="text"
+                value={filter.defaultValue != null ? String(filter.defaultValue) : ''}
+                onChange={(e) =>
+                  handleChange({
+                    defaultValue: e.target.value || undefined,
+                  })
+                }
+                placeholder="Optional default..."
+                data-testid={`filter-default-${filter.id}`}
+                style={selectStyle}
+              />
+            </div>
+          </div>
+
+          {/* Filter type */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <label htmlFor={typeSelectId} style={labelStyle}>
+              Control type
+            </label>
+            <select
+              id={typeSelectId}
+              name={`filter-type-${filter.id}`}
+              value={normalizedFilterType}
+              onChange={(e) =>
+                handleControlTypeChange(e.target.value as SupportedFilterControlType)
+              }
+              data-testid={`filter-type-${filter.id}`}
+              style={selectStyle}
+            >
+              {FILTER_CONTROL_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
       {isSelectFilterControlType(normalizedFilterType) && !isDateField && (

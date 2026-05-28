@@ -475,6 +475,29 @@ describe('FilterBar', () => {
     });
   });
 
+  it('[filters-and-interactions.FILTER_BAR.5] respects relative weekly defaults', () => {
+    const currentWeek = generateWeeklyDateRangeOptions(weeklyDateFilter.dateConfig).find(
+      (option) => option.offset === 0,
+    );
+
+    expect(currentWeek).toBeDefined();
+    if (!currentWeek) {
+      throw new Error('Expected the weekly filter to include the current week');
+    }
+
+    const { container } = renderFilterBar([weeklyDateFilter], {
+      initialValues: { 'f-week': { preset: 'this_week' } },
+    });
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+
+    expect(select.value).toBe(currentWeek.value);
+    expect(compileFilterDefinitionValue(weeklyDateFilter, { preset: 'this_week' })).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: [currentWeek.start, currentWeek.end],
+    });
+  });
+
   it('[filters-and-interactions.FILTER_BAR.4] renders range-mode date filters as date inputs without a preset dropdown', () => {
     const onFilterChange = vi.fn();
     const { container } = renderFilterBar([rangeDateFilter], { onFilterChange });
@@ -497,6 +520,26 @@ describe('FilterBar', () => {
       operator: 'between',
       value: ['2026-05-01', '2026-05-31'],
     });
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] compiles partial date ranges as one-sided filters', () => {
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '2026-05-05', end: '' })).toEqual(
+      {
+        fieldId: 'created_at',
+        operator: 'gte',
+        value: '2026-05-05',
+      },
+    );
+
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '', end: '2026-05-31' })).toEqual(
+      {
+        fieldId: 'created_at',
+        operator: 'lte',
+        value: '2026-05-31',
+      },
+    );
+
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '', end: '' })).toBeNull();
   });
 
   it('calls setFilter via onFilterChange when text is typed', () => {

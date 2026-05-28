@@ -424,8 +424,18 @@ function renderDate(
       : '';
   const customEnd = isObj ? ((dateVal as { end?: string }).end ?? '') : '';
   const weeklyOptions = isWeekly ? generateWeeklyDateRangeOptions(dateConfig) : [];
+  const weeklyPresetOption =
+    isWeekly && isObj && !customStart && !customEnd
+      ? weeklyOptions.find((option) =>
+          preset === 'this_week'
+            ? option.offset === 0
+            : preset === 'last_week' && option.offset === -1,
+        )
+      : undefined;
   const selectedWeeklyValue =
-    isWeekly && isObj && customStart && customEnd ? `week:${customStart}:${customEnd}` : '';
+    isWeekly && isObj && customStart && customEnd
+      ? `week:${customStart}:${customEnd}`
+      : (weeklyPresetOption?.value ?? '');
   const presetOptions =
     dateConfig?.presets && dateConfig.presets.length > 0
       ? DATE_PRESETS.filter(

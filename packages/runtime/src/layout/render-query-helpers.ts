@@ -342,17 +342,25 @@ function compileCrossFilterValue(
   }
 
   if (isDateRangeLike(value)) {
-    const lower = value.start ?? value.min;
-    const upper = value.end ?? value.max;
+    const lower = normalizeCrossFilterRangeBound(value.start ?? value.min);
+    const upper = normalizeCrossFilterRangeBound(value.end ?? value.max);
 
     if (lower == null && upper == null) {
       return null;
     }
 
+    if (lower != null && upper != null) {
+      return {
+        fieldId: fieldRef,
+        operator: 'between',
+        value: [lower, upper],
+      };
+    }
+
     return {
       fieldId: fieldRef,
-      operator: 'between',
-      value: [lower, upper],
+      operator: lower != null ? 'gte' : 'lte',
+      value: lower ?? upper,
     };
   }
 
@@ -365,6 +373,16 @@ function compileCrossFilterValue(
     operator: 'eq',
     value,
   };
+}
+
+function normalizeCrossFilterRangeBound(
+  value: string | number | undefined,
+): string | number | undefined {
+  if (value === '') {
+    return undefined;
+  }
+
+  return value;
 }
 
 function normalizeAggregation(value: string | undefined): AggregationType | undefined {
