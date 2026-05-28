@@ -5,17 +5,18 @@
  * metadata from MetadataAdapter. The host app instantiates this and provides
  * the concrete adapters — Supersubset never connects to databases directly.
  */
-import type {
-  FilterOptionRequest,
-  FilterOptionResponse,
-  LogicalQuery,
-  QueryResult,
-  QueryAdapter,
-  MetadataAdapter,
-  NormalizedDataset,
-  QueryFilter,
-  QuerySort,
-  AggregationType,
+import {
+  resolveFilterOptionsWithAdapter,
+  type FilterOptionRequest,
+  type FilterOptionResponse,
+  type LogicalQuery,
+  type QueryResult,
+  type QueryAdapter,
+  type MetadataAdapter,
+  type NormalizedDataset,
+  type QueryFilter,
+  type QuerySort,
+  type AggregationType,
 } from '@supersubset/data-model';
 
 // Re-export key data-model types for convenience
@@ -85,12 +86,15 @@ export class QueryClient<TSource = unknown> {
     }
   }
 
-  /** Resolve filter options via the host adapter (if supported) */
+  /**
+   * Resolve filter options through the host adapter.
+   *
+   * Delegates to `queryAdapter.resolveFilterOptions` if implemented; otherwise
+   * falls back to a generic distinct-values query via the adapter's `execute`.
+   * See ADR-009 §2.
+   */
   async resolveFilterOptions(request: FilterOptionRequest): Promise<FilterOptionResponse> {
-    if (!this.queryAdapter.resolveFilterOptions) {
-      throw new Error('Query adapter does not support filter option resolution');
-    }
-    return this.queryAdapter.resolveFilterOptions(request);
+    return resolveFilterOptionsWithAdapter(this.queryAdapter, request);
   }
 
   /** Get all datasets from metadata adapter (cached) */

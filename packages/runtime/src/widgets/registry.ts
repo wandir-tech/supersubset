@@ -3,6 +3,7 @@
  * Chart packages register their components here; the runtime looks them up by type string.
  */
 import type { ComponentType } from 'react';
+import type { QueryAdapter } from '@supersubset/data-model';
 import type { DatasetDefinition, FilterDefinition } from '@supersubset/schema';
 import type { FilterValue } from '../filters/FilterEngine';
 import { FilterBarWidget } from './FilterBarWidget';
@@ -38,6 +39,11 @@ export interface WidgetProps {
   datasets?: DatasetDefinition[];
   /** Legacy static option values for authored filters */
   filterOptions?: Record<string, string[]>;
+  /**
+   * Host-provided query adapter, used by control widgets (e.g. FilterBar) to
+   * resolve field-backed options via `resolveFilterOptionsWithAdapter`.
+   */
+  queryAdapter?: QueryAdapter;
   /** Callback for widget interactions (click, hover, etc.) */
   onEvent?: (event: WidgetEvent) => void;
 }

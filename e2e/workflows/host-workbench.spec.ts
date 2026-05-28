@@ -248,9 +248,15 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('[host-integration.WORKBENCH_PATTERNS.3] imports a field-backed filter dashboard and shows the explicit unavailable state in viewer mode', async ({
+  test('[host-integration.WORKBENCH_PATTERNS.3] imports a field-backed filter dashboard and renders an explicit unavailable state for search-strategy filters in viewer mode', async ({
     page,
   }) => {
+    // Updated for ADR-012 / ADR-009 §3: the imported workbench dashboard
+    // authors the Region filter with `strategy: 'search'`, which must not
+    // auto-issue an unbounded distinct query on initial render. Until the
+    // typeahead input is wired, search-strategy filters render explicit
+    // unavailable state. `preload`-strategy filters and adapter-backed
+    // resolution are covered by unit tests.
     const fieldBackedDashboard = buildFieldBackedFilterWorkbenchDashboard();
     const requestUrls: string[] = [];
     const consoleErrors: string[] = [];
@@ -287,10 +293,12 @@ test.describe('Next.js Real Host Workbench', () => {
     const regionFilter = page.getByLabel('Region');
     const carrierFilter = page.getByLabel('Carrier');
 
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'unavailable');
     await expect(regionFilter).toBeDisabled();
-    await expect(regionFilter.locator('option')).toHaveText([
-      'Field-backed options require host support',
-    ]);
+    await expect(regionFilter.locator('option')).toHaveCount(1);
+    await expect(regionFilter.locator('option').first()).toContainText(
+      /Search-strategy field options require a typeahead input/,
+    );
     await expect(carrierFilter).toBeEnabled();
     await expect(carrierFilter.locator('option')).toContainText(['All', 'Atlas Air']);
 

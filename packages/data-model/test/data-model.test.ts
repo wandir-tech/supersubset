@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type {
   FilterOptionRequest,
   FilterOptionResponse,
@@ -17,6 +17,7 @@ import {
   PROBE_STANDARD_AGGREGATIONS,
   PROBE_STANDARD_FILTER_OPERATORS,
   PROBE_STANDARD_SOURCE_TYPES,
+  resolveFilterOptionsWithAdapter,
 } from '../src';
 
 describe('NormalizedDataset type', () => {
@@ -162,6 +163,146 @@ describe('QueryAdapter interface', () => {
     };
 
     const response = await mockQuery.resolveFilterOptions?.(request);
+    expect(response).toEqual(mockResponse);
+  });
+});
+
+describe('resolveFilterOptionsWithAdapter', () => {
+  function makeAdapter(
+    rows: Array<Record<string, unknown>>,
+    extra: Partial<QueryResult> = {},
+  ): QueryAdapter & { execute: ReturnType<typeof vi.fn> } {
+    return {
+      name: 'mock',
+      execute: vi.fn().mockResolvedValue({
+        columns: [{ fieldId: 'status', label: 'Status', dataType: 'string' }],
+        rows,
+        ...extra,
+      } satisfies QueryResult),
+    };
+  }
+
+  it('synthesizes a distinct LogicalQuery and returns dedup-defensive options', async () => {
+    const adapter = makeAdapter([
+      { status: 'open' },
+      { status: 'open' },
+      { status: 'closed' },
+      { status: null },
+    ]);
+
+    const response = await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      limit: 50,
+    });
+
+    expect(adapter.execute).toHaveBeenCalledWith({
+      datasetId: 'orders',
+      fields: [{ fieldId: 'status' }],
+      limit: 50,
+      distinct: true,
+    });
+    expect(response.options).toEqual([{ value: 'open' }, { value: 'closed' }]);
+  });
+
+  it('wraps a bare search term with % for contains semantics', async () => {
+    const adapter = makeAdapter([{ status: 'open' }]);
+
+    await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'op',
+    });
+
+    expect(adapter.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ fieldId: 'status', operator: 'like', value: '%op%' }],
+      }),
+    );
+  });
+
+  it('passes a search term through verbatim when the caller already uses wildcards', async () => {
+    const adapter = makeAdapter([{ status: 'op_en' }]);
+
+    await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'op_%',
+    });
+
+    expect(adapter.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ fieldId: 'status', operator: 'like', value: 'op_%' }],
+      }),
+    );
+  });
+
+  it('reports complete: false when the adapter signals truncation', async () => {
+    const adapter = makeAdapter([{ status: 'open' }, { status: 'closed' }], { truncated: true });
+
+    const response = await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      limit: 50,
+    });
+
+    expect(response.complete).toBe(false);
+  });
+
+  it('reports complete: true when the adapter signals no truncation, even if dedup shrank the list below limit', async () => {
+    const adapter = makeAdapter(
+      // 3 rows post-dedup → 2 distinct values, well below limit 50, but
+      // truncated:false means there are no more rows to fetch
+      [{ status: 'open' }, { status: 'open' }, { status: 'closed' }],
+      { truncated: false },
+    );
+
+    const response = await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      limit: 50,
+    });
+
+    expect(response.options).toHaveLength(2);
+    expect(response.complete).toBe(true);
+  });
+
+  it('falls back to the length heuristic when the adapter does not set truncated', async () => {
+    const adapter = makeAdapter([{ status: 'open' }, { status: 'closed' }]);
+
+    const response = await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+      limit: 50,
+    });
+
+    expect(response.complete).toBe(true);
+  });
+
+  it('delegates to the adapter when resolveFilterOptions is implemented', async () => {
+    const mockResponse: FilterOptionResponse = {
+      options: [{ value: 'curated' }],
+      complete: true,
+    };
+    const adapter: QueryAdapter = {
+      name: 'curated',
+      execute: vi.fn(),
+      resolveFilterOptions: vi.fn().mockResolvedValue(mockResponse),
+    };
+
+    const response = await resolveFilterOptionsWithAdapter(adapter, {
+      filterId: 'f',
+      datasetId: 'orders',
+      fieldId: 'status',
+    });
+
+    expect(adapter.execute).not.toHaveBeenCalled();
     expect(response).toEqual(mockResponse);
   });
 });

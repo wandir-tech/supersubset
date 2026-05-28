@@ -123,9 +123,14 @@ test.describe('Host Integration Workflow', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('[interface-behavior.EMPTY_STATES.2] Vite host shows an explicit unavailable state when Region is authored with field-backed options', async ({
+  test('[interface-behavior.EMPTY_STATES.2] Vite host renders explicit unavailable state for search-strategy field-backed options (no typeahead UI yet)', async ({
     page,
   }) => {
+    // Updated for ADR-012 / ADR-009 §3: field-backed options with the default
+    // `strategy: 'search'` must not auto-issue an unbounded distinct query on
+    // initial render — the runtime renders an explicit unavailable state
+    // until a typeahead input is wired. `strategy: 'preload'` is the safe
+    // path for low-cardinality fields and is covered by unit tests.
     const consoleErrors: string[] = [];
 
     page.on('console', (msg) => {
@@ -149,10 +154,11 @@ test.describe('Host Integration Workflow', () => {
     await page.getByRole('button', { name: 'Viewer' }).click();
 
     const regionFilter = page.getByLabel('Region');
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'unavailable');
     await expect(regionFilter).toBeDisabled();
     await expect(regionFilter.locator('option')).toHaveCount(1);
-    await expect(regionFilter.locator('option').first()).toHaveText(
-      'Field-backed options require host support',
+    await expect(regionFilter.locator('option').first()).toContainText(
+      /Search-strategy field options require a typeahead input/,
     );
 
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);

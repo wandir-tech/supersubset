@@ -11,6 +11,7 @@
       "@supersubset/theme",
       "@supersubset/data-model",
       "@supersubset/query-client",
+      "@supersubset/query-sql",
       "@supersubset/cli",
       "@supersubset/adapter-prisma",
       "@supersubset/adapter-sql",

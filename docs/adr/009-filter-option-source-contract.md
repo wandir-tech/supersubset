@@ -79,9 +79,9 @@ Implications:
 - `kind: 'static'` is first-class, not a temporary workaround
 - `completeness: 'curated'` explicitly means the authored list is an intentional subset rather than the full domain
 
-### 2. Add a standardized host-owned option resolver for dynamic sources
+### 2. Standardize an optional host-owned option resolver, with a generic fallback
 
-For `optionSource.kind = 'field'`, Supersubset should use an explicit host-owned resolution method instead of overloading undocumented props.
+For `optionSource.kind = 'field'`, Supersubset defines an explicit `resolveFilterOptions` capability on `QueryAdapter`. Hosts MAY implement it for curation, authorization, or backend-specific lookup paths. When a host does not implement it, the runtime falls back to synthesizing a distinct-values query through the existing `execute(LogicalQuery)` method that every adapter must already provide.
 
 Illustrative data-model contract:
 
@@ -106,14 +106,24 @@ interface QueryAdapter {
   readonly name: string;
   execute(query: LogicalQuery): Promise<QueryResult>;
   cancel?(queryId: string): void;
+  // Optional. If absent, Supersubset synthesizes a LogicalQuery via execute().
   resolveFilterOptions?(request: FilterOptionRequest): Promise<FilterOptionResponse>;
 }
 ```
 
-This remains host-owned and backend-agnostic:
+The generic fallback (`resolveFilterOptionsWithAdapter` in `@supersubset/data-model`) builds a `LogicalQuery` selecting the single requested field with no aggregation (which produces an implicit `GROUP BY` and therefore distinct values), applies `request.limit`, and translates `request.search` to a `like` filter. Hosts that already expose a general LogicalQuery executor (DuckDB, Prisma, SQL, dbt) get field-backed filters for free with zero additional integration code.
+
+Hosts SHOULD implement `resolveFilterOptions` themselves when they need:
+
+- **curation** — mapping raw enum values to human labels, or restricting to a curated subset of the field's domain
+- **authorization** — scoping distinct results to values the current user is allowed to see
+- **alternative backends** — fetching options from a lookup service that is not the analytics warehouse
+- **search semantics** — fuzzier matching than the generic `like` translation
+
+This keeps the contract host-owned and backend-agnostic, while eliminating boilerplate for the common case:
 
 - Supersubset does not prescribe SQL, Prisma, dbt, or warehouse semantics
-- the host decides how to authorize and execute the lookup
+- the host can override when it needs to authorize or curate the lookup
 - the runtime gets one stable capability instead of private app wiring
 
 ### 3. Dynamic option resolution must be search-first for large-cardinality fields
@@ -152,13 +162,13 @@ The current runtime prop should remain temporarily so existing hosts do not brea
 Resolution order should become:
 
 1. `FilterDefinition.optionSource.kind = 'static'`
-2. `FilterDefinition.optionSource.kind = 'field'` via `resolveFilterOptions`
+2. `FilterDefinition.optionSource.kind = 'field'` via `queryAdapter.resolveFilterOptions` if implemented, otherwise via the `resolveFilterOptionsWithAdapter` fallback (synthesized LogicalQuery through `execute`)
 3. deprecated legacy `filterOptions` prop
-4. explicit unavailable state
+4. explicit unavailable state (only when no adapter is in scope at all)
 
 If a select filter has no valid option source, the runtime should render a clear unavailable state and the designer should warn during authoring. It should not silently render an empty dropdown that looks valid but cannot function.
 
-During the current rollout, field-backed runtime resolution remains tracked separately in [Issue #121](https://github.com/wandir-tech/supersubset/issues/121). Until that runtime path is wired, unsupported select-like filters must render as unavailable rather than appearing interactive with no usable options.
+Field-backed runtime resolution was originally tracked in [Issue #121](https://github.com/wandir-tech/supersubset/issues/121) as a separate workstream because the runtime had no path to call into the host. That gap closes with the resolver-or-fallback wiring described in §2.
 
 ### 6. Keep option-source semantics on the filter, not only on dataset metadata
 
@@ -186,7 +196,7 @@ Therefore the authored filter definition owns the option-source decision, while 
 
 - The schema and query contracts both gain new surface area.
 - The runtime will need async control states such as loading, empty, unavailable, and paginated search.
-- Hosts that want dynamic select filters must implement another optional capability beyond `execute()`.
+- Hosts that need curation, authorization, or non-warehouse lookups for dynamic select filters must implement the optional `resolveFilterOptions` capability beyond `execute()`. Hosts that only need raw distinct values from the same backend get them through the generic fallback with no extra integration.
 - Designer UX becomes slightly more complex because authors must choose or confirm an option-source strategy.
 
 ### Neutral
