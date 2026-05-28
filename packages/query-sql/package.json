@@ -1,6 +1,6 @@
 {
   "name": "@supersubset/query-sql",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "SQL QueryAdapter and translator for Supersubset — turns LogicalQuery into SQL so SQL-backed hosts don't have to.",
   "license": "Apache-2.0",
   "author": "Wandir Technologies Inc.",
