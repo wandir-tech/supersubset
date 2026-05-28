@@ -4,6 +4,10 @@ import type { QueryAdapter } from '@supersubset/data-model';
 import { FilterBar } from '../src/components/FilterBar';
 import { FilterProvider } from '../src/filters/FilterEngine';
 import type { FilterDefinition } from '@supersubset/schema';
+import {
+  compileFilterDefinitionValue,
+  generateWeeklyDateRangeOptions,
+} from '../src/filters/date-filter-utils';
 
 // Helper: render FilterBar within FilterProvider
 function renderFilterBar(
@@ -76,6 +80,31 @@ const dateFilter: FilterDefinition = {
   datasetRef: 'ds-1',
   operator: 'gte',
   scope: { type: 'page', pageId: 'page-1' },
+};
+
+const weeklyDateFilter: FilterDefinition = {
+  ...dateFilter,
+  id: 'f-week',
+  title: 'Week',
+  operator: 'between',
+  dateConfig: {
+    mode: 'weekly',
+    weekStartsOn: 1,
+    weeksBack: 1,
+    weeksForward: 1,
+    includeCurrentWeek: true,
+  },
+};
+
+const rangeDateFilter: FilterDefinition = {
+  ...dateFilter,
+  id: 'f-date-range',
+  title: 'Created range',
+  operator: 'between',
+  dateConfig: {
+    mode: 'range',
+    allowCustomRange: true,
+  },
 };
 
 const multiSelectFilter: FilterDefinition = {
@@ -394,6 +423,80 @@ describe('FilterBar', () => {
     expect(options!.length).toBeGreaterThan(5);
     // First option is "All time"
     expect(options![0].textContent).toBe('All time');
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.5] renders authored weekly date range options', () => {
+    const options = generateWeeklyDateRangeOptions(
+      weeklyDateFilter.dateConfig,
+      new Date(2026, 4, 28),
+    );
+
+    expect(options).toEqual([
+      expect.objectContaining({ start: '2026-05-18', end: '2026-05-24', offset: -1 }),
+      expect.objectContaining({ start: '2026-05-25', end: '2026-05-31', offset: 0 }),
+      expect.objectContaining({ start: '2026-06-01', end: '2026-06-07', offset: 1 }),
+    ]);
+
+    const { container } = renderFilterBar([weeklyDateFilter]);
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+    const labels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(labels[0]).toBe('All time');
+    expect(labels).toContain('May 25 - May 31');
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.5] emits weekly range values that compile to logical query ranges', () => {
+    const onFilterChange = vi.fn();
+    const { container } = renderFilterBar([weeklyDateFilter], { onFilterChange });
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+    const firstWeeklyValue = Array.from(select.options).find((option) =>
+      option.value.startsWith('week:'),
+    )?.value;
+
+    expect(firstWeeklyValue).toBeTruthy();
+    fireEvent.change(select, { target: { value: firstWeeklyValue } });
+
+    const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
+    const filterValue = lastCall.values['f-week'];
+
+    expect(filterValue).toEqual(
+      expect.objectContaining({
+        preset: firstWeeklyValue,
+        start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    );
+    expect(compileFilterDefinitionValue(weeklyDateFilter, filterValue)).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: [filterValue.start, filterValue.end],
+    });
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] renders range-mode date filters as date inputs without a preset dropdown', () => {
+    const onFilterChange = vi.fn();
+    const { container } = renderFilterBar([rangeDateFilter], { onFilterChange });
+
+    expect(container.querySelector('.ss-filter-date-preset')).toBeNull();
+
+    const startInput = container.querySelector(
+      'input[name="f-date-range-start"]',
+    ) as HTMLInputElement;
+    const endInput = container.querySelector('input[name="f-date-range-end"]') as HTMLInputElement;
+    expect(startInput?.type).toBe('date');
+    expect(endInput?.type).toBe('date');
+
+    fireEvent.change(startInput, { target: { value: '2026-05-01' } });
+    fireEvent.change(endInput, { target: { value: '2026-05-31' } });
+
+    const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
+    expect(compileFilterDefinitionValue(rangeDateFilter, lastCall.values['f-date-range'])).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: ['2026-05-01', '2026-05-31'],
+    });
   });
 
   it('calls setFilter via onFilterChange when text is typed', () => {

@@ -140,6 +140,27 @@ const filterOptionSourceSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
+const dateFilterConfigSchema = z.object({
+  mode: z.enum(['range', 'preset', 'weekly']).optional(),
+  presets: z.array(z.string().min(1)).optional(),
+  defaultPreset: z.string().min(1).optional(),
+  allowCustomRange: z.boolean().optional(),
+  weekStartsOn: z
+    .union([
+      z.literal(0),
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.literal(6),
+    ])
+    .optional(),
+  weeksBack: z.number().int().min(0).optional(),
+  weeksForward: z.number().int().min(0).optional(),
+  includeCurrentWeek: z.boolean().optional(),
+});
+
 const filterDefinitionSchema = z.object({
   id: z.string().min(1),
   title: z.string().optional(),
@@ -148,6 +169,7 @@ const filterDefinitionSchema = z.object({
   datasetRef: z.string().min(1),
   operator: z.string().min(1),
   defaultValue: z.unknown().optional(),
+  dateConfig: dateFilterConfigSchema.optional(),
   optionSource: filterOptionSourceSchema.optional(),
   scope: filterScopeSchema,
 });
@@ -405,6 +427,7 @@ export {
   dataBindingSchema,
   fieldBindingSchema,
   filterDefinitionSchema,
+  dateFilterConfigSchema,
   filterOptionDefinitionSchema,
   filterOptionSourceSchema,
   filterScopeSchema,

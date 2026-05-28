@@ -714,6 +714,66 @@ describe('FilterBuilderPanel', () => {
     expect(optionValues).toEqual(['select', 'multi-select', 'range', 'date', 'text']);
   });
 
+  it('[filters-and-interactions.FILTER_BAR.4] switches date fields to date-aware controls', () => {
+    const onChange = vi.fn();
+    const filter: FilterDefinition = {
+      id: 'f-date',
+      type: 'select',
+      fieldRef: 'region',
+      datasetRef: 'ds-orders',
+      operator: 'equals',
+      scope: { type: 'global' },
+    };
+
+    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+
+    fireEvent.change(screen.getByTestId('filter-field-f-date'), {
+      target: { value: 'order_date' },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        fieldRef: 'order_date',
+        type: 'date',
+        operator: 'between',
+        optionSource: undefined,
+        dateConfig: expect.objectContaining({ mode: 'preset' }),
+      }),
+    ]);
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] hides select option sourcing for date filters and exposes weekly settings', () => {
+    const filter: FilterDefinition = {
+      id: 'f-date',
+      type: 'date',
+      fieldRef: 'order_date',
+      datasetRef: 'ds-orders',
+      operator: 'between',
+      dateConfig: {
+        mode: 'weekly',
+        weekStartsOn: 1,
+        weeksBack: 2,
+        weeksForward: 1,
+        includeCurrentWeek: true,
+      },
+      scope: { type: 'global' },
+    };
+
+    render(<FilterBuilderPanel filters={[filter]} onChange={vi.fn()} datasets={[MOCK_DATASET]} />);
+
+    expect(screen.queryByTestId('filter-option-source-kind-f-date')).toBeNull();
+    expect(screen.getByTestId('filter-date-mode-f-date')).toBeTruthy();
+    expect(screen.getByTestId('filter-week-start-f-date')).toBeTruthy();
+    expect(screen.getByTestId('filter-weeks-back-f-date')).toBeTruthy();
+    expect(screen.getByTestId('filter-weeks-forward-f-date')).toBeTruthy();
+
+    const typeValues = Array.from(
+      screen.getByTestId('filter-type-f-date').querySelectorAll('option'),
+    ).map((option) => option.getAttribute('value'));
+
+    expect(typeValues).toEqual(['date']);
+  });
+
   it('lets authors choose a static option source and add authored options', () => {
     const onChange = vi.fn();
     const filter: FilterDefinition = {

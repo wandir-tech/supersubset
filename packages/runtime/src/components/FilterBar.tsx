@@ -10,6 +10,11 @@ import type {
   FilterOptionDefinition,
 } from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
+import {
+  DATE_PRESETS,
+  generateWeeklyDateRangeOptions,
+  resolveRelativeDate,
+} from '../filters/date-filter-utils';
 
 // ─── Styles ──────────────────────────────────────────────────
 
@@ -218,7 +223,7 @@ function FilterControl({
       { className: 'ss-filter-label', style: LABEL_STYLE, htmlFor: `${inputIdBase}-primary` },
       label,
     ),
-    renderInput(filter.type, value, onChangeValue, resolvedOptionsState, {
+    renderInput(filter, value, onChangeValue, resolvedOptionsState, {
       inputIdBase,
       inputName: filter.id,
       label,
@@ -227,13 +232,13 @@ function FilterControl({
 }
 
 function renderInput(
-  type: string,
+  filter: FilterDefinition,
   value: unknown,
   onChange: (value: unknown) => void,
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
-  switch (type) {
+  switch (filter.type) {
     case 'select':
       return renderSelect(value, onChange, optionsState, metadata);
     case 'multi-select':
@@ -243,7 +248,7 @@ function renderInput(
     case 'range':
       return renderRange(value, onChange, metadata);
     case 'date':
-      return renderDate(value, onChange, metadata);
+      return renderDate(filter, value, onChange, metadata);
     default:
       return renderText(value, onChange, metadata);
   }
@@ -395,164 +400,95 @@ function renderRange(
   );
 }
 
-// ─── Relative Date Presets ────────────────────────────────────
-
-export const DATE_PRESETS: { value: string; label: string }[] = [
-  { value: '', label: 'All time' },
-  { value: 'today', label: 'Today' },
-  { value: 'yesterday', label: 'Yesterday' },
-  { value: 'this_week', label: 'This week' },
-  { value: 'last_week', label: 'Last week' },
-  { value: 'this_month', label: 'This month' },
-  { value: 'last_month', label: 'Last month' },
-  { value: 'this_quarter', label: 'This quarter' },
-  { value: 'last_quarter', label: 'Last quarter' },
-  { value: 'this_year', label: 'This year' },
-  { value: 'last_year', label: 'Last year' },
-  { value: 'last_7_days', label: 'Last 7 days' },
-  { value: 'last_30_days', label: 'Last 30 days' },
-  { value: 'last_90_days', label: 'Last 90 days' },
-  { value: 'last_365_days', label: 'Last 365 days' },
-  { value: 'custom', label: 'Custom range…' },
-];
-
-/**
- * Resolve a relative date preset to a concrete { start, end } range (ISO strings).
- * Returns undefined for empty/unknown presets.
- */
-export function resolveRelativeDate(
-  preset: string,
-  now = new Date(),
-): { start: string; end: string } | undefined {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-
-  switch (preset) {
-    case 'today':
-      return { start: iso(today), end: iso(today) };
-    case 'yesterday': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 1);
-      return { start: iso(d), end: iso(d) };
-    }
-    case 'this_week': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - d.getDay());
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_week': {
-      const end = new Date(today);
-      end.setDate(end.getDate() - end.getDay() - 1);
-      const start = new Date(end);
-      start.setDate(start.getDate() - 6);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_month':
-      return { start: iso(new Date(today.getFullYear(), today.getMonth(), 1)), end: iso(today) };
-    case 'last_month': {
-      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const end = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_quarter': {
-      const q = Math.floor(today.getMonth() / 3);
-      return { start: iso(new Date(today.getFullYear(), q * 3, 1)), end: iso(today) };
-    }
-    case 'last_quarter': {
-      const q = Math.floor(today.getMonth() / 3);
-      const start = new Date(today.getFullYear(), (q - 1) * 3, 1);
-      const end = new Date(today.getFullYear(), q * 3, 0);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_year':
-      return { start: iso(new Date(today.getFullYear(), 0, 1)), end: iso(today) };
-    case 'last_year':
-      return {
-        start: iso(new Date(today.getFullYear() - 1, 0, 1)),
-        end: iso(new Date(today.getFullYear() - 1, 11, 31)),
-      };
-    case 'last_7_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 6);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_30_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 29);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_90_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 89);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_365_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 364);
-      return { start: iso(d), end: iso(today) };
-    }
-    default:
-      return undefined;
-  }
-}
-
 function renderDate(
+  filter: FilterDefinition,
   value: unknown,
   onChange: (value: unknown) => void,
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
   const dateVal = value as { preset?: string; start?: string; end?: string } | string | undefined;
   const isObj = typeof dateVal === 'object' && dateVal !== null;
+  const dateConfig = filter.dateConfig;
+  const isWeekly = dateConfig?.mode === 'weekly';
+  const isRangeMode = dateConfig?.mode === 'range';
+  const allowCustomRange = dateConfig?.allowCustomRange !== false;
   const preset = isObj ? ((dateVal as { preset?: string }).preset ?? '') : '';
-  const isCustom = preset === 'custom';
+  const isCustom =
+    isRangeMode ||
+    (allowCustomRange &&
+      (preset === 'custom' || (!isWeekly && !preset && typeof dateVal === 'string')));
   const customStart = isObj
     ? ((dateVal as { start?: string }).start ?? '')
     : typeof dateVal === 'string'
       ? dateVal
       : '';
   const customEnd = isObj ? ((dateVal as { end?: string }).end ?? '') : '';
+  const weeklyOptions = isWeekly ? generateWeeklyDateRangeOptions(dateConfig) : [];
+  const selectedWeeklyValue =
+    isWeekly && isObj && customStart && customEnd ? `week:${customStart}:${customEnd}` : '';
+  const presetOptions =
+    dateConfig?.presets && dateConfig.presets.length > 0
+      ? DATE_PRESETS.filter(
+          (presetOption) =>
+            presetOption.value === '' ||
+            presetOption.value === 'custom' ||
+            dateConfig.presets?.includes(presetOption.value),
+        )
+      : DATE_PRESETS;
 
   return createElement(
     'div',
     { className: 'ss-filter-date', style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-    // Preset dropdown
-    createElement(
-      'select',
-      {
-        className: 'ss-filter-date-preset',
-        id: `${metadata.inputIdBase}-primary`,
-        name: `${metadata.inputName}-preset`,
-        style: INPUT_STYLE,
-        value: preset,
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const v = e.target.value;
-          if (v === '') {
-            onChange(undefined);
-          } else if (v === 'custom') {
-            onChange({ preset: 'custom', start: '', end: '' });
-          } else {
-            const resolved = resolveRelativeDate(v);
-            onChange({ preset: v, ...(resolved ?? {}) });
-          }
-        },
-      },
-      ...DATE_PRESETS.map((p) =>
-        createElement('option', { key: p.value, value: p.value }, p.label),
-      ),
-    ),
-    // Custom date pickers (only when "Custom range…" is selected)
+    isRangeMode
+      ? null
+      : createElement(
+          'select',
+          {
+            className: 'ss-filter-date-preset',
+            id: `${metadata.inputIdBase}-primary`,
+            name: `${metadata.inputName}-preset`,
+            style: INPUT_STYLE,
+            value: isWeekly ? selectedWeeklyValue : preset,
+            onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
+              const v = e.target.value;
+              if (v === '') {
+                onChange(undefined);
+              } else if (isWeekly) {
+                const option = weeklyOptions.find((candidate) => candidate.value === v);
+                if (option) {
+                  onChange({ preset: option.value, start: option.start, end: option.end });
+                }
+              } else if (v === 'custom') {
+                onChange({ preset: 'custom', start: '', end: '' });
+              } else {
+                const resolved = resolveRelativeDate(v, new Date(), dateConfig);
+                onChange({ preset: v, ...(resolved ?? {}) });
+              }
+            },
+          },
+          isWeekly ? createElement('option', { value: '' }, 'All time') : null,
+          ...(isWeekly ? weeklyOptions : presetOptions).map((p) =>
+            createElement('option', { key: p.value, value: p.value }, p.label),
+          ),
+        ),
+    // Custom date pickers (only when custom ranges are enabled and selected)
     isCustom
       ? createElement(
           'div',
           { style: RANGE_STYLE },
           createElement('input', {
+            id: isRangeMode ? `${metadata.inputIdBase}-primary` : undefined,
             name: `${metadata.inputName}-start`,
             'aria-label': `${metadata.label} start date`,
             type: 'date',
             style: { ...INPUT_STYLE, minWidth: '130px' },
             value: customStart,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-              onChange({ preset: 'custom', start: e.target.value, end: customEnd });
+              onChange({
+                ...(isRangeMode ? {} : { preset: 'custom' }),
+                start: e.target.value,
+                end: customEnd,
+              });
             },
           }),
           createElement('span', { style: { color: '#9ca3af' } }, '–'),
@@ -563,7 +499,11 @@ function renderDate(
             style: { ...INPUT_STYLE, minWidth: '130px' },
             value: customEnd,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-              onChange({ preset: 'custom', start: customStart, end: e.target.value });
+              onChange({
+                ...(isRangeMode ? {} : { preset: 'custom' }),
+                start: customStart,
+                end: e.target.value,
+              });
             },
           }),
         )

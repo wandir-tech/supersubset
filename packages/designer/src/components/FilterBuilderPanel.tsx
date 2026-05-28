@@ -12,6 +12,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { NormalizedDataset } from '@supersubset/data-model';
 import type {
+  DateFilterConfig,
   FilterDefinition,
   FilterOptionDefinition,
   FilterOptionSource,
@@ -78,6 +79,22 @@ const SELECT_FILTER_CONTROL_TYPES = new Set<SupportedFilterControlType>(['select
 type StaticFilterOptionSource = Extract<FilterOptionSource, { kind: 'static' }>;
 type FieldFilterOptionSource = Extract<FilterOptionSource, { kind: 'field' }>;
 
+const WEEKDAY_OPTIONS = [
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+] as const;
+
+const DATE_FILTER_MODE_OPTIONS = [
+  { value: 'preset', label: 'Preset or custom range' },
+  { value: 'range', label: 'Custom date range' },
+  { value: 'weekly', label: 'Weekly range dropdown' },
+] as const;
+
 function isSelectFilterControlType(type: string): type is 'select' | 'multi-select' {
   return SELECT_FILTER_CONTROL_TYPES.has(type as SupportedFilterControlType);
 }
@@ -114,6 +131,17 @@ function createFieldOptionSource(): FieldFilterOptionSource {
   };
 }
 
+function createDefaultDateConfig(mode: DateFilterConfig['mode'] = 'preset'): DateFilterConfig {
+  return {
+    mode,
+    allowCustomRange: mode !== 'weekly',
+    weekStartsOn: 0,
+    weeksBack: 4,
+    weeksForward: 0,
+    includeCurrentWeek: true,
+  };
+}
+
 function coercePositiveInteger(value: string): number | undefined {
   if (value.trim().length === 0) {
     return undefined;
@@ -125,6 +153,40 @@ function coercePositiveInteger(value: string): number | undefined {
   }
 
   return parsed;
+}
+
+function coerceNonNegativeInteger(value: string): number | undefined {
+  if (value.trim().length === 0) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
+function isDateDataType(dataType: string | undefined): boolean {
+  return dataType === 'date' || dataType === 'datetime';
+}
+
+function asDateDefaultValue(value: unknown): { preset?: string; start?: string; end?: string } {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    const candidate = value as { preset?: unknown; start?: unknown; end?: unknown };
+    return {
+      preset: typeof candidate.preset === 'string' ? candidate.preset : undefined,
+      start: typeof candidate.start === 'string' ? candidate.start : undefined,
+      end: typeof candidate.end === 'string' ? candidate.end : undefined,
+    };
+  }
+
+  if (typeof value === 'string' && value.length > 0) {
+    return { start: value };
+  }
+
+  return {};
 }
 
 function normalizeFilterControlType(type: string): SupportedFilterControlType {
@@ -219,10 +281,20 @@ function FilterEditor({
     const dt = field?.dataType ?? 'string';
     return FILTER_OPERATORS.filter((op) => op.types.includes(dt));
   }, [field]);
+  const isDateField = isDateDataType(field?.dataType);
   const normalizedFilterType = useMemo(
     () => normalizeFilterControlType(filter.type),
     [filter.type],
   );
+  const availableControlOptions = useMemo(
+    () =>
+      isDateField
+        ? FILTER_CONTROL_OPTIONS.filter((option) => option.value === 'date')
+        : FILTER_CONTROL_OPTIONS,
+    [isDateField],
+  );
+  const dateConfig = filter.dateConfig ?? createDefaultDateConfig();
+  const defaultDateValue = asDateDefaultValue(filter.defaultValue);
 
   const handleChange = useCallback(
     (patch: Partial<FilterDefinition>) => {
@@ -290,10 +362,39 @@ function FilterEditor({
       if (nextType === 'multi-select' && !['in', 'not_in'].includes(filter.operator)) {
         nextPatch.operator = 'in';
       }
+      if (nextType === 'date') {
+        nextPatch.operator = 'between';
+        nextPatch.optionSource = undefined;
+        nextPatch.dateConfig = filter.dateConfig ?? createDefaultDateConfig();
+      }
 
       handleChange(nextPatch);
     },
-    [filter.operator, handleChange],
+    [filter.dateConfig, filter.operator, handleChange],
+  );
+
+  useEffect(() => {
+    if (isDateField && normalizedFilterType !== 'date') {
+      handleChange({
+        type: 'date',
+        operator: 'between',
+        optionSource: undefined,
+        dateConfig: filter.dateConfig ?? createDefaultDateConfig(),
+      });
+    }
+  }, [filter.dateConfig, handleChange, isDateField, normalizedFilterType]);
+
+  const handleDateConfigChange = useCallback(
+    (patch: Partial<DateFilterConfig>) => {
+      handleChange({
+        dateConfig: {
+          ...createDefaultDateConfig(),
+          ...(filter.dateConfig ?? {}),
+          ...patch,
+        },
+      });
+    },
+    [filter.dateConfig, handleChange],
   );
 
   const handleOptionSourceKindChange = useCallback(
@@ -424,7 +525,22 @@ function FilterEditor({
             id={fieldSelectId}
             name={`filter-field-${filter.id}`}
             value={filter.fieldRef}
-            onChange={(e) => handleChange({ fieldRef: e.target.value })}
+            onChange={(e) => {
+              const nextFieldRef = e.target.value;
+              const nextField = dataset?.fields.find((f) => f.id === nextFieldRef);
+              const nextIsDateField = isDateDataType(nextField?.dataType);
+              handleChange({
+                fieldRef: nextFieldRef,
+                ...(nextIsDateField
+                  ? {
+                      type: 'date',
+                      operator: 'between',
+                      optionSource: undefined,
+                      dateConfig: filter.dateConfig ?? createDefaultDateConfig(),
+                    }
+                  : {}),
+              });
+            }}
             data-testid={`filter-field-${filter.id}`}
             style={selectStyle}
             disabled={!dataset}
@@ -464,20 +580,64 @@ function FilterEditor({
           <label htmlFor={defaultInputId} style={labelStyle}>
             Default value
           </label>
-          <input
-            id={defaultInputId}
-            name={`filter-default-${filter.id}`}
-            type="text"
-            value={filter.defaultValue != null ? String(filter.defaultValue) : ''}
-            onChange={(e) =>
-              handleChange({
-                defaultValue: e.target.value || undefined,
-              })
-            }
-            placeholder="Optional default..."
-            data-testid={`filter-default-${filter.id}`}
-            style={selectStyle}
-          />
+          {normalizedFilterType === 'date' ? (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input
+                id={defaultInputId}
+                name={`filter-default-start-${filter.id}`}
+                aria-label="Default start date"
+                type="date"
+                value={defaultDateValue.start ?? ''}
+                onChange={(e) => {
+                  const nextStart = e.target.value || undefined;
+                  const nextValue = {
+                    ...defaultDateValue,
+                    start: nextStart,
+                  };
+                  handleChange({
+                    defaultValue:
+                      nextValue.start || nextValue.end || nextValue.preset ? nextValue : undefined,
+                  });
+                }}
+                data-testid={`filter-default-start-${filter.id}`}
+                style={selectStyle}
+              />
+              <input
+                name={`filter-default-end-${filter.id}`}
+                aria-label="Default end date"
+                type="date"
+                value={defaultDateValue.end ?? ''}
+                onChange={(e) => {
+                  const nextEnd = e.target.value || undefined;
+                  const nextValue = {
+                    ...defaultDateValue,
+                    end: nextEnd,
+                  };
+                  handleChange({
+                    defaultValue:
+                      nextValue.start || nextValue.end || nextValue.preset ? nextValue : undefined,
+                  });
+                }}
+                data-testid={`filter-default-end-${filter.id}`}
+                style={selectStyle}
+              />
+            </div>
+          ) : (
+            <input
+              id={defaultInputId}
+              name={`filter-default-${filter.id}`}
+              type="text"
+              value={filter.defaultValue != null ? String(filter.defaultValue) : ''}
+              onChange={(e) =>
+                handleChange({
+                  defaultValue: e.target.value || undefined,
+                })
+              }
+              placeholder="Optional default..."
+              data-testid={`filter-default-${filter.id}`}
+              style={selectStyle}
+            />
+          )}
         </div>
       </div>
 
@@ -494,7 +654,7 @@ function FilterEditor({
           data-testid={`filter-type-${filter.id}`}
           style={selectStyle}
         >
-          {FILTER_CONTROL_OPTIONS.map((option) => (
+          {availableControlOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -502,7 +662,130 @@ function FilterEditor({
         </select>
       </div>
 
-      {isSelectFilterControlType(normalizedFilterType) && (
+      {normalizedFilterType === 'date' && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            padding: 10,
+            borderRadius: 6,
+            border: '1px solid #dbe4ee',
+            background: '#fff',
+          }}
+        >
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <label htmlFor={`ss-filter-date-mode-${filter.id}`} style={labelStyle}>
+                Date mode
+              </label>
+              <select
+                id={`ss-filter-date-mode-${filter.id}`}
+                name={`filter-date-mode-${filter.id}`}
+                value={dateConfig.mode ?? 'preset'}
+                onChange={(e) =>
+                  handleDateConfigChange({
+                    mode: e.target.value as NonNullable<DateFilterConfig['mode']>,
+                    allowCustomRange: e.target.value !== 'weekly',
+                  })
+                }
+                data-testid={`filter-date-mode-${filter.id}`}
+                style={selectStyle}
+              >
+                {DATE_FILTER_MODE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: 6,
+                fontSize: 12,
+                color: '#475569',
+                paddingBottom: 5,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={dateConfig.allowCustomRange !== false}
+                onChange={(e) => handleDateConfigChange({ allowCustomRange: e.target.checked })}
+                data-testid={`filter-date-allow-custom-${filter.id}`}
+              />
+              Allow custom
+            </label>
+          </div>
+
+          {(dateConfig.mode ?? 'preset') === 'weekly' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor={`ss-filter-week-start-${filter.id}`} style={labelStyle}>
+                  Week starts on
+                </label>
+                <select
+                  id={`ss-filter-week-start-${filter.id}`}
+                  name={`filter-week-start-${filter.id}`}
+                  value={dateConfig.weekStartsOn ?? 0}
+                  onChange={(e) =>
+                    handleDateConfigChange({
+                      weekStartsOn: Number(e.target.value) as DateFilterConfig['weekStartsOn'],
+                    })
+                  }
+                  data-testid={`filter-week-start-${filter.id}`}
+                  style={selectStyle}
+                >
+                  {WEEKDAY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor={`ss-filter-weeks-back-${filter.id}`} style={labelStyle}>
+                  Weeks back
+                </label>
+                <input
+                  id={`ss-filter-weeks-back-${filter.id}`}
+                  name={`filter-weeks-back-${filter.id}`}
+                  type="number"
+                  min={0}
+                  value={dateConfig.weeksBack ?? 4}
+                  onChange={(e) =>
+                    handleDateConfigChange({ weeksBack: coerceNonNegativeInteger(e.target.value) })
+                  }
+                  data-testid={`filter-weeks-back-${filter.id}`}
+                  style={selectStyle}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <label htmlFor={`ss-filter-weeks-forward-${filter.id}`} style={labelStyle}>
+                  Weeks forward
+                </label>
+                <input
+                  id={`ss-filter-weeks-forward-${filter.id}`}
+                  name={`filter-weeks-forward-${filter.id}`}
+                  type="number"
+                  min={0}
+                  value={dateConfig.weeksForward ?? 0}
+                  onChange={(e) =>
+                    handleDateConfigChange({
+                      weeksForward: coerceNonNegativeInteger(e.target.value),
+                    })
+                  }
+                  data-testid={`filter-weeks-forward-${filter.id}`}
+                  style={selectStyle}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {isSelectFilterControlType(normalizedFilterType) && !isDateField && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label htmlFor={optionSourceSelectId} style={labelStyle}>

@@ -22,6 +22,15 @@ components:
         requirement: Filter controls support the standard operator set advertised
           by the host query *adapter* or *probe* capabilities and reject unsupported
           operators during validation.
+      4:
+        requirement: Date and datetime *filter* controls are authored as
+          date-aware controls, including range, relative preset, and weekly
+          period options, rather than generic value dropdowns.
+      5:
+        requirement: Weekly date *filter* controls generate viewer options from
+          authored boundary weekday, lookback window, and lookahead window
+          settings and compile selected periods into concrete *logical query*
+          date ranges.
   CROSS_WIDGET_FILTERS:
     name: Cross-Widget Filters
     description: Propagation of filter state across widgets on a page.

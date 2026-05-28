@@ -212,8 +212,20 @@ export interface FilterDefinition {
   datasetRef: string;
   operator: string;
   defaultValue?: unknown;
+  dateConfig?: DateFilterConfig;
   optionSource?: FilterOptionSource;
   scope: FilterScope;
+}
+
+export interface DateFilterConfig {
+  mode?: 'range' | 'preset' | 'weekly';
+  presets?: string[];
+  defaultPreset?: string;
+  allowCustomRange?: boolean;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  weeksBack?: number;
+  weeksForward?: number;
+  includeCurrentWeek?: boolean;
 }
 
 export interface FilterOptionDefinition {

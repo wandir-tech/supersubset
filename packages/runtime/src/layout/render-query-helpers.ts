@@ -1,9 +1,4 @@
-import type {
-  AggregationType,
-  LogicalQuery,
-  QueryFilterOperator,
-  QueryResult,
-} from '@supersubset/data-model';
+import type { AggregationType, LogicalQuery, QueryResult } from '@supersubset/data-model';
 import {
   structuredAlertRuleSchema,
   type StructuredAlertRuleDefinition,
@@ -12,28 +7,13 @@ import {
 } from '@supersubset/schema';
 import type { WidgetProps } from '../widgets/registry';
 import { filterAppliesToWidget, type FilterValue } from '../filters/FilterEngine';
+import { compileFilterDefinitionValue, isDateRangeLike } from '../filters/date-filter-utils';
 import { resolveDataBindingConfig } from './widget-config';
 
 export interface QueryDataState {
   data?: Record<string, unknown>[];
   columns?: WidgetProps['columns'];
 }
-
-const DIRECT_QUERY_OPERATORS = new Set<QueryFilterOperator>([
-  'eq',
-  'neq',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-  'in',
-  'not_in',
-  'like',
-  'not_like',
-  'is_null',
-  'is_not_null',
-  'between',
-]);
 
 const VALID_AGGREGATIONS = new Set<AggregationType>([
   'sum',
@@ -326,7 +306,7 @@ function compileActiveFiltersForQuery(
         return [];
       }
 
-      const compiledFilter = compileFilterValue(definition, activeFilter.value);
+      const compiledFilter = compileFilterDefinitionValue(definition, activeFilter.value);
       return compiledFilter ? [compiledFilter] : [];
     }
 
@@ -338,58 +318,6 @@ function compileActiveFiltersForQuery(
     const compiledFilter = compileCrossFilterValue(crossFilter.fieldRef, activeFilter.value);
     return compiledFilter ? [compiledFilter] : [];
   });
-}
-
-function compileFilterValue(
-  definition: FilterDefinition,
-  value: unknown,
-): NonNullable<LogicalQuery['filters']>[number] | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (Array.isArray(value)) {
-    const values = value.filter((entry) => entry != null && entry !== '');
-    if (values.length === 0) {
-      return null;
-    }
-
-    return {
-      fieldId: definition.fieldRef,
-      operator: definition.operator === 'not_in' ? 'not_in' : 'in',
-      value: values,
-    };
-  }
-
-  if (isBetweenValue(value)) {
-    const lower = value.start ?? value.min;
-    const upper = value.end ?? value.max;
-
-    if (lower == null && upper == null) {
-      return null;
-    }
-
-    return {
-      fieldId: definition.fieldRef,
-      operator: 'between',
-      value: [lower, upper],
-    };
-  }
-
-  if (typeof value === 'string' && value.length === 0) {
-    return null;
-  }
-
-  const operator = normalizeFilterOperator(definition.operator);
-  if (!operator) {
-    return null;
-  }
-
-  return {
-    fieldId: definition.fieldRef,
-    operator,
-    value,
-  };
 }
 
 function compileCrossFilterValue(
@@ -413,7 +341,7 @@ function compileCrossFilterValue(
     };
   }
 
-  if (isBetweenValue(value)) {
+  if (isDateRangeLike(value)) {
     const lower = value.start ?? value.min;
     const upper = value.end ?? value.max;
 
@@ -439,37 +367,12 @@ function compileCrossFilterValue(
   };
 }
 
-function normalizeFilterOperator(operator: string): QueryFilterOperator | null {
-  if (DIRECT_QUERY_OPERATORS.has(operator as QueryFilterOperator)) {
-    return operator as QueryFilterOperator;
-  }
-
-  switch (operator) {
-    case 'equals':
-      return 'eq';
-    case 'contains':
-      return 'like';
-    default:
-      return null;
-  }
-}
-
 function normalizeAggregation(value: string | undefined): AggregationType | undefined {
   if (!value || !VALID_AGGREGATIONS.has(value as AggregationType) || value === 'none') {
     return undefined;
   }
 
   return value as AggregationType;
-}
-
-function isBetweenValue(
-  value: unknown,
-): value is { start?: string; end?: string; min?: number; max?: number } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    ('start' in value || 'end' in value || 'min' in value || 'max' in value)
-  );
 }
 
 function parseCrossFilterId(filterId: string): { sourceWidgetId: string; fieldRef: string } | null {
