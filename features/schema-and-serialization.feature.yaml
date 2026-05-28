@@ -1,0 +1,88 @@
+feature:
+  name: schema-and-serialization
+  product: supersubset
+  description: Canonical dashboard schema contract, Zod validation, JSON/YAML
+    serialization, versioned migrations, and stable identifier rules for the
+    embeddable analytics library.
+  version: 0.1.0
+  draft: false
+components:
+  CANONICAL_SCHEMA:
+    name: Canonical Schema
+    description: DashboardDefinition product contract shared by designer and runtime.
+    requirements:
+      1:
+        requirement: The canonical *dashboard* schema defines a single
+          DashboardDefinition shape that both the *designer* and *runtime*
+          consume without package-specific forks.
+      2:
+        requirement: Every persisted *dashboard* document must include a required
+          *schema version* so consumers can select the correct parser and
+          migration path.
+      3:
+        requirement: The canonical schema models multi-*page* *dashboards* with
+          flat normalized *layout* maps, *widget* definitions, optional
+          *filter* and *interaction* collections, and optional *theme* and data
+          model references.
+  ZOD_VALIDATION:
+    name: Zod Validation
+    description: Runtime parsing and structural validation of dashboard documents.
+    requirements:
+      1:
+        requirement: Dashboard documents are validated with Zod schemas that
+          mirror the canonical TypeScript contract and reject unknown top-level
+          keys by default.
+      2:
+        requirement: Validation reports actionable errors with paths that map to
+          *designer* property panels and code-view locations.
+      3:
+        requirement: '*Logical query*, *field ref*, and *filter* shapes are
+          validated as structured objects rather than accepting opaque strings
+          or host-specific SQL fragments.'
+  SERIALIZATION:
+    name: Serialization
+    description: Lossless JSON and YAML encoding of dashboard definitions.
+    requirements:
+      1:
+        requirement: The *serialization* layer supports round-trip encode and
+          decode for JSON and YAML representations of the same *dashboard*
+          document without semantic drift.
+      2:
+        requirement: Serialized output preserves stable *widget*, *page*, and
+          *layout* identifiers so host persistence and version control diffs
+          remain addressable.
+  MIGRATIONS:
+    name: Migrations
+    description: Forward migration from older schema versions to the current contract.
+    requirements:
+      1:
+        requirement: A migration engine upgrades documents from older *schema
+          version* values to the current contract before validation or render.
+      2:
+        requirement: Migrations are pure transforms that preserve *dashboard*
+          identity, *page* structure, and user-authored titles unless a breaking
+          rename is explicitly documented.
+      3:
+        requirement: Unsupported *schema version* values fail with a clear error
+          rather than partially applying unknown migration steps.
+  STABLE_IDS:
+    name: Stable Identifiers
+    description: Identifier stability rules across edit, export, and migration.
+    requirements:
+      1:
+        requirement: '*Widget*, *layout*, *page*, and *filter* identifiers remain
+          stable across *designer* edits unless the user explicitly duplicates
+          or replaces a node.'
+      2:
+        requirement: Import and migration steps remap only colliding identifiers
+          and record enough metadata for the *host app* to reconcile external
+          references.
+constraints:
+  LIBRARY_SCOPE:
+    name: Library Scope
+    description: Schema package boundaries for embeddable analytics.
+    requirements:
+      1:
+        requirement: Schema and *serialization* requirements apply to
+          `@supersubset/schema` and host-owned persistence layers; they do not
+          prescribe a specific database or object-store backend.

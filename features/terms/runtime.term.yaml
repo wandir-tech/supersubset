@@ -1,0 +1,16 @@
+term:
+  id: runtime
+  definition: >
+    The read-only renderer that materializes a DashboardDefinition into interactive
+    UI. It orchestrates layout, filters, widget queries, interactions, theme tokens,
+    and optional state persistence via a host-provided QueryAdapter.
+  aliases:
+    - SupersubsetRenderer
+    - renderer
+  references:
+    ui:
+      shared:
+        - packages/runtime/src/components/SupersubsetRenderer.tsx
+        - packages/runtime/src/layout/LayoutRenderer.tsx
+    server:
+      - packages/schema/src/types/dashboard.ts

@@ -1,6 +1,6 @@
 ---
 name: maintaining-ai-context
-description: "Add, update, or audit Supersubset AI context: .github/skills, .github/agents, AGENTS.md, copilot-instructions, docs/status, docs/testing. Use when creating a skill, shrinking bloat, fixing stale cross-references, or aligning agents with orchestration."
+description: 'Add, update, or audit Supersubset AI context: .github/skills, .github/agents, AGENTS.md, copilot-instructions, docs/status, docs/testing. Use when creating a skill, shrinking bloat, fixing stale cross-references, or aligning agents with orchestration.'
 ---
 
 # Maintaining AI Context (Supersubset)
@@ -9,16 +9,18 @@ Supersubset keeps agent/playbook context in **`.github/`** and **`docs/`** (not 
 
 ## Scope (what this skill owns)
 
-| Artifact | Role |
-| -------- | ---- |
-| `.github/skills/*/SKILL.md` | How-to playbooks |
-| `.github/agents/*.agent.md` | Subagent definitions + tool allowlists |
-| `AGENTS.md` | Orchestrator + recovery + pointers |
-| `.github/copilot-instructions.md` | Lean always-on Copilot summary |
-| `.github/skills/github-cli/SKILL.md` | Canonical `gh` patterns for GitHub operations |
-| `docs/bootstrap.md` | Fresh-session orientation |
-| `docs/status/*` | Master plan, risks, phase summaries, checkpoints |
-| `docs/testing/*` | Verification strategy, QA lists, browser plans |
+| Artifact                             | Role                                             |
+| ------------------------------------ | ------------------------------------------------ |
+| `features/*.feature.yaml`            | Acai-compatible product requirements (ADR-011)   |
+| `features/terms/*.term.yaml`         | Glossary terms for requirement prose             |
+| `.github/skills/*/SKILL.md`          | How-to playbooks                                 |
+| `.github/agents/*.agent.md`          | Subagent definitions + tool allowlists           |
+| `AGENTS.md`                          | Orchestrator + recovery + pointers               |
+| `.github/copilot-instructions.md`    | Lean always-on Copilot summary                   |
+| `.github/skills/github-cli/SKILL.md` | Canonical `gh` patterns for GitHub operations    |
+| `docs/bootstrap.md`                  | Fresh-session orientation                        |
+| `docs/status/*`                      | Master plan, risks, phase summaries, checkpoints |
+| `docs/testing/*`                     | Verification strategy, QA lists, browser plans   |
 
 ## When to add a new skill
 
@@ -59,11 +61,11 @@ Run these when context feels bloated or agents misfire.
 
 ## Size guidance
 
-| Artifact | Heuristic |
-| -------- | --------- |
-| `copilot-instructions.md` | Keep roughly under ~80 lines of dense lists |
-| Single skill | Split beyond ~300 lines; add `docs/guides/` for narrative |
-| `AGENTS.md` | Index + protocols; move long prose into skills |
+| Artifact                  | Heuristic                                                 |
+| ------------------------- | --------------------------------------------------------- |
+| `copilot-instructions.md` | Keep roughly under ~80 lines of dense lists               |
+| Single skill              | Split beyond ~300 lines; add `docs/guides/` for narrative |
+| `AGENTS.md`               | Index + protocols; move long prose into skills            |
 
 ## Anti-patterns
 

@@ -1,0 +1,17 @@
+term:
+  id: serialization
+  definition: >
+    The import and export of DashboardDefinition documents as JSON or YAML.
+    Serializers parse external text, run schema migrations, and validate against
+    the canonical Zod contract before designer or runtime use.
+  aliases:
+    - import export
+    - YAML serialization
+  references:
+    server:
+      - packages/schema/src/serializers/json.ts
+      - packages/schema/src/serializers/yaml.ts
+      - packages/schema/src/json-schema
+    ui:
+      shared:
+        - packages/designer/src/components/ImportExportPanel.tsx

@@ -84,6 +84,12 @@ export interface LogicalQuery {
   sort?: QuerySort[];
   limit?: number;
   offset?: number;
+  /**
+   * When true, the executor must return distinct rows (SQL `SELECT DISTINCT` or
+   * equivalent). Additive — adapters that ignore it return non-distinct rows
+   * (legacy behavior). See ADR-012.
+   */
+  distinct?: boolean;
 }
 
 export interface QueryField {
@@ -95,7 +101,8 @@ export interface QueryField {
 export interface QueryFilter {
   fieldId: string;
   operator: QueryFilterOperator;
-  value: unknown;
+  /** Omitted for operators like `is_null` / `is_not_null` that take no value. */
+  value?: unknown;
 }
 
 export type QueryFilterOperator =
@@ -122,6 +129,10 @@ export interface QueryResult {
   columns: QueryResultColumn[];
   rows: Record<string, unknown>[];
   totalRows?: number;
+  /** True when the executor saw more rows than `limit` and trimmed the response. */
+  truncated?: boolean;
+  /** Wall-clock duration of the underlying execution, in milliseconds. */
+  executionTimeMs?: number;
 }
 
 export interface QueryResultColumn {
@@ -161,6 +172,77 @@ export interface QueryAdapter {
   execute(query: LogicalQuery): Promise<QueryResult>;
   cancel?(queryId: string): Promise<void>;
   resolveFilterOptions?(request: FilterOptionRequest): Promise<FilterOptionResponse>;
+}
+
+/**
+ * Resolve filter options through a QueryAdapter, with a generic fallback.
+ *
+ * If the adapter implements `resolveFilterOptions`, that path is used (the host
+ * may curate, authorize, or use a backend-specific lookup). Otherwise, a
+ * distinct-values `LogicalQuery` is synthesized — adapters that honor
+ * `distinct: true` (e.g. `SqlQueryAdapter` from `@supersubset/query-sql`)
+ * produce de-duplicated values; older adapters that ignore the flag still work
+ * but may return duplicates.
+ *
+ * See ADR-009 §2 and ADR-012.
+ */
+const DEFAULT_FIELD_OPTIONS_LIMIT = 200;
+
+export async function resolveFilterOptionsWithAdapter(
+  adapter: QueryAdapter,
+  request: FilterOptionRequest,
+): Promise<FilterOptionResponse> {
+  if (adapter.resolveFilterOptions) {
+    return adapter.resolveFilterOptions(request);
+  }
+
+  const limit = request.limit ?? DEFAULT_FIELD_OPTIONS_LIMIT;
+  const query: LogicalQuery = {
+    datasetId: request.datasetId,
+    fields: [{ fieldId: request.fieldId }],
+    limit,
+    distinct: true,
+  };
+  if (request.search) {
+    query.filters = [
+      {
+        fieldId: request.fieldId,
+        operator: 'like',
+        value: normalizeSearchToContains(request.search),
+      },
+    ];
+  }
+
+  const result = await adapter.execute(query);
+  const seen = new Set<string>();
+  const options: QueryFilterOption[] = [];
+  for (const row of result.rows) {
+    const raw = row[request.fieldId];
+    if (raw === null || raw === undefined) continue;
+    const value = String(raw);
+    if (seen.has(value)) continue;
+    seen.add(value);
+    options.push({ value });
+  }
+
+  // Prefer execution evidence over a post-dedupe heuristic: client-side dedup
+  // can shrink `options.length` below `limit` even when more distinct values
+  // exist on the source. `QueryResult.truncated` is set by adapters that know
+  // (e.g. `SqlQueryAdapter` via the +1 sentinel); fall back to the heuristic
+  // only when the adapter hasn't reported truncation.
+  const complete =
+    result.truncated === false ? true : result.truncated === true ? false : options.length < limit;
+
+  return { options, complete };
+}
+
+/**
+ * Wrap a search term with `%` for contains-style matching unless the caller
+ * already supplied wildcards. Keeps the contract predictable across hosts.
+ */
+function normalizeSearchToContains(search: string): string {
+  if (search.includes('%') || search.includes('_')) return search;
+  return `%${search}%`;
 }
 
 // ─── Probe Contract ──────────────────────────────────────────

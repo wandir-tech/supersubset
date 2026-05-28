@@ -1,0 +1,66 @@
+name: Requirements validation
+
+on:
+  pull_request:
+    branches: [develop, staging, main]
+    paths:
+      - 'features/**'
+      - 'tools/requirements/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '**/*.spec.ts'
+      - '**/*.spec.tsx'
+      - '**/*.spec.js'
+      - '**/*.spec.jsx'
+      - '**/*.test.ts'
+      - '**/*.test.tsx'
+      - '**/*.test.js'
+      - '**/*.test.jsx'
+  push:
+    branches: [develop, staging, main]
+    paths:
+      - 'features/**'
+      - 'tools/requirements/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '**/*.spec.ts'
+      - '**/*.spec.tsx'
+      - '**/*.spec.js'
+      - '**/*.spec.jsx'
+      - '**/*.test.ts'
+      - '**/*.test.tsx'
+      - '**/*.test.js'
+      - '**/*.test.jsx'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: requirements-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22.13.0'
+
+jobs:
+  validate-requirements:
+    name: validate-requirements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run requirements validator self-tests
+        run: pnpm run test:requirements-validator
+
+      - name: Validate feature specs and Acai test refs
+        run: pnpm run validate:requirements

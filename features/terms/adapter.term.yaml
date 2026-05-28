@@ -1,0 +1,18 @@
+term:
+  id: adapter
+  definition: >
+    A pluggable bridge that introspects a host data source and produces
+    NormalizedDataset metadata or executes LogicalQuery requests. Supersubset
+    ships adapters for Prisma, SQL, dbt, and JSON fixtures.
+  aliases:
+    - metadata adapter
+    - query adapter
+  references:
+    server:
+      - packages/data-model/src/index.ts
+      - packages/adapter-prisma/src
+      - packages/adapter-sql/src
+      - packages/adapter-json/src
+      - packages/adapter-dbt/src
+    docs:
+      - docs/guides/custom-adapter.md

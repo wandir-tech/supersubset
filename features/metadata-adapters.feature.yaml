@@ -1,0 +1,91 @@
+feature:
+  name: metadata-adapters
+  product: supersubset
+  description: Source-specific metadata adapters, normalized analytical metadata
+    model, and CLI import for Prisma, SQL, JSON, and dbt sources.
+  version: 0.1.0
+  draft: false
+components:
+  METADATA_MODEL:
+    name: Metadata Model
+    description: Normalized catalog consumed by designer and runtime binding.
+    requirements:
+      1:
+        requirement: Supersubset defines a normalized *metadata model* of entities,
+          fields, measures, relationships, and roles independent of any single
+          source system.
+      2:
+        requirement: The *metadata model* exposes stable field identifiers
+          suitable for *field ref* binding in *dashboard* *widget* and *filter*
+          definitions.
+      3:
+        requirement: Designer and *runtime* consume the normalized model through
+          adapter-agnostic interfaces and never depend on Prisma, dbt, or
+          database-specific types directly.
+  ADAPTER_PRISMA:
+    name: Prisma Adapter
+    description: Prisma schema introspection into normalized metadata.
+    requirements:
+      1:
+        requirement: The Prisma *adapter* ingests Prisma schema definitions and
+          emits normalized entity and field metadata for analytical binding.
+      2:
+        requirement: Prisma *adapter* output includes data types, relation hints,
+          and suggested measure roles where inferrable without executing queries
+          against a live database.
+  ADAPTER_SQL:
+    name: SQL Adapter
+    description: Relational database introspection into normalized metadata.
+    requirements:
+      1:
+        requirement: The SQL *adapter* introspects supported relational sources
+          and maps tables and columns into normalized *dataset* entities and
+          fields.
+      2:
+        requirement: SQL introspection runs read-only catalog queries and surfaces
+          actionable connection errors when credentials or driver configuration
+          are invalid.
+  ADAPTER_JSON:
+    name: JSON Adapter
+    description: Fixture and file-based metadata for development and tests.
+    requirements:
+      1:
+        requirement: The JSON *adapter* loads normalized *metadata model*
+          documents from JSON fixtures for local development, examples, and
+          automated tests.
+      2:
+        requirement: JSON *adapter* input is validated against the same normalized
+          shape produced by live introspection *adapter* implementations.
+  ADAPTER_DBT:
+    name: dbt Adapter
+    description: dbt manifest ingestion into normalized metadata.
+    requirements:
+      1:
+        requirement: The dbt *adapter* reads dbt manifest artifacts and maps
+          models, columns, and semantic hints into normalized entities and
+          fields.
+      2:
+        requirement: dbt *adapter* preserves model naming stable enough for
+          *field ref* and *logical query* *dataset* selection across re-imports
+          when manifest identifiers are unchanged.
+  CLI_IMPORT:
+    name: CLI Import
+    description: Command-line schema import for host and CI workflows.
+    requirements:
+      1:
+        requirement: The CLI exposes an import-schema command that runs selected
+          *adapter* implementations and writes normalized *metadata model*
+          output for *host app* consumption.
+      2:
+        requirement: CLI import supports selecting source type and connection or
+          file inputs without requiring the *designer* or *runtime* to be
+          running.
+constraints:
+  ADAPTER_BOUNDARY:
+    name: Adapter Boundary
+    description: Separation between metadata ingestion and host execution.
+    requirements:
+      1:
+        requirement: Metadata *adapter* packages produce catalogs only; query
+          execution, row-level security, and credential storage remain the
+          responsibility of the *host app*.

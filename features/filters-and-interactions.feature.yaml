@@ -1,0 +1,103 @@
+feature:
+  name: filters-and-interactions
+  product: supersubset
+  description: Dashboard filter bar, cross-widget filter propagation, click-to-filter
+    interactions, drilldown actions, and filter option resolution.
+  version: 0.1.0
+  draft: false
+components:
+  FILTER_BAR:
+    name: Filter Bar
+    description: Dashboard-level filter controls rendered above page content.
+    requirements:
+      1:
+        requirement: The *runtime* renders a *filter* bar for dashboard-scoped
+          controls and merges active values into each *widget* *logical query*
+          at render time.
+      2:
+        requirement: The *designer* exposes a filter builder for authoring
+          dashboard *filter* definitions, including field binding, operator,
+          default value, and visibility scope.
+      3:
+        requirement: Filter controls support the standard operator set advertised
+          by the host query *adapter* or *probe* capabilities and reject unsupported
+          operators during validation.
+      4:
+        requirement: Date and datetime *filter* controls are authored as
+          date-aware controls, including range, relative preset, and weekly
+          period options, rather than generic value dropdowns.
+      5:
+        requirement: Weekly date *filter* controls generate viewer options from
+          authored boundary weekday, lookback window, and lookahead window
+          settings and compile selected periods into concrete *logical query*
+          date ranges.
+  CROSS_WIDGET_FILTERS:
+    name: Cross-Widget Filters
+    description: Propagation of filter state across widgets on a page.
+    requirements:
+      1:
+        requirement: Active dashboard *filter* values propagate to all bound
+          *widget* queries on the current *page* unless a *widget* declares an
+          explicit filter override.
+      2:
+        requirement: Cross-widget *filter* updates re-query affected *widget*
+          instances without resetting unrelated *widget* local state such as table
+          sort or pagination when those states remain valid.
+      3:
+        requirement: The *runtime* filter engine resolves filter precedence between
+          dashboard filters, page filters, and widget-scoped filters deterministically
+          before building each *logical query*.
+  CLICK_TO_FILTER:
+    name: Click To Filter
+    description: Widget-driven filter updates from user interaction.
+    requirements:
+      1:
+        requirement: Authored *interaction* rules can map *widget* click, hover,
+          or change triggers to update one or more dashboard *filter* values.
+      2:
+        requirement: Click-to-filter *interaction* payloads carry field id, operator,
+          and value derived from the clicked mark or row so cross-widget filtering
+          stays declarative rather than host-scripted.
+      3:
+        requirement: The *designer* interaction editor validates click-to-filter
+          targets against known *filter* ids and field refs on the active *dashboard*.
+  DRILLDOWN:
+    name: Drilldown
+    description: Navigation and detail actions driven by widget interactions.
+    requirements:
+      1:
+        requirement: Authored *interaction* rules may declare *drilldown* actions that
+          navigate to another *page*, open a scoped detail view, or route through
+          a host-provided navigation callback.
+      2:
+        requirement: Configured *drilldown* actions pass structured context such as field
+          values and originating *widget* id so the destination *page* can seed
+          filters or query parameters.
+      3:
+        requirement: The *runtime* executes *drilldown* without requiring iframe
+          navigation; the *host app* may intercept routing when embedding the
+          *runtime* in its own router.
+  FILTER_OPTION_SOURCES:
+    name: Filter Option Sources
+    description: Static and dynamic sources for filter control choices.
+    requirements:
+      1:
+        requirement: Select and multi-select *filter* controls support statically
+          authored option lists defined in the *dashboard* schema.
+      2:
+        requirement: Field-backed *filter* option sources request distinct values
+          through the query *adapter* when the host advertises option resolution
+          support, and degrade to an explicit unavailable state when unsupported.
+      3:
+        requirement: The *designer* preview and *runtime* share the same filter
+          option resolution rules so authored controls do not behave differently
+          between authoring and viewing modes.
+constraints:
+  STATE_OWNERSHIP:
+    name: State Ownership
+    description: Filter and interaction state boundaries.
+    requirements:
+      1:
+        requirement: The *runtime* owns in-session *filter* and *interaction*
+          state while the *host app* may hydrate or persist saved filter state
+          through controlled embedding props.

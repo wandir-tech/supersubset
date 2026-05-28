@@ -77,7 +77,7 @@ test.describe('Import/Export Cycle Workflow', () => {
     await page.goto('/');
   });
 
-  test('code view shows JSON schema', async ({ page }) => {
+  test('[designer-authoring.CODE_VIEW.2] code view shows JSON schema', async ({ page }) => {
     // Switch to designer
     await page.getByText('Designer').click();
     await page.waitForTimeout(1500);
@@ -93,7 +93,7 @@ test.describe('Import/Export Cycle Workflow', () => {
     await expect(schemaContent.first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('import/export panel opens', async ({ page }) => {
+  test('[designer-authoring.IMPORT_EXPORT.1] import/export panel opens', async ({ page }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1500);
 
@@ -103,12 +103,20 @@ test.describe('Import/Export Cycle Workflow', () => {
     const importBtn = page.getByText('Import');
 
     // At least one of these should be present
-    const hasExport = await exportBtn.first().isVisible().catch(() => false);
-    const hasImport = await importBtn.first().isVisible().catch(() => false);
+    const hasExport = await exportBtn
+      .first()
+      .isVisible()
+      .catch(() => false);
+    const hasImport = await importBtn
+      .first()
+      .isVisible()
+      .catch(() => false);
     expect(hasExport || hasImport).toBe(true);
   });
 
-  test('designer publishes valid schema on save', async ({ page }) => {
+  test('[schema-and-serialization.CANONICAL_SCHEMA.1] designer publishes valid schema on save', async ({
+    page,
+  }) => {
     const consoleMessages: string[] = [];
     page.on('console', (msg) => {
       if (msg.text().includes('[Supersubset] Dashboard published:')) {
@@ -121,7 +129,10 @@ test.describe('Import/Export Cycle Workflow', () => {
 
     // Puck has a Publish button — try to find and click it
     const publishBtn = page.locator('button', { hasText: /Publish/i });
-    const publishVisible = await publishBtn.first().isVisible().catch(() => false);
+    const publishVisible = await publishBtn
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     if (publishVisible) {
       await publishBtn.first().click();
@@ -135,7 +146,9 @@ test.describe('Import/Export Cycle Workflow', () => {
     // If Publish not visible, this tests gracefully passes (Puck may hide it)
   });
 
-  test('import after refresh rehydrates a dashboard with an added line chart', async ({ page }) => {
+  test('[designer-authoring.IMPORT_EXPORT.2] import after refresh rehydrates a dashboard with an added line chart', async ({
+    page,
+  }) => {
     const importedDashboard = buildDashboardWithExtraLineChart();
 
     await page.reload();
@@ -158,7 +171,9 @@ test.describe('Import/Export Cycle Workflow', () => {
     await expect(page.locator('.ss-chart')).toHaveCount(3);
   });
 
-  test('alerts import preserves structured navigate targets across code view and viewer mode', async ({ page }) => {
+  test('[navigation-and-alerts.ALERT_WIDGETS.1] alerts import preserves structured navigate targets across code view and viewer mode', async ({
+    page,
+  }) => {
     const importedDashboard = buildDashboardWithAlertsAndStructuredNavigate();
 
     await page.getByText('Designer').click();
@@ -173,11 +188,11 @@ test.describe('Import/Export Cycle Workflow', () => {
     await expect(page.getByText('Last saved: Imported Alerts Dashboard')).toBeVisible();
 
     await page.getByTestId('code-toggle').click();
-  const codePanel = page.getByTestId('code-view-panel');
-  await expect(codePanel).toContainText('Imported Operations Watchlist');
-  await expect(codePanel).toContainText('"type": "alerts"');
-  await expect(codePanel).toContainText('"kind": "page"');
-  await expect(codePanel).toContainText('"pageId": "page-gallery"');
+    const codePanel = page.getByTestId('code-view-panel');
+    await expect(codePanel).toContainText('Imported Operations Watchlist');
+    await expect(codePanel).toContainText('"type": "alerts"');
+    await expect(codePanel).toContainText('"kind": "page"');
+    await expect(codePanel).toContainText('"pageId": "page-gallery"');
 
     await page.getByText('Viewer').click();
     await page.waitForTimeout(1000);

@@ -22,7 +22,9 @@ function buildDashboardWithStackedAlerts() {
 }
 
 test.describe('Alerts widget workflow', () => {
-  test('renders in viewer and stays available through the designer canvas', async ({ page }) => {
+  test('[navigation-and-alerts.ALERT_WIDGETS.2] renders in viewer and stays available through the designer canvas', async ({
+    page,
+  }) => {
     const consoleErrors: string[] = [];
     page.on('console', (message) => {
       if (message.type() === 'error') {
@@ -52,7 +54,7 @@ test.describe('Alerts widget workflow', () => {
     expect(consoleErrors.filter((entry) => !entry.includes('favicon'))).toHaveLength(0);
   });
 
-  test('imported alerts config applies stacked layout and max item visibility in viewer mode', async ({
+  test('[navigation-and-alerts.ALERT_WIDGETS.3] imported alerts config applies stacked layout and max item visibility in viewer mode', async ({
     page,
   }) => {
     const stackedDashboard = buildDashboardWithStackedAlerts();

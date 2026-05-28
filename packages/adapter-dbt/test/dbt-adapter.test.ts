@@ -64,7 +64,7 @@ describe('DbtAdapter', () => {
   });
 
   describe('getDatasets', () => {
-    it('extracts only model and source nodes', async () => {
+    it('[metadata-adapters.ADAPTER_DBT.1] extracts only model and source nodes', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       expect(datasets).toHaveLength(3);
       const names = datasets.map((d) => d.id);
@@ -80,7 +80,7 @@ describe('DbtAdapter', () => {
       expect(names).not.toContain('country_codes');
     });
 
-    it('preserves descriptions', async () => {
+    it('[metadata-adapters.ADAPTER_DBT.2] preserves descriptions', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       const users = datasets.find((d) => d.id === 'model.project.users')!;
       expect(users.description).toBe('All application users');

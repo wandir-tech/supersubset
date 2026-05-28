@@ -1,0 +1,13 @@
+feature:
+  name: valid-minimal
+  product: supersubset
+components:
+  DEMO:
+    requirements:
+      1:
+        requirement: A *user* can sign in.
+constraints:
+  PLATFORM:
+    requirements:
+      1:
+        requirement: Default platform scope applies to both web and native_app.

@@ -155,7 +155,9 @@ async function openProbe(page: import('@playwright/test').Page) {
 }
 
 test.describe('Backend probe live discovery', () => {
-  test('loads the designer from a live discovery URL with bearer auth', async ({ page }) => {
+  test('[query-and-probe.PROBE_DISCOVERY.1] loads the designer from a live discovery URL with bearer auth', async ({
+    page,
+  }) => {
     let authorizationHeader = '';
 
     await page.route('**/probe-mock-api/supersubset/datasets', async (route) => {
@@ -192,7 +194,7 @@ test.describe('Backend probe live discovery', () => {
     expect(download.suggestedFilename()).toBe('backend-probe-dashboard.json');
   });
 
-  test('loads the designer from a live discovery URL with a custom auth header', async ({
+  test('[query-and-probe.PROBE_DISCOVERY.2] loads the designer from a live discovery URL with a custom auth header', async ({
     page,
   }) => {
     let headerName = '';
@@ -229,7 +231,7 @@ test.describe('Backend probe live discovery', () => {
     expect(headerValue).toBe('alpha-dev-key');
   });
 
-  test('logs in with email and password, then reuses the returned token for discovery', async ({
+  test('[query-and-probe.PROBE_QUERY.3] logs in with email and password, then reuses the returned token for discovery', async ({
     page,
   }) => {
     let loginBody: Record<string, unknown> | null = null;
@@ -282,7 +284,7 @@ test.describe('Backend probe live discovery', () => {
     expect(authorizationHeader).toBe('Bearer probe-login-token-12345');
   });
 
-  test('connects to the real Next.js workbench backend and runs a live preview query', async ({
+  test('[query-and-probe.PREVIEW_DATA.2] connects to the real Next.js workbench backend and runs a live preview query', async ({
     page,
   }) => {
     const importedDashboard = buildWorkbenchProbePreviewDashboard();
@@ -340,7 +342,9 @@ test.describe('Backend probe live discovery', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('stays on the probe form and shows an error when login fails', async ({ page }) => {
+  test('[query-and-probe.ERROR_ENVELOPE.1] stays on the probe form and shows an error when login fails', async ({
+    page,
+  }) => {
     await page.route('**/probe-login-api-fail/graphql', async (route) => {
       await route.fulfill({
         status: 200,
@@ -368,7 +372,9 @@ test.describe('Backend probe live discovery', () => {
     await expect(page.getByTestId('probe-connect-button')).toBeVisible();
   });
 
-  test('shows an error when discovery succeeds but returns no datasets', async ({ page }) => {
+  test('[query-and-probe.ERROR_ENVELOPE.2] shows an error when discovery succeeds but returns no datasets', async ({
+    page,
+  }) => {
     await page.route('**/probe-empty-api/supersubset/datasets', async (route) => {
       await route.fulfill({
         status: 200,
@@ -413,7 +419,7 @@ test.describe('Backend probe live discovery', () => {
     await expect(page.getByText('Supersubset Probe Designer')).toHaveCount(0);
   });
 
-  test('accepts raw dataset arrays from direct /datasets and /query endpoints', async ({
+  test('[query-and-probe.BACKEND_AGNOSTIC.1] accepts raw dataset arrays from direct /datasets and /query endpoints', async ({
     page,
   }) => {
     const importedDashboard = buildProbePreviewDashboard();
@@ -472,7 +478,7 @@ test.describe('Backend probe live discovery', () => {
     });
   });
 
-  test('executes preview queries after connecting with pasted metadata and an explicit query URL', async ({
+  test('[query-and-probe.PROBE_QUERY.1] executes preview queries after connecting with pasted metadata and an explicit query URL', async ({
     page,
   }) => {
     const importedDashboard = buildProbePreviewDashboard();
@@ -527,7 +533,7 @@ test.describe('Backend probe live discovery', () => {
     });
   });
 
-  test('shows empty preview fallback status when a connected query returns no rows', async ({
+  test('[interface-behavior.EMPTY_STATES.1] shows empty preview fallback status when a connected query returns no rows', async ({
     page,
   }) => {
     const importedDashboard = buildProbePreviewDashboard();
@@ -568,7 +574,9 @@ test.describe('Backend probe live discovery', () => {
     await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
   });
 
-  test('shows error preview fallback status when a connected query fails', async ({ page }) => {
+  test('[interface-behavior.ERROR_STATES.1] shows error preview fallback status when a connected query fails', async ({
+    page,
+  }) => {
     const importedDashboard = buildProbePreviewDashboard();
 
     await page.route('**/probe-preview-error/supersubset/query', async (route) => {
@@ -603,7 +611,9 @@ test.describe('Backend probe live discovery', () => {
     await expect(page.getByText('Supersubset Probe Designer')).toBeVisible();
   });
 
-  test('restores remembered probe settings after reload', async ({ page }) => {
+  test('[query-and-probe.PROBE_DISCOVERY.3] restores remembered probe settings after reload', async ({
+    page,
+  }) => {
     const metadataJson = JSON.stringify(DISCOVERY_FIXTURE);
     const rememberCheckbox = page.getByRole('checkbox', {
       name: 'Remember settings in sessionStorage for this browser session',

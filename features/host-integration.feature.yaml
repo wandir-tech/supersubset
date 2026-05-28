@@ -1,0 +1,92 @@
+feature:
+  name: host-integration
+  product: supersubset
+  description: Embedding contract for mounting designer and runtime inside a host
+    application, workbench reference patterns, theming hooks, and host-owned auth
+    and data boundaries.
+  version: 0.1.0
+  draft: false
+components:
+  EMBEDDING_CONTRACT:
+    name: Embedding Contract
+    description: React mounting surface for designer and runtime packages.
+    requirements:
+      1:
+        requirement: The *host app* mounts Supersubset *designer* and *runtime*
+          components directly in React trees without requiring an iframe for core
+          authoring or viewing flows.
+      2:
+        requirement: Embedding props accept normalized *dataset* metadata, query
+          and metadata *adapter* instances, and optional preview or render callbacks
+          so the library stays backend-agnostic.
+      3:
+        requirement: The embedding contract exposes stable component entrypoints
+          and typed dashboard definition props without coupling to a specific host
+          router, state manager, or CSS framework.
+  DESIGNER_MODES:
+    name: Designer Modes
+    description: Controlled and uncontrolled dashboard editing ownership.
+    requirements:
+      1:
+        requirement: The *designer* supports controlled mode with value and onChange
+          so the *host app* owns the authoritative *dashboard* definition in its
+          store or API.
+      2:
+        requirement: The *designer* supports uncontrolled mode with defaultValue
+          and onPublish so lightweight hosts can defer persistence until an explicit
+          publish action.
+      3:
+        requirement: Controlled *designer* updates preserve undo and redo history
+          locally while emitting canonical *dashboard* snapshots only when the
+          host callback requests persistence.
+  WORKBENCH_PATTERNS:
+    name: Workbench Patterns
+    description: Reference host flows for auth, probe endpoints, and persistence.
+    requirements:
+      1:
+        requirement: Example workbench hosts demonstrate login-gated access to
+          *designer* and *runtime* modes with session or token auth owned entirely
+          by the *host app*.
+      2:
+        requirement: Workbench reference implementations expose probe-compatible
+          GET /supersubset/datasets and POST /supersubset/query routes that wrap
+          host query logic and return normalized *dataset* metadata and query
+          results.
+      3:
+        requirement: Workbench examples persist *dashboard* JSON in host-controlled
+          storage keys and reload the saved definition on subsequent visits without
+          Supersubset-hosted persistence services.
+  THEMING_HOOKS:
+    name: Theming Hooks
+    description: Host-controlled visual integration.
+    requirements:
+      1:
+        requirement: The *designer* and *runtime* accept *theme* tokens or CSS
+          variable mappings so the *host app* can align typography, spacing, and
+          palette with its design system.
+      2:
+        requirement: Chart *widget* rendering inherits resolved *theme* tokens
+          from the parent *runtime* or *designer* shell rather than hard-coding
+          product branding inside Supersubset packages.
+  HOST_OWNERSHIP:
+    name: Host Ownership
+    description: Security, metadata, and persistence boundaries.
+    requirements:
+      1:
+        requirement: The *host app* owns authentication, authorization, row-level
+          security, and credential storage; Supersubset components never persist
+          host secrets in dashboard definitions.
+      2:
+        requirement: Metadata ingestion through source *adapter* packages produces
+          normalized *dataset* models in the *host app* process; Supersubset does
+          not require a vendor metastore or warehouse lock-in.
+constraints:
+  LIBRARY_FIRST:
+    name: Library First
+    description: Supersubset ships embeddable packages, not a hosted BI product.
+    requirements:
+      1:
+        requirement: Host integration requirements treat Supersubset as library-first
+          packages where the *host app* supplies adapters, storage, auth, and routing
+          and Supersubset supplies *designer*, *runtime*, schema, and reference
+          workbench patterns only.

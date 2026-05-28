@@ -1,0 +1,13 @@
+feature:
+  name: orphan-acid
+  product: supersubset
+components:
+  DEMO:
+    requirements:
+      1:
+        requirement: A valid requirement with no matching test prefix in this fixture.
+constraints:
+  PLATFORM:
+    requirements:
+      1:
+        requirement: Default platform scope applies.

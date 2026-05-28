@@ -1,0 +1,16 @@
+term:
+  id: filter
+  definition: >
+    A dashboard-level or scoped control that constrains widget queries by field
+    and operator. Active filter values are merged into LogicalQuery filters at
+    render time.
+  aliases:
+    - dashboard filter
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/filters/FilterEngine.tsx
+        - packages/runtime/src/components/FilterBar.tsx
+        - packages/designer/src/components/FilterBuilderPanel.tsx

@@ -22,21 +22,21 @@ const DATASETS: NormalizedDataset[] = [
 ];
 
 describe('probe metadata helpers', () => {
-  it('accepts metadata JSON envelope objects', async () => {
+  it('[query-and-probe.PROBE_DISCOVERY.1] accepts metadata JSON envelope objects', async () => {
     const datasets = await parseProbeMetadataJson(JSON.stringify({ datasets: DATASETS }));
 
     expect(datasets).toHaveLength(1);
     expect(datasets[0]?.id).toBe('orders');
   });
 
-  it('accepts raw dataset arrays', async () => {
+  it('[query-and-probe.PROBE_DISCOVERY.2] accepts raw dataset arrays', async () => {
     const datasets = await parseProbeMetadataJson(JSON.stringify(DATASETS));
 
     expect(datasets).toHaveLength(1);
     expect(datasets[0]?.fields[1]?.defaultAggregation).toBe('sum');
   });
 
-  it('builds preview queries with aggregation for measure fields', () => {
+  it('[query-and-probe.PREVIEW_DATA.1] builds preview queries with aggregation for measure fields', () => {
     const query = buildPreviewQuery(DATASETS, 'orders', {
       xField: 'region',
       yField: 'revenue',
@@ -49,7 +49,7 @@ describe('probe metadata helpers', () => {
     });
   });
 
-  it('uses explicit aggregation hints for metric slots', () => {
+  it('[query-and-probe.PREVIEW_DATA.2] uses explicit aggregation hints for metric slots', () => {
     const query = buildPreviewQuery(
       [
         {
@@ -91,7 +91,7 @@ describe('probe metadata helpers', () => {
     });
   });
 
-  it('derives query endpoint from discovery endpoint input', () => {
+  it('[query-and-probe.PROBE_QUERY.1] derives query endpoint from discovery endpoint input', () => {
     expect(deriveQueryEndpointInput('https://api.example.com/supersubset/datasets')).toBe(
       'https://api.example.com/supersubset/query',
     );

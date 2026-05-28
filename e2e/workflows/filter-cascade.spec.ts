@@ -47,7 +47,9 @@ test.describe('Filter Cascade Workflow', () => {
     });
   }
 
-  test('dashboard renders with filter bar and all widgets', async ({ page }) => {
+  test('[runtime-rendering.WIDGET_REGISTRY.1] dashboard renders with filter bar and all widgets', async ({
+    page,
+  }) => {
     // Verify the dashboard renders
     const dashboard = page.locator('[data-ss-dashboard]');
     await expect(dashboard).toBeVisible();
@@ -57,7 +59,9 @@ test.describe('Filter Cascade Workflow', () => {
     expect(await widgets.count()).toBeGreaterThan(0);
   });
 
-  test('filter bar is present when filters are defined', async ({ page }) => {
+  test('[filters-and-interactions.FILTER_BAR.1] filter bar is present when filters are defined', async ({
+    page,
+  }) => {
     const filterBar = page.locator('.ss-filter-bar');
     // The demo dashboard has filters, so filter bar should appear
     await expect(filterBar.first()).toBeVisible();
@@ -69,7 +73,9 @@ test.describe('Filter Cascade Workflow', () => {
     }
   });
 
-  test('switching pages preserves mode', async ({ page }) => {
+  test('[navigation-and-alerts.PAGE_NAVIGATION.2] switching pages preserves mode', async ({
+    page,
+  }) => {
     // If there are page tabs, clicking them should stay in viewer mode
     const tabs = page.locator('nav button');
     const tabCount = await tabs.count();
@@ -81,7 +87,9 @@ test.describe('Filter Cascade Workflow', () => {
     }
   });
 
-  test('mode switching works with filters', async ({ page }) => {
+  test('[runtime-rendering.FILTER_ENGINE.1] mode switching works with filters', async ({
+    page,
+  }) => {
     // Switch to preview mode
     const previewBtn = page.getByRole('button', { name: /preview/i });
     if (await previewBtn.isVisible()) {
@@ -99,7 +107,7 @@ test.describe('Filter Cascade Workflow', () => {
     }
   });
 
-  test('page demo shows shared filters on both pages and preserves selected values', async ({
+  test('[filters-and-interactions.STATE_OWNERSHIP.1] page demo shows shared filters on both pages and preserves selected values', async ({
     page,
   }) => {
     await openPagesWorkbook(page);
@@ -127,7 +135,9 @@ test.describe('Filter Cascade Workflow', () => {
     await expect(page.locator('.ss-filter-bar').getByLabel('Region')).toHaveValue('East');
   });
 
-  test('real overview chart clicks navigate to the detail page', async ({ page }) => {
+  test('[filters-and-interactions.DRILLDOWN.1] real overview chart clicks navigate to the detail page', async ({
+    page,
+  }) => {
     await openPagesWorkbook(page);
 
     await page.evaluate(() => {
@@ -162,7 +172,7 @@ test.describe('Filter Cascade Workflow', () => {
     });
   });
 
-  test('separate dashboards switch document identity instead of preserving workbook state', async ({
+  test('[navigation-and-alerts.DASHBOARD_NAVIGATION.1] separate dashboards switch document identity instead of preserving workbook state', async ({
     page,
   }) => {
     await openSeparateDashboardsDemo(page);
@@ -191,7 +201,7 @@ test.describe('Filter Cascade Workflow', () => {
     ).toBeVisible();
   });
 
-  test('page-scoped category filter changes overview widgets without leaking into detail widgets', async ({
+  test('[filters-and-interactions.CROSS_WIDGET_FILTERS.2] page-scoped category filter changes overview widgets without leaking into detail widgets', async ({
     page,
   }) => {
     await openPagesWorkbook(page);

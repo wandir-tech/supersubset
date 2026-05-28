@@ -548,6 +548,10 @@ describe('LayoutRenderer', () => {
             filterId: 'created-at',
             value: { start: '2024-01-01', end: '2024-01-31' },
           },
+          {
+            filterId: 'cross-filter:chart-1:amount',
+            value: { start: 1, end: 10 },
+          },
           { filterId: 'other-page-region', value: 'APAC' },
           { filterId: 'customer-region', value: 'France' },
         ]}
@@ -579,6 +583,11 @@ describe('LayoutRenderer', () => {
             fieldId: 'created_at',
             operator: 'between',
             value: ['2024-01-01', '2024-01-31'],
+          },
+          {
+            fieldId: 'amount',
+            operator: 'between',
+            value: [1, 10],
           },
         ],
       });

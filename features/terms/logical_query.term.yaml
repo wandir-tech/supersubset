@@ -1,0 +1,13 @@
+term:
+  id: logical_query
+  definition: >
+    A backend-agnostic query describing dataset, projected fields, aggregations,
+    filters, sort, and pagination. Adapters compile LogicalQuery into source-specific
+    SQL or API calls.
+  aliases:
+    - logical query
+  references:
+    server:
+      - packages/data-model/src/index.ts
+      - packages/query-client/src
+      - packages/runtime/src/layout/render-query-helpers.ts

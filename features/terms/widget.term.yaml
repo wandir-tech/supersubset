@@ -1,0 +1,16 @@
+term:
+  id: widget
+  definition: >
+    A typed visualization or control bound to datasets and fields inside a page
+    layout. Widget definitions live in the dashboard schema; the runtime resolves
+    them through a host-supplied widget registry.
+  aliases:
+    - chart
+    - viz
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/widgets/registry.ts
+        - packages/charts-echarts/src

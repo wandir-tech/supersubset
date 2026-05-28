@@ -1,0 +1,85 @@
+feature:
+  name: runtime-rendering
+  product: supersubset
+  description: SupersubsetRenderer layout engine, widget registry, interactive
+    and read-only modes, filter state engine, and host-integrable state
+    persistence for embedded analytics.
+  version: 0.1.0
+  draft: false
+components:
+  LAYOUT_ENGINE:
+    name: Layout Engine
+    description: Flat normalized layout map rendering for dashboard pages.
+    requirements:
+      1:
+        requirement: The *runtime* walks each *page* from its root *layout* node
+          and renders nested grid, row, column, tabs, and container nodes from
+          the flat layout map.
+      2:
+        requirement: The layout engine honors width, height, gap, and min-height
+          metadata so *dashboard* *pages* reflow predictably across host
+          viewport sizes.
+  WIDGET_REGISTRY:
+    name: Widget Registry
+    description: Pluggable widget type resolution for runtime render.
+    requirements:
+      1:
+        requirement: The *runtime* resolves *widget* types through a registry so
+          hosts and chart packages can register implementations without forking
+          core render code, and exposes *probe* hooks for query and render health
+          signals to the *host app*.
+      2:
+        requirement: Unknown *widget* types produce a visible fallback state and
+          structured error metadata for *host app* telemetry.
+      3:
+        requirement: Registry lookups receive normalized *widget* props and bound
+          *field ref* metadata needed to execute *logical query* requests.
+  RENDER_MODES:
+    name: Read-Only and Interactive Modes
+    description: Capability-gated interactivity for embedded dashboards.
+    requirements:
+      1:
+        requirement: The *runtime* supports read-only render mode that displays
+          *dashboard* content without mutating *filter* state or firing
+          cross-*widget* *interaction* handlers.
+      2:
+        requirement: Interactive mode enables *filter* controls, *widget*
+          selection, and declared *interaction* actions according to host-provided
+          capability flags.
+      3:
+        requirement: '*Drilldown* and navigation *interaction* types delegate
+          destination resolution to the *host app* rather than hard-coding routes
+          inside the library.'
+  STATE_PERSISTENCE:
+    name: State Persistence
+    description: Host-integrable persistence for runtime session state.
+    requirements:
+      1:
+        requirement: The *runtime* exposes a persistence hook for *filter*
+          selections, active *page*, and other session state so the *host app*
+          can restore user context across reloads.
+      2:
+        requirement: Persisted state serializes to a versioned, JSON-safe shape
+          that remains compatible when the underlying *dashboard* document
+          migrates forward.
+  FILTER_ENGINE:
+    name: Filter State Engine
+    description: Cross-widget filter evaluation and query scoping.
+    requirements:
+      1:
+        requirement: The filter engine merges *dashboard*-level and *page*-scoped
+          *filter* definitions into a coherent scope applied to affected *widget*
+          queries.
+      2:
+        requirement: Changing a *filter* value re-evaluates dependent *logical
+          query* bindings and refreshes bound *widget* data without requiring a
+          full *page* remount.
+constraints:
+  EMBEDDING:
+    name: Embedding
+    description: Runtime integration constraints for host applications.
+    requirements:
+      1:
+        requirement: The *runtime* renders as React components in the *host app*
+          DOM and does not require iframe isolation or a dedicated analytics
+          server process.

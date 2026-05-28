@@ -55,7 +55,7 @@ describe('SqlAdapter', () => {
   });
 
   describe('getDatasets', () => {
-    it('returns all tables and views', async () => {
+    it('[metadata-adapters.ADAPTER_SQL.1] returns all tables and views', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       expect(datasets).toHaveLength(3);
     });
@@ -108,7 +108,7 @@ describe('SqlAdapter', () => {
       expect(orders.fields.find((f) => f.id === 'total_amount')?.defaultAggregation).toBe('sum');
     });
 
-    it('detects foreign key relationships', async () => {
+    it('[metadata-adapters.ADAPTER_SQL.2] detects foreign key relationships', async () => {
       const datasets = await adapter.getDatasets(FIXTURE);
       const orders = datasets[1];
       expect(orders.relationships).toHaveLength(1);

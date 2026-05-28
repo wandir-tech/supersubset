@@ -39,18 +39,26 @@ Commit and push the new `.changeset/*.md` (and any config edits) to `main`.
 
 ## Preconditions (CI / org)
 
-- Repo secret **`NPM_TOKEN`**: npm token with publish access to **`@supersubset`** (granular token: scope + read/write + bypass 2FA for automation if required).
+- Repo secret **`NPM_TOKEN`**: npm automation token that can publish the existing **`@supersubset/*`** packages. For granular tokens, this means **package write** on the published packages and **`bypass_2fa: true`** for automation. `npm whoami` alone is not enough to prove this.
 - **Org → Actions → Workflow permissions:** allow **read/write** and **“Allow GitHub Actions to create and approve pull requests”** so `changesets/action` can open the version PR. If repo UI is grayed out, an **org owner** must relax the org default.
+
+## Token preflight (recommended before updating GitHub secret)
+
+- `npm whoami` proves the token authenticates, but not that it can publish.
+- `npm owner ls @supersubset/runtime` confirms the account still has owner access on an existing package.
+- `npm token list --json` should show the candidate automation token with publish-capable scope and **`"bypass_2fa": true`**. A token can pass `whoami` and still fail publish if either package-write or bypass-2FA is missing.
 
 ## When Release fails
 
-| Symptom                                            | Fix                                                                        |
-| -------------------------------------------------- | -------------------------------------------------------------------------- |
-| “not permitted to create or approve pull requests” | Org/repo workflow permissions (above). Re-run failed **Release** job.      |
-| `403` / `ENEEDAUTH` on publish                     | `NPM_TOKEN` missing, expired, wrong scope, or npm 2FA blocking automation. |
-| Duplicate version                                  | Version already on registry; add a new changeset with a higher bump.       |
+| Symptom                                                                               | Fix                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| “not permitted to create or approve pull requests”                                    | Org/repo workflow permissions (above). Re-run failed **Release** job.                                                                                                                        |
+| `E404` on `PUT https://registry.npmjs.org/@supersubset%2f...` for an existing package | Granular token is authenticated but does not actually have **package write** for that package/scope. Replace `NPM_TOKEN` with a package-write token, then re-run the failed **Release** job. |
+| `E403` saying bypass 2FA is required                                                  | Token has enough auth to reach npm, but **`bypass_2fa` is false**. Create a new automation token with bypass 2FA enabled, update `NPM_TOKEN`, then re-run the failed **Release** job.        |
+| `403` / `ENEEDAUTH` on publish without the bypass message                             | `NPM_TOKEN` is missing, expired, or otherwise not usable for npm publish.                                                                                                                    |
+| Duplicate version                                                                     | Version already on registry; add a new changeset with a higher bump.                                                                                                                         |
 
-Inspect: **Actions → Release → failed run → logs**. Locally: `pnpm -r publish --dry-run --no-git-checks` (from repo root) to validate tarballs without publishing.
+Inspect: **Actions → Release → failed run → logs**. After fixing npm auth, re-run the same failed **Release** workflow for the existing `main` commit; do **not** add another changeset just to retry the same release. Locally: `pnpm -r publish --dry-run --no-git-checks` (from repo root) to validate tarballs without publishing.
 
 ## Branch protection
 
@@ -59,9 +67,11 @@ Keep **`main` protected**. Land the **changeset commit** via **PR into `main`** 
 ## Verify publish
 
 ```bash
-npm view @supersubset/schema version
-npm view @supersubset/cli version
+npm view @supersubset/schema version dist-tags --json
+npm view @supersubset/cli version dist-tags --json
 ```
+
+Prefer `npm view` over relying on the npm website alone; the web UI can lag slightly after a successful publish.
 
 ## Anti-patterns
 

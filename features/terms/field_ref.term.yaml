@@ -1,0 +1,16 @@
+term:
+  id: field_ref
+  definition: >
+    A string identifier pointing to a field within a normalized dataset. Field
+    refs appear in filter definitions, widget data bindings, interaction mappings,
+    and drilldown state.
+  aliases:
+    - fieldRef
+    - field reference
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+      - packages/data-model/src/index.ts
+    ui:
+      shared:
+        - packages/designer/src/fields/field-ref-field.tsx
