@@ -21,8 +21,8 @@ export const DATE_PRESETS: { value: string; label: string }[] = [
 
 export interface DateRangeValue {
   preset?: string;
-  start?: string;
-  end?: string;
+  start?: string | number;
+  end?: string | number;
   min?: number;
   max?: number;
 }
@@ -222,7 +222,10 @@ function isValidRangeBound(key: string, value: unknown): boolean {
     return typeof value === 'number' && Number.isFinite(value);
   }
 
-  return typeof value === 'string' && DATE_BOUND_PATTERN.test(value);
+  return (
+    (typeof value === 'number' && Number.isFinite(value)) ||
+    (typeof value === 'string' && DATE_BOUND_PATTERN.test(value))
+  );
 }
 
 export function normalizeRangeBound(
