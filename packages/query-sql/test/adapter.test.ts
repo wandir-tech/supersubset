@@ -174,7 +174,7 @@ describe('SqlQueryAdapter — resolveFilterOptions via data-model helper', () =>
     });
 
     expect(executor.run).toHaveBeenCalledWith(
-      `SELECT DISTINCT "plan_type" AS "plan_type" FROM "plan_events" WHERE "plan_type" LIKE 'MEET' LIMIT 11`,
+      `SELECT DISTINCT "plan_type" AS "plan_type" FROM "plan_events" WHERE "plan_type" LIKE '%MEET%' LIMIT 11`,
     );
   });
 

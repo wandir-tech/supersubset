@@ -231,6 +231,23 @@ describe('toSql — validation', () => {
       }),
     ).toThrow(/min, max/);
   });
+
+  it('throws on duplicate sqlAlias collisions (forces caller to disambiguate)', () => {
+    expect(() =>
+      toSql({
+        datasetId: 'orders',
+        fields: [{ fieldId: 'status' }, { fieldId: 'status' }],
+      }),
+    ).toThrow(/duplicate column alias "status"/);
+  });
+
+  it('allows the same fieldId twice when at least one carries a unique alias', () => {
+    const { sql } = toSql({
+      datasetId: 'orders',
+      fields: [{ fieldId: 'status' }, { fieldId: 'status', alias: 'status_raw' }],
+    });
+    expect(sql).toBe('SELECT "status" AS "status", "status" AS "status_raw" FROM "orders"');
+  });
 });
 
 describe('escapeLiteral', () => {

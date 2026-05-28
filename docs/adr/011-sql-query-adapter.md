@@ -74,11 +74,21 @@ export function toSql(
 
 Behavior:
 
-- Translates `LogicalQuery.fields` to a `SELECT` list. Honors aggregations and aliases.
-- Translates `LogicalQuery.filters` to a `WHERE` clause with parameterized values by default.
-- Emits `GROUP BY` for non-aggregated projection fields when at least one aggregation is present **or** when `distinct: true` is set on the query.
+- Translates `LogicalQuery.fields` to a `SELECT` list. Honors aggregations and aliases. Rejects duplicate `sqlAlias` collisions with an explicit error rather than producing ambiguous columns.
+- Translates `LogicalQuery.filters` to a `WHERE` clause. Values are SQL-escaped (string literals quoted, embedded quotes doubled; numerics validated; nulls / booleans emitted directly).
+- Emits `SELECT DISTINCT` when `LogicalQuery.distinct === true` and no aggregations are present; emits `GROUP BY` for non-aggregated projection fields when at least one aggregation is present.
 - Translates `LogicalQuery.sort`, `limit`, `offset` directly.
-- `resolveFilterOptions` synthesizes `SELECT DISTINCT <field> FROM <dataset> LIMIT <n>` (or `LIKE` for search) and runs via `executor.run`, without relying on the host to implement anything beyond `run(sql)`.
+- `resolveFilterOptionsWithAdapter` (in `@supersubset/data-model`) synthesizes a `distinct: true` `LogicalQuery` and runs it via `executor.run`, without relying on the host to implement anything beyond `run(sql)`. For search, the term is normalized to **contains semantics** (wrapped with `%…%`) unless the caller already supplied `%` or `_` wildcards. The returned `complete` flag prefers `QueryResult.truncated` over a post-dedupe length heuristic so duplicate rows from older adapters cannot falsely report "all options loaded."
+
+### Security boundary
+
+`SqlQueryAdapter` emits inline-literal SQL in this MVP (no `?` / `$1` parameters). The contract is:
+
+- **Hosts MUST validate `datasetId` and `fieldId`** against an allowlist before calling `adapter.execute(query)`. The translator quotes identifiers but does not authorize them.
+- **Filter values are SQL-escaped** at the literal level by the translator, so user-supplied `value` payloads cannot break out of a quoted string.
+- **Hosts SHOULD validate `value` types** that don't pass through `escapeLiteral` cleanly (e.g. arrays for `in`, `[min, max]` for `between`).
+
+Parameterized execution is intentionally out of scope for the MVP; tracked as a follow-up so adapters can opt into `?` / `$1` placeholders once a dialect layer exists.
 
 ### 3. Extend `LogicalQuery` with `distinct?: boolean`
 

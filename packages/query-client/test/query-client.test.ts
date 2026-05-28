@@ -191,7 +191,7 @@ describe('QueryClient', () => {
       fields: [{ fieldId: 'status' }],
       limit: 10,
       distinct: true,
-      filters: [{ fieldId: 'status', operator: 'like', value: 'sh' }],
+      filters: [{ fieldId: 'status', operator: 'like', value: '%sh%' }],
     });
   });
 

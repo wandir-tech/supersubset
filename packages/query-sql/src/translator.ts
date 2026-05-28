@@ -54,7 +54,7 @@ export function isRealAggregation(agg: AggregationType | undefined): boolean {
 }
 
 export function planFields(query: LogicalQuery): PlannedField[] {
-  return query.fields.map((field) => {
+  const planned = query.fields.map((field) => {
     const sqlAlias = field.alias
       ? field.alias
       : isRealAggregation(field.aggregation)
@@ -63,6 +63,25 @@ export function planFields(query: LogicalQuery): PlannedField[] {
     const outputKey = field.alias ?? field.fieldId;
     return { field, sqlAlias, outputKey };
   });
+
+  // Reject ambiguous column projections. Duplicate `AS "x"` aliases in SQL
+  // give driver-dependent behavior (most keep the last column under that
+  // name) and would silently overwrite row keys during remapping. The user
+  // must disambiguate by setting `alias` on at least one of the colliding
+  // fields.
+  const seen = new Map<string, number>();
+  for (const p of planned) {
+    seen.set(p.sqlAlias, (seen.get(p.sqlAlias) ?? 0) + 1);
+  }
+  for (const [alias, count] of seen) {
+    if (count > 1) {
+      throw new Error(
+        `planFields: duplicate column alias "${alias}" — set a unique \`alias\` on the colliding fields.`,
+      );
+    }
+  }
+
+  return planned;
 }
 
 export function toSql(query: LogicalQuery, options: TranslateOptions = {}): TranslateResult {

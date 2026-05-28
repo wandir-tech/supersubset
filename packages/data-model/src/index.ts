@@ -204,7 +204,13 @@ export async function resolveFilterOptionsWithAdapter(
     distinct: true,
   };
   if (request.search) {
-    query.filters = [{ fieldId: request.fieldId, operator: 'like', value: request.search }];
+    query.filters = [
+      {
+        fieldId: request.fieldId,
+        operator: 'like',
+        value: normalizeSearchToContains(request.search),
+      },
+    ];
   }
 
   const result = await adapter.execute(query);
@@ -219,10 +225,24 @@ export async function resolveFilterOptionsWithAdapter(
     options.push({ value });
   }
 
-  return {
-    options,
-    complete: options.length < limit,
-  };
+  // Prefer execution evidence over a post-dedupe heuristic: client-side dedup
+  // can shrink `options.length` below `limit` even when more distinct values
+  // exist on the source. `QueryResult.truncated` is set by adapters that know
+  // (e.g. `SqlQueryAdapter` via the +1 sentinel); fall back to the heuristic
+  // only when the adapter hasn't reported truncation.
+  const complete =
+    result.truncated === false ? true : result.truncated === true ? false : options.length < limit;
+
+  return { options, complete };
+}
+
+/**
+ * Wrap a search term with `%` for contains-style matching unless the caller
+ * already supplied wildcards. Keeps the contract predictable across hosts.
+ */
+function normalizeSearchToContains(search: string): string {
+  if (search.includes('%') || search.includes('_')) return search;
+  return `%${search}%`;
 }
 
 // ─── Probe Contract ──────────────────────────────────────────
