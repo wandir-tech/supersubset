@@ -11,12 +11,13 @@
  */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { NormalizedDataset } from '@supersubset/data-model';
-import type {
-  DateFilterConfig,
-  FilterDefinition,
-  FilterOptionDefinition,
-  FilterOptionSource,
-  FilterScope,
+import {
+  generateWeeklyDateRangeOptions,
+  type DateFilterConfig,
+  type FilterDefinition,
+  type FilterOptionDefinition,
+  type FilterOptionSource,
+  type FilterScope,
 } from '@supersubset/schema';
 
 export type { FilterDefinition, FilterScope } from '@supersubset/schema';
@@ -112,6 +113,8 @@ const WEEKLY_DATE_DEFAULT_OPTIONS = [
   { value: 'last_week', label: 'Previous week' },
 ] as const;
 
+const WEEKLY_PREVIEW_OPTION_COUNT = 3;
+
 function isSelectFilterControlType(type: string): type is 'select' | 'multi-select' {
   return SELECT_FILTER_CONTROL_TYPES.has(type as SupportedFilterControlType);
 }
@@ -206,57 +209,12 @@ function asDateDefaultValue(value: unknown): { preset?: string; start?: string; 
   return {};
 }
 
-function startOfLocalDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function addDays(date: Date, days: number): Date {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
-}
-
-function clampWeekday(
-  value: DateFilterConfig['weekStartsOn'] | undefined,
-): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
-  return value === 0 ||
-    value === 1 ||
-    value === 2 ||
-    value === 3 ||
-    value === 4 ||
-    value === 5 ||
-    value === 6
-    ? value
-    : 0;
-}
-
-function getWeekStart(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): Date {
-  const localDate = startOfLocalDay(date);
-  const dayOffset = (localDate.getDay() - weekStartsOn + 7) % 7;
-  return addDays(localDate, -dayOffset);
-}
-
-function formatShortDate(date: Date): string {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
-}
-
 function getWeeklyPreviewLabels(config: DateFilterConfig): string[] {
-  const weekStartsOn = clampWeekday(config.weekStartsOn);
-  const currentWeekStart = getWeekStart(new Date(), weekStartsOn);
-  const weeksBack = config.weeksBack ?? 4;
-  const weeksForward = config.weeksForward ?? 0;
-  const labels: string[] = [];
-
-  for (let offset = -weeksBack; offset <= weeksForward; offset += 1) {
-    const start = addDays(currentWeekStart, offset * 7);
-    const end = addDays(start, 6);
-    labels.push(`${formatShortDate(start)} - ${formatShortDate(end)}`);
-  }
-
-  return labels.reverse().slice(0, 3);
+  // Preview only the newest few generated choices so the editor stays compact.
+  return generateWeeklyDateRangeOptions(config)
+    .reverse()
+    .slice(0, WEEKLY_PREVIEW_OPTION_COUNT)
+    .map((option) => option.label);
 }
 
 function normalizeFilterControlType(type: string): SupportedFilterControlType {
@@ -657,22 +615,7 @@ function FilterEditor({
             id={fieldSelectId}
             name={`filter-field-${filter.id}`}
             value={filter.fieldRef}
-            onChange={(e) => {
-              const nextFieldRef = e.target.value;
-              const nextField = dataset?.fields.find((f) => f.id === nextFieldRef);
-              const nextIsDateField = isDateDataType(nextField?.dataType);
-              handleChange({
-                fieldRef: nextFieldRef,
-                ...(nextIsDateField
-                  ? {
-                      type: 'date',
-                      operator: 'between',
-                      optionSource: undefined,
-                      dateConfig: filter.dateConfig ?? createDefaultDateConfig(),
-                    }
-                  : {}),
-              });
-            }}
+            onChange={(e) => handleChange({ fieldRef: e.target.value })}
             data-testid={`filter-field-${filter.id}`}
             style={selectStyle}
             disabled={!dataset}
@@ -786,7 +729,7 @@ function FilterEditor({
                     <span key={label}>{label}</span>
                   ))}
                   <span style={{ color: '#64748b' }}>
-                    Showing {Math.min(weeklyPreviewLabels.length, 3)} of{' '}
+                    Showing {Math.min(weeklyPreviewLabels.length, WEEKLY_PREVIEW_OPTION_COUNT)} of{' '}
                     {(dateConfig.weeksBack ?? 4) + (dateConfig.weeksForward ?? 0) + 1} weeks
                   </span>
                 </div>

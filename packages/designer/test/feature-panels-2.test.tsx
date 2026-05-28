@@ -726,11 +726,23 @@ describe('FilterBuilderPanel', () => {
       scope: { type: 'global' },
     };
 
-    render(<FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />);
+    const { rerender } = render(
+      <FilterBuilderPanel filters={[filter]} onChange={onChange} datasets={[MOCK_DATASET]} />,
+    );
 
     fireEvent.change(screen.getByTestId('filter-field-f-date'), {
       target: { value: 'order_date' },
     });
+
+    expect(onChange).toHaveBeenCalledWith([expect.objectContaining({ fieldRef: 'order_date' })]);
+
+    rerender(
+      <FilterBuilderPanel
+        filters={[{ ...filter, fieldRef: 'order_date' }]}
+        onChange={onChange}
+        datasets={[MOCK_DATASET]}
+      />,
+    );
 
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({

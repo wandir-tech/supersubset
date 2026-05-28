@@ -54,6 +54,36 @@ function createAlertsDashboard(alertRule: Record<string, unknown>) {
   };
 }
 
+function createDashboardWithDateConfig(dateConfig: Record<string, unknown>) {
+  return {
+    schemaVersion: '0.2.0',
+    id: 'dashboard-date-filters',
+    title: 'Date Filters',
+    pages: [
+      {
+        id: 'page-1',
+        title: 'Overview',
+        rootNodeId: 'root',
+        layout: {
+          root: { id: 'root', type: 'root', children: [], meta: {} },
+        },
+        widgets: [],
+      },
+    ],
+    filters: [
+      {
+        id: 'event-week',
+        type: 'date',
+        fieldRef: 'event_date',
+        datasetRef: 'events',
+        operator: 'between',
+        dateConfig,
+        scope: { type: 'global' },
+      },
+    ],
+  };
+}
+
 describe('dashboardDefinitionSchema alert rules', () => {
   it('keeps widgetDefinitionSchema chainable for sub-schema consumers', () => {
     const extendedWidgetSchema = widgetDefinitionSchema.extend({
@@ -156,6 +186,65 @@ describe('dashboardDefinitionSchema alert rules', () => {
         ? false
         : result.error.issues.some(
             (issue) => issue.path.join('.') === 'pages.0.widgets.0.config.alertRule',
+          ),
+    ).toBe(true);
+  });
+});
+
+describe('dashboardDefinitionSchema date filters', () => {
+  it('[filters-and-interactions.FILTER_BAR.4] rejects unknown date presets', () => {
+    const result = dashboardDefinitionSchema.safeParse(
+      createDashboardWithDateConfig({
+        mode: 'preset',
+        presets: ['next_fortnight'],
+      }),
+    );
+
+    expect(result.success).toBe(false);
+    expect(
+      result.success
+        ? false
+        : result.error.issues.some((issue) =>
+            issue.path.join('.').endsWith('dateConfig.presets.0'),
+          ),
+    ).toBe(true);
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] rejects default presets outside the curated list', () => {
+    const result = dashboardDefinitionSchema.safeParse(
+      createDashboardWithDateConfig({
+        mode: 'preset',
+        presets: ['today'],
+        defaultPreset: 'last_7_days',
+      }),
+    );
+
+    expect(result.success).toBe(false);
+    expect(
+      result.success
+        ? false
+        : result.error.issues.some((issue) =>
+            issue.path.join('.').endsWith('dateConfig.defaultPreset'),
+          ),
+    ).toBe(true);
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] rejects weekly configs with no generated options', () => {
+    const result = dashboardDefinitionSchema.safeParse(
+      createDashboardWithDateConfig({
+        mode: 'weekly',
+        weeksBack: 0,
+        weeksForward: 0,
+        includeCurrentWeek: false,
+      }),
+    );
+
+    expect(result.success).toBe(false);
+    expect(
+      result.success
+        ? false
+        : result.error.issues.some((issue) =>
+            issue.path.join('.').endsWith('dateConfig.includeCurrentWeek'),
           ),
     ).toBe(true);
   });

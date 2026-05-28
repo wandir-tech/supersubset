@@ -1,13 +1,13 @@
 import type { AggregationType, LogicalQuery, QueryResult } from '@supersubset/data-model';
 import {
   structuredAlertRuleSchema,
+  type FilterDefinition,
   type StructuredAlertRuleDefinition,
   type WidgetDefinition,
-  type FilterDefinition,
 } from '@supersubset/schema';
 import type { WidgetProps } from '../widgets/registry';
 import { filterAppliesToWidget, type FilterValue } from '../filters/FilterEngine';
-import { compileFilterDefinitionValue, isDateRangeLike } from '../filters/date-filter-utils';
+import { compileFilterDefinitionValue } from '../filters/date-filter-utils';
 import { resolveDataBindingConfig } from './widget-config';
 
 export interface QueryDataState {
@@ -324,65 +324,16 @@ function compileCrossFilterValue(
   fieldRef: string,
   value: unknown,
 ): NonNullable<LogicalQuery['filters']>[number] | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (Array.isArray(value)) {
-    const values = value.filter((entry) => entry != null && entry !== '');
-    if (values.length === 0) {
-      return null;
-    }
-
-    return {
-      fieldId: fieldRef,
-      operator: 'in',
-      value: values,
-    };
-  }
-
-  if (isDateRangeLike(value)) {
-    const lower = normalizeCrossFilterRangeBound(value.start ?? value.min);
-    const upper = normalizeCrossFilterRangeBound(value.end ?? value.max);
-
-    if (lower == null && upper == null) {
-      return null;
-    }
-
-    if (lower != null && upper != null) {
-      return {
-        fieldId: fieldRef,
-        operator: 'between',
-        value: [lower, upper],
-      };
-    }
-
-    return {
-      fieldId: fieldRef,
-      operator: lower != null ? 'gte' : 'lte',
-      value: lower ?? upper,
-    };
-  }
-
-  if (typeof value === 'string' && value.length === 0) {
-    return null;
-  }
-
-  return {
-    fieldId: fieldRef,
-    operator: 'eq',
-    value,
+  const syntheticDefinition: FilterDefinition = {
+    id: `cross-filter:${fieldRef}`,
+    type: 'cross-filter',
+    datasetRef: '__cross_filter__',
+    fieldRef,
+    operator: 'equals',
+    scope: { type: 'global' },
   };
-}
 
-function normalizeCrossFilterRangeBound(
-  value: string | number | undefined,
-): string | number | undefined {
-  if (value === '') {
-    return undefined;
-  }
-
-  return value;
+  return compileFilterDefinitionValue(syntheticDefinition, value);
 }
 
 function normalizeAggregation(value: string | undefined): AggregationType | undefined {

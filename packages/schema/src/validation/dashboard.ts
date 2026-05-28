@@ -1,8 +1,12 @@
 import { z } from 'zod';
+import { DATE_PRESETS, generateWeeklyDateRangeOptions } from '../date-utils';
 import { VALID_CHILDREN } from '../types/dashboard';
 import type { LayoutComponentType } from '../types/dashboard';
 
 const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const KNOWN_DATE_PRESET_VALUES = new Set(
+  DATE_PRESETS.map((preset) => preset.value).filter((value) => value.length > 0),
+);
 
 function safeRecord<V extends z.ZodTypeAny>(valueSchema: V) {
   return z.record(z.string(), valueSchema).transform((obj) => {
@@ -140,26 +144,62 @@ const filterOptionSourceSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-const dateFilterConfigSchema = z.object({
-  mode: z.enum(['range', 'preset', 'weekly']).optional(),
-  presets: z.array(z.string().min(1)).optional(),
-  defaultPreset: z.string().min(1).optional(),
-  allowCustomRange: z.boolean().optional(),
-  weekStartsOn: z
-    .union([
-      z.literal(0),
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(5),
-      z.literal(6),
-    ])
-    .optional(),
-  weeksBack: z.number().int().min(0).optional(),
-  weeksForward: z.number().int().min(0).optional(),
-  includeCurrentWeek: z.boolean().optional(),
-});
+const dateFilterConfigSchema = z
+  .object({
+    mode: z.enum(['range', 'preset', 'weekly']).optional(),
+    presets: z.array(z.string().min(1)).optional(),
+    defaultPreset: z.string().min(1).optional(),
+    allowCustomRange: z.boolean().optional(),
+    weekStartsOn: z
+      .union([
+        z.literal(0),
+        z.literal(1),
+        z.literal(2),
+        z.literal(3),
+        z.literal(4),
+        z.literal(5),
+        z.literal(6),
+      ])
+      .optional(),
+    weeksBack: z.number().int().min(0).optional(),
+    weeksForward: z.number().int().min(0).optional(),
+    includeCurrentWeek: z.boolean().optional(),
+  })
+  .superRefine((config, ctx) => {
+    config.presets?.forEach((preset, index) => {
+      if (!KNOWN_DATE_PRESET_VALUES.has(preset)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['presets', index],
+          message: `Unknown date preset: ${preset}`,
+        });
+      }
+    });
+
+    if (config.defaultPreset && !KNOWN_DATE_PRESET_VALUES.has(config.defaultPreset)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['defaultPreset'],
+        message: `Unknown default date preset: ${config.defaultPreset}`,
+      });
+    }
+
+    if (config.defaultPreset && config.presets && !config.presets.includes(config.defaultPreset)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['defaultPreset'],
+        message: 'defaultPreset must be included in presets when presets is set',
+      });
+    }
+
+    if (config.mode === 'weekly' && generateWeeklyDateRangeOptions(config).length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['includeCurrentWeek'],
+        message: 'weekly date filters must generate at least one option',
+      });
+    }
+  });
 
 const filterDefinitionSchema = z.object({
   id: z.string().min(1),

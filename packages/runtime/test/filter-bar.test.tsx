@@ -7,6 +7,7 @@ import type { FilterDefinition } from '@supersubset/schema';
 import {
   compileFilterDefinitionValue,
   generateWeeklyDateRangeOptions,
+  isDateRangeLike,
 } from '../src/filters/date-filter-utils';
 
 // Helper: render FilterBar within FilterProvider
@@ -540,6 +541,13 @@ describe('FilterBar', () => {
     );
 
     expect(compileFilterDefinitionValue(rangeDateFilter, { start: '', end: '' })).toBeNull();
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] only treats valid range-shaped objects as date ranges', () => {
+    expect(isDateRangeLike({ start: '2026-05-05', end: '' })).toBe(true);
+    expect(isDateRangeLike({ min: 10, max: 20 })).toBe(true);
+    expect(isDateRangeLike({ start: 'open' })).toBe(false);
+    expect(isDateRangeLike({ min: '10' })).toBe(false);
   });
 
   it('calls setFilter via onFilterChange when text is typed', () => {
