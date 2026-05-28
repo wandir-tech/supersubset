@@ -87,7 +87,7 @@ export interface LogicalQuery {
   /**
    * When true, the executor must return distinct rows (SQL `SELECT DISTINCT` or
    * equivalent). Additive — adapters that ignore it return non-distinct rows
-   * (legacy behavior). See ADR-011.
+   * (legacy behavior). See ADR-012.
    */
   distinct?: boolean;
 }
@@ -184,7 +184,7 @@ export interface QueryAdapter {
  * produce de-duplicated values; older adapters that ignore the flag still work
  * but may return duplicates.
  *
- * See ADR-009 §2 and ADR-011.
+ * See ADR-009 §2 and ADR-012.
  */
 const DEFAULT_FIELD_OPTIONS_LIMIT = 200;
 

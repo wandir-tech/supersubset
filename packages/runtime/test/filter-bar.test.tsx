@@ -173,8 +173,7 @@ describe('FilterBar', () => {
           ...selectFilter,
           optionSource: {
             kind: 'field',
-            strategy: 'search',
-            minSearchChars: 2,
+            strategy: 'preload',
           },
         },
       ],
@@ -192,6 +191,40 @@ describe('FilterBar', () => {
     expect(select.disabled).toBe(true);
     expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
     expect(optionLabels).toEqual(['No query adapter available for field-backed options']);
+  });
+
+  it("renders an explicit unavailable state for strategy: 'search' until a typeahead input exists (ADR-009 §3)", async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      // Adapter present, but search strategy must NOT auto-issue a query.
+      execute: vi.fn(),
+      resolveFilterOptions: vi.fn(),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: {
+            kind: 'field',
+            strategy: 'search',
+            minSearchChars: 2,
+          },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    expect(select.disabled).toBe(true);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels[0]).toMatch(/Search-strategy field options require a typeahead input/);
+    expect(queryAdapter.execute).not.toHaveBeenCalled();
+    expect(queryAdapter.resolveFilterOptions).not.toHaveBeenCalled();
   });
 
   it('resolves field-backed select options via queryAdapter.resolveFilterOptions when implemented', async () => {
@@ -318,8 +351,7 @@ describe('FilterBar', () => {
         ...multiSelectFilter,
         optionSource: {
           kind: 'field',
-          strategy: 'search',
-          minSearchChars: 2,
+          strategy: 'preload',
         },
       },
     ]);

@@ -123,14 +123,14 @@ test.describe('Host Integration Workflow', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('[interface-behavior.EMPTY_STATES.2] Vite host resolves field-backed Region options through the host QueryAdapter', async ({
+  test('[interface-behavior.EMPTY_STATES.2] Vite host renders explicit unavailable state for search-strategy field-backed options (no typeahead UI yet)', async ({
     page,
   }) => {
-    // Updated for ADR-011: with `LogicalQuery.distinct` plus `SqlQueryAdapter`
-    // (or any QueryAdapter implementing `execute`), field-backed options now
-    // resolve through the host instead of rendering the legacy unavailable
-    // placeholder. The Vite + SQLite example provides a QueryAdapter, so the
-    // Region filter populates with distinct values from the live dataset.
+    // Updated for ADR-012 / ADR-009 §3: field-backed options with the default
+    // `strategy: 'search'` must not auto-issue an unbounded distinct query on
+    // initial render — the runtime renders an explicit unavailable state
+    // until a typeahead input is wired. `strategy: 'preload'` is the safe
+    // path for low-cardinality fields and is covered by unit tests.
     const consoleErrors: string[] = [];
 
     page.on('console', (msg) => {
@@ -154,14 +154,12 @@ test.describe('Host Integration Workflow', () => {
     await page.getByRole('button', { name: 'Viewer' }).click();
 
     const regionFilter = page.getByLabel('Region');
-    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'ready');
-    await expect(regionFilter).toBeEnabled();
-    // Placeholder + at least one resolved value from the host dataset.
-    await expect(regionFilter.locator('option')).not.toHaveText([
-      'Field-backed options require host support',
-    ]);
-    const optionCount = await regionFilter.locator('option').count();
-    expect(optionCount).toBeGreaterThan(1);
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'unavailable');
+    await expect(regionFilter).toBeDisabled();
+    await expect(regionFilter.locator('option')).toHaveCount(1);
+    await expect(regionFilter.locator('option').first()).toContainText(
+      /Search-strategy field options require a typeahead input/,
+    );
 
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });

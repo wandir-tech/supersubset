@@ -614,6 +614,12 @@ function legacyState(legacyOptions?: string[]): ResolvedFilterOptionsState | nul
  * Resolve filter options for a single filter, handling static, field-backed,
  * legacy, and unavailable cases. Field-backed resolution is async via the
  * host-provided QueryAdapter. See ADR-009 §2.
+ *
+ * ADR-009 §3 mandates that `strategy: 'search'` filters must not auto-issue an
+ * unbounded distinct query on initial render. Until the typeahead UI lands
+ * (no debounced text input is wired through `FilterBar` yet), search-strategy
+ * filters render an explicit unavailable state. `preload` keeps the immediate
+ * fetch behavior, which is the safe path for low-cardinality fields.
  */
 function useResolveFilterOptions(
   filter: FilterDefinition,
@@ -621,16 +627,33 @@ function useResolveFilterOptions(
   legacyOptions: string[] | undefined,
 ): ResolvedFilterOptionsState {
   const sync = staticState(filter);
-  const isFieldBacked = filter.optionSource?.kind === 'field';
-  const fieldLimit =
-    filter.optionSource?.kind === 'field' ? filter.optionSource.maxOptions : undefined;
+  const fieldSource = filter.optionSource?.kind === 'field' ? filter.optionSource : undefined;
+  const isFieldBacked = fieldSource !== undefined;
+  const isSearchStrategy = fieldSource?.strategy === 'search';
+  const fieldLimit = fieldSource?.maxOptions;
 
-  const [fieldState, setFieldState] = useState<ResolvedFilterOptionsState>(() =>
-    isFieldBacked ? { kind: 'loading' } : { kind: 'ready', options: [] },
-  );
+  const [fieldState, setFieldState] = useState<ResolvedFilterOptionsState>(() => {
+    if (!isFieldBacked) return { kind: 'ready', options: [] };
+    if (isSearchStrategy) {
+      return {
+        kind: 'unavailable',
+        message:
+          'Search-strategy field options require a typeahead input (not yet implemented). Use strategy: "preload" or a static option list.',
+      };
+    }
+    return { kind: 'loading' };
+  });
 
   useEffect(() => {
     if (!isFieldBacked) return;
+    if (isSearchStrategy) {
+      setFieldState({
+        kind: 'unavailable',
+        message:
+          'Search-strategy field options require a typeahead input (not yet implemented). Use strategy: "preload" or a static option list.',
+      });
+      return;
+    }
     if (!queryAdapter) {
       setFieldState({
         kind: 'unavailable',
@@ -671,7 +694,15 @@ function useResolveFilterOptions(
     return () => {
       cancelled = true;
     };
-  }, [isFieldBacked, queryAdapter, filter.id, filter.datasetRef, filter.fieldRef, fieldLimit]);
+  }, [
+    isFieldBacked,
+    isSearchStrategy,
+    queryAdapter,
+    filter.id,
+    filter.datasetRef,
+    filter.fieldRef,
+    fieldLimit,
+  ]);
 
   if (sync) return sync;
   if (isFieldBacked) return fieldState;

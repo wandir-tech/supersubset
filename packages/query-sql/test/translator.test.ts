@@ -248,6 +248,66 @@ describe('toSql — validation', () => {
     });
     expect(sql).toBe('SELECT "status" AS "status", "status" AS "status_raw" FROM "orders"');
   });
+
+  it('throws on outputKey collision even when sqlAlias is unique (different aggregations on same fieldId)', () => {
+    // sqlAlias would be sum_total / avg_total (unique), but outputKey defaults
+    // to fieldId for both, which would silently overwrite during row remap.
+    expect(() =>
+      toSql({
+        datasetId: 'orders',
+        fields: [
+          { fieldId: 'total', aggregation: 'sum' },
+          { fieldId: 'total', aggregation: 'avg' },
+        ],
+      }),
+    ).toThrow(/duplicate output key "total"/);
+  });
+
+  it('throws on outputKey collision between raw + aggregated same fieldId', () => {
+    expect(() =>
+      toSql({
+        datasetId: 'orders',
+        fields: [{ fieldId: 'total' }, { fieldId: 'total', aggregation: 'sum' }],
+      }),
+    ).toThrow(/duplicate output key "total"/);
+  });
+
+  it('allows multiple aggregations on the same fieldId when each has a unique alias', () => {
+    const { sql, planned } = toSql({
+      datasetId: 'orders',
+      fields: [
+        { fieldId: 'total', aggregation: 'sum', alias: 'sum_total' },
+        { fieldId: 'total', aggregation: 'avg', alias: 'avg_total' },
+      ],
+    });
+    expect(sql).toBe(
+      'SELECT SUM("total") AS "sum_total", AVG("total") AS "avg_total" FROM "orders"',
+    );
+    expect(planned.map((p) => p.outputKey)).toEqual(['sum_total', 'avg_total']);
+  });
+
+  it('rejects negative or fractional limit/offset', () => {
+    expect(() => toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], limit: -1 })).toThrow(
+      /limit must be a non-negative integer/,
+    );
+    expect(() => toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], limit: 2.5 })).toThrow(
+      /limit must be a non-negative integer/,
+    );
+    expect(() => toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], offset: -5 })).toThrow(
+      /offset must be a non-negative integer/,
+    );
+    expect(() => toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], offset: 1.5 })).toThrow(
+      /offset must be a non-negative integer/,
+    );
+  });
+
+  it('accepts limit/offset of 0 (valid edge cases)', () => {
+    const a = toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], limit: 0 });
+    expect(a.sql).toContain('LIMIT 0');
+    // offset 0 is valid but omitted from the SQL (no OFFSET clause emitted).
+    const b = toSql({ datasetId: 'orders', fields: [{ fieldId: 'x' }], offset: 0 });
+    expect(b.sql).not.toContain('OFFSET');
+  });
 });
 
 describe('escapeLiteral', () => {

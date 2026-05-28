@@ -771,7 +771,7 @@ function FilterEditor({
                 Resolved at runtime via the host&apos;s QueryAdapter. Hosts using{' '}
                 <code>@supersubset/query-sql</code>&apos;s <code>SqlQueryAdapter</code> get this
                 automatically; others may implement <code>resolveFilterOptions</code> for custom
-                curation or authorization. See ADR-009 §2 and ADR-011.
+                curation or authorization. See ADR-009 §2 and ADR-012.
               </div>
             </div>
           )}

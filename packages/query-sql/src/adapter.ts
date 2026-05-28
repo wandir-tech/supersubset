@@ -5,7 +5,7 @@
  *
  * Hosts implement SqlExecutor (one tiny method: `run(sql) → rows`) and get
  * complete LogicalQuery → SQL behavior for free, including DISTINCT support
- * via `LogicalQuery.distinct`. See ADR-011.
+ * via `LogicalQuery.distinct`. See ADR-012.
  */
 import {
   type FieldDataType,

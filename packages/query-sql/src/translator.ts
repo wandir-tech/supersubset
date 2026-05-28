@@ -4,7 +4,7 @@
  * other dialects (MySQL backticks, ClickHouse) can wrap or replace this in
  * a future dialect layer.
  *
- * See ADR-011.
+ * See ADR-012.
  */
 import type {
   AggregationType,
@@ -64,24 +64,36 @@ export function planFields(query: LogicalQuery): PlannedField[] {
     return { field, sqlAlias, outputKey };
   });
 
-  // Reject ambiguous column projections. Duplicate `AS "x"` aliases in SQL
-  // give driver-dependent behavior (most keep the last column under that
-  // name) and would silently overwrite row keys during remapping. The user
-  // must disambiguate by setting `alias` on at least one of the colliding
-  // fields.
-  const seen = new Map<string, number>();
+  // Reject ambiguous column projections at two levels:
+  //
+  //   - sqlAlias collisions produce duplicate `AS "x"` clauses; driver
+  //     behavior is then dialect-dependent (most keep the last column under
+  //     that name).
+  //   - outputKey collisions are silent at the SQL level (sqlAlias may
+  //     disambiguate, e.g. `sum_total` vs `avg_total`) but cause the result
+  //     remap to overwrite the same row key — `[{fieldId:'total',aggregation:'sum'}, {fieldId:'total',aggregation:'avg'}]`
+  //     would put both into `row.total`, losing one value. The caller must
+  //     disambiguate by setting a unique `alias` on at least one of the
+  //     colliding fields.
+  assertUniqueAcrossPlanned(planned, 'sqlAlias');
+  assertUniqueAcrossPlanned(planned, 'outputKey');
+
+  return planned;
+}
+
+function assertUniqueAcrossPlanned(planned: PlannedField[], key: 'sqlAlias' | 'outputKey'): void {
+  const counts = new Map<string, number>();
   for (const p of planned) {
-    seen.set(p.sqlAlias, (seen.get(p.sqlAlias) ?? 0) + 1);
+    counts.set(p[key], (counts.get(p[key]) ?? 0) + 1);
   }
-  for (const [alias, count] of seen) {
+  for (const [value, count] of counts) {
     if (count > 1) {
+      const label = key === 'sqlAlias' ? 'column alias' : 'output key';
       throw new Error(
-        `planFields: duplicate column alias "${alias}" — set a unique \`alias\` on the colliding fields.`,
+        `planFields: duplicate ${label} "${value}" — set a unique \`alias\` on the colliding fields.`,
       );
     }
   }
-
-  return planned;
 }
 
 export function toSql(query: LogicalQuery, options: TranslateOptions = {}): TranslateResult {
@@ -131,16 +143,24 @@ export function toSql(query: LogicalQuery, options: TranslateOptions = {}): Tran
 
   // LIMIT (+1 sentinel if truncation probe requested)
   if (query.limit !== undefined) {
+    assertNonNegativeInteger(query.limit, 'limit');
     const limit = options.truncationProbe ? query.limit + 1 : query.limit;
     sql += ` LIMIT ${limit}`;
   }
 
-  // OFFSET
-  if (query.offset !== undefined && query.offset > 0) {
-    sql += ` OFFSET ${query.offset}`;
+  // OFFSET — validate when provided, but only emit when non-zero.
+  if (query.offset !== undefined) {
+    assertNonNegativeInteger(query.offset, 'offset');
+    if (query.offset > 0) sql += ` OFFSET ${query.offset}`;
   }
 
   return { sql, planned };
+}
+
+function assertNonNegativeInteger(value: number, label: 'limit' | 'offset'): void {
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`toSql: ${label} must be a non-negative integer (got ${value}).`);
+  }
 }
 
 // ─── Filters ─────────────────────────────────────────────────

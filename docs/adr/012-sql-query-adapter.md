@@ -1,4 +1,4 @@
-# ADR-011: Centralize SQL Generation in a Reusable SqlQueryAdapter
+# ADR-012: Centralize SQL Generation in a Reusable SqlQueryAdapter
 
 ## Status
 

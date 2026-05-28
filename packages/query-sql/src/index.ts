@@ -5,7 +5,7 @@
  * `SqlQueryAdapter` to get full `LogicalQuery → SQL` behavior, including
  * `LogicalQuery.distinct` support.
  *
- * See ADR-011.
+ * See ADR-012.
  */
 export {
   SqlQueryAdapter,

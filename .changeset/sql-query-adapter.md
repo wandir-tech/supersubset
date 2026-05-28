@@ -14,7 +14,7 @@
 '@supersubset/adapter-dbt': minor
 ---
 
-Centralize SQL generation in a reusable `SqlQueryAdapter` (ADR-011).
+Centralize SQL generation in a reusable `SqlQueryAdapter` (ADR-012).
 
 **New package `@supersubset/query-sql`** exporting:
 
@@ -33,6 +33,6 @@ Centralize SQL generation in a reusable `SqlQueryAdapter` (ADR-011).
 
 **`@supersubset/query-client` `QueryClient.resolveFilterOptions`** delegates to the data-model helper instead of throwing when the adapter has no `resolveFilterOptions` — falls through to the generic distinct query.
 
-**ADR updates**: ADR-011 (Accepted) documents the SQL-flavored execution layer the original spec called for, fixing the drift identified in [#160](https://github.com/wandir-tech/supersubset/issues/160). ADR-008 amended to point at ADR-011 for SQL-backed hosts; ADR-009 §2 softened to make the host-side resolver optional (the generic fallback is the default path).
+**ADR updates**: ADR-012 (Accepted) documents the SQL-flavored execution layer the original spec called for, fixing the drift identified in [#160](https://github.com/wandir-tech/supersubset/issues/160). ADR-008 amended to point at ADR-012 for SQL-backed hosts; ADR-009 §2 softened to make the host-side resolver optional (the generic fallback is the default path).
 
 **Designer**: updated the field-backed authoring hint to reflect the new architecture.
