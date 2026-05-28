@@ -1,39 +1,19 @@
-import type {
-  AggregationType,
-  LogicalQuery,
-  QueryFilterOperator,
-  QueryResult,
-} from '@supersubset/data-model';
+import type { AggregationType, LogicalQuery, QueryResult } from '@supersubset/data-model';
 import {
   structuredAlertRuleSchema,
+  type FilterDefinition,
   type StructuredAlertRuleDefinition,
   type WidgetDefinition,
-  type FilterDefinition,
 } from '@supersubset/schema';
 import type { WidgetProps } from '../widgets/registry';
 import { filterAppliesToWidget, type FilterValue } from '../filters/FilterEngine';
+import { compileFilterDefinitionValue } from '../filters/date-filter-utils';
 import { resolveDataBindingConfig } from './widget-config';
 
 export interface QueryDataState {
   data?: Record<string, unknown>[];
   columns?: WidgetProps['columns'];
 }
-
-const DIRECT_QUERY_OPERATORS = new Set<QueryFilterOperator>([
-  'eq',
-  'neq',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-  'in',
-  'not_in',
-  'like',
-  'not_like',
-  'is_null',
-  'is_not_null',
-  'between',
-]);
 
 const VALID_AGGREGATIONS = new Set<AggregationType>([
   'sum',
@@ -326,7 +306,7 @@ function compileActiveFiltersForQuery(
         return [];
       }
 
-      const compiledFilter = compileFilterValue(definition, activeFilter.value);
+      const compiledFilter = compileFilterDefinitionValue(definition, activeFilter.value);
       return compiledFilter ? [compiledFilter] : [];
     }
 
@@ -340,118 +320,20 @@ function compileActiveFiltersForQuery(
   });
 }
 
-function compileFilterValue(
-  definition: FilterDefinition,
-  value: unknown,
-): NonNullable<LogicalQuery['filters']>[number] | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (Array.isArray(value)) {
-    const values = value.filter((entry) => entry != null && entry !== '');
-    if (values.length === 0) {
-      return null;
-    }
-
-    return {
-      fieldId: definition.fieldRef,
-      operator: definition.operator === 'not_in' ? 'not_in' : 'in',
-      value: values,
-    };
-  }
-
-  if (isBetweenValue(value)) {
-    const lower = value.start ?? value.min;
-    const upper = value.end ?? value.max;
-
-    if (lower == null && upper == null) {
-      return null;
-    }
-
-    return {
-      fieldId: definition.fieldRef,
-      operator: 'between',
-      value: [lower, upper],
-    };
-  }
-
-  if (typeof value === 'string' && value.length === 0) {
-    return null;
-  }
-
-  const operator = normalizeFilterOperator(definition.operator);
-  if (!operator) {
-    return null;
-  }
-
-  return {
-    fieldId: definition.fieldRef,
-    operator,
-    value,
-  };
-}
-
 function compileCrossFilterValue(
   fieldRef: string,
   value: unknown,
 ): NonNullable<LogicalQuery['filters']>[number] | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (Array.isArray(value)) {
-    const values = value.filter((entry) => entry != null && entry !== '');
-    if (values.length === 0) {
-      return null;
-    }
-
-    return {
-      fieldId: fieldRef,
-      operator: 'in',
-      value: values,
-    };
-  }
-
-  if (isBetweenValue(value)) {
-    const lower = value.start ?? value.min;
-    const upper = value.end ?? value.max;
-
-    if (lower == null && upper == null) {
-      return null;
-    }
-
-    return {
-      fieldId: fieldRef,
-      operator: 'between',
-      value: [lower, upper],
-    };
-  }
-
-  if (typeof value === 'string' && value.length === 0) {
-    return null;
-  }
-
-  return {
-    fieldId: fieldRef,
-    operator: 'eq',
-    value,
+  const syntheticDefinition: FilterDefinition = {
+    id: `cross-filter:${fieldRef}`,
+    type: 'cross-filter',
+    datasetRef: '__cross_filter__',
+    fieldRef,
+    operator: 'equals',
+    scope: { type: 'global' },
   };
-}
 
-function normalizeFilterOperator(operator: string): QueryFilterOperator | null {
-  if (DIRECT_QUERY_OPERATORS.has(operator as QueryFilterOperator)) {
-    return operator as QueryFilterOperator;
-  }
-
-  switch (operator) {
-    case 'equals':
-      return 'eq';
-    case 'contains':
-      return 'like';
-    default:
-      return null;
-  }
+  return compileFilterDefinitionValue(syntheticDefinition, value);
 }
 
 function normalizeAggregation(value: string | undefined): AggregationType | undefined {
@@ -460,16 +342,6 @@ function normalizeAggregation(value: string | undefined): AggregationType | unde
   }
 
   return value as AggregationType;
-}
-
-function isBetweenValue(
-  value: unknown,
-): value is { start?: string; end?: string; min?: number; max?: number } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    ('start' in value || 'end' in value || 'min' in value || 'max' in value)
-  );
 }
 
 function parseCrossFilterId(filterId: string): { sourceWidgetId: string; fieldRef: string } | null {
