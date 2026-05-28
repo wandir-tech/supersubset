@@ -248,9 +248,14 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('[host-integration.WORKBENCH_PATTERNS.3] imports a field-backed filter dashboard and shows the explicit unavailable state in viewer mode', async ({
+  test('[host-integration.WORKBENCH_PATTERNS.3] imports a field-backed filter dashboard and resolves Region options through the host QueryAdapter in viewer mode', async ({
     page,
   }) => {
+    // Updated for ADR-011: field-backed options now resolve through the
+    // host's QueryAdapter via the generic `LogicalQuery.distinct` path. The
+    // Next.js workbench exposes /api/analytics/supersubset/query, so Region
+    // populates with distinct values from the live dataset instead of
+    // rendering the legacy "host support" unavailable placeholder.
     const fieldBackedDashboard = buildFieldBackedFilterWorkbenchDashboard();
     const requestUrls: string[] = [];
     const consoleErrors: string[] = [];
@@ -287,10 +292,13 @@ test.describe('Next.js Real Host Workbench', () => {
     const regionFilter = page.getByLabel('Region');
     const carrierFilter = page.getByLabel('Carrier');
 
-    await expect(regionFilter).toBeDisabled();
-    await expect(regionFilter.locator('option')).toHaveText([
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'ready');
+    await expect(regionFilter).toBeEnabled();
+    await expect(regionFilter.locator('option')).not.toHaveText([
       'Field-backed options require host support',
     ]);
+    const regionOptionCount = await regionFilter.locator('option').count();
+    expect(regionOptionCount).toBeGreaterThan(1);
     await expect(carrierFilter).toBeEnabled();
     await expect(carrierFilter.locator('option')).toContainText(['All', 'Atlas Air']);
 

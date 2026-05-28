@@ -123,9 +123,14 @@ test.describe('Host Integration Workflow', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('[interface-behavior.EMPTY_STATES.2] Vite host shows an explicit unavailable state when Region is authored with field-backed options', async ({
+  test('[interface-behavior.EMPTY_STATES.2] Vite host resolves field-backed Region options through the host QueryAdapter', async ({
     page,
   }) => {
+    // Updated for ADR-011: with `LogicalQuery.distinct` plus `SqlQueryAdapter`
+    // (or any QueryAdapter implementing `execute`), field-backed options now
+    // resolve through the host instead of rendering the legacy unavailable
+    // placeholder. The Vite + SQLite example provides a QueryAdapter, so the
+    // Region filter populates with distinct values from the live dataset.
     const consoleErrors: string[] = [];
 
     page.on('console', (msg) => {
@@ -149,11 +154,14 @@ test.describe('Host Integration Workflow', () => {
     await page.getByRole('button', { name: 'Viewer' }).click();
 
     const regionFilter = page.getByLabel('Region');
-    await expect(regionFilter).toBeDisabled();
-    await expect(regionFilter.locator('option')).toHaveCount(1);
-    await expect(regionFilter.locator('option').first()).toHaveText(
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'ready');
+    await expect(regionFilter).toBeEnabled();
+    // Placeholder + at least one resolved value from the host dataset.
+    await expect(regionFilter.locator('option')).not.toHaveText([
       'Field-backed options require host support',
-    );
+    ]);
+    const optionCount = await regionFilter.locator('option').count();
+    expect(optionCount).toBeGreaterThan(1);
 
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
