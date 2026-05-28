@@ -34,6 +34,7 @@ export function FilterBarWidget({
   dashboardFilters,
   datasets,
   filterOptions,
+  queryAdapter,
 }: WidgetProps) {
   const filters = resolveWidgetFilters(dashboardFilters, config);
   if (filters.length === 0) {
@@ -63,6 +64,7 @@ export function FilterBarWidget({
       filters,
       datasets,
       filterOptions,
+      queryAdapter,
       className: 'ss-widget-filter-bar',
       layout,
     }),

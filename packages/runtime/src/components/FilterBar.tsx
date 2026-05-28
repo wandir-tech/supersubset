@@ -2,7 +2,8 @@
  * FilterBar — renders dashboard-level filter controls from FilterDefinition[].
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
-import { createElement, useId, type ReactNode } from 'react';
+import { createElement, useEffect, useId, useState, type ReactNode } from 'react';
+import { resolveFilterOptionsWithAdapter, type QueryAdapter } from '@supersubset/data-model';
 import type {
   FilterDefinition,
   DatasetDefinition,
@@ -79,6 +80,11 @@ export interface FilterBarProps {
   datasets?: DatasetDefinition[];
   /** Legacy static option values per filter ID — compatibility fallback provided by the host */
   filterOptions?: Record<string, string[]>;
+  /**
+   * Host-provided query adapter used to resolve field-backed filter options.
+   * If absent, field-backed filters render an unavailable state.
+   */
+  queryAdapter?: QueryAdapter;
   className?: string;
   layout?: FilterBarLayout;
 }
@@ -89,10 +95,11 @@ interface ResolvedFilterOption {
   disabled?: boolean;
 }
 
-interface ResolvedFilterOptionsState {
-  options: ResolvedFilterOption[];
-  unavailableMessage?: string;
-}
+type ResolvedFilterOptionsState =
+  | { kind: 'ready'; options: ResolvedFilterOption[] }
+  | { kind: 'loading' }
+  | { kind: 'unavailable'; message: string }
+  | { kind: 'error'; message: string };
 
 function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
   if (layout === 'vertical') {
@@ -131,6 +138,7 @@ export function FilterBar({
   filters,
   datasets,
   filterOptions,
+  queryAdapter,
   className,
   layout = 'horizontal',
 }: FilterBarProps) {
@@ -153,7 +161,7 @@ export function FilterBar({
         key: f.id,
         filter: f,
         value: state.values[f.id],
-        datasets,
+        queryAdapter,
         inputIdPrefix,
         legacyOptions: filterOptions?.[f.id],
         onChangeValue: (value: unknown) => setFilter(f.id, value),
@@ -179,7 +187,7 @@ export function FilterBar({
 interface FilterControlProps {
   filter: FilterDefinition;
   value: unknown;
-  datasets?: DatasetDefinition[];
+  queryAdapter?: QueryAdapter;
   inputIdPrefix: string;
   legacyOptions?: string[];
   onChangeValue: (value: unknown) => void;
@@ -188,13 +196,13 @@ interface FilterControlProps {
 function FilterControl({
   filter,
   value,
-  datasets,
+  queryAdapter,
   inputIdPrefix,
   legacyOptions,
   onChangeValue,
 }: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
-  const resolvedOptionsState = resolveFilterOptions(filter, legacyOptions, datasets);
+  const resolvedOptionsState = useResolveFilterOptions(filter, queryAdapter, legacyOptions);
   const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
@@ -247,16 +255,12 @@ function renderSelect(
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
-  const isUnavailable = optionsState.unavailableMessage !== undefined;
-  const options = isUnavailable
-    ? [
-        {
-          value: '',
-          label: optionsState.unavailableMessage ?? 'Options unavailable',
-          disabled: true,
-        },
-      ]
-    : optionsState.options;
+  const placeholder = placeholderForState(optionsState);
+  const isInteractive = optionsState.kind === 'ready';
+  const options =
+    placeholder !== undefined
+      ? [{ value: '', label: placeholder, disabled: true }]
+      : (optionsState as { kind: 'ready'; options: ResolvedFilterOption[] }).options;
 
   return createElement(
     'select',
@@ -265,14 +269,15 @@ function renderSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       style: INPUT_STYLE,
-      value: isUnavailable ? '' : ((value as string) ?? ''),
-      disabled: isUnavailable,
+      value: isInteractive ? ((value as string) ?? '') : '',
+      disabled: !isInteractive,
+      'data-ss-filter-options-state': optionsState.kind,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const v = e.target.value;
         onChange(v === '' ? undefined : v);
       },
     },
-    isUnavailable ? null : createElement('option', { value: '' }, 'All'),
+    isInteractive ? createElement('option', { value: '' }, 'All') : null,
     ...options.map((opt) =>
       createElement(
         'option',
@@ -289,16 +294,12 @@ function renderMultiSelect(
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
-  const isUnavailable = optionsState.unavailableMessage !== undefined;
-  const options = isUnavailable
-    ? [
-        {
-          value: '',
-          label: optionsState.unavailableMessage ?? 'Options unavailable',
-          disabled: true,
-        },
-      ]
-    : optionsState.options;
+  const placeholder = placeholderForState(optionsState);
+  const isInteractive = optionsState.kind === 'ready';
+  const options =
+    placeholder !== undefined
+      ? [{ value: '', label: placeholder, disabled: true }]
+      : (optionsState as { kind: 'ready'; options: ResolvedFilterOption[] }).options;
   const selectedValues = Array.isArray(value)
     ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
     : typeof value === 'string' && value.length > 0
@@ -312,10 +313,11 @@ function renderMultiSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       multiple: true,
-      size: isUnavailable ? 1 : Math.min(Math.max(options.length, 3), 6),
+      size: isInteractive ? Math.min(Math.max(options.length, 3), 6) : 1,
       style: { ...INPUT_STYLE, minWidth: '160px', minHeight: '96px' },
-      value: isUnavailable ? [''] : selectedValues,
-      disabled: isUnavailable,
+      value: isInteractive ? selectedValues : [''],
+      disabled: !isInteractive,
+      'data-ss-filter-options-state': optionsState.kind,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const nextValues = Array.from(e.target.selectedOptions)
           .map((option) => option.value)
@@ -571,40 +573,17 @@ function renderDate(
 
 // ─── Field Options ───────────────────────────────────────────
 
-/**
- * Extract distinct options for a select filter from dataset field metadata.
- * In a real scenario, options come from query results. For now we return
- * an empty array when datasets provide no enum values.
- */
-function resolveFilterOptions(
-  filter: FilterDefinition,
-  legacyOptions?: string[],
-  datasets?: DatasetDefinition[],
-): ResolvedFilterOptionsState {
-  if (filter.optionSource?.kind === 'static') {
-    return filter.optionSource.options.length > 0
-      ? { options: filter.optionSource.options.map(normalizeStaticOption) }
-      : { options: [], unavailableMessage: 'No options configured' };
+function placeholderForState(state: ResolvedFilterOptionsState): string | undefined {
+  switch (state.kind) {
+    case 'loading':
+      return 'Loading options…';
+    case 'unavailable':
+      return state.message;
+    case 'error':
+      return state.message;
+    case 'ready':
+      return undefined;
   }
-
-  if (filter.optionSource?.kind === 'field') {
-    const fieldOptions = getFieldOptions(filter, datasets);
-    if (fieldOptions.length > 0) {
-      return { options: fieldOptions };
-    }
-
-    // TODO(issue #121): Replace this unavailable bridge with host-owned runtime resolution.
-    return {
-      options: [],
-      unavailableMessage: 'Field-backed options require host support',
-    };
-  }
-
-  if (legacyOptions && legacyOptions.length > 0) {
-    return { options: legacyOptions.map((option) => ({ value: option, label: option })) };
-  }
-
-  return { options: [], unavailableMessage: 'Options unavailable' };
 }
 
 function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOption {
@@ -615,15 +594,90 @@ function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOp
   };
 }
 
-function getFieldOptions(
+function staticState(filter: FilterDefinition): ResolvedFilterOptionsState | null {
+  if (filter.optionSource?.kind !== 'static') return null;
+  if (filter.optionSource.options.length === 0) {
+    return { kind: 'unavailable', message: 'No options configured' };
+  }
+  return { kind: 'ready', options: filter.optionSource.options.map(normalizeStaticOption) };
+}
+
+function legacyState(legacyOptions?: string[]): ResolvedFilterOptionsState | null {
+  if (!legacyOptions || legacyOptions.length === 0) return null;
+  return {
+    kind: 'ready',
+    options: legacyOptions.map((option) => ({ value: option, label: option })),
+  };
+}
+
+/**
+ * Resolve filter options for a single filter, handling static, field-backed,
+ * legacy, and unavailable cases. Field-backed resolution is async via the
+ * host-provided QueryAdapter. See ADR-009 §2.
+ */
+function useResolveFilterOptions(
   filter: FilterDefinition,
-  datasets?: DatasetDefinition[],
-): ResolvedFilterOption[] {
-  if (!datasets) return [];
-  const ds = datasets.find((d) => d.id === filter.datasetRef);
-  if (!ds) return [];
-  // Field-backed option resolution is still host-owned and not yet wired through
-  // the runtime. Static authored options and the legacy filterOptions prop are
-  // the currently supported sources.
-  return [];
+  queryAdapter: QueryAdapter | undefined,
+  legacyOptions: string[] | undefined,
+): ResolvedFilterOptionsState {
+  const sync = staticState(filter);
+  const isFieldBacked = filter.optionSource?.kind === 'field';
+  const fieldLimit =
+    filter.optionSource?.kind === 'field' ? filter.optionSource.maxOptions : undefined;
+
+  const [fieldState, setFieldState] = useState<ResolvedFilterOptionsState>(() =>
+    isFieldBacked ? { kind: 'loading' } : { kind: 'ready', options: [] },
+  );
+
+  useEffect(() => {
+    if (!isFieldBacked) return;
+    if (!queryAdapter) {
+      setFieldState({
+        kind: 'unavailable',
+        message: 'No query adapter available for field-backed options',
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setFieldState({ kind: 'loading' });
+    void resolveFilterOptionsWithAdapter(queryAdapter, {
+      filterId: filter.id,
+      datasetId: filter.datasetRef,
+      fieldId: filter.fieldRef,
+      limit: fieldLimit,
+    })
+      .then((response) => {
+        if (cancelled) return;
+        if (response.options.length === 0) {
+          setFieldState({ kind: 'unavailable', message: 'No values available' });
+          return;
+        }
+        setFieldState({
+          kind: 'ready',
+          options: response.options.map((option) => ({
+            value: option.value,
+            label: option.label ?? option.value,
+            disabled: option.disabled,
+          })),
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Failed to load options';
+        setFieldState({ kind: 'error', message });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isFieldBacked, queryAdapter, filter.id, filter.datasetRef, filter.fieldRef, fieldLimit]);
+
+  if (sync) return sync;
+  if (isFieldBacked) return fieldState;
+
+  const legacy = legacyState(legacyOptions);
+  if (legacy) return legacy;
+
+  return { kind: 'unavailable', message: 'Options unavailable' };
 }

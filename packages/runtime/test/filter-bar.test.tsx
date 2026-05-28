@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import type { QueryAdapter } from '@supersubset/data-model';
 import { FilterBar } from '../src/components/FilterBar';
 import { FilterProvider } from '../src/filters/FilterEngine';
 import type { FilterDefinition } from '@supersubset/schema';
@@ -11,6 +12,7 @@ function renderFilterBar(
     initialValues?: Record<string, unknown>;
     onFilterChange?: (state: { values: Record<string, unknown> }) => void;
     filterOptions?: Record<string, string[]>;
+    queryAdapter?: QueryAdapter;
   },
 ) {
   return render(
@@ -19,7 +21,11 @@ function renderFilterBar(
       initialValues={opts?.initialValues}
       onFilterChange={opts?.onFilterChange}
     >
-      <FilterBar filters={filters} filterOptions={opts?.filterOptions} />
+      <FilterBar
+        filters={filters}
+        filterOptions={opts?.filterOptions}
+        queryAdapter={opts?.queryAdapter}
+      />
     </FilterProvider>,
   );
 }
@@ -174,6 +180,7 @@ describe('FilterBar', () => {
       ],
       {
         filterOptions: { 'f-status': ['open', 'closed'] },
+        // No queryAdapter — field-backed should render unavailable, not use legacy options
       },
     );
 
@@ -183,7 +190,113 @@ describe('FilterBar', () => {
     );
 
     expect(select.disabled).toBe(true);
-    expect(optionLabels).toEqual(['Field-backed options require host support']);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    expect(optionLabels).toEqual(['No query adapter available for field-backed options']);
+  });
+
+  it('resolves field-backed select options via queryAdapter.resolveFilterOptions when implemented', async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      execute: vi.fn(),
+      resolveFilterOptions: vi.fn().mockResolvedValue({
+        options: [
+          { value: 'open', label: 'Open' },
+          { value: 'closed', label: 'Closed' },
+        ],
+        complete: true,
+      }),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload', maxOptions: 50 },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('ready');
+    });
+
+    expect(queryAdapter.resolveFilterOptions).toHaveBeenCalledWith({
+      filterId: 'f-status',
+      datasetId: 'ds-1',
+      fieldId: 'status',
+      limit: 50,
+    });
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['All', 'Open', 'Closed']);
+  });
+
+  it('resolves field-backed select options via the execute() fallback when the adapter has no resolveFilterOptions', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      columns: [{ fieldId: 'status', label: 'Status', dataType: 'string' }],
+      rows: [{ status: 'open' }, { status: 'closed' }],
+      totalRows: 2,
+    });
+    const queryAdapter: QueryAdapter = { name: 'mock', execute };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload' },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('ready');
+    });
+
+    expect(execute).toHaveBeenCalledWith({
+      datasetId: 'ds-1',
+      fields: [{ fieldId: 'status' }],
+      limit: 200,
+      distinct: true,
+    });
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['All', 'open', 'closed']);
+  });
+
+  it('shows an error state when the resolver rejects', async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      execute: vi.fn().mockRejectedValue(new Error('database unreachable')),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload' },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('error');
+    });
+
+    expect(select.disabled).toBe(true);
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['database unreachable']);
   });
 
   it('renders a multi-select control for multi-select filters', () => {
@@ -199,7 +312,7 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['Footwear', 'Apparel', 'Hydration']);
   });
 
-  it('renders an unavailable multi-select state for field-backed options without runtime support', () => {
+  it('renders an unavailable multi-select state for field-backed options when no queryAdapter is provided', () => {
     const { container } = renderFilterBar([
       {
         ...multiSelectFilter,
@@ -218,7 +331,8 @@ describe('FilterBar', () => {
 
     expect(select.disabled).toBe(true);
     expect(select.size).toBe(1);
-    expect(optionLabels).toEqual(['Field-backed options require host support']);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    expect(optionLabels).toEqual(['No query adapter available for field-backed options']);
   });
 
   it('renders a text input for text-type filter', () => {

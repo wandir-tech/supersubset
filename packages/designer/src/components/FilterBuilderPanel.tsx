@@ -768,8 +768,10 @@ function FilterEditor({
                 data-testid={`filter-option-field-note-${filter.id}`}
                 style={{ fontSize: 12, color: '#64748b' }}
               >
-                Field-backed options require runtime host support. Hosts may satisfy this with a
-                dedicated option resolver or, during migration, a compatibility fallback.
+                Resolved at runtime via the host&apos;s QueryAdapter. Hosts using{' '}
+                <code>@supersubset/query-sql</code>&apos;s <code>SqlQueryAdapter</code> get this
+                automatically; others may implement <code>resolveFilterOptions</code> for custom
+                curation or authorization. See ADR-009 §2 and ADR-011.
               </div>
             </div>
           )}

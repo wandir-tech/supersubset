@@ -285,6 +285,7 @@ function renderWidget(node: LayoutComponent, context: RenderContext): ReactNode 
     dashboardFilters: context.filters,
     datasets: context.datasets,
     filterOptions: context.filterOptions,
+    queryAdapter: context.queryAdapter,
     onEvent: context.onWidgetEvent,
   };
 

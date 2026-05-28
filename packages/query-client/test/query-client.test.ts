@@ -141,18 +141,58 @@ describe('QueryClient', () => {
     expect(response.complete).toBe(true);
   });
 
-  it('throws when filter option resolution is not supported', async () => {
+  it('falls back to a synthesized DISTINCT query when the adapter has no resolveFilterOptions', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      columns: [{ fieldId: 'status', label: 'Status', dataType: 'string' }],
+      rows: [{ status: 'delivered' }, { status: 'shipped' }, { status: null }],
+      totalRows: 3,
+    } satisfies QueryResult);
     const clientNoResolver = new QueryClient({
-      queryAdapter: { name: 'no-resolver', execute: vi.fn().mockResolvedValue(mockResult) },
+      queryAdapter: { name: 'no-resolver', execute },
     });
 
-    await expect(
-      clientNoResolver.resolveFilterOptions({
-        filterId: 'status-filter',
-        datasetId: 'orders',
-        fieldId: 'status',
-      }),
-    ).rejects.toThrow('Query adapter does not support filter option resolution');
+    const response = await clientNoResolver.resolveFilterOptions({
+      filterId: 'status-filter',
+      datasetId: 'orders',
+      fieldId: 'status',
+      limit: 25,
+    });
+
+    expect(execute).toHaveBeenCalledWith({
+      datasetId: 'orders',
+      fields: [{ fieldId: 'status' }],
+      limit: 25,
+      distinct: true,
+    });
+    expect(response.options).toEqual([{ value: 'delivered' }, { value: 'shipped' }]);
+    expect(response.complete).toBe(true);
+  });
+
+  it('forwards search as a like filter in the synthesized fallback query', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      columns: [{ fieldId: 'status', label: 'Status', dataType: 'string' }],
+      rows: [{ status: 'shipped' }],
+      totalRows: 1,
+    } satisfies QueryResult);
+    const clientNoResolver = new QueryClient({
+      queryAdapter: { name: 'no-resolver', execute },
+    });
+
+    await clientNoResolver.resolveFilterOptions({
+      filterId: 'status-filter',
+      datasetId: 'orders',
+      fieldId: 'status',
+      search: 'sh',
+      limit: 10,
+    });
+
+    expect(execute).toHaveBeenCalledWith({
+      datasetId: 'orders',
+      fields: [{ fieldId: 'status' }],
+      limit: 10,
+      distinct: true,
+      filters: [{ fieldId: 'status', operator: 'like', value: 'sh' }],
+    });
   });
 
   it('cancel is a no-op when adapter has no cancel', async () => {

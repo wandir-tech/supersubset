@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Proposed — amended by [ADR-011](./011-sql-query-adapter.md) (2026-05-27)
+
+> **Amendment summary (ADR-011, 2026-05-27)**: This ADR's "backend-agnostic, does not prescribe database access" stance remains valid for non-SQL hosts and the dev-app probe. For SQL-backed hosts, ADR-011 adds `@supersubset/query-sql`'s `SqlQueryAdapter` and the `LogicalQuery.distinct` flag, so the SQL execution path the spec called for now exists alongside the agnostic contract.
 
 ## Date
 
