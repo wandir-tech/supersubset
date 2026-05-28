@@ -44,7 +44,9 @@ test.describe('Metadata to Dashboard Workflow', () => {
     await page.goto('/');
   });
 
-  test('import Prisma schema and render resulting dashboard', async ({ page }) => {
+  test('[metadata-adapters.CLI_IMPORT.1] import Prisma schema and render resulting dashboard', async ({
+    page,
+  }) => {
     // Switch to Designer mode
     await page.getByText('Designer').click();
     await page.waitForTimeout(1500);
@@ -59,13 +61,15 @@ test.describe('Metadata to Dashboard Workflow', () => {
     // For this e2e test, we verify the import UI works with a pre-generated dashboard
   });
 
-  test('dev app renders without errors', async ({ page }) => {
+  test('[metadata-adapters.METADATA_MODEL.1] dev app renders without errors', async ({ page }) => {
     // Verify the viewer mode renders correctly
     const heading = page.getByRole('heading', { name: /sales overview/i });
     await expect(heading).toBeVisible({ timeout: 5000 });
   });
 
-  test('designer mode shows Components sidebar', async ({ page }) => {
+  test('[metadata-adapters.METADATA_MODEL.2] designer mode shows Components sidebar', async ({
+    page,
+  }) => {
     await page.getByText('Designer').click();
     await page.waitForTimeout(1500);
     // Verify the renamed sidebar tabs are visible

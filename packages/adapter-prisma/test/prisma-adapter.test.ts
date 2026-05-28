@@ -38,7 +38,7 @@ describe('PrismaAdapter', () => {
   });
 
   describe('getDatasets', () => {
-    it('extracts all models', async () => {
+    it('[metadata-adapters.ADAPTER_PRISMA.1] extracts all models', async () => {
       const datasets = await adapter.getDatasets(FIXTURE_SCHEMA);
       expect(datasets).toHaveLength(3);
       expect(datasets.map((d) => d.id)).toEqual(['user', 'order', 'orderitem']);
@@ -88,7 +88,7 @@ describe('PrismaAdapter', () => {
       expect(total?.defaultAggregation).toBe('sum');
     });
 
-    it('extracts relationships from @relation', async () => {
+    it('[metadata-adapters.METADATA_MODEL.3] extracts relationships from @relation', async () => {
       const datasets = await adapter.getDatasets(FIXTURE_SCHEMA);
       const order = datasets.find((d) => d.id === 'order')!;
       expect(order.relationships).toHaveLength(1);

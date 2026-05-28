@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Probe metadata onboarding', () => {
-  test('opens the designer from pasted metadata JSON', async ({ page }) => {
+  test('[metadata-adapters.CLI_IMPORT.2] opens the designer from pasted metadata JSON', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     await page.getByTestId('mode-probe').click();

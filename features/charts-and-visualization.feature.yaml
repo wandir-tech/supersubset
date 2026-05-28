@@ -1,0 +1,101 @@
+feature:
+  name: charts-and-visualization
+  product: supersubset
+  description: ECharts widget wrappers, designer-to-runtime chart config
+    round-trip, cross-chart field binding, scatter sizing capability, and theme
+    integration for Supersubset visualization.
+  version: 0.1.0
+  draft: false
+components:
+  ECHARTS_WRAPPERS:
+    name: ECharts Wrappers
+    description: Registered chart widget implementations for the runtime registry.
+    requirements:
+      1:
+        requirement: The charts package provides ECharts-backed *widget*
+          implementations for core analytical presentations including line, bar,
+          area, pie, scatter, combo, heatmap, table, KPI, and markdown surfaces.
+      2:
+        requirement: Each chart *widget* registers a stable type key and schema
+          props shape so the *designer* palette and *runtime* registry resolve
+          the same implementation.
+      3:
+        requirement: Chart *widget* wrappers isolate ECharts lifecycle concerns
+          inside the package so the core *runtime* remains chart-library agnostic.
+  ROUND_TRIP:
+    name: Config Round-Trip
+    description: Designer, schema, and runtime chart configuration fidelity.
+    requirements:
+      1:
+        requirement: Chart configuration authored in the *designer* serializes
+          into canonical *widget* props on the *dashboard* document at the current
+          *schema version*.
+      2:
+        requirement: The *runtime* reconstructs equivalent ECharts options from
+          serialized *widget* props without requiring a parallel shadow config
+          format.
+      3:
+        requirement: Round-trip save and reload preserves chart titles, series
+          bindings, axis roles, and legend visibility as capability groups
+          rather than losing unset optional fields.
+  FIELD_BINDING:
+    name: Cross-Chart Field Binding
+    description: Shared dataset field binding across visualization widgets.
+    requirements:
+      1:
+        requirement: Chart *widget* props bind dimensions and measures through
+          *field ref* identifiers that resolve against the host-provided
+          *dataset* catalog.
+      2:
+        requirement: Multiple chart *widgets* on the same *page* may bind the
+          same *field ref* so *filter* changes keep visualizations synchronized
+          without duplicate query definitions.
+      3:
+        requirement: Field binding validation rejects unknown *field ref*
+          identifiers at *dashboard* load time with errors surfaced in the
+          *designer* and *runtime*.
+      4:
+        requirement: Bound charts execute *logical query* requests through the
+          shared query client abstraction rather than embedding raw SQL in
+          *widget* configuration.
+  SCATTER:
+    name: Scatter Visualization
+    description: Tier-A scatter chart capabilities including point size encoding.
+    requirements:
+      1:
+        requirement: The scatter *widget* supports binding x, y, color, and
+          label channels through structured *field ref* roles defined in schema
+          rather than ad hoc prop names per host.
+      2:
+        requirement: Scatter charts expose a point-size capability that maps an
+          optional measure *field ref* to encoded marker size as a single
+          tier-A feature, not a matrix of unrelated size knobs.
+      3:
+        requirement: When point-size binding is absent the scatter *widget*
+          renders with a consistent default marker size across themes and export
+          round-trips.
+  THEMES:
+    name: Themes
+    description: Visual theming for chart and dashboard presentation.
+    requirements:
+      1:
+        requirement: Chart *widgets* consume shared *theme* tokens and ECharts
+          theme bridges so palette, typography, and axis styling stay consistent
+          with the enclosing *dashboard*.
+      2:
+        requirement: Inline and referenced *theme* definitions on the *dashboard*
+          document propagate to chart rendering without requiring per-*widget*
+          color overrides for defaults.
+      3:
+        requirement: Alert *widget* types render *alert rule* evaluations supplied
+          by the *host app* rather than inventing thresholds absent from bound
+          metadata or props.
+constraints:
+  VISUALIZATION_SCOPE:
+    name: Visualization Scope
+    description: Chart package boundaries within the library.
+    requirements:
+      1:
+        requirement: Chart requirements describe visualization capabilities at
+          the *widget* and binding level; they do not mandate a specific
+          warehouse, ORM, or server-side chart renderer.

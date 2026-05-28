@@ -7,12 +7,17 @@ export {
 } from './components/SupersubsetRenderer';
 
 // FilterBar component
+export { FilterBar, type FilterBarProps } from './components/FilterBar';
+
 export {
-  FilterBar,
-  type FilterBarProps,
   DATE_PRESETS,
+  compileFilterDefinitionValue,
+  generateWeeklyDateRangeOptions,
+  isDateRangeLike,
   resolveRelativeDate,
-} from './components/FilterBar';
+  type DateRangeValue,
+  type WeeklyDateRangeOption,
+} from './filters/date-filter-utils';
 
 // DrillBreadcrumbBar component
 export { DrillBreadcrumbBar } from './components/DrillBreadcrumbBar';

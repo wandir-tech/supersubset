@@ -1,0 +1,12 @@
+term:
+  id: page
+  definition: >
+    A tab or screen within a dashboard containing its own layout tree, widget
+    list, and optional page-scoped filters. Multi-page dashboards use interactions
+    to navigate between pages.
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/layout/LayoutRenderer.tsx

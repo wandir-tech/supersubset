@@ -1,0 +1,58 @@
+{
+  "name": "@supersubset/query-sql",
+  "version": "0.1.4",
+  "description": "SQL QueryAdapter and translator for Supersubset — turns LogicalQuery into SQL so SQL-backed hosts don't have to.",
+  "license": "Apache-2.0",
+  "author": "Wandir Technologies Inc.",
+  "homepage": "https://github.com/wandir-tech/supersubset/tree/main/packages/query-sql#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wandir-tech/supersubset.git",
+    "directory": "packages/query-sql"
+  },
+  "bugs": {
+    "url": "https://github.com/wandir-tech/supersubset/issues"
+  },
+  "keywords": [
+    "query",
+    "sql",
+    "duckdb",
+    "analytics",
+    "supersubset"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@supersubset/data-model": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

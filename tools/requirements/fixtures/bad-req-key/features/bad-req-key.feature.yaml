@@ -1,0 +1,13 @@
+feature:
+  name: bad-req-key
+  product: supersubset
+components:
+  DEMO:
+    requirements:
+      one:
+        requirement: Invalid requirement key shape.
+constraints:
+  PLATFORM:
+    requirements:
+      1:
+        requirement: Default platform scope applies.

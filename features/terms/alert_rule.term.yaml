@@ -1,0 +1,16 @@
+term:
+  id: alert_rule
+  definition: >
+    A structured widget configuration that evaluates a metric against a threshold
+    and surfaces an alert when the condition matches. Alert rules compile to
+    LogicalQuery requests evaluated during widget render.
+  aliases:
+    - alert
+    - threshold rule
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/runtime/src/layout/render-query-helpers.ts
+        - packages/designer/src/adapters/alert-rule-helpers.ts

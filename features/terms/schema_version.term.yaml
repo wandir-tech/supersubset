@@ -1,0 +1,12 @@
+term:
+  id: schema_version
+  definition: >
+    The semver-like version stamp on a DashboardDefinition that drives migration
+    before validation. Parsers normalize older documents to the current canonical
+    shape when schema_version is supported.
+  aliases:
+    - schemaVersion
+  references:
+    server:
+      - packages/schema/src/migrations/index.ts
+      - packages/schema/src/types/dashboard.ts

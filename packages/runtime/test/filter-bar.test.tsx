@@ -1,8 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import type { QueryAdapter } from '@supersubset/data-model';
 import { FilterBar } from '../src/components/FilterBar';
 import { FilterProvider } from '../src/filters/FilterEngine';
 import type { FilterDefinition } from '@supersubset/schema';
+import {
+  compileFilterDefinitionValue,
+  generateWeeklyDateRangeOptions,
+  isDateRangeLike,
+} from '../src/filters/date-filter-utils';
 
 // Helper: render FilterBar within FilterProvider
 function renderFilterBar(
@@ -11,6 +17,7 @@ function renderFilterBar(
     initialValues?: Record<string, unknown>;
     onFilterChange?: (state: { values: Record<string, unknown> }) => void;
     filterOptions?: Record<string, string[]>;
+    queryAdapter?: QueryAdapter;
   },
 ) {
   return render(
@@ -19,7 +26,11 @@ function renderFilterBar(
       initialValues={opts?.initialValues}
       onFilterChange={opts?.onFilterChange}
     >
-      <FilterBar filters={filters} filterOptions={opts?.filterOptions} />
+      <FilterBar
+        filters={filters}
+        filterOptions={opts?.filterOptions}
+        queryAdapter={opts?.queryAdapter}
+      />
     </FilterProvider>,
   );
 }
@@ -72,6 +83,31 @@ const dateFilter: FilterDefinition = {
   scope: { type: 'page', pageId: 'page-1' },
 };
 
+const weeklyDateFilter: FilterDefinition = {
+  ...dateFilter,
+  id: 'f-week',
+  title: 'Week',
+  operator: 'between',
+  dateConfig: {
+    mode: 'weekly',
+    weekStartsOn: 1,
+    weeksBack: 1,
+    weeksForward: 1,
+    includeCurrentWeek: true,
+  },
+};
+
+const rangeDateFilter: FilterDefinition = {
+  ...dateFilter,
+  id: 'f-date-range',
+  title: 'Created range',
+  operator: 'between',
+  dateConfig: {
+    mode: 'range',
+    allowCustomRange: true,
+  },
+};
+
 const multiSelectFilter: FilterDefinition = {
   id: 'f-category',
   title: 'Category',
@@ -92,7 +128,7 @@ const multiSelectFilter: FilterDefinition = {
 };
 
 describe('FilterBar', () => {
-  it('renders a control for each filter definition', () => {
+  it('[filters-and-interactions.FILTER_BAR.1] renders a control for each filter definition', () => {
     const { container } = renderFilterBar([selectFilter, textFilter, rangeFilter, dateFilter]);
 
     const controls = container.querySelectorAll('.ss-filter-control');
@@ -111,7 +147,7 @@ describe('FilterBar', () => {
     expect(select?.tagName).toBe('SELECT');
   });
 
-  it('renders authored static options without the legacy filterOptions prop', () => {
+  it('[filters-and-interactions.FILTER_OPTION_SOURCES.1] renders authored static options without the legacy filterOptions prop', () => {
     const { container } = renderFilterBar([selectFilter]);
 
     const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
@@ -148,7 +184,7 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['All', 'Pending', 'Resolved']);
   });
 
-  it('renders an unavailable select state when no option source is available', () => {
+  it('[filters-and-interactions.FILTER_OPTION_SOURCES.3] renders an unavailable select state when no option source is available', () => {
     const { container } = renderFilterBar([{ ...selectFilter, optionSource: undefined }]);
 
     const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
@@ -167,13 +203,13 @@ describe('FilterBar', () => {
           ...selectFilter,
           optionSource: {
             kind: 'field',
-            strategy: 'search',
-            minSearchChars: 2,
+            strategy: 'preload',
           },
         },
       ],
       {
         filterOptions: { 'f-status': ['open', 'closed'] },
+        // No queryAdapter — field-backed should render unavailable, not use legacy options
       },
     );
 
@@ -183,7 +219,147 @@ describe('FilterBar', () => {
     );
 
     expect(select.disabled).toBe(true);
-    expect(optionLabels).toEqual(['Field-backed options require host support']);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    expect(optionLabels).toEqual(['No query adapter available for field-backed options']);
+  });
+
+  it("renders an explicit unavailable state for strategy: 'search' until a typeahead input exists (ADR-009 §3)", async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      // Adapter present, but search strategy must NOT auto-issue a query.
+      execute: vi.fn(),
+      resolveFilterOptions: vi.fn(),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: {
+            kind: 'field',
+            strategy: 'search',
+            minSearchChars: 2,
+          },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    expect(select.disabled).toBe(true);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels[0]).toMatch(/Search-strategy field options require a typeahead input/);
+    expect(queryAdapter.execute).not.toHaveBeenCalled();
+    expect(queryAdapter.resolveFilterOptions).not.toHaveBeenCalled();
+  });
+
+  it('resolves field-backed select options via queryAdapter.resolveFilterOptions when implemented', async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      execute: vi.fn(),
+      resolveFilterOptions: vi.fn().mockResolvedValue({
+        options: [
+          { value: 'open', label: 'Open' },
+          { value: 'closed', label: 'Closed' },
+        ],
+        complete: true,
+      }),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload', maxOptions: 50 },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('ready');
+    });
+
+    expect(queryAdapter.resolveFilterOptions).toHaveBeenCalledWith({
+      filterId: 'f-status',
+      datasetId: 'ds-1',
+      fieldId: 'status',
+      limit: 50,
+    });
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['All', 'Open', 'Closed']);
+  });
+
+  it('resolves field-backed select options via the execute() fallback when the adapter has no resolveFilterOptions', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      columns: [{ fieldId: 'status', label: 'Status', dataType: 'string' }],
+      rows: [{ status: 'open' }, { status: 'closed' }],
+      totalRows: 2,
+    });
+    const queryAdapter: QueryAdapter = { name: 'mock', execute };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload' },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('ready');
+    });
+
+    expect(execute).toHaveBeenCalledWith({
+      datasetId: 'ds-1',
+      fields: [{ fieldId: 'status' }],
+      limit: 200,
+      distinct: true,
+    });
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['All', 'open', 'closed']);
+  });
+
+  it('shows an error state when the resolver rejects', async () => {
+    const queryAdapter: QueryAdapter = {
+      name: 'mock',
+      execute: vi.fn().mockRejectedValue(new Error('database unreachable')),
+    };
+
+    const { container } = renderFilterBar(
+      [
+        {
+          ...selectFilter,
+          optionSource: { kind: 'field', strategy: 'preload' },
+        },
+      ],
+      { queryAdapter },
+    );
+
+    const select = container.querySelector('.ss-filter-select') as HTMLSelectElement;
+    await waitFor(() => {
+      expect(select.getAttribute('data-ss-filter-options-state')).toBe('error');
+    });
+
+    expect(select.disabled).toBe(true);
+    const optionLabels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(optionLabels).toEqual(['database unreachable']);
   });
 
   it('renders a multi-select control for multi-select filters', () => {
@@ -199,14 +375,13 @@ describe('FilterBar', () => {
     expect(optionLabels).toEqual(['Footwear', 'Apparel', 'Hydration']);
   });
 
-  it('renders an unavailable multi-select state for field-backed options without runtime support', () => {
+  it('renders an unavailable multi-select state for field-backed options when no queryAdapter is provided', () => {
     const { container } = renderFilterBar([
       {
         ...multiSelectFilter,
         optionSource: {
           kind: 'field',
-          strategy: 'search',
-          minSearchChars: 2,
+          strategy: 'preload',
         },
       },
     ]);
@@ -218,7 +393,8 @@ describe('FilterBar', () => {
 
     expect(select.disabled).toBe(true);
     expect(select.size).toBe(1);
-    expect(optionLabels).toEqual(['Field-backed options require host support']);
+    expect(select.getAttribute('data-ss-filter-options-state')).toBe('unavailable');
+    expect(optionLabels).toEqual(['No query adapter available for field-backed options']);
   });
 
   it('renders a text input for text-type filter', () => {
@@ -250,6 +426,131 @@ describe('FilterBar', () => {
     expect(options![0].textContent).toBe('All time');
   });
 
+  it('[filters-and-interactions.FILTER_BAR.5] renders authored weekly date range options', () => {
+    const options = generateWeeklyDateRangeOptions(
+      weeklyDateFilter.dateConfig,
+      new Date(2026, 4, 28),
+    );
+
+    expect(options).toEqual([
+      expect.objectContaining({ start: '2026-05-18', end: '2026-05-24', offset: -1 }),
+      expect.objectContaining({ start: '2026-05-25', end: '2026-05-31', offset: 0 }),
+      expect.objectContaining({ start: '2026-06-01', end: '2026-06-07', offset: 1 }),
+    ]);
+
+    const { container } = renderFilterBar([weeklyDateFilter]);
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+    const labels = Array.from(select.querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(labels[0]).toBe('All time');
+    expect(labels).toContain('May 25 - May 31');
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.5] emits weekly range values that compile to logical query ranges', () => {
+    const onFilterChange = vi.fn();
+    const { container } = renderFilterBar([weeklyDateFilter], { onFilterChange });
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+    const firstWeeklyValue = Array.from(select.options).find((option) =>
+      option.value.startsWith('week:'),
+    )?.value;
+
+    expect(firstWeeklyValue).toBeTruthy();
+    fireEvent.change(select, { target: { value: firstWeeklyValue } });
+
+    const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
+    const filterValue = lastCall.values['f-week'];
+
+    expect(filterValue).toEqual(
+      expect.objectContaining({
+        preset: firstWeeklyValue,
+        start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    );
+    expect(compileFilterDefinitionValue(weeklyDateFilter, filterValue)).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: [filterValue.start, filterValue.end],
+    });
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.5] respects relative weekly defaults', () => {
+    const currentWeek = generateWeeklyDateRangeOptions(weeklyDateFilter.dateConfig).find(
+      (option) => option.offset === 0,
+    );
+
+    expect(currentWeek).toBeDefined();
+    if (!currentWeek) {
+      throw new Error('Expected the weekly filter to include the current week');
+    }
+
+    const { container } = renderFilterBar([weeklyDateFilter], {
+      initialValues: { 'f-week': { preset: 'this_week' } },
+    });
+    const select = container.querySelector('.ss-filter-date-preset') as HTMLSelectElement;
+
+    expect(select.value).toBe(currentWeek.value);
+    expect(compileFilterDefinitionValue(weeklyDateFilter, { preset: 'this_week' })).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: [currentWeek.start, currentWeek.end],
+    });
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] renders range-mode date filters as date inputs without a preset dropdown', () => {
+    const onFilterChange = vi.fn();
+    const { container } = renderFilterBar([rangeDateFilter], { onFilterChange });
+
+    expect(container.querySelector('.ss-filter-date-preset')).toBeNull();
+
+    const startInput = container.querySelector(
+      'input[name="f-date-range-start"]',
+    ) as HTMLInputElement;
+    const endInput = container.querySelector('input[name="f-date-range-end"]') as HTMLInputElement;
+    expect(startInput?.type).toBe('date');
+    expect(endInput?.type).toBe('date');
+
+    fireEvent.change(startInput, { target: { value: '2026-05-01' } });
+    fireEvent.change(endInput, { target: { value: '2026-05-31' } });
+
+    const lastCall = onFilterChange.mock.calls[onFilterChange.mock.calls.length - 1][0];
+    expect(compileFilterDefinitionValue(rangeDateFilter, lastCall.values['f-date-range'])).toEqual({
+      fieldId: 'created_at',
+      operator: 'between',
+      value: ['2026-05-01', '2026-05-31'],
+    });
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] compiles partial date ranges as one-sided filters', () => {
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '2026-05-05', end: '' })).toEqual(
+      {
+        fieldId: 'created_at',
+        operator: 'gte',
+        value: '2026-05-05',
+      },
+    );
+
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '', end: '2026-05-31' })).toEqual(
+      {
+        fieldId: 'created_at',
+        operator: 'lte',
+        value: '2026-05-31',
+      },
+    );
+
+    expect(compileFilterDefinitionValue(rangeDateFilter, { start: '', end: '' })).toBeNull();
+  });
+
+  it('[filters-and-interactions.FILTER_BAR.4] only treats valid range-shaped objects as date ranges', () => {
+    expect(isDateRangeLike({ start: '2026-05-05', end: '' })).toBe(true);
+    expect(isDateRangeLike({ start: 10, end: 20 })).toBe(true);
+    expect(isDateRangeLike({ min: 10, max: 20 })).toBe(true);
+    expect(isDateRangeLike({ start: 'open' })).toBe(false);
+    expect(isDateRangeLike({ min: '10' })).toBe(false);
+  });
+
   it('calls setFilter via onFilterChange when text is typed', () => {
     const onFilterChange = vi.fn();
     const { container } = renderFilterBar([textFilter], { onFilterChange });
@@ -278,7 +579,7 @@ describe('FilterBar', () => {
     expect(lastCall.values['f-category']).toEqual(['footwear', 'hydration']);
   });
 
-  it('renders Clear filters button when filters are active', () => {
+  it('[filters-and-interactions.FILTER_BAR.3] renders Clear filters button when filters are active', () => {
     const onFilterChange = vi.fn();
     const { container } = renderFilterBar([textFilter], {
       initialValues: { 'f-search': 'existing' },

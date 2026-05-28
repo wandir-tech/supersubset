@@ -1,0 +1,13 @@
+term:
+  id: theme
+  definition: >
+    Dashboard styling tokens for colors, typography, spacing, and chart palettes.
+    Inline or referenced themes resolve to CSS variables and propagate to chart
+    widgets at render time.
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+    ui:
+      shared:
+        - packages/theme/src/index.ts
+        - packages/runtime/src/layout/LayoutRenderer.tsx

@@ -104,7 +104,7 @@ async function ensureDesignerMenuBarExpanded(page: Page) {
 }
 
 test.describe('Next.js Real Host Workbench', () => {
-  test('logs in, loads datasets, and re-queries a query-backed alerts tile in viewer mode', async ({
+  test('[host-integration.WORKBENCH_PATTERNS.1] logs in, loads datasets, and re-queries a query-backed alerts tile in viewer mode', async ({
     page,
   }) => {
     const requestUrls: string[] = [];
@@ -160,7 +160,7 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('imports a structured alert-rule dashboard and executes it through the real host query adapter', async ({
+  test('[host-integration.WORKBENCH_PATTERNS.2] imports a structured alert-rule dashboard and executes it through the real host query adapter', async ({
     page,
   }) => {
     const structuredDashboard = buildStructuredAlertsWorkbenchDashboard();
@@ -248,9 +248,15 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('imports a field-backed filter dashboard and shows the explicit unavailable state in viewer mode', async ({
+  test('[host-integration.WORKBENCH_PATTERNS.3] imports a field-backed filter dashboard and renders an explicit unavailable state for search-strategy filters in viewer mode', async ({
     page,
   }) => {
+    // Updated for ADR-012 / ADR-009 §3: the imported workbench dashboard
+    // authors the Region filter with `strategy: 'search'`, which must not
+    // auto-issue an unbounded distinct query on initial render. Until the
+    // typeahead input is wired, search-strategy filters render explicit
+    // unavailable state. `preload`-strategy filters and adapter-backed
+    // resolution are covered by unit tests.
     const fieldBackedDashboard = buildFieldBackedFilterWorkbenchDashboard();
     const requestUrls: string[] = [];
     const consoleErrors: string[] = [];
@@ -287,10 +293,12 @@ test.describe('Next.js Real Host Workbench', () => {
     const regionFilter = page.getByLabel('Region');
     const carrierFilter = page.getByLabel('Carrier');
 
+    await expect(regionFilter).toHaveAttribute('data-ss-filter-options-state', 'unavailable');
     await expect(regionFilter).toBeDisabled();
-    await expect(regionFilter.locator('option')).toHaveText([
-      'Field-backed options require host support',
-    ]);
+    await expect(regionFilter.locator('option')).toHaveCount(1);
+    await expect(regionFilter.locator('option').first()).toContainText(
+      /Search-strategy field options require a typeahead input/,
+    );
     await expect(carrierFilter).toBeEnabled();
     await expect(carrierFilter.locator('option')).toContainText(['All', 'Atlas Air']);
 
@@ -301,7 +309,7 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('publishes an edited dashboard title and reloads the persisted workbench state without another login', async ({
+  test('[host-integration.HOST_OWNERSHIP.2] publishes an edited dashboard title and reloads the persisted workbench state without another login', async ({
     page,
   }) => {
     const editedDashboardTitle = 'Northstar Logistics Persisted Host Workflow';
@@ -347,7 +355,7 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('keeps the published dashboard across logout while discarding an unpublished draft after re-login', async ({
+  test('[host-integration.EMBEDDING_CONTRACT.2] keeps the published dashboard across logout while discarding an unpublished draft after re-login', async ({
     page,
   }) => {
     const publishedDashboardTitle = 'Northstar Published Session Boundary';
@@ -408,7 +416,7 @@ test.describe('Next.js Real Host Workbench', () => {
     expect(consoleErrors.filter((text) => !text.includes('favicon'))).toHaveLength(0);
   });
 
-  test('requires login in a second tab while rehydrating the published dashboard after login', async ({
+  test('[host-integration.EMBEDDING_CONTRACT.3] requires login in a second tab while rehydrating the published dashboard after login', async ({
     browser,
   }) => {
     const publishedDashboardTitle = 'Northstar Cross Tab Probe';
@@ -447,7 +455,7 @@ test.describe('Next.js Real Host Workbench', () => {
     }
   });
 
-  test('rehydrates a newer publish when a second tab logs in after mounting before the publish', async ({
+  test('[runtime-rendering.EMBEDDING.1] rehydrates a newer publish when a second tab logs in after mounting before the publish', async ({
     browser,
   }) => {
     const publishedDashboardTitle = 'Northstar Cross Tab Rehydrate On Login';
@@ -566,7 +574,7 @@ test.describe('Next.js Real Host Workbench', () => {
     }
   });
 
-  test('preserves an unpublished draft in a second tab while syncing the newer published dashboard', async ({
+  test('[designer-authoring.HOST_OWNERSHIP.1] preserves an unpublished draft in a second tab while syncing the newer published dashboard', async ({
     browser,
   }) => {
     const draftDashboardTitle = 'Northstar Draft Should Survive';

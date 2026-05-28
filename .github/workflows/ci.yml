@@ -267,11 +267,43 @@ jobs:
           command: code test
           args: --severity-threshold=high
 
+  # ── Requirements Validation ────────────────────────────────
+  requirements-validate:
+    name: Requirements Validate
+    needs: changes
+    if: needs.changes.outputs.full_ci == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:requirements-validator
+      - run: pnpm run validate:requirements
+
   # ── CI Gate (required check for branch protection) ─────────
   ci-gate:
     name: CI Gate
     if: always()
-    needs: [changes, docs-build, build, lint, format, typecheck, unit-tests, e2e, security]
+    needs:
+      [
+        changes,
+        docs-build,
+        build,
+        lint,
+        format,
+        typecheck,
+        unit-tests,
+        e2e,
+        security,
+        requirements-validate,
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
@@ -285,6 +317,7 @@ jobs:
               "${{ needs.unit-tests.result }}"
               "${{ needs.e2e.result }}"
               "${{ needs.security.result }}"
+              "${{ needs.requirements-validate.result }}"
             )
             for r in "${results[@]}"; do
               if [[ "$r" != "success" ]]; then

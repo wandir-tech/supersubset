@@ -1,0 +1,78 @@
+feature:
+  name: navigation-and-alerts
+  product: supersubset
+  description: Multi-page dashboard navigation, host routing hooks, structured
+    alert rules, and alert widget presentation.
+  version: 0.1.0
+  draft: false
+components:
+  PAGE_NAVIGATION:
+    name: Page Navigation
+    description: In-dashboard page tabs and active page rendering.
+    requirements:
+      1:
+        requirement: A *dashboard* definition contains one or more *page* entries
+          with stable ids, labels, and layout trees consumed by both *designer*
+          and *runtime*.
+      2:
+        requirement: The *runtime* renders page navigation controls and switches
+          active *page* content without remounting unrelated *dashboard* chrome
+          such as the *filter* bar when page-level filters are shared.
+      3:
+        requirement: The *designer* page navigator supports add, rename, reorder,
+          duplicate, and delete *page* operations and emits updated *dashboard*
+          definitions through controlled or uncontrolled save callbacks.
+  DASHBOARD_NAVIGATION:
+    name: Dashboard Navigation
+    description: Host-level routing across dashboards and deep links.
+    requirements:
+      1:
+        requirement: The *host app* may mount the *runtime* with a selected
+          *dashboard* id and optional initial *page* id without re-authoring layout
+          content.
+      2:
+        requirement: Authored *interaction* and *drilldown* actions may target another
+          *page* within the same *dashboard* or invoke a host navigation callback
+          for cross-dashboard routing owned by the *host app*.
+      3:
+        requirement: Navigation hooks preserve enough context for the *host app*
+          to update browser URLs, breadcrumbs, or application tabs when embedding
+          Supersubset inside an existing shell.
+  ALERT_RULES:
+    name: Alert Rules
+    description: Structured threshold evaluation authored on widgets.
+    requirements:
+      1:
+        requirement: A structured *alert_rule* binds a *dataset* ref, metric field
+          ref, aggregation, comparison operator, threshold, and alert copy.
+      2:
+        requirement: Structured *alert_rule* evaluation compiles to a *logical query* executed
+          during *widget* render and compares the returned metric against the
+          authored threshold.
+      3:
+        requirement: The *designer* validates *alert_rule* field refs against
+          normalized *dataset* metadata and surfaces schema errors before publish.
+  ALERT_WIDGETS:
+    name: Alert Widgets
+    description: Runtime presentation when alert conditions match.
+    requirements:
+      1:
+        requirement: When an *alert_rule* condition matches, the *runtime* renders
+          an alert *widget* surface with title, message, and severity without
+          blocking unrelated *widget* queries on the *page*.
+      2:
+        requirement: Non-matching *alert_rule* evaluations produce no alert chrome
+          so empty threshold states remain visually quiet in both *designer*
+          preview and *runtime* viewing modes.
+      3:
+        requirement: Alert *widget* styling respects the active *dashboard* *theme*
+          tokens for severity colors and typography.
+constraints:
+  ROUTING:
+    name: Routing
+    description: Navigation remains host-aware.
+    requirements:
+      1:
+        requirement: Supersubset supplies in-dashboard *page* navigation and
+          declarative *interaction* targets; the *host app* owns external routing,
+          authentication gates, and persistence keys for saved *dashboard* state.

@@ -1,0 +1,102 @@
+feature:
+  name: designer-authoring
+  product: supersubset
+  description: Puck-based dashboard designer with palette, property panels, page
+    navigation, undo, code view, and import/export UX for host-controlled
+    authoring workflows.
+  version: 0.1.0
+  draft: false
+components:
+  PUCK_SHELL:
+    name: Puck Shell
+    description: SupersubsetDesigner embedding surface built on Puck.
+    requirements:
+      1:
+        requirement: The *designer* ships as an embeddable React component that
+          wraps Puck without requiring iframes or a hosted BI server.
+      2:
+        requirement: The Puck shell maps Puck component types to canonical
+          *layout* and *widget* schema nodes so canvas edits stay aligned with
+          the *dashboard* contract.
+      3:
+        requirement: The *designer* accepts host-provided capability metadata so
+          the *host app* controls which *widget* types and data bindings are
+          available in a given surface.
+  PALETTE:
+    name: Component Palette
+    description: Drag-and-drop palette for layout and widget building blocks.
+    requirements:
+      1:
+        requirement: The palette lists registered *layout* containers and
+          *widget* types grouped for discoverability rather than exposing raw
+          schema keys.
+      2:
+        requirement: Dropping a palette item creates schema-valid *layout* and
+          *widget* nodes with generated stable identifiers and sensible default
+          sizing metadata.
+  PROPERTY_PANELS:
+    name: Property Panels
+    description: Contextual editors for selected canvas nodes.
+    requirements:
+      1:
+        requirement: Selecting a canvas node opens property panels that edit
+          canonical schema fields, including *field ref* bindings, titles, and
+          *filter* scope where applicable.
+      2:
+        requirement: Property panel edits validate against the same Zod rules as
+          import and code view so invalid states cannot be saved silently.
+  PAGE_NAVIGATION:
+    name: Page Navigation
+    description: Multi-page dashboard authoring within one designer session.
+    requirements:
+      1:
+        requirement: The *designer* exposes *page* navigation so authors can add,
+          rename, reorder, and delete *dashboard* *pages* without leaving the
+          editor shell.
+  UNDO_REDO:
+    name: Undo and Redo
+    description: Edit history for canvas and property changes.
+    requirements:
+      1:
+        requirement: The *designer* supports undo and redo for structural canvas
+          operations and property panel edits within the active *page*.
+  CODE_VIEW:
+    name: Code View
+    description: Read/write serialized dashboard document alongside the canvas.
+    requirements:
+      1:
+        requirement: Code view displays the current *dashboard* document using
+          the shared *serialization* format and reflects canvas edits without
+          requiring a manual refresh.
+      2:
+        requirement: Applying code view edits re-validates the document and
+          surfaces parse or schema errors inline before replacing canvas state.
+  IMPORT_EXPORT:
+    name: Import and Export
+    description: Host-facing document exchange for designer sessions.
+    requirements:
+      1:
+        requirement: The *designer* supports import and export of *dashboard*
+          documents as JSON or YAML for repository workflows and *host app*
+          persistence APIs.
+      2:
+        requirement: Export emits normalized, migrated documents at the current
+          *schema version* so downstream *runtime* consumers never receive stale
+          shapes.
+  CONTROL_MODES:
+    name: Controlled and Uncontrolled Modes
+    description: React state integration patterns for host applications.
+    requirements:
+      1:
+        requirement: The *designer* supports controlled and uncontrolled React
+          integration modes so the *host app* may own the *dashboard* value or
+          rely on internal draft state with explicit save and export hooks.
+constraints:
+  HOST_OWNERSHIP:
+    name: Host Ownership
+    description: Designer persistence and auth boundaries.
+    requirements:
+      1:
+        requirement: The *designer* emits schema documents only; persistence,
+          authorization, and audit logging remain the responsibility of the
+          *host app*.

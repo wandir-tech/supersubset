@@ -63,7 +63,7 @@ describe('BaseChart interaction events', () => {
     );
   });
 
-  it('emits click events with extracted payload data', () => {
+  it('[charts-and-visualization.ECHARTS_WRAPPERS.1] emits click events with extracted payload data', () => {
     const onEvent = vi.fn();
 
     render(
@@ -129,7 +129,7 @@ describe('BaseChart interaction events', () => {
     });
   });
 
-  it('converts resolved Supersubset themes before initializing ECharts', () => {
+  it('[charts-and-visualization.THEMES.1] converts resolved Supersubset themes before initializing ECharts', () => {
     render(
       React.createElement(BaseChart, {
         option: {},

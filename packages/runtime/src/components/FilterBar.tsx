@@ -2,13 +2,19 @@
  * FilterBar — renders dashboard-level filter controls from FilterDefinition[].
  * Uses plain HTML elements with inline styles for a clean, horizontal layout.
  */
-import { createElement, useId, type ReactNode } from 'react';
+import { createElement, useEffect, useId, useState, type ReactNode } from 'react';
+import { resolveFilterOptionsWithAdapter, type QueryAdapter } from '@supersubset/data-model';
 import type {
   FilterDefinition,
   DatasetDefinition,
   FilterOptionDefinition,
 } from '@supersubset/schema';
 import { useFilters } from '../filters/FilterEngine';
+import {
+  DATE_PRESETS,
+  generateWeeklyDateRangeOptions,
+  resolveRelativeDate,
+} from '../filters/date-filter-utils';
 
 // ─── Styles ──────────────────────────────────────────────────
 
@@ -79,6 +85,11 @@ export interface FilterBarProps {
   datasets?: DatasetDefinition[];
   /** Legacy static option values per filter ID — compatibility fallback provided by the host */
   filterOptions?: Record<string, string[]>;
+  /**
+   * Host-provided query adapter used to resolve field-backed filter options.
+   * If absent, field-backed filters render an unavailable state.
+   */
+  queryAdapter?: QueryAdapter;
   className?: string;
   layout?: FilterBarLayout;
 }
@@ -89,10 +100,11 @@ interface ResolvedFilterOption {
   disabled?: boolean;
 }
 
-interface ResolvedFilterOptionsState {
-  options: ResolvedFilterOption[];
-  unavailableMessage?: string;
-}
+type ResolvedFilterOptionsState =
+  | { kind: 'ready'; options: ResolvedFilterOption[] }
+  | { kind: 'loading' }
+  | { kind: 'unavailable'; message: string }
+  | { kind: 'error'; message: string };
 
 function getBarStyle(layout: FilterBarLayout): React.CSSProperties {
   if (layout === 'vertical') {
@@ -131,6 +143,7 @@ export function FilterBar({
   filters,
   datasets,
   filterOptions,
+  queryAdapter,
   className,
   layout = 'horizontal',
 }: FilterBarProps) {
@@ -153,7 +166,7 @@ export function FilterBar({
         key: f.id,
         filter: f,
         value: state.values[f.id],
-        datasets,
+        queryAdapter,
         inputIdPrefix,
         legacyOptions: filterOptions?.[f.id],
         onChangeValue: (value: unknown) => setFilter(f.id, value),
@@ -179,7 +192,7 @@ export function FilterBar({
 interface FilterControlProps {
   filter: FilterDefinition;
   value: unknown;
-  datasets?: DatasetDefinition[];
+  queryAdapter?: QueryAdapter;
   inputIdPrefix: string;
   legacyOptions?: string[];
   onChangeValue: (value: unknown) => void;
@@ -188,13 +201,13 @@ interface FilterControlProps {
 function FilterControl({
   filter,
   value,
-  datasets,
+  queryAdapter,
   inputIdPrefix,
   legacyOptions,
   onChangeValue,
 }: FilterControlProps) {
   const label = filter.title ?? filter.fieldRef;
-  const resolvedOptionsState = resolveFilterOptions(filter, legacyOptions, datasets);
+  const resolvedOptionsState = useResolveFilterOptions(filter, queryAdapter, legacyOptions);
   const inputIdBase = `${inputIdPrefix}-ss-filter-${filter.id}`;
 
   return createElement(
@@ -210,7 +223,7 @@ function FilterControl({
       { className: 'ss-filter-label', style: LABEL_STYLE, htmlFor: `${inputIdBase}-primary` },
       label,
     ),
-    renderInput(filter.type, value, onChangeValue, resolvedOptionsState, {
+    renderInput(filter, value, onChangeValue, resolvedOptionsState, {
       inputIdBase,
       inputName: filter.id,
       label,
@@ -219,13 +232,13 @@ function FilterControl({
 }
 
 function renderInput(
-  type: string,
+  filter: FilterDefinition,
   value: unknown,
   onChange: (value: unknown) => void,
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
-  switch (type) {
+  switch (filter.type) {
     case 'select':
       return renderSelect(value, onChange, optionsState, metadata);
     case 'multi-select':
@@ -235,7 +248,7 @@ function renderInput(
     case 'range':
       return renderRange(value, onChange, metadata);
     case 'date':
-      return renderDate(value, onChange, metadata);
+      return renderDate(filter, value, onChange, metadata);
     default:
       return renderText(value, onChange, metadata);
   }
@@ -247,16 +260,12 @@ function renderSelect(
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
-  const isUnavailable = optionsState.unavailableMessage !== undefined;
-  const options = isUnavailable
-    ? [
-        {
-          value: '',
-          label: optionsState.unavailableMessage ?? 'Options unavailable',
-          disabled: true,
-        },
-      ]
-    : optionsState.options;
+  const placeholder = placeholderForState(optionsState);
+  const isInteractive = optionsState.kind === 'ready';
+  const options =
+    placeholder !== undefined
+      ? [{ value: '', label: placeholder, disabled: true }]
+      : (optionsState as { kind: 'ready'; options: ResolvedFilterOption[] }).options;
 
   return createElement(
     'select',
@@ -265,14 +274,15 @@ function renderSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       style: INPUT_STYLE,
-      value: isUnavailable ? '' : ((value as string) ?? ''),
-      disabled: isUnavailable,
+      value: isInteractive ? ((value as string) ?? '') : '',
+      disabled: !isInteractive,
+      'data-ss-filter-options-state': optionsState.kind,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const v = e.target.value;
         onChange(v === '' ? undefined : v);
       },
     },
-    isUnavailable ? null : createElement('option', { value: '' }, 'All'),
+    isInteractive ? createElement('option', { value: '' }, 'All') : null,
     ...options.map((opt) =>
       createElement(
         'option',
@@ -289,16 +299,12 @@ function renderMultiSelect(
   optionsState: ResolvedFilterOptionsState,
   metadata: { inputIdBase: string; inputName: string },
 ): ReactNode {
-  const isUnavailable = optionsState.unavailableMessage !== undefined;
-  const options = isUnavailable
-    ? [
-        {
-          value: '',
-          label: optionsState.unavailableMessage ?? 'Options unavailable',
-          disabled: true,
-        },
-      ]
-    : optionsState.options;
+  const placeholder = placeholderForState(optionsState);
+  const isInteractive = optionsState.kind === 'ready';
+  const options =
+    placeholder !== undefined
+      ? [{ value: '', label: placeholder, disabled: true }]
+      : (optionsState as { kind: 'ready'; options: ResolvedFilterOption[] }).options;
   const selectedValues = Array.isArray(value)
     ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
     : typeof value === 'string' && value.length > 0
@@ -312,10 +318,11 @@ function renderMultiSelect(
       id: `${metadata.inputIdBase}-primary`,
       name: metadata.inputName,
       multiple: true,
-      size: isUnavailable ? 1 : Math.min(Math.max(options.length, 3), 6),
+      size: isInteractive ? Math.min(Math.max(options.length, 3), 6) : 1,
       style: { ...INPUT_STYLE, minWidth: '160px', minHeight: '96px' },
-      value: isUnavailable ? [''] : selectedValues,
-      disabled: isUnavailable,
+      value: isInteractive ? selectedValues : [''],
+      disabled: !isInteractive,
+      'data-ss-filter-options-state': optionsState.kind,
       onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
         const nextValues = Array.from(e.target.selectedOptions)
           .map((option) => option.value)
@@ -393,164 +400,105 @@ function renderRange(
   );
 }
 
-// ─── Relative Date Presets ────────────────────────────────────
-
-export const DATE_PRESETS: { value: string; label: string }[] = [
-  { value: '', label: 'All time' },
-  { value: 'today', label: 'Today' },
-  { value: 'yesterday', label: 'Yesterday' },
-  { value: 'this_week', label: 'This week' },
-  { value: 'last_week', label: 'Last week' },
-  { value: 'this_month', label: 'This month' },
-  { value: 'last_month', label: 'Last month' },
-  { value: 'this_quarter', label: 'This quarter' },
-  { value: 'last_quarter', label: 'Last quarter' },
-  { value: 'this_year', label: 'This year' },
-  { value: 'last_year', label: 'Last year' },
-  { value: 'last_7_days', label: 'Last 7 days' },
-  { value: 'last_30_days', label: 'Last 30 days' },
-  { value: 'last_90_days', label: 'Last 90 days' },
-  { value: 'last_365_days', label: 'Last 365 days' },
-  { value: 'custom', label: 'Custom range…' },
-];
-
-/**
- * Resolve a relative date preset to a concrete { start, end } range (ISO strings).
- * Returns undefined for empty/unknown presets.
- */
-export function resolveRelativeDate(
-  preset: string,
-  now = new Date(),
-): { start: string; end: string } | undefined {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-
-  switch (preset) {
-    case 'today':
-      return { start: iso(today), end: iso(today) };
-    case 'yesterday': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 1);
-      return { start: iso(d), end: iso(d) };
-    }
-    case 'this_week': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - d.getDay());
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_week': {
-      const end = new Date(today);
-      end.setDate(end.getDate() - end.getDay() - 1);
-      const start = new Date(end);
-      start.setDate(start.getDate() - 6);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_month':
-      return { start: iso(new Date(today.getFullYear(), today.getMonth(), 1)), end: iso(today) };
-    case 'last_month': {
-      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const end = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_quarter': {
-      const q = Math.floor(today.getMonth() / 3);
-      return { start: iso(new Date(today.getFullYear(), q * 3, 1)), end: iso(today) };
-    }
-    case 'last_quarter': {
-      const q = Math.floor(today.getMonth() / 3);
-      const start = new Date(today.getFullYear(), (q - 1) * 3, 1);
-      const end = new Date(today.getFullYear(), q * 3, 0);
-      return { start: iso(start), end: iso(end) };
-    }
-    case 'this_year':
-      return { start: iso(new Date(today.getFullYear(), 0, 1)), end: iso(today) };
-    case 'last_year':
-      return {
-        start: iso(new Date(today.getFullYear() - 1, 0, 1)),
-        end: iso(new Date(today.getFullYear() - 1, 11, 31)),
-      };
-    case 'last_7_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 6);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_30_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 29);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_90_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 89);
-      return { start: iso(d), end: iso(today) };
-    }
-    case 'last_365_days': {
-      const d = new Date(today);
-      d.setDate(d.getDate() - 364);
-      return { start: iso(d), end: iso(today) };
-    }
-    default:
-      return undefined;
-  }
-}
-
 function renderDate(
+  filter: FilterDefinition,
   value: unknown,
   onChange: (value: unknown) => void,
   metadata: { inputIdBase: string; inputName: string; label: string },
 ): ReactNode {
   const dateVal = value as { preset?: string; start?: string; end?: string } | string | undefined;
   const isObj = typeof dateVal === 'object' && dateVal !== null;
+  const dateConfig = filter.dateConfig;
+  const isWeekly = dateConfig?.mode === 'weekly';
+  const isRangeMode = dateConfig?.mode === 'range';
+  const allowCustomRange = dateConfig?.allowCustomRange !== false;
   const preset = isObj ? ((dateVal as { preset?: string }).preset ?? '') : '';
-  const isCustom = preset === 'custom';
+  const isCustom =
+    isRangeMode ||
+    (allowCustomRange &&
+      (preset === 'custom' || (!isWeekly && !preset && typeof dateVal === 'string')));
   const customStart = isObj
     ? ((dateVal as { start?: string }).start ?? '')
     : typeof dateVal === 'string'
       ? dateVal
       : '';
   const customEnd = isObj ? ((dateVal as { end?: string }).end ?? '') : '';
+  const weeklyOptions = isWeekly ? generateWeeklyDateRangeOptions(dateConfig) : [];
+  const weeklyPresetOption =
+    isWeekly && isObj && !customStart && !customEnd
+      ? weeklyOptions.find((option) =>
+          preset === 'this_week'
+            ? option.offset === 0
+            : preset === 'last_week' && option.offset === -1,
+        )
+      : undefined;
+  const selectedWeeklyValue =
+    isWeekly && isObj && customStart && customEnd
+      ? `week:${customStart}:${customEnd}`
+      : (weeklyPresetOption?.value ?? '');
+  const presetOptions =
+    dateConfig?.presets && dateConfig.presets.length > 0
+      ? DATE_PRESETS.filter(
+          (presetOption) =>
+            presetOption.value === '' ||
+            presetOption.value === 'custom' ||
+            dateConfig.presets?.includes(presetOption.value),
+        )
+      : DATE_PRESETS;
 
   return createElement(
     'div',
     { className: 'ss-filter-date', style: { display: 'flex', alignItems: 'center', gap: '6px' } },
-    // Preset dropdown
-    createElement(
-      'select',
-      {
-        className: 'ss-filter-date-preset',
-        id: `${metadata.inputIdBase}-primary`,
-        name: `${metadata.inputName}-preset`,
-        style: INPUT_STYLE,
-        value: preset,
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const v = e.target.value;
-          if (v === '') {
-            onChange(undefined);
-          } else if (v === 'custom') {
-            onChange({ preset: 'custom', start: '', end: '' });
-          } else {
-            const resolved = resolveRelativeDate(v);
-            onChange({ preset: v, ...(resolved ?? {}) });
-          }
-        },
-      },
-      ...DATE_PRESETS.map((p) =>
-        createElement('option', { key: p.value, value: p.value }, p.label),
-      ),
-    ),
-    // Custom date pickers (only when "Custom range…" is selected)
+    isRangeMode
+      ? null
+      : createElement(
+          'select',
+          {
+            className: 'ss-filter-date-preset',
+            id: `${metadata.inputIdBase}-primary`,
+            name: `${metadata.inputName}-preset`,
+            style: INPUT_STYLE,
+            value: isWeekly ? selectedWeeklyValue : preset,
+            onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
+              const v = e.target.value;
+              if (v === '') {
+                onChange(undefined);
+              } else if (isWeekly) {
+                const option = weeklyOptions.find((candidate) => candidate.value === v);
+                if (option) {
+                  onChange({ preset: option.value, start: option.start, end: option.end });
+                }
+              } else if (v === 'custom') {
+                onChange({ preset: 'custom', start: '', end: '' });
+              } else {
+                const resolved = resolveRelativeDate(v, new Date(), dateConfig);
+                onChange({ preset: v, ...(resolved ?? {}) });
+              }
+            },
+          },
+          isWeekly ? createElement('option', { value: '' }, 'All time') : null,
+          ...(isWeekly ? weeklyOptions : presetOptions).map((p) =>
+            createElement('option', { key: p.value, value: p.value }, p.label),
+          ),
+        ),
+    // Custom date pickers (only when custom ranges are enabled and selected)
     isCustom
       ? createElement(
           'div',
           { style: RANGE_STYLE },
           createElement('input', {
+            id: isRangeMode ? `${metadata.inputIdBase}-primary` : undefined,
             name: `${metadata.inputName}-start`,
             'aria-label': `${metadata.label} start date`,
             type: 'date',
             style: { ...INPUT_STYLE, minWidth: '130px' },
             value: customStart,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-              onChange({ preset: 'custom', start: e.target.value, end: customEnd });
+              onChange({
+                ...(isRangeMode ? {} : { preset: 'custom' }),
+                start: e.target.value,
+                end: customEnd,
+              });
             },
           }),
           createElement('span', { style: { color: '#9ca3af' } }, '–'),
@@ -561,7 +509,11 @@ function renderDate(
             style: { ...INPUT_STYLE, minWidth: '130px' },
             value: customEnd,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-              onChange({ preset: 'custom', start: customStart, end: e.target.value });
+              onChange({
+                ...(isRangeMode ? {} : { preset: 'custom' }),
+                start: customStart,
+                end: e.target.value,
+              });
             },
           }),
         )
@@ -571,40 +523,17 @@ function renderDate(
 
 // ─── Field Options ───────────────────────────────────────────
 
-/**
- * Extract distinct options for a select filter from dataset field metadata.
- * In a real scenario, options come from query results. For now we return
- * an empty array when datasets provide no enum values.
- */
-function resolveFilterOptions(
-  filter: FilterDefinition,
-  legacyOptions?: string[],
-  datasets?: DatasetDefinition[],
-): ResolvedFilterOptionsState {
-  if (filter.optionSource?.kind === 'static') {
-    return filter.optionSource.options.length > 0
-      ? { options: filter.optionSource.options.map(normalizeStaticOption) }
-      : { options: [], unavailableMessage: 'No options configured' };
+function placeholderForState(state: ResolvedFilterOptionsState): string | undefined {
+  switch (state.kind) {
+    case 'loading':
+      return 'Loading options…';
+    case 'unavailable':
+      return state.message;
+    case 'error':
+      return state.message;
+    case 'ready':
+      return undefined;
   }
-
-  if (filter.optionSource?.kind === 'field') {
-    const fieldOptions = getFieldOptions(filter, datasets);
-    if (fieldOptions.length > 0) {
-      return { options: fieldOptions };
-    }
-
-    // TODO(issue #121): Replace this unavailable bridge with host-owned runtime resolution.
-    return {
-      options: [],
-      unavailableMessage: 'Field-backed options require host support',
-    };
-  }
-
-  if (legacyOptions && legacyOptions.length > 0) {
-    return { options: legacyOptions.map((option) => ({ value: option, label: option })) };
-  }
-
-  return { options: [], unavailableMessage: 'Options unavailable' };
 }
 
 function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOption {
@@ -615,15 +544,121 @@ function normalizeStaticOption(option: FilterOptionDefinition): ResolvedFilterOp
   };
 }
 
-function getFieldOptions(
+function staticState(filter: FilterDefinition): ResolvedFilterOptionsState | null {
+  if (filter.optionSource?.kind !== 'static') return null;
+  if (filter.optionSource.options.length === 0) {
+    return { kind: 'unavailable', message: 'No options configured' };
+  }
+  return { kind: 'ready', options: filter.optionSource.options.map(normalizeStaticOption) };
+}
+
+function legacyState(legacyOptions?: string[]): ResolvedFilterOptionsState | null {
+  if (!legacyOptions || legacyOptions.length === 0) return null;
+  return {
+    kind: 'ready',
+    options: legacyOptions.map((option) => ({ value: option, label: option })),
+  };
+}
+
+/**
+ * Resolve filter options for a single filter, handling static, field-backed,
+ * legacy, and unavailable cases. Field-backed resolution is async via the
+ * host-provided QueryAdapter. See ADR-009 §2.
+ *
+ * ADR-009 §3 mandates that `strategy: 'search'` filters must not auto-issue an
+ * unbounded distinct query on initial render. Until the typeahead UI lands
+ * (no debounced text input is wired through `FilterBar` yet), search-strategy
+ * filters render an explicit unavailable state. `preload` keeps the immediate
+ * fetch behavior, which is the safe path for low-cardinality fields.
+ */
+function useResolveFilterOptions(
   filter: FilterDefinition,
-  datasets?: DatasetDefinition[],
-): ResolvedFilterOption[] {
-  if (!datasets) return [];
-  const ds = datasets.find((d) => d.id === filter.datasetRef);
-  if (!ds) return [];
-  // Field-backed option resolution is still host-owned and not yet wired through
-  // the runtime. Static authored options and the legacy filterOptions prop are
-  // the currently supported sources.
-  return [];
+  queryAdapter: QueryAdapter | undefined,
+  legacyOptions: string[] | undefined,
+): ResolvedFilterOptionsState {
+  const sync = staticState(filter);
+  const fieldSource = filter.optionSource?.kind === 'field' ? filter.optionSource : undefined;
+  const isFieldBacked = fieldSource !== undefined;
+  const isSearchStrategy = fieldSource?.strategy === 'search';
+  const fieldLimit = fieldSource?.maxOptions;
+
+  const [fieldState, setFieldState] = useState<ResolvedFilterOptionsState>(() => {
+    if (!isFieldBacked) return { kind: 'ready', options: [] };
+    if (isSearchStrategy) {
+      return {
+        kind: 'unavailable',
+        message:
+          'Search-strategy field options require a typeahead input (not yet implemented). Use strategy: "preload" or a static option list.',
+      };
+    }
+    return { kind: 'loading' };
+  });
+
+  useEffect(() => {
+    if (!isFieldBacked) return;
+    if (isSearchStrategy) {
+      setFieldState({
+        kind: 'unavailable',
+        message:
+          'Search-strategy field options require a typeahead input (not yet implemented). Use strategy: "preload" or a static option list.',
+      });
+      return;
+    }
+    if (!queryAdapter) {
+      setFieldState({
+        kind: 'unavailable',
+        message: 'No query adapter available for field-backed options',
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setFieldState({ kind: 'loading' });
+    void resolveFilterOptionsWithAdapter(queryAdapter, {
+      filterId: filter.id,
+      datasetId: filter.datasetRef,
+      fieldId: filter.fieldRef,
+      limit: fieldLimit,
+    })
+      .then((response) => {
+        if (cancelled) return;
+        if (response.options.length === 0) {
+          setFieldState({ kind: 'unavailable', message: 'No values available' });
+          return;
+        }
+        setFieldState({
+          kind: 'ready',
+          options: response.options.map((option) => ({
+            value: option.value,
+            label: option.label ?? option.value,
+            disabled: option.disabled,
+          })),
+        });
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Failed to load options';
+        setFieldState({ kind: 'error', message });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isFieldBacked,
+    isSearchStrategy,
+    queryAdapter,
+    filter.id,
+    filter.datasetRef,
+    filter.fieldRef,
+    fieldLimit,
+  ]);
+
+  if (sync) return sync;
+  if (isFieldBacked) return fieldState;
+
+  const legacy = legacyState(legacyOptions);
+  if (legacy) return legacy;
+
+  return { kind: 'unavailable', message: 'Options unavailable' };
 }

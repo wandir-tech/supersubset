@@ -1,0 +1,100 @@
+# Tripmatch glossary term YAML schema.
+# Reference copy only. Active glossary terms live under features/terms/*.term.yaml.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://tripmatch.local/schemas/term-yaml.schema.yaml
+title: Tripmatch glossary term
+type: object
+additionalProperties: false
+required:
+  - term
+properties:
+  term:
+    type: object
+    required:
+      - id
+      - definition
+    properties:
+      id:
+        type: string
+        pattern: ^[a-z][a-z0-9_]*$
+        description: Matches the filename stem, for example user.term.yaml has id user.
+      definition:
+        type: string
+        minLength: 1
+      aliases:
+        type: array
+        items:
+          type: string
+          minLength: 1
+      references:
+        type: object
+        additionalProperties: false
+        properties:
+          prisma:
+            type: object
+            additionalProperties: false
+            properties:
+              models:
+                $ref: '#/$defs/namedReferences'
+              enums:
+                $ref: '#/$defs/namedReferences'
+          graphql:
+            type: object
+            additionalProperties: false
+            properties:
+              operations:
+                $ref: '#/$defs/namedReferences'
+          ui:
+            type: object
+            additionalProperties: false
+            properties:
+              web:
+                $ref: '#/$defs/pathReferences'
+              native:
+                $ref: '#/$defs/pathReferences'
+              shared:
+                $ref: '#/$defs/pathReferences'
+          server:
+            $ref: '#/$defs/pathReferences'
+          worker:
+            $ref: '#/$defs/pathReferences'
+          docs:
+            $ref: '#/$defs/pathReferences'
+          adr:
+            $ref: '#/$defs/pathReferences'
+          skills:
+            $ref: '#/$defs/pathReferences'
+          memory:
+            $ref: '#/$defs/pathReferences'
+      notes:
+        type: array
+        items:
+          type: string
+          minLength: 1
+    patternProperties:
+      '^(?!id$|definition$|aliases$|references$|notes$|platform$|platforms$)[a-z][a-z0-9_]*$':
+        type: object
+        additionalProperties:
+          type: string
+          minLength: 1
+    additionalProperties: false
+$defs:
+  namedReferences:
+    type: array
+    items:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        schema:
+          type: string
+          minLength: 1
+      additionalProperties: false
+  pathReferences:
+    type: array
+    items:
+      type: string
+      minLength: 1

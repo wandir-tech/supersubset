@@ -1,0 +1,15 @@
+term:
+  id: probe
+  definition: >
+    A dev-app workflow for connecting to a host backend without embedding the
+    full designer. Probe resolves datasets from discovery URLs, pasted metadata
+    JSON, or authenticated HTTP endpoints.
+  aliases:
+    - probe mode
+  references:
+    ui:
+      shared:
+        - packages/dev-app/src/probe/probe-connection.ts
+        - packages/dev-app/src/probe/metadata.ts
+    docs:
+      - packages/schema/README.md

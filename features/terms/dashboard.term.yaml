@@ -1,0 +1,18 @@
+term:
+  id: dashboard
+  definition: >
+    A persisted analytics experience composed of pages, layout, widgets, filters,
+    and interactions. The designer emits and the runtime renders a
+    DashboardDefinition; the host app owns storage and auth.
+  aliases:
+    - analytics dashboard
+  references:
+    server:
+      - packages/schema/src/types/dashboard.ts
+      - packages/schema/src/validation/dashboard.ts
+    ui:
+      shared:
+        - packages/designer/src/components/SupersubsetDesigner.tsx
+        - packages/runtime/src/components/SupersubsetRenderer.tsx
+    docs:
+      - packages/schema/README.md

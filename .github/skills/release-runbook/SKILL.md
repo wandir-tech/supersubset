@@ -113,6 +113,16 @@ If local Playwright `webServer` startup is flaky, start the servers manually and
 pnpm exec playwright test --config=playwright.e2e.config.ts
 ```
 
+If you are validating against leased DevEnv ports locally, export all three host ports before running the host-backed E2E suite:
+
+```bash
+export SUPERSUBSET_DEV_APP_PORT=<dev-app-port>
+export SUPERSUBSET_EXAMPLE_NEXTJS_PORT=<nextjs-port>
+export SUPERSUBSET_EXAMPLE_VITE_SQLITE_PORT=<vite-port>
+```
+
+Without the explicit example-host vars, workbench/probe specs can silently fall back to `3001` / `3002` even when leased ports are active.
+
 Optional but recommended for release confidence:
 
 ```bash
@@ -197,13 +207,25 @@ Expected behavior:
 
 If no version-packages PR appears, verify again that the merged branch actually contained a pending `.changeset`.
 
+If the second pass fails because of npm token/auth issues, fix the secret and re-run the failed `release.yml` run for the same `main` commit. Do not create another changeset or another version PR just to retry the same publish.
+
 ## Step 9: Verify published artifacts
 
 After publish:
 
 - check the release workflow conclusion in GitHub Actions
-- confirm the expected package versions exist in npm
+- confirm the expected package versions exist in npm via `npm view`, not only the npm website or PR checks
 - note the published version that downstream consumers should adopt
+
+Recommended checks:
+
+```bash
+npm view @supersubset/runtime version
+npm view @supersubset/schema version
+npm view @supersubset/charts-echarts version
+```
+
+Treat the registry CLI result as the source of truth. The npm website can lag briefly after publish.
 
 Do not open downstream upgrade PRs against hypothetical versions that have not been published yet.
 
@@ -227,10 +249,16 @@ Prefer published versions. If pre-publish validation is required, use tarballs o
   - switch to manually started servers and `playwright.e2e.config.ts`
 - No pending `.changeset`:
   - stop the publish path and add a release note on `develop`
+- Publish returns `E404` on `PUT https://registry.npmjs.org/@supersubset%2f...` for existing packages:
+  - suspect a granular token that authenticates but is missing package-write access; `npm whoami` is insufficient proof
+- Publish returns `E403` requiring bypass 2FA:
+  - create a new automation token with `bypass_2fa` enabled, update the GitHub secret, then rerun the failed release job
 - Browser-auth-gated downstream app:
   - verify as much as possible locally, then call out the blocked surface explicitly
 - GitHub API or tool restrictions:
   - fall back to `gh` CLI rather than abandoning issue or PR automation
+- `gh run watch` is unreliable in a given terminal:
+  - poll the run via `gh api repos/<owner>/<repo>/actions/runs/<id>` for attempt/status/conclusion, then confirm registry state with `npm view`
 
 ## Current default path for the repo
 

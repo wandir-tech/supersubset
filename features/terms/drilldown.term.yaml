@@ -1,0 +1,16 @@
+term:
+  id: drilldown
+  definition: >
+    An interaction pattern that narrows widget data by applying successive field
+    filters from user selections. DrillManager tracks breadcrumb state so users
+    can drill up or reset to the top level.
+  aliases:
+    - drill-down
+    - drill to detail
+  references:
+    ui:
+      shared:
+        - packages/runtime/src/interactions/DrillManager.tsx
+        - packages/runtime/src/components/DrillBreadcrumbBar.tsx
+    server:
+      - packages/schema/src/types/dashboard.ts
