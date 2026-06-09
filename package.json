@@ -69,13 +69,5 @@
       "prettier --write"
     ]
   },
-  "license": "Apache-2.0",
-  "dependencies": {
-    "@supersubset/adapter-sql": "file:.yalc/@supersubset/adapter-sql",
-    "@supersubset/data-model": "file:.yalc/@supersubset/data-model",
-    "@supersubset/designer": "file:.yalc/@supersubset/designer",
-    "@supersubset/query-client": "file:.yalc/@supersubset/query-client",
-    "@supersubset/runtime": "file:.yalc/@supersubset/runtime",
-    "@supersubset/schema": "file:.yalc/@supersubset/schema"
-  }
+  "license": "Apache-2.0"
 }

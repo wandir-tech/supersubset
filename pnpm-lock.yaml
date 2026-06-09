@@ -10,25 +10,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      '@supersubset/adapter-sql':
-        specifier: file:.yalc/@supersubset/adapter-sql
-        version: file:.yalc/@supersubset/adapter-sql
-      '@supersubset/data-model':
-        specifier: file:.yalc/@supersubset/data-model
-        version: file:.yalc/@supersubset/data-model
-      '@supersubset/designer':
-        specifier: file:.yalc/@supersubset/designer
-        version: file:.yalc/@supersubset/designer(@floating-ui/dom@1.7.6)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
-      '@supersubset/query-client':
-        specifier: file:.yalc/@supersubset/query-client
-        version: file:.yalc/@supersubset/query-client
-      '@supersubset/runtime':
-        specifier: file:.yalc/@supersubset/runtime
-        version: file:.yalc/@supersubset/runtime(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@supersubset/schema':
-        specifier: file:.yalc/@supersubset/schema
-        version: file:.yalc/@supersubset/schema
     devDependencies:
       '@changesets/changelog-github':
         specifier: ^0.6.0
@@ -3060,51 +3041,6 @@ packages:
     resolution: {integrity: sha512-n6OEjEtHupa2PdTwWzRepr7cO8NkDd4rgF6BKLitRbujOspLxzMBEqdphs+QLcuiCIgf33SqmEA64QWnbSMhPw==}
     peerDependencies:
       storybook: ^8.2.0 || ^8.3.0-0 || ^8.4.0-0 || ^8.5.0-0 || ^8.6.0-0
-
-  '@supersubset/adapter-sql@file:.yalc/@supersubset/adapter-sql':
-    resolution: {directory: .yalc/@supersubset/adapter-sql, type: directory}
-
-  '@supersubset/charts-echarts@0.2.0':
-    resolution: {integrity: sha512-nK1lty+GwJvifIZypKSAHJrIKXPpYpb7FcMkeocW5ja1j2xIMBUZinQ0N9+xbW0vi/6DvA1mItE6seyH5l4eXQ==}
-    peerDependencies:
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
-
-  '@supersubset/data-model@0.2.0':
-    resolution: {integrity: sha512-EYssvjDLS3G3VtmpKHMvehSrdLyjXy/87v9iAKWfbURGGLDv151oB+oXBhQWOVVZp5DIkXZVu8Ggu2B0cZELiw==}
-
-  '@supersubset/data-model@file:.yalc/@supersubset/data-model':
-    resolution: {directory: .yalc/@supersubset/data-model, type: directory}
-
-  '@supersubset/designer@file:.yalc/@supersubset/designer':
-    resolution: {directory: .yalc/@supersubset/designer, type: directory}
-    peerDependencies:
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
-
-  '@supersubset/query-client@file:.yalc/@supersubset/query-client':
-    resolution: {directory: .yalc/@supersubset/query-client, type: directory}
-
-  '@supersubset/runtime@0.2.0':
-    resolution: {integrity: sha512-GdWZoI2Fi10V4Q0Cx4FFUNZGWZGe4x9nf3wJBrArrwiBbbrv98rlBJetJoJ5v/Aew+dz4Fon2lam05z1j7tdvw==}
-    peerDependencies:
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
-
-  '@supersubset/runtime@file:.yalc/@supersubset/runtime':
-    resolution: {directory: .yalc/@supersubset/runtime, type: directory}
-    peerDependencies:
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
-
-  '@supersubset/schema@0.2.0':
-    resolution: {integrity: sha512-l7g5YtRVcKRfWHsiT+lA8Cu48gbpnesSzYTZ4RYgAwhEU1QKpLVRm5RUraj7wQM28aZAiQGzcu4JxOhW9v4PSw==}
-
-  '@supersubset/schema@file:.yalc/@supersubset/schema':
-    resolution: {directory: .yalc/@supersubset/schema, type: directory}
-
-  '@supersubset/theme@0.2.0':
-    resolution: {integrity: sha512-hCS92NxI2RuIT8DEJYMmBGjzYVFwz7bD+/uH4HWlBrJtHvVeIUU2hcYetkUuWSOosxKpJ800KNell0rkK24ang==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -9369,80 +9305,6 @@ snapshots:
   '@storybook/theming@8.6.18(storybook@8.6.18(prettier@3.8.2))':
     dependencies:
       storybook: 8.6.18(prettier@3.8.2)
-
-  '@supersubset/adapter-sql@file:.yalc/@supersubset/adapter-sql':
-    dependencies:
-      '@supersubset/data-model': 0.2.0
-
-  '@supersubset/charts-echarts@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@supersubset/runtime': 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@supersubset/schema': 0.2.0
-      '@supersubset/theme': 0.2.0
-      echarts: 5.6.0
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  '@supersubset/data-model@0.2.0':
-    dependencies:
-      '@supersubset/schema': 0.2.0
-
-  '@supersubset/data-model@file:.yalc/@supersubset/data-model':
-    dependencies:
-      '@supersubset/schema': 0.2.0
-
-  '@supersubset/designer@file:.yalc/@supersubset/designer(@floating-ui/dom@1.7.6)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))':
-    dependencies:
-      '@puckeditor/core': 0.21.2(@floating-ui/dom@1.7.6)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
-      '@supersubset/charts-echarts': 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@supersubset/data-model': 0.2.0
-      '@supersubset/runtime': 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@supersubset/schema': 0.2.0
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@floating-ui/dom'
-      - '@types/react'
-      - '@types/react-dom'
-      - bufferutil
-      - immer
-      - use-sync-external-store
-      - utf-8-validate
-
-  '@supersubset/query-client@file:.yalc/@supersubset/query-client':
-    dependencies:
-      '@supersubset/data-model': 0.2.0
-      '@supersubset/schema': 0.2.0
-
-  '@supersubset/runtime@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@supersubset/data-model': 0.2.0
-      '@supersubset/schema': 0.2.0
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  '@supersubset/runtime@file:.yalc/@supersubset/runtime(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@supersubset/data-model': 0.2.0
-      '@supersubset/schema': 0.2.0
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  '@supersubset/schema@0.2.0':
-    dependencies:
-      yaml: 2.9.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
-
-  '@supersubset/schema@file:.yalc/@supersubset/schema':
-    dependencies:
-      yaml: 2.9.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
-
-  '@supersubset/theme@0.2.0':
-    dependencies:
-      '@supersubset/schema': 0.2.0
 
   '@swc/helpers@0.5.15':
     dependencies:
