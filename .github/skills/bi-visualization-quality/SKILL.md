@@ -108,6 +108,7 @@ Use this skill to strengthen evidence, not replace it.
 ## See Also
 
 - `.github/skills/testing-strategy/SKILL.md`
+- `.github/skills/chart-feature-testing/SKILL.md`
 - `.github/skills/browser-testing/SKILL.md`
 - `docs/testing/verification-strategy.md`
 - `docs/testing/qa-checklist.md`

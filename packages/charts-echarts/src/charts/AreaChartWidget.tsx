@@ -23,6 +23,7 @@ import {
   buildLabelOption,
   buildTitleOption,
 } from '../base/shared-options';
+import { resolveYFields } from '../base/resolve-field-keys';
 
 echarts.use([EChartsLine]);
 
@@ -33,7 +34,7 @@ export function AreaChartWidget({ config, data, columns, title, height, theme }:
     }
 
     const xField = (config.xField as string) ?? columns?.[0]?.fieldId ?? '';
-    const yFields = (config.yFields as string[]) ?? columns?.slice(1).map((c) => c.fieldId) ?? [];
+    const yFields = resolveYFields(config, columns);
     const smooth = config.smooth === true;
     const stacked = config.stacked !== false; // default true for area chart
     const areaOpacity = (config.areaOpacity as number) ?? 0.7;

@@ -59,6 +59,12 @@ vi.mock('@puckeditor/core', () => ({
   },
   blocksPlugin: () => ({ name: 'blocks', label: 'Blocks' }),
   outlinePlugin: () => ({ name: 'outline', label: 'Outline' }),
+  createUsePuck: () => () => ({
+    selectedItem: null,
+    dispatch: vi.fn(),
+    getSelectorForId: vi.fn(),
+    appState: { data: { content: [] } },
+  }),
 }));
 
 vi.mock('@puckeditor/core/puck.css', () => ({}));
@@ -188,6 +194,19 @@ describe('SupersubsetDesigner', () => {
     expect(root?.style.height).toBe('100%');
     expect(root?.style.overflow).toBe('hidden');
     expect(root?.style.display).toBe('flex');
+  });
+
+  it('marks inline preview mode when iframes are disabled', () => {
+    const { container } = render(
+      React.createElement(SupersubsetDesigner, {
+        disableIframe: true,
+      }),
+    );
+
+    const root = container.querySelector(
+      '[data-supersubset-designer-root="true"]',
+    ) as HTMLDivElement | null;
+    expect(root?.getAttribute('data-supersubset-inline-preview')).toBe('true');
   });
 
   it('passes headerTitle from props', () => {

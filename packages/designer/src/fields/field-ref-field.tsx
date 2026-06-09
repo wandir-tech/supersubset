@@ -57,6 +57,21 @@ function FieldRefSelect({
     return result;
   }, [datasets, acceptRoles]);
 
+  const optionsWithCurrentValue = React.useMemo(() => {
+    if (!value || options.some((opt) => opt.value === value)) {
+      return options;
+    }
+    return [
+      {
+        value,
+        label: `${value} (bound)`,
+        dataset: 'Current binding',
+        role: 'dimension' as FieldRole,
+      },
+      ...options,
+    ];
+  }, [options, value]);
+
   // If no datasets are available, fall back to a text input
   if (datasets.length === 0) {
     return React.createElement(
@@ -111,7 +126,7 @@ function FieldRefSelect({
         },
       },
       React.createElement('option', { value: '' }, `Select ${label.toLowerCase()}…`),
-      ...options.map((opt) =>
+      ...optionsWithCurrentValue.map((opt) =>
         React.createElement(
           'option',
           { key: `${opt.dataset}-${opt.value}`, value: opt.value },
