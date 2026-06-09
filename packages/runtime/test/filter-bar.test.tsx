@@ -427,6 +427,9 @@ describe('FilterBar', () => {
   });
 
   it('[filters-and-interactions.FILTER_BAR.5] renders authored weekly date range options', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 4, 28));
+
     const options = generateWeeklyDateRangeOptions(
       weeklyDateFilter.dateConfig,
       new Date(2026, 4, 28),
@@ -446,6 +449,8 @@ describe('FilterBar', () => {
 
     expect(labels[0]).toBe('All time');
     expect(labels).toContain('May 25 - May 31');
+
+    vi.useRealTimers();
   });
 
   it('[filters-and-interactions.FILTER_BAR.5] emits weekly range values that compile to logical query ranges', () => {

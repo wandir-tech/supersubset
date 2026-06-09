@@ -76,7 +76,7 @@ The **orchestrator agent** (`orchestrator.agent.md`) is the coordinator. It deco
 
 For designer-shell visual work, pair the `designer` agent with `.github/skills/designer-design/SKILL.md`. Use `.github/skills/puck-integration/SKILL.md` for Puck mechanics and serialization.
 
-For testing work, pair the `testing` agent with `.github/skills/testing-strategy/SKILL.md` for layer selection and evidence expectations. Use `.github/skills/browser-testing/SKILL.md` for Chrome MCP and Playwright browser execution details.
+For testing work, pair the `testing` agent with `.github/skills/testing-strategy/SKILL.md` for layer selection and evidence expectations. Use `.github/skills/browser-testing/SKILL.md` for Chrome MCP and Playwright browser execution details. For chart editing in Tripmatch/Wandir, use `.github/skills/chart-feature-testing/SKILL.md`.
 
 ### Planning, CI, and AI context skills
 
@@ -87,6 +87,7 @@ For testing work, pair the `testing` agent with `.github/skills/testing-strategy
 | `requirements-intake`         | Creating or backfilling Acai-compatible feature specs and glossary terms                                  |
 | `requirements-driven-work`    | Implementing or reviewing against existing `features/*.feature.yaml` ACIDs                                |
 | `requirements-test-tagging`   | Prefixing tests with `[ACID]` evidence links                                                              |
+| `chart-feature-testing`       | Host-embedded chart intents (Tripmatch editor → publish → Metrics)                                        |
 | `branch-ci-promotion`         | PR readiness: `pnpm lint`, `typecheck`, `test`, E2E, merge expectations                                   |
 | `ai-code-cleanup`             | Continuous AI-code cleanup: drift detection, duplicate removal, bounded refactors, and standards updates  |
 | `release-runbook`             | End-to-end release execution: candidate validation, changesets, branch promotion, publish, downstream PRs |

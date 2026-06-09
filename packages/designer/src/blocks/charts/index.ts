@@ -19,7 +19,7 @@ const titleField = {
 
 const xAxisFieldRef = createFieldRefField('X-Axis Field', ['time', 'dimension']);
 
-const yAxisFieldRef = createFieldRefField('Y-Axis Field', ['measure']);
+const yAxisFieldRef = createFieldRefField('Y-Axis Field', ['measure', 'key']);
 
 const seriesFieldRef = createFieldRefField('Series Field', ['dimension']);
 
@@ -296,8 +296,6 @@ export const LineChart: ComponentConfig = {
   defaultProps: {
     title: 'Line Chart',
     datasetRef: '',
-    xAxisField: '',
-    yAxisField: '',
     seriesField: '',
     aggregation: 'none',
     smooth: 'false',
@@ -364,8 +362,6 @@ export const BarChart: ComponentConfig = {
   defaultProps: {
     title: 'Bar Chart',
     datasetRef: '',
-    xAxisField: '',
-    yAxisField: '',
     seriesField: '',
     aggregation: 'none',
     orientation: 'vertical',
@@ -414,9 +410,6 @@ export const PieChart: ComponentConfig = {
   defaultProps: {
     title: 'Pie Chart',
     datasetRef: '',
-    categoryField: '',
-    valueField: '',
-    aggregation: 'none',
     variant: 'pie',
     innerRadius: 0,
     outerRadius: 70,
@@ -453,8 +446,6 @@ export const ScatterChart: ComponentConfig = {
   defaultProps: {
     title: 'Scatter Chart',
     datasetRef: '',
-    xAxisField: '',
-    yAxisField: '',
     sizeField: '',
     colorGroupField: '',
     symbolSize: 10,
@@ -523,8 +514,6 @@ export const AreaChart: ComponentConfig = {
   defaultProps: {
     title: 'Area Chart',
     datasetRef: '',
-    xAxisField: '',
-    yAxisField: '',
     seriesField: '',
     aggregation: 'none',
     stacked: 'false',
@@ -560,7 +549,6 @@ export const ComboChart: ComponentConfig = {
   defaultProps: {
     title: 'Combo Chart',
     datasetRef: '',
-    xAxisField: '',
     barField: '',
     lineField: '',
     aggregation: 'none',
