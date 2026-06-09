@@ -1,5 +1,15 @@
 # @supersubset/runtime
 
+## 0.2.1
+
+### Patch Changes
+
+- [#170](https://github.com/wandir-tech/supersubset/pull/170) [`45329e2`](https://github.com/wandir-tech/supersubset/commit/45329e270e70f853a8226cfe64fdf06b3f771257) Thanks [@kokokenada](https://github.com/kokokenada)! - Analytics host integration for Tripmatch dogfooding: prefer `config.logicalQuery` in `buildWidgetQuery`, resolve output aliases for yField/yFields and combo bar/line fields, combo chart cumulative line series from `cumulativeFromField`, designer chart type switch panel, axis binding repair on select, and inline preview canvas scroll fix.
+
+- Updated dependencies []:
+  - @supersubset/schema@0.2.1
+  - @supersubset/data-model@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
