@@ -2,7 +2,7 @@
  * Central Puck Config for the Supersubset Designer.
  * Defines all components and categories for the editor sidebar.
  */
-import type { Config } from '@puckeditor/core';
+import type { Config, ComponentConfig } from '@puckeditor/core';
 import type { FilterDefinition } from '@supersubset/schema';
 import React from 'react';
 
@@ -10,6 +10,28 @@ import * as chartBlocks from '../blocks/charts';
 import * as contentBlocks from '../blocks/content';
 import * as controlBlocks from '../blocks/controls';
 import * as layoutBlocks from '../blocks/layout';
+import { chartAxisResolveData } from '../adapters/puck-canonical';
+
+const BINDING_REPAIR_CHARTS = new Set([
+  'LineChart',
+  'BarChart',
+  'ScatterChart',
+  'AreaChart',
+  'ComboChart',
+  'PieChart',
+  'KPICard',
+]);
+
+function withChartAxisResolveData(block: ComponentConfig): ComponentConfig {
+  return { ...block, resolveData: chartAxisResolveData };
+}
+
+function registerChartBlock(name: string, block: ComponentConfig): ComponentConfig {
+  if (BINDING_REPAIR_CHARTS.has(name)) {
+    return withChartAxisResolveData(block);
+  }
+  return block;
+}
 
 /**
  * Build the complete Puck Config with all Supersubset blocks.
@@ -38,12 +60,12 @@ export function createPuckConfig(options: CreatePuckConfigOptions = {}): Config 
     },
     components: {
       // Charts
-      LineChart: chartBlocks.LineChart,
-      BarChart: chartBlocks.BarChart,
-      PieChart: chartBlocks.PieChart,
-      ScatterChart: chartBlocks.ScatterChart,
-      AreaChart: chartBlocks.AreaChart,
-      ComboChart: chartBlocks.ComboChart,
+      LineChart: registerChartBlock('LineChart', chartBlocks.LineChart),
+      BarChart: registerChartBlock('BarChart', chartBlocks.BarChart),
+      PieChart: registerChartBlock('PieChart', chartBlocks.PieChart),
+      ScatterChart: registerChartBlock('ScatterChart', chartBlocks.ScatterChart),
+      AreaChart: registerChartBlock('AreaChart', chartBlocks.AreaChart),
+      ComboChart: registerChartBlock('ComboChart', chartBlocks.ComboChart),
       HeatmapChart: chartBlocks.HeatmapChart,
       RadarChart: chartBlocks.RadarChart,
       FunnelChart: chartBlocks.FunnelChart,
@@ -54,7 +76,7 @@ export function createPuckConfig(options: CreatePuckConfigOptions = {}): Config 
       GaugeChart: chartBlocks.GaugeChart,
       AlertsWidgetBlock: chartBlocks.AlertsWidgetBlock,
       Table: chartBlocks.Table,
-      KPICard: chartBlocks.KPICard,
+      KPICard: registerChartBlock('KPICard', chartBlocks.KPICard),
       // Content
       HeaderBlock: contentBlocks.HeaderBlock,
       MarkdownBlock: contentBlocks.MarkdownBlock,

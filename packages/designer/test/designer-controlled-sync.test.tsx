@@ -33,6 +33,12 @@ vi.mock('@puckeditor/core', async () => {
     },
     blocksPlugin: () => ({ name: 'blocks', label: 'Blocks' }),
     outlinePlugin: () => ({ name: 'outline', label: 'Outline' }),
+    createUsePuck: () => () => ({
+      selectedItem: null,
+      dispatch: vi.fn(),
+      getSelectorForId: vi.fn(),
+      appState: { data: { content: [] } },
+    }),
   };
 });
 

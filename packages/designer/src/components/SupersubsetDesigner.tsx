@@ -10,7 +10,11 @@ import type { Data } from '@puckeditor/core';
 import type { DashboardDefinition, PageDefinition } from '@supersubset/schema';
 import type { NormalizedDataset } from '@supersubset/data-model';
 import { createPuckConfig } from '../config/puck-config';
-import { puckToCanonical, canonicalToPuck } from '../adapters/puck-canonical';
+import {
+  puckToCanonical,
+  canonicalToPuck,
+  repairChartAxisPropsInPuckData,
+} from '../adapters/puck-canonical';
 import { getComponentIcon } from '../icons/component-icons';
 import { DatasetProvider } from '../context/DatasetContext';
 import { PreviewDataProvider, type FetchPreviewData } from '../context/PreviewDataContext';
@@ -20,6 +24,8 @@ import {
   decorateDesignerShell,
   injectDesignerSidebarStyles,
 } from './designer-shell-utils';
+import { ChartTypeSwitchPanel } from './ChartTypeSwitchPanel';
+import { ChartAxisResolveOnSelect } from './ChartAxisResolveOnSelect';
 import { FilterBuilderPanel } from './FilterBuilderPanel';
 import { SlideOverPanel } from './SlideOverPanel';
 
@@ -86,6 +92,12 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     DashboardDefinition | undefined
   >(defaultValue);
   const sourceDashboard = isControlled ? value : (uncontrolledDashboard ?? defaultValue);
+
+  useEffect(() => {
+    if (!isControlled && defaultValue) {
+      setUncontrolledDashboard(defaultValue);
+    }
+  }, [defaultValue, isControlled]);
   const pages = sourceDashboard?.pages ?? [];
   const [activePageId, setActivePageId] = useState<string | undefined>(
     sourceDashboard?.defaults?.activePage ?? sourceDashboard?.pages[0]?.id,
@@ -103,6 +115,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const [pendingDeletePageId, setPendingDeletePageId] = useState<string | undefined>();
   const [controlledSyncRevision, setControlledSyncRevision] = useState(0);
   const canMutateDashboard = !isControlled || !!onChange;
+  /** Avoid Puck onChange → parent re-render → data prop churn loops in publish-only hosts. */
+  const syncPuckCanvasToDashboard = isControlled || !!onChange;
   const pendingDeletePage = pages.find((page) => page.id === pendingDeletePageId);
   const hasUncommittedDraftChanges =
     canMutateDashboard &&
@@ -398,6 +412,15 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   // Sidebar icon overrides + header actions wrapper
   const overrides = useMemo(
     () => ({
+      fields: ({ children }: { children: React.ReactNode }) => {
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(ChartAxisResolveOnSelect),
+          React.createElement(ChartTypeSwitchPanel),
+          children,
+        );
+      },
       drawerItem: ({ name, children }: { name: string; children: React.ReactNode }) => {
         const icon = getComponentIcon(name);
         return React.createElement(
@@ -492,7 +515,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     if (!source) {
       return { root: { props: {} }, content: [] };
     }
-    return canonicalToPuck(source, { pageIndex: activePageIndex });
+    return repairChartAxisPropsInPuckData(canonicalToPuck(source, { pageIndex: activePageIndex }));
   }, [activePageIndex, sourceDashboard]);
 
   // Track latest dashboard ID from source
@@ -506,7 +529,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
 
   const handleChange = useCallback(
     (puckData: Data) => {
-      const dashboard = puckToCanonical(puckData, {
+      const repaired = repairChartAxisPropsInPuckData(puckData);
+      const dashboard = puckToCanonical(repaired, {
         dashboardId: dashboardIdRef.current,
         dashboardTitle: effectiveDashboardTitle,
         baseDashboard: sourceDashboard,
@@ -529,7 +553,8 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
   const handlePublish = useCallback(
     (puckData: Data) => {
       if (onPublish) {
-        const dashboard = puckToCanonical(puckData, {
+        const repaired = repairChartAxisPropsInPuckData(puckData);
+        const dashboard = puckToCanonical(repaired, {
           dashboardId: dashboardIdRef.current,
           dashboardTitle: effectiveDashboardTitle,
           baseDashboard: sourceDashboard,
@@ -579,6 +604,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
     {
       ref: designerRootRef,
       'data-supersubset-designer-root': 'true',
+      ...(disableIframe ? { 'data-supersubset-inline-preview': 'true' } : {}),
       style: {
         display: 'flex',
         flexDirection: 'column',
@@ -601,7 +627,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
                 key: editorKey,
                 config,
                 data: initialData,
-                onChange: canMutateDashboard ? handleChange : undefined,
+                onChange: syncPuckCanvasToDashboard ? handleChange : undefined,
                 onPublish: onPublish ? handlePublish : undefined,
                 headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
                 height,
@@ -615,7 +641,7 @@ export function SupersubsetDesigner(props: SupersubsetDesignerProps) {
               key: editorKey,
               config,
               data: initialData,
-              onChange: canMutateDashboard ? handleChange : undefined,
+              onChange: syncPuckCanvasToDashboard ? handleChange : undefined,
               onPublish: onPublish ? handlePublish : undefined,
               headerTitle: headerTitle ?? (sourceDashboard?.title || 'Supersubset Designer'),
               height,
