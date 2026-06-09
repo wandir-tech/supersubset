@@ -1,5 +1,15 @@
 # @supersubset/designer
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`45329e2`](https://github.com/wandir-tech/supersubset/commit/45329e270e70f853a8226cfe64fdf06b3f771257)]:
+  - @supersubset/runtime@0.2.1
+  - @supersubset/charts-echarts@0.2.1
+  - @supersubset/schema@0.2.1
+  - @supersubset/data-model@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
