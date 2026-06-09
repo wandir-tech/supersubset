@@ -21,8 +21,50 @@ import {
   buildLabelOption,
   buildTitleOption,
 } from '../base/shared-options';
+import {
+  resolveBarFields,
+  resolveCategoryField,
+  resolveLineFields,
+} from '../base/resolve-field-keys';
 
 echarts.use([EChartsBar, EChartsLine]);
+
+function readConfigString(config: Record<string, unknown>, key: string): string | undefined {
+  const value = config[key];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+export function applyCumulativeLineSeries(
+  data: Array<Record<string, unknown>>,
+  config: Record<string, unknown>,
+  barFields: string[],
+  lineFields: string[],
+): { data: Array<Record<string, unknown>>; lineFields: string[] } {
+  const cumulativeFromField = readConfigString(config, 'cumulativeFromField');
+  const lineField = readConfigString(config, 'lineField');
+  if (!cumulativeFromField || !lineField) {
+    return { data, lineFields };
+  }
+
+  let cumulative = 0;
+  const enriched = data.map((row) => {
+    const rawIncrement =
+      row[cumulativeFromField] ?? (barFields[0] != null ? row[barFields[0]] : undefined);
+    const increment =
+      typeof rawIncrement === 'number'
+        ? rawIncrement
+        : rawIncrement == null
+          ? 0
+          : Number(rawIncrement) || 0;
+    cumulative += increment;
+    return { ...row, [lineField]: cumulative };
+  });
+
+  return {
+    data: enriched,
+    lineFields: lineFields.length > 0 ? lineFields : [lineField],
+  };
+}
 
 export function ComboChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
@@ -30,24 +72,36 @@ export function ComboChartWidget({ config, data, columns, title, height, theme }
       return buildEmptyOption(title);
     }
 
-    const xField = (config.xField as string) ?? columns?.[0]?.fieldId ?? '';
-    const barFields = (config.barFields as string[]) ?? [];
-    const lineFields = (config.lineFields as string[]) ?? [];
+    const xField = resolveCategoryField(config, columns);
+    const barFields = resolveBarFields(config, columns);
+    let lineFields = resolveLineFields(config, columns);
+    const { data: chartData, lineFields: effectiveLineFields } = applyCumulativeLineSeries(
+      data,
+      config,
+      barFields,
+      lineFields,
+    );
+    lineFields = effectiveLineFields;
     const stacked = config.stacked === true;
     const lineSmooth = config.lineSmooth !== false;
     const barBorderRadius = (config.barBorderRadius as number) ?? 0;
+    const barLabel = readConfigString(config, 'barLabel');
+    const lineLabel = readConfigString(config, 'lineLabel');
     const shared = extractSharedConfig(config);
     const label = buildLabelOption(shared);
 
-    const categoryData = data.map((row) => String(row[xField] ?? ''));
-    const allFields = [...barFields, ...lineFields];
+    const categoryData = chartData.map((row) => String(row[xField] ?? ''));
+    const allFields = [
+      ...barFields.map((field) => barLabel ?? field),
+      ...lineFields.map((field) => lineLabel ?? field),
+    ];
     const hasTitle = Boolean(title);
     const legend = buildLegendOption(shared, allFields, hasTitle);
 
     const barSeries = barFields.map((field) => ({
-      name: field,
+      name: barLabel ?? field,
       type: 'bar' as const,
-      data: data.map((row) => row[field]),
+      data: chartData.map((row) => row[field]),
       yAxisIndex: 0,
       ...(label ? { label } : {}),
       ...(stacked ? { stack: 'bars' } : {}),
@@ -55,9 +109,9 @@ export function ComboChartWidget({ config, data, columns, title, height, theme }
     }));
 
     const lineSeries = lineFields.map((field) => ({
-      name: field,
+      name: lineLabel ?? field,
       type: 'line' as const,
-      data: data.map((row) => row[field]),
+      data: chartData.map((row) => row[field]),
       yAxisIndex: lineFields.length > 0 ? 1 : 0,
       smooth: lineSmooth,
       ...(label ? { label } : {}),

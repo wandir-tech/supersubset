@@ -61,12 +61,13 @@ export function puckToCanonical(
   const layout: LayoutMap = {};
   const widgets: WidgetDefinition[] = [];
 
-  // Recursively walk content items
+  // Recursively walk content items (slot children may live in data.zones at runtime)
   const childIds = processContentItems(
     (puckData.content ?? []) as ComponentData[],
     'grid-main',
     layout,
     widgets,
+    puckData.zones as PuckZones | undefined,
   );
 
   // Root layout node
@@ -184,11 +185,38 @@ const layoutTypeToPuckName: Record<string, string> = {
  * Recursively walk Puck content items and build layout nodes + widgets.
  * Handles RowBlock/ColumnBlock nesting by creating row/column layout nodes.
  */
+type PuckZones = Record<string, ComponentData[]>;
+
+const PUCK_SLOT_FIELD_NAMES = ['content'] as const;
+
+/** Read slot children from inline props or Puck runtime zones (`parentId:slotField`). */
+function readPuckSlotContent(
+  props: Record<string, unknown>,
+  itemId: string | undefined,
+  zones: PuckZones | undefined,
+  slotField = 'content',
+): ComponentData[] {
+  const inline = props[slotField];
+  if (Array.isArray(inline) && inline.length > 0) {
+    return inline as ComponentData[];
+  }
+
+  if (itemId && zones) {
+    const fromZone = zones[`${itemId}:${slotField}`];
+    if (Array.isArray(fromZone)) {
+      return fromZone;
+    }
+  }
+
+  return Array.isArray(inline) ? (inline as ComponentData[]) : [];
+}
+
 function processContentItems(
   items: ComponentData[],
   parentLayoutId: string,
   layout: LayoutMap,
   widgets: WidgetDefinition[],
+  zones?: PuckZones,
 ): string[] {
   const childIds: string[] = [];
 
@@ -201,8 +229,8 @@ function processContentItems(
     const layoutBlockType = LAYOUT_PUCK_NAME_TO_TYPE[puckType];
     if (layoutBlockType) {
       const layoutId = `layout-${itemId}`;
-      const slotContent = (props.content as ComponentData[]) ?? [];
-      const nestedChildIds = processContentItems(slotContent, layoutId, layout, widgets);
+      const slotContent = readPuckSlotContent(props, itemId, zones);
+      const nestedChildIds = processContentItems(slotContent, layoutId, layout, widgets, zones);
 
       layout[layoutId] = {
         id: layoutId,
@@ -481,6 +509,19 @@ function unwrapPuckOptionValue(value: unknown): unknown {
   return value;
 }
 
+/** Flatten Puck select/radio values like `'{"value":"count"}'` → `'count'`. */
+function normalizePuckOptionProps(props: Record<string, unknown>): void {
+  for (const [key, value] of Object.entries(props)) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+    const unwrapped = unwrapPuckOptionValue(value);
+    if (unwrapped !== value) {
+      props[key] = unwrapped;
+    }
+  }
+}
+
 function normalizeNumericConfigValue(value: unknown): unknown {
   const unwrapped = unwrapPuckOptionValue(value);
   if (typeof unwrapped === 'number' && Number.isFinite(unwrapped)) {
@@ -562,6 +603,15 @@ function buildWidgetDefinition(
       ['timestampField', 'alert-timestamp'],
     ];
 
+    const METRIC_BINDING_ROLES = new Set([
+      'y-axis',
+      'value',
+      'bar-y',
+      'line-y',
+      'size',
+      'comparison',
+    ]);
+
     for (const [propKey, role] of fieldMappings) {
       const fieldRef = props[propKey] as string;
       if (fieldRef) {
@@ -569,12 +619,14 @@ function buildWidgetDefinition(
           role,
           fieldRef,
           aggregation:
-            props.aggregation && props.aggregation !== 'none'
+            METRIC_BINDING_ROLES.has(role) && props.aggregation && props.aggregation !== 'none'
               ? (props.aggregation as string)
               : undefined,
         });
       }
     }
+
+    supplementDataBindingFieldsFromLegacyProps(props, fields);
 
     // Always create dataBinding when datasetRef is present (even without fields,
     // e.g. Table widget needs datasetRef to know which dataset to query)
@@ -635,7 +687,269 @@ function buildWidgetDefinition(
     }
   }
 
+  mirrorHostRuntimeConfigFields(widget);
+
   return widget;
+}
+
+interface LogicalQueryFieldLike {
+  fieldId: string;
+  aggregation?: string;
+  alias?: string;
+}
+
+interface LogicalQueryLike {
+  datasetId: string;
+  fields: LogicalQueryFieldLike[];
+}
+
+interface ResolvedFieldBinding {
+  fieldRef: string;
+  aggregation?: string;
+}
+
+const HOST_CONFIG_FIELD_MIRROR: Array<[string, string]> = [
+  ['x-axis', 'xField'],
+  ['y-axis', 'yField'],
+  ['bar-y', 'barField'],
+  ['line-y', 'lineField'],
+  ['category', 'categoryField'],
+  ['value', 'valueField'],
+];
+
+/** Host apps (e.g. Tripmatch) read xField/yField from widget.config at runtime. */
+function mirrorHostRuntimeConfigFields(widget: WidgetDefinition): void {
+  if (!widget.dataBinding) {
+    return;
+  }
+
+  for (const [role, configKey] of HOST_CONFIG_FIELD_MIRROR) {
+    const binding = widget.dataBinding.fields.find((field) => field.role === role);
+    if (!binding) {
+      continue;
+    }
+    widget.config[configKey] = hostConfigValueForBinding(binding);
+  }
+
+  // Pie / part-to-whole charts use nameField in Tripmatch runtime.
+  if (
+    widget.type === 'pie-chart' &&
+    typeof widget.config.categoryField === 'string' &&
+    !widget.config.nameField
+  ) {
+    widget.config.nameField = widget.config.categoryField;
+  }
+}
+
+function hostConfigValueForBinding(binding: FieldBinding): string {
+  if (binding.aggregation && binding.aggregation !== 'none') {
+    return hostAliasForAggregatedBinding(binding) ?? binding.fieldRef;
+  }
+  return binding.fieldRef;
+}
+
+function hostAliasForAggregatedBinding(binding: FieldBinding): string | undefined {
+  if (binding.aggregation === 'count') {
+    return 'count';
+  }
+  return undefined;
+}
+
+function readLogicalQueryFromWidgetConfig(
+  config: Record<string, unknown>,
+): LogicalQueryLike | null {
+  const logicalQuery = config.logicalQuery;
+  if (!logicalQuery || typeof logicalQuery !== 'object' || Array.isArray(logicalQuery)) {
+    return null;
+  }
+
+  const record = logicalQuery as Record<string, unknown>;
+  if (typeof record.datasetId !== 'string') {
+    return null;
+  }
+
+  const fields: LogicalQueryFieldLike[] = [];
+  if (Array.isArray(record.fields)) {
+    for (const field of record.fields) {
+      if (!field || typeof field !== 'object' || Array.isArray(field)) {
+        continue;
+      }
+      const fieldRecord = field as Record<string, unknown>;
+      if (typeof fieldRecord.fieldId !== 'string') {
+        continue;
+      }
+      const nextField: LogicalQueryFieldLike = { fieldId: fieldRecord.fieldId };
+      if (typeof fieldRecord.aggregation === 'string') {
+        nextField.aggregation = fieldRecord.aggregation;
+      }
+      if (typeof fieldRecord.alias === 'string') {
+        nextField.alias = fieldRecord.alias;
+      }
+      fields.push(nextField);
+    }
+  }
+
+  return { datasetId: record.datasetId, fields };
+}
+
+function resolveLegacyConfigFieldRef(
+  rawRef: string,
+  logicalQuery: LogicalQueryLike,
+): ResolvedFieldBinding | null {
+  const queryField = logicalQuery.fields.find(
+    (field) => field.alias === rawRef || field.fieldId === rawRef,
+  );
+
+  if (queryField) {
+    return {
+      fieldRef: queryField.fieldId,
+      ...(queryField.aggregation ? { aggregation: queryField.aggregation } : {}),
+    };
+  }
+
+  return { fieldRef: rawRef };
+}
+
+function dataBindingHasPopulatedRole(
+  dataBinding: WidgetDefinition['dataBinding'],
+  role: string,
+): boolean {
+  return !!dataBinding?.fields.some(
+    (field) =>
+      field.role === role && typeof field.fieldRef === 'string' && field.fieldRef.length > 0,
+  );
+}
+
+function readLogicalQueryFromProps(props: Record<string, unknown>): LogicalQueryLike | null {
+  const logicalQuery = props.logicalQuery;
+  if (!logicalQuery || typeof logicalQuery !== 'object' || Array.isArray(logicalQuery)) {
+    return null;
+  }
+
+  return readLogicalQueryFromWidgetConfig({ logicalQuery });
+}
+
+function ensureCartesianAxisPuckProps(
+  props: Record<string, unknown>,
+  config: Record<string, unknown>,
+): void {
+  const logicalQuery = readLogicalQueryFromWidgetConfig(config) ?? readLogicalQueryFromProps(props);
+
+  if (!props.xAxisField) {
+    const rawX = config.xField ?? props.xField;
+    if (typeof rawX === 'string' && rawX.length > 0) {
+      if (logicalQuery) {
+        const resolved = resolveLegacyConfigFieldRef(rawX, logicalQuery);
+        props.xAxisField = resolved?.fieldRef ?? rawX;
+      } else {
+        props.xAxisField = rawX;
+      }
+    }
+  }
+
+  if (!props.yAxisField) {
+    const rawY = config.yField ?? props.yField;
+    if (typeof rawY === 'string' && rawY.length > 0) {
+      if (logicalQuery) {
+        const resolved = resolveLegacyConfigFieldRef(rawY, logicalQuery);
+        if (resolved) {
+          props.yAxisField = resolved.fieldRef;
+          if (resolved.aggregation && (!props.aggregation || props.aggregation === 'none')) {
+            props.aggregation = resolved.aggregation;
+          }
+        }
+      } else {
+        props.yAxisField = rawY;
+      }
+    }
+  }
+}
+
+function supplementDataBindingFieldsFromLegacyProps(
+  props: Record<string, unknown>,
+  fields: FieldBinding[],
+): void {
+  const logicalQuery = readLogicalQueryFromProps(props);
+  const populatedRoles = new Set(
+    fields
+      .filter((field) => typeof field.fieldRef === 'string' && field.fieldRef.length > 0)
+      .map((field) => field.role),
+  );
+
+  const legacyMappings: Array<[string, string, string]> = [
+    ['xAxisField', 'xField', 'x-axis'],
+    ['yAxisField', 'yField', 'y-axis'],
+  ];
+
+  for (const [puckKey, configKey, role] of legacyMappings) {
+    if (populatedRoles.has(role)) {
+      continue;
+    }
+
+    const fromPuck = props[puckKey];
+    if (typeof fromPuck === 'string' && fromPuck.length > 0) {
+      fields.push({
+        role,
+        fieldRef: fromPuck,
+        ...(role === 'y-axis' && props.aggregation && props.aggregation !== 'none'
+          ? { aggregation: props.aggregation as string }
+          : {}),
+      });
+      continue;
+    }
+
+    const rawRef = props[configKey];
+    if (typeof rawRef !== 'string' || rawRef.length === 0) {
+      continue;
+    }
+
+    if (logicalQuery) {
+      const resolved = resolveLegacyConfigFieldRef(rawRef, logicalQuery);
+      if (resolved) {
+        fields.push({
+          role,
+          fieldRef: resolved.fieldRef,
+          ...(role === 'y-axis' && resolved.aggregation
+            ? { aggregation: resolved.aggregation }
+            : {}),
+        });
+      }
+      continue;
+    }
+
+    fields.push({ role, fieldRef: rawRef });
+  }
+
+  if (!logicalQuery) {
+    return;
+  }
+
+  if (!fieldBindingListHasPopulatedRole(fields, 'x-axis')) {
+    const dimension = logicalQuery.fields.find((field) => !field.aggregation);
+    if (dimension) {
+      fields.push({ role: 'x-axis', fieldRef: dimension.fieldId });
+    }
+  }
+
+  if (!fieldBindingListHasPopulatedRole(fields, 'y-axis')) {
+    const metric = logicalQuery.fields.find(
+      (field) => field.aggregation && field.aggregation !== 'none',
+    );
+    if (metric) {
+      fields.push({
+        role: 'y-axis',
+        fieldRef: metric.fieldId,
+        aggregation: metric.aggregation,
+      });
+    }
+  }
+}
+
+function fieldBindingListHasPopulatedRole(fields: FieldBinding[], role: string): boolean {
+  return fields.some(
+    (field) =>
+      field.role === role && typeof field.fieldRef === 'string' && field.fieldRef.length > 0,
+  );
 }
 
 function buildContentMeta(
@@ -658,6 +972,7 @@ function buildContentMeta(
 
 function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unknown> {
   const props: Record<string, unknown> = {};
+  const logicalQuery = readLogicalQueryFromWidgetConfig(widget.config);
 
   // Reconstruct data binding fields
   if (widget.dataBinding) {
@@ -689,35 +1004,69 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
       if (propKey) {
         props[propKey] = field.fieldRef;
       }
-      if (field.aggregation) {
+      if (
+        field.aggregation &&
+        field.aggregation !== 'none' &&
+        (field.role === 'y-axis' || field.role === 'value')
+      ) {
         props.aggregation = field.aggregation;
       }
     }
   }
 
+  if (!props.datasetRef) {
+    if (typeof widget.config.datasetRef === 'string') {
+      props.datasetRef = widget.config.datasetRef;
+    } else if (logicalQuery?.datasetId) {
+      props.datasetRef = logicalQuery.datasetId;
+    }
+  }
+
+  const logicalQueryForFallback = logicalQuery;
+
   // Fallback: map field-ref keys stored in widget.config to Puck props
   // (for legacy/hand-authored dashboards that don't use dataBinding)
-  const configFieldFallbacks: Array<[string, string]> = [
-    // Standard keys (config key → Puck prop)
-    ['valueField', 'valueField'],
-    ['comparisonField', 'comparisonField'],
-    ['categoryField', 'categoryField'],
-    ['sourceField', 'sourceField'],
-    ['targetField', 'targetField'],
-    ['sizeField', 'sizeField'],
-    ['colorGroupField', 'colorGroupField'],
-    ['nameField', 'nameField'],
-    ['parentField', 'parentField'],
-    ['datasetRef', 'datasetRef'],
-    // Alternative legacy keys
-    ['xField', 'xAxisField'],
-    ['yField', 'yAxisField'],
+  const configFieldFallbacks: Array<[string, string, string]> = [
+    // Standard keys (config key → Puck prop → dataBinding role)
+    ['valueField', 'valueField', 'value'],
+    ['comparisonField', 'comparisonField', 'comparison'],
+    ['categoryField', 'categoryField', 'category'],
+    ['sourceField', 'sourceField', 'source'],
+    ['targetField', 'targetField', 'target'],
+    ['sizeField', 'sizeField', 'size'],
+    ['colorGroupField', 'colorGroupField', 'color-group'],
+    ['nameField', 'nameField', 'name'],
+    ['parentField', 'parentField', 'parent'],
+    ['datasetRef', 'datasetRef', ''],
+    ['xField', 'xAxisField', 'x-axis'],
+    ['yField', 'yAxisField', 'y-axis'],
   ];
 
-  for (const [configKey, puckProp] of configFieldFallbacks) {
-    if (!props[puckProp] && widget.config[configKey]) {
-      props[puckProp] = widget.config[configKey];
+  for (const [configKey, puckProp, role] of configFieldFallbacks) {
+    if (props[puckProp]) {
+      continue;
     }
+    if (role && widget.dataBinding && dataBindingHasPopulatedRole(widget.dataBinding, role)) {
+      continue;
+    }
+
+    const rawRef = widget.config[configKey];
+    if (typeof rawRef !== 'string' || rawRef.length === 0) {
+      continue;
+    }
+
+    if (logicalQueryForFallback && (configKey === 'xField' || configKey === 'yField')) {
+      const resolved = resolveLegacyConfigFieldRef(rawRef, logicalQueryForFallback);
+      if (resolved) {
+        props[puckProp] = resolved.fieldRef;
+        if (resolved.aggregation && configKey === 'yField') {
+          props.aggregation = resolved.aggregation;
+        }
+      }
+      continue;
+    }
+
+    props[puckProp] = rawRef;
   }
 
   // Handle array-valued fields (yFields, barFields, lineFields)
@@ -743,8 +1092,13 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
     props.lineField = widget.config.lineFields[0];
   }
 
-  // Spread config props
+  // Spread config props (skip host axis aliases — mapped to Puck field props via ensureCartesianAxisPuckProps)
+  const HOST_AXIS_ALIAS_KEYS = new Set(['xField', 'yField']);
+
   for (const [key, value] of Object.entries(widget.config)) {
+    if (HOST_AXIS_ALIAS_KEYS.has(key)) {
+      continue;
+    }
     if (
       widget.type === 'alerts' &&
       (key === 'alertMode' || key === 'alertRule' || key === 'alertRuleDraft')
@@ -836,7 +1190,177 @@ function widgetConfigToPuckProps(widget: WidgetDefinition): Record<string, unkno
     }
   }
 
+  ensureCartesianAxisPuckProps(props, widget.config);
+  normalizePuckOptionProps(props);
+
   return props;
+}
+
+interface LogicalQueryFieldShape {
+  fieldId: string;
+  aggregation?: string;
+}
+
+function readLogicalQueryFieldsFromProps(props: Record<string, unknown>): LogicalQueryFieldShape[] {
+  const logicalQuery = readLogicalQueryFromProps(props);
+  return logicalQuery?.fields ?? [];
+}
+
+/**
+ * Repair chart axis Puck props from logicalQuery when axis fields were lost
+ * (e.g. Puck defaultProps merge or chart-type switch dropped yAxisField).
+ */
+export function repairChartAxisPropsInPuckData(data: Data): Data {
+  const beforeSnapshot = collectChartAxisBindingSnapshot(data);
+  const zones = data.zones ? { ...(data.zones as PuckZones) } : undefined;
+  const content = Array.isArray(data.content)
+    ? repairChartAxisPropsInPuckItems(data.content as ComponentData[], zones)
+    : data.content;
+
+  const next = {
+    ...data,
+    content,
+    ...(zones ? { zones } : {}),
+  };
+
+  if (collectChartAxisBindingSnapshot(next) === beforeSnapshot) {
+    return data;
+  }
+
+  return next;
+}
+
+function repairChartAxisPropsInPuckItems(
+  items: ComponentData[],
+  zones?: PuckZones,
+): ComponentData[] {
+  return items.map((item) => {
+    const props: Record<string, unknown> = { ...(item.props ?? {}) };
+    const itemId = typeof props.id === 'string' ? props.id : undefined;
+
+    if (isChartPuckType(item.type)) {
+      repairChartAxisPropsRecord(props);
+    }
+
+    for (const slotField of PUCK_SLOT_FIELD_NAMES) {
+      const zoneKey = itemId ? `${itemId}:${slotField}` : undefined;
+      if (zoneKey && zones?.[zoneKey]) {
+        zones[zoneKey] = repairChartAxisPropsInPuckItems(zones[zoneKey], zones);
+      } else if (Array.isArray(props[slotField])) {
+        props[slotField] = repairChartAxisPropsInPuckItems(
+          props[slotField] as ComponentData[],
+          zones,
+        );
+      }
+    }
+
+    return { ...item, props } as ComponentData;
+  });
+}
+
+function isChartPuckType(puckType: string): boolean {
+  return (
+    puckType.endsWith('Chart') ||
+    puckType === 'KPICard' ||
+    puckType === 'Table' ||
+    puckType === 'AlertsWidgetBlock'
+  );
+}
+
+interface ChartAxisBindingSnapshot {
+  id: string;
+  type: string;
+  xAxisField?: unknown;
+  yAxisField?: unknown;
+  categoryField?: unknown;
+  valueField?: unknown;
+  aggregation?: unknown;
+}
+
+function collectChartAxisBindingSnapshots(
+  items: ComponentData[] | undefined,
+  out: ChartAxisBindingSnapshot[],
+  zones?: PuckZones,
+): void {
+  if (!Array.isArray(items)) {
+    return;
+  }
+
+  for (const item of items) {
+    const props = (item.props ?? {}) as Record<string, unknown>;
+    const itemId = typeof props.id === 'string' ? props.id : undefined;
+
+    if (isChartPuckType(item.type)) {
+      out.push({
+        id: String(props.id ?? ''),
+        type: item.type,
+        xAxisField: props.xAxisField,
+        yAxisField: props.yAxisField,
+        categoryField: props.categoryField,
+        valueField: props.valueField,
+        aggregation: props.aggregation,
+      });
+    }
+
+    for (const slotField of PUCK_SLOT_FIELD_NAMES) {
+      const children = readPuckSlotContent(props, itemId, zones, slotField);
+      if (children.length > 0) {
+        collectChartAxisBindingSnapshots(children, out, zones);
+      }
+    }
+  }
+}
+
+/** Stable string for comparing chart axis bindings before/after repair. */
+export function collectChartAxisBindingSnapshot(data: Data): string {
+  const snapshots: ChartAxisBindingSnapshot[] = [];
+  const zones = data.zones as PuckZones | undefined;
+  collectChartAxisBindingSnapshots(data.content as ComponentData[] | undefined, snapshots, zones);
+  return JSON.stringify(snapshots);
+}
+
+export function repairChartAxisPropsRecord(props: Record<string, unknown>): void {
+  normalizePuckOptionProps(props);
+  ensureCartesianAxisPuckProps(props, props);
+
+  const fields = readLogicalQueryFieldsFromProps(props);
+  if (fields.length === 0) {
+    return;
+  }
+
+  if (!props.yAxisField) {
+    const metric = fields.find((field) => field.aggregation && field.aggregation !== 'none');
+    if (metric) {
+      props.yAxisField = metric.fieldId;
+      if (!props.aggregation || props.aggregation === 'none') {
+        props.aggregation = metric.aggregation;
+      }
+    }
+  }
+
+  if (!props.xAxisField) {
+    const dimension = fields.find((field) => !field.aggregation);
+    if (dimension) {
+      props.xAxisField = dimension.fieldId;
+    }
+  }
+
+  if (!props.categoryField) {
+    const category = fields.find((field) => !field.aggregation);
+    if (category) {
+      props.categoryField = category.fieldId;
+    }
+  }
+
+  if (!props.valueField) {
+    const value = fields.find((field) => field.aggregation && field.aggregation !== 'none');
+    if (value) {
+      props.valueField = value.fieldId;
+      if (!props.aggregation || props.aggregation === 'none') {
+        props.aggregation = value.aggregation;
+      }
+    }
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -849,4 +1373,23 @@ function layoutMetaToPuckProps(node: LayoutComponent): Record<string, unknown> {
   if (node.meta.headerSize) props.size = node.meta.headerSize;
   if (node.meta.height) props.height = node.meta.height;
   return props;
+}
+
+/** Puck resolveData — repairs axis bindings before fields panel / preview read props. */
+export async function chartAxisResolveData(data: {
+  props: Record<string, unknown>;
+}): Promise<{ props: Record<string, unknown> }> {
+  const props = { ...(data.props ?? {}) };
+  repairChartAxisPropsRecord(props);
+
+  const unchanged =
+    props.xAxisField === data.props?.xAxisField &&
+    props.yAxisField === data.props?.yAxisField &&
+    props.aggregation === data.props?.aggregation;
+
+  if (unchanged) {
+    return { props: data.props };
+  }
+
+  return { props };
 }

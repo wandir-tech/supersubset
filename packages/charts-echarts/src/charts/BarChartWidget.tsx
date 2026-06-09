@@ -18,6 +18,7 @@ import {
   buildLabelOption,
   buildTitleOption,
 } from '../base/shared-options';
+import { resolveYFields } from '../base/resolve-field-keys';
 
 echarts.use([EChartsBar]);
 
@@ -37,7 +38,7 @@ export function BarChartWidget({
     }
 
     const xField = (config.xField as string) ?? columns?.[0]?.fieldId;
-    const yFields = (config.yFields as string[]) ?? columns?.slice(1).map((c) => c.fieldId) ?? [];
+    const yFields = resolveYFields(config, columns);
     const horizontal = config.horizontal === true;
     const stacked = config.stacked === true;
     const barWidth = config.barWidth as string | number | undefined;

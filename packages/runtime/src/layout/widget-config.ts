@@ -27,6 +27,13 @@ const ROLE_TO_ARRAY_CONFIG_KEY: Record<string, string> = {
   'line-y': 'lineFields',
 };
 
+/** When a scalar sibling is already set (host apps often use yField), prefer it over dataBinding fieldRefs (mart ids). */
+const ARRAY_SCALAR_SIBLING: Record<string, string> = {
+  yFields: 'yField',
+  barFields: 'barField',
+  lineFields: 'lineField',
+};
+
 export function resolveDataBindingConfig(widgetDef: WidgetDefinition): Record<string, unknown> {
   const config = { ...widgetDef.config };
   if (!widgetDef.dataBinding?.fields) return config;
@@ -46,9 +53,11 @@ export function resolveDataBindingConfig(widgetDef: WidgetDefinition): Record<st
   }
 
   for (const [key, values] of Object.entries(arrayCollectors)) {
-    if (config[key] === undefined) {
-      config[key] = values;
-    }
+    if (config[key] !== undefined) continue;
+    const siblingKey = ARRAY_SCALAR_SIBLING[key];
+    const siblingValue =
+      siblingKey && typeof config[siblingKey] === 'string' ? config[siblingKey] : undefined;
+    config[key] = siblingValue ? [siblingValue] : values;
   }
 
   if (widgetDef.dataBinding.datasetRef && !config.datasetRef) {

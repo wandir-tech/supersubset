@@ -53,23 +53,22 @@ export function buildWidgetQuery(
     };
   }
 
+  const configQuery = readConfigLogicalQuery(widgetDef);
+  if (configQuery) {
+    return mergeActiveFiltersIntoQuery(configQuery, filters, activeFilters);
+  }
+
   const dataBinding = widgetDef.dataBinding;
   if (!dataBinding?.datasetRef || !dataBinding.fields || dataBinding.fields.length === 0) {
     return null;
   }
 
-  const fields = dataBinding.fields.map((field) => {
-    const queryField: LogicalQuery['fields'][number] = {
-      fieldId: field.fieldRef,
-    };
+  const mergedConfig = resolveDataBindingConfig(widgetDef);
+  const fields = buildQueryFieldsFromDataBinding(dataBinding.fields, mergedConfig);
 
-    const aggregation = normalizeAggregation(field.aggregation);
-    if (aggregation) {
-      queryField.aggregation = aggregation;
-    }
-
-    return queryField;
-  });
+  if (fields.length === 0) {
+    return null;
+  }
 
   const compiledFilters = compileActiveFiltersForQuery(
     dataBinding.datasetRef,
@@ -82,6 +81,202 @@ export function buildWidgetQuery(
     fields,
     ...(compiledFilters.length > 0 ? { filters: compiledFilters } : {}),
   };
+}
+
+/** Host-embedded dashboards (e.g. Tripmatch) often store the executable query on config. */
+function readConfigLogicalQuery(widgetDef: WidgetDefinition): LogicalQuery | null {
+  const raw = widgetDef.config?.logicalQuery;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return null;
+  }
+
+  const record = raw as Record<string, unknown>;
+  if (typeof record.datasetId !== 'string' || record.datasetId.length === 0) {
+    return null;
+  }
+
+  if (!Array.isArray(record.fields) || record.fields.length === 0) {
+    return null;
+  }
+
+  const fields: LogicalQuery['fields'] = [];
+  for (const entry of record.fields) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      continue;
+    }
+    const field = entry as Record<string, unknown>;
+    if (typeof field.fieldId !== 'string' || field.fieldId.length === 0) {
+      continue;
+    }
+
+    const queryField: LogicalQuery['fields'][number] = {
+      fieldId: field.fieldId,
+    };
+    const aggregation = normalizeAggregation(
+      typeof field.aggregation === 'string' ? field.aggregation : undefined,
+    );
+    if (aggregation) {
+      queryField.aggregation = aggregation;
+    }
+    if (typeof field.alias === 'string' && field.alias.length > 0) {
+      queryField.alias = field.alias;
+    }
+    fields.push(queryField);
+  }
+
+  if (fields.length === 0) {
+    return null;
+  }
+
+  const query: LogicalQuery = {
+    datasetId: record.datasetId,
+    fields,
+  };
+
+  if (Array.isArray(record.filters)) {
+    const parsedFilters = parseQueryFilters(record.filters);
+    if (parsedFilters.length > 0) {
+      query.filters = parsedFilters;
+    }
+  }
+
+  if (Array.isArray(record.sort)) {
+    const parsedSort = parseQuerySort(record.sort);
+    if (parsedSort.length > 0) {
+      query.sort = parsedSort;
+    }
+  }
+
+  if (typeof record.limit === 'number' && Number.isFinite(record.limit)) {
+    query.limit = record.limit;
+  }
+
+  if (typeof record.offset === 'number' && Number.isFinite(record.offset)) {
+    query.offset = record.offset;
+  }
+
+  if (record.distinct === true) {
+    query.distinct = true;
+  }
+
+  return query;
+}
+
+function mergeActiveFiltersIntoQuery(
+  base: LogicalQuery,
+  filters: FilterDefinition[] | undefined,
+  activeFilters: FilterValue[] | undefined,
+): LogicalQuery {
+  const compiledFilters = compileActiveFiltersForQuery(base.datasetId, filters, activeFilters);
+
+  if (compiledFilters.length === 0) {
+    return base;
+  }
+
+  return {
+    ...base,
+    filters: [...(base.filters ?? []), ...compiledFilters],
+  };
+}
+
+function buildQueryFieldsFromDataBinding(
+  bindings: NonNullable<WidgetDefinition['dataBinding']>['fields'],
+  config: Record<string, unknown>,
+): LogicalQuery['fields'] {
+  const seenRoles = new Set<string>();
+  const fields: LogicalQuery['fields'] = [];
+
+  for (const field of bindings) {
+    if (!field?.fieldRef || seenRoles.has(field.role)) {
+      continue;
+    }
+
+    seenRoles.add(field.role);
+
+    const queryField: LogicalQuery['fields'][number] = {
+      fieldId: field.fieldRef,
+    };
+
+    const aggregation = normalizeAggregation(field.aggregation);
+    if (aggregation) {
+      queryField.aggregation = aggregation;
+    }
+
+    const alias = aliasForDataBindingField(field.role, config);
+    if (alias && alias !== field.fieldRef) {
+      queryField.alias = alias;
+    }
+
+    fields.push(queryField);
+  }
+
+  return fields;
+}
+
+function aliasForDataBindingField(
+  role: string,
+  config: Record<string, unknown>,
+): string | undefined {
+  switch (role) {
+    case 'y-axis':
+      return readConfigString(config, 'yField');
+    case 'value':
+      return readConfigString(config, 'valueField') ?? readConfigString(config, 'metricField');
+    case 'category':
+      return readConfigString(config, 'nameField');
+    case 'bar-y':
+      return readConfigString(config, 'barField');
+    case 'line-y':
+      return readConfigString(config, 'lineField');
+    default:
+      return undefined;
+  }
+}
+
+function readConfigString(config: Record<string, unknown>, key: string): string | undefined {
+  const value = config[key];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function parseQueryFilters(raw: unknown[]): NonNullable<LogicalQuery['filters']> {
+  const filters: NonNullable<LogicalQuery['filters']> = [];
+
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      continue;
+    }
+    const filter = entry as Record<string, unknown>;
+    if (typeof filter.fieldId !== 'string' || typeof filter.operator !== 'string') {
+      continue;
+    }
+    filters.push({
+      fieldId: filter.fieldId,
+      operator: filter.operator as NonNullable<LogicalQuery['filters']>[number]['operator'],
+      ...(filter.value !== undefined ? { value: filter.value } : {}),
+    });
+  }
+
+  return filters;
+}
+
+function parseQuerySort(raw: unknown[]): NonNullable<LogicalQuery['sort']> {
+  const sort: NonNullable<LogicalQuery['sort']> = [];
+
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      continue;
+    }
+    const item = entry as Record<string, unknown>;
+    if (typeof item.fieldId !== 'string') {
+      continue;
+    }
+    if (item.direction !== 'asc' && item.direction !== 'desc') {
+      continue;
+    }
+    sort.push({ fieldId: item.fieldId, direction: item.direction });
+  }
+
+  return sort;
 }
 
 export function parseStructuredAlertRule(
@@ -360,30 +555,3 @@ function parseCrossFilterId(filterId: string): { sourceWidgetId: string; fieldRe
     fieldRef: remainder.slice(separatorIndex + 1),
   };
 }
-
-const ROLE_TO_CONFIG_KEY: Record<string, string> = {
-  'x-axis': 'xField',
-  'y-axis': 'yField',
-  series: 'seriesField',
-  value: 'valueField',
-  category: 'categoryField',
-  size: 'sizeField',
-  'color-group': 'colorGroupField',
-  'bar-y': 'barField',
-  'line-y': 'lineField',
-  name: 'nameField',
-  parent: 'parentField',
-  source: 'sourceField',
-  target: 'targetField',
-  comparison: 'comparisonField',
-  'alert-title': 'titleField',
-  'alert-message': 'messageField',
-  'alert-severity': 'severityField',
-  'alert-timestamp': 'timestampField',
-};
-
-const ROLE_TO_ARRAY_CONFIG_KEY: Record<string, string> = {
-  'y-axis': 'yFields',
-  'bar-y': 'barFields',
-  'line-y': 'lineFields',
-};
