@@ -1,5 +1,21 @@
 # @supersubset/charts-echarts
 
+## 0.2.2
+
+### Patch Changes
+
+- [#175](https://github.com/wandir-tech/supersubset/pull/175) [`099b026`](https://github.com/wandir-tech/supersubset/commit/099b026a3a7a9473141ab5c264f1865f9e2948f6) Thanks [@kokokenada](https://github.com/kokokenada)! - Fix analytics dashboard editor publish validation and pie chart legend:
+  - Map Puck ColumnBlock `verticalAlign` CSS values to canonical schema (`top`/`center`/`bottom`; omit `stretch`).
+  - Respect `showLegend: false` on pie charts (remove hard-coded legend fallback).
+  - Reserve canvas space when a pie legend is shown so the series stays visible (center/radius layout).
+  - Reduce overlapping outside labels on skewed pie data when legend is off (`hideOverlap`, `minShowLabelAngle`).
+  - Deduplicate table columns when runtime metadata repeats a configured field id (fixes React key warnings in host E2E).
+
+- Updated dependencies []:
+  - @supersubset/schema@0.2.2
+  - @supersubset/runtime@0.2.2
+  - @supersubset/theme@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
