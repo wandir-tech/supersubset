@@ -292,7 +292,7 @@ test.describe('Designer chart matrix certification', () => {
       expect(getSeriesList(option)[0]).toEqual(
         expect.objectContaining({
           type: 'pie',
-          center: ['50%', '58%'],
+          center: ['50%', '62%'],
           radius: ['0%', '58%'],
         }),
       );
