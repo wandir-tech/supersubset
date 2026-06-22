@@ -1757,6 +1757,28 @@ describe('TableWidget — per-chart properties', () => {
     expect(headerCells.length).toBe(4); // # + 3 columns
   });
 
+  it('config.columns preserves order and dedupes repeated runtime columns', () => {
+    const { container } = render(
+      <TableWidget
+        {...makeProps({
+          config: { columns: ['name', 'score', 'grade'] },
+          data: tableData,
+          columns: [
+            { fieldId: 'name', label: 'Name', dataType: 'string' as const },
+            { fieldId: 'name', label: 'Name dup', dataType: 'string' as const },
+            { fieldId: 'score', label: 'Score', dataType: 'number' as const },
+            { fieldId: 'grade', label: 'Grade', dataType: 'string' as const },
+          ],
+        })}
+      />,
+    );
+    const headerCells = container.querySelectorAll('th');
+    expect(headerCells.length).toBe(3);
+    expect(headerCells[0].textContent).toBe('Name');
+    expect(headerCells[1].textContent).toBe('Score');
+    expect(headerCells[2].textContent).toBe('Grade');
+  });
+
   it('showRowNumbers=false (default) omits row number column', () => {
     const { container } = render(
       <TableWidget
