@@ -293,7 +293,7 @@ test.describe('Designer chart matrix certification', () => {
         expect.objectContaining({
           type: 'pie',
           center: ['50%', '62%'],
-          radius: ['0%', '58%'],
+          radius: ['40%', '58%'],
         }),
       );
       expect(option.legend).toBeDefined();
