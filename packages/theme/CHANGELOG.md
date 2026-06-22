@@ -1,5 +1,12 @@
 # @supersubset/theme
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @supersubset/schema@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
