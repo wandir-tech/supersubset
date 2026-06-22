@@ -13,7 +13,15 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
   const displayColumns = useMemo(() => {
     const configColumns = config.columns as string[] | undefined;
     if (configColumns && configColumns.length > 0 && columns) {
-      return columns.filter((c) => configColumns.includes(c.fieldId));
+      const byFieldId = new Map<string, (typeof columns)[number]>();
+      for (const col of columns) {
+        if (!byFieldId.has(col.fieldId)) {
+          byFieldId.set(col.fieldId, col);
+        }
+      }
+      return configColumns
+        .map((fieldId) => byFieldId.get(fieldId))
+        .filter((col): col is NonNullable<typeof col> => col != null);
     }
     return columns ?? [];
   }, [config, columns]);
@@ -36,7 +44,10 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
       let isNumeric = false;
       for (const row of data) {
         const v = row[col.fieldId];
-        if (typeof v === 'number' && Number.isFinite(v)) { sum += v; isNumeric = true; }
+        if (typeof v === 'number' && Number.isFinite(v)) {
+          sum += v;
+          isNumeric = true;
+        }
       }
       if (isNumeric) sums[col.fieldId] = sum;
     }
@@ -45,7 +56,10 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
 
   if (!data || data.length === 0) {
     return (
-      <div className="ss-table-empty" style={{ textAlign: 'center', padding: '24px', color: '#999' }}>
+      <div
+        className="ss-table-empty"
+        style={{ textAlign: 'center', padding: '24px', color: '#999' }}
+      >
         <div style={{ fontWeight: 600 }}>{title ?? 'Table'}</div>
         <div>No data available</div>
       </div>
@@ -71,7 +85,20 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
         <thead>
           <tr>
             {showRowNumbers && (
-              <th style={{ padding: '8px 12px', textAlign: headerAlign, borderBottom: '2px solid #e0e0e0', fontWeight: 600, position: 'sticky', top: 0, background: 'var(--ss-color-surface, #fff)', width: 40 }}>#</th>
+              <th
+                style={{
+                  padding: '8px 12px',
+                  textAlign: headerAlign,
+                  borderBottom: '2px solid #e0e0e0',
+                  fontWeight: 600,
+                  position: 'sticky',
+                  top: 0,
+                  background: 'var(--ss-color-surface, #fff)',
+                  width: 40,
+                }}
+              >
+                #
+              </th>
             )}
             {displayColumns.map((col) => (
               <th
@@ -95,10 +122,21 @@ export function TableWidget({ config, data, columns, title, height }: WidgetProp
           {displayData.map((row, rowIdx) => (
             <tr
               key={rowIdx}
-              style={{ background: striped && rowIdx % 2 !== 0 ? 'rgba(0,0,0,0.02)' : 'transparent' }}
+              style={{
+                background: striped && rowIdx % 2 !== 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
+              }}
             >
               {showRowNumbers && (
-                <td style={{ padding: '6px 12px', borderBottom: '1px solid #f0f0f0', textAlign: cellAlign, color: '#999' }}>{rowIdx + 1}</td>
+                <td
+                  style={{
+                    padding: '6px 12px',
+                    borderBottom: '1px solid #f0f0f0',
+                    textAlign: cellAlign,
+                    color: '#999',
+                  }}
+                >
+                  {rowIdx + 1}
+                </td>
               )}
               {displayColumns.map((col) => (
                 <td

@@ -16,9 +16,41 @@ import {
   buildTooltipOption,
   formatNumber,
   buildTitleOption,
+  type SharedConfig,
 } from '../base/shared-options';
 
 echarts.use([EChartsPie]);
+
+/** Keep the pie series inside the canvas when a legend reserves edge space. */
+export function resolvePieLayout(
+  shared: SharedConfig,
+  legend: Record<string, unknown> | undefined,
+  hasTitle: boolean,
+  innerRadius: number,
+  outerRadius: number,
+  labelPosition: 'outside' | 'inside' | 'center' | 'none',
+): { center: [string, string]; radius: [string, string] } {
+  const cappedOuter = legend ? Math.min(outerRadius, 58) : outerRadius;
+  const radius: [string, string] = [`${innerRadius}%`, `${cappedOuter}%`];
+
+  if (!legend) {
+    const y = labelPosition === 'outside' ? '55%' : '52%';
+    return { center: ['50%', y], radius };
+  }
+
+  const position = shared.legendPosition ?? 'top';
+  switch (position) {
+    case 'bottom':
+      return { center: ['50%', hasTitle ? '44%' : '46%'], radius };
+    case 'left':
+      return { center: ['58%', hasTitle ? '54%' : '52%'], radius };
+    case 'right':
+      return { center: ['42%', hasTitle ? '54%' : '52%'], radius };
+    case 'top':
+    default:
+      return { center: ['50%', hasTitle ? '62%' : '58%'], radius };
+  }
+}
 
 export function PieChartWidget({ config, data, columns, title, height, theme }: WidgetProps) {
   const option = useMemo(() => {
@@ -62,6 +94,16 @@ export function PieChartWidget({ config, data, columns, title, height, theme }: 
             formatter: shared.showValues === false ? '{b}' : labelFormatter,
           };
 
+    const legend = buildLegendOption(shared, sliceNames, hasTitle);
+    const { center, radius } = resolvePieLayout(
+      shared,
+      legend,
+      hasTitle,
+      innerRadius,
+      outerRadius,
+      labelPosition,
+    );
+
     return {
       ...(buildTitleOption(title) ? { title: buildTitleOption(title) } : {}),
       color: buildColorOption(shared),
@@ -72,19 +114,23 @@ export function PieChartWidget({ config, data, columns, title, height, theme }: 
               `${params.name}: ${formatNumber(params.value, shared.numberFormat!)} (${params.percent}%)`
           : '{b}: {c} ({d}%)',
       },
-      legend: buildLegendOption(shared, sliceNames, hasTitle) ?? {
-        orient: 'vertical' as const,
-        left: 'left',
-      },
+      ...(legend ? { legend } : {}),
       series: [
         {
           type: 'pie' as const,
           data: seriesData,
-          radius: [`${innerRadius}%`, `${outerRadius}%`],
+          radius,
+          center,
           emphasis: {
             itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' },
           },
           label: labelConfig,
+          ...(labelPosition === 'outside' && !legend
+            ? {
+                minShowLabelAngle: 8,
+                labelLayout: { hideOverlap: true },
+              }
+            : {}),
           ...(roseType ? { roseType } : {}),
           ...(padAngle > 0 ? { padAngle } : {}),
         },

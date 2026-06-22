@@ -181,6 +181,32 @@ const layoutTypeToPuckName: Record<string, string> = {
   column: 'ColumnBlock',
 };
 
+/** Puck ColumnBlock uses CSS alignSelf values; canonical schema uses top/center/bottom. */
+const PUCK_TO_CANONICAL_VERTICAL_ALIGN: Record<string, 'top' | 'center' | 'bottom' | undefined> = {
+  start: 'top',
+  top: 'top',
+  center: 'center',
+  end: 'bottom',
+  bottom: 'bottom',
+  stretch: undefined,
+};
+
+const CANONICAL_TO_PUCK_VERTICAL_ALIGN: Record<string, string> = {
+  top: 'start',
+  center: 'center',
+  bottom: 'end',
+};
+
+function puckVerticalAlignToCanonical(value: unknown): 'top' | 'center' | 'bottom' | undefined {
+  if (typeof value !== 'string') return undefined;
+  return PUCK_TO_CANONICAL_VERTICAL_ALIGN[value];
+}
+
+function canonicalVerticalAlignToPuck(value: unknown): string {
+  if (typeof value !== 'string') return 'stretch';
+  return CANONICAL_TO_PUCK_VERTICAL_ALIGN[value] ?? 'stretch';
+}
+
 /**
  * Recursively walk Puck content items and build layout nodes + widgets.
  * Handles RowBlock/ColumnBlock nesting by creating row/column layout nodes.
@@ -412,7 +438,8 @@ function buildLayoutBlockMeta(
   }
   if (puckType === 'ColumnBlock') {
     if (props.span !== undefined) meta.width = props.span;
-    if (props.verticalAlign) meta.verticalAlign = props.verticalAlign;
+    const verticalAlign = puckVerticalAlignToCanonical(props.verticalAlign);
+    if (verticalAlign) meta.verticalAlign = verticalAlign;
   }
   return meta;
 }
@@ -427,7 +454,9 @@ function layoutNodeToPuckProps(node: LayoutComponent): Record<string, unknown> {
   }
   if (node.type === 'column') {
     if (node.meta.width !== undefined) props.span = node.meta.width;
-    if (node.meta.verticalAlign) props.verticalAlign = node.meta.verticalAlign;
+    if (node.meta.verticalAlign) {
+      props.verticalAlign = canonicalVerticalAlignToPuck(node.meta.verticalAlign);
+    }
   }
   return props;
 }
