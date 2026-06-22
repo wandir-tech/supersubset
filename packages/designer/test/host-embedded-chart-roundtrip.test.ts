@@ -3,6 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import type { DashboardDefinition } from '@supersubset/schema';
+import { dashboardDefinitionSchema } from '@supersubset/schema';
 import {
   canonicalToPuck,
   puckToCanonical,
@@ -540,5 +541,23 @@ describe('host-embedded chart round-trip', () => {
     const after = collectChartAxisBindingSnapshot(fixed);
     expect(brokenSnapshot).not.toBe(after);
     expect(JSON.parse(after)[0]?.yAxisField).toBe('event_id');
+  });
+
+  it('publish round-trip omits invalid stretch verticalAlign from column meta', () => {
+    const puck = canonicalToPuck(makeTripmatchPlanChartsRowDashboard(PLAN_CHART_DAY_WIDGET));
+    const published = puckToCanonical(puck, {
+      dashboardId: 'tripmatch-analytics',
+      dashboardTitle: 'Tripmatch analytics',
+      baseDashboard: makeTripmatchPlanChartsRowDashboard(PLAN_CHART_DAY_WIDGET),
+    });
+
+    expect(() => dashboardDefinitionSchema.parse(published)).not.toThrow();
+
+    for (const node of Object.values(published.pages[0].layout)) {
+      const verticalAlign = node.meta?.verticalAlign;
+      if (verticalAlign !== undefined) {
+        expect(['top', 'center', 'bottom']).toContain(verticalAlign);
+      }
+    }
   });
 });

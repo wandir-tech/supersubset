@@ -405,11 +405,177 @@ describe('PieChartWidget — per-chart properties', () => {
     capturedOption = null;
   });
 
+  it('showLegend=false omits legend option', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: false,
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getOption().legend).toBeUndefined();
+  });
+
+  // Regression: #680 — legend must not collapse the pie (center/radius reserved)
+  it('showLegend=true keeps an explicit center below a top legend', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: true,
+            legendPosition: 'top',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getOption().legend).toBeDefined();
+    expect(getSeries().center).toEqual(['50%', '58%']);
+    expect(getSeries().radius).toEqual(['0%', '58%']);
+  });
+
+  it.each([
+    ['bottom', ['50%', '46%']],
+    ['left', ['58%', '52%']],
+    ['right', ['42%', '52%']],
+  ] as const)('showLegend=true with legendPosition=%s shifts center', (position, center) => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: true,
+            legendPosition: position,
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().center).toEqual(center);
+  });
+
+  it('showLegend=true with title lowers center further for top legend', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          title: 'Plans by type',
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: true,
+            legendPosition: 'top',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().center).toEqual(['50%', '62%']);
+  });
+
+  it('labelPosition=outside without legend enables overlap hiding', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: false,
+            labelPosition: 'outside',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().labelLayout).toEqual({ hideOverlap: true });
+    expect(getSeries().minShowLabelAngle).toBe(8);
+  });
+
+  it('labelPosition=outside with legend skips overlap hiding', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: true,
+            labelPosition: 'outside',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getSeries().labelLayout).toBeUndefined();
+    expect(getSeries().minShowLabelAngle).toBeUndefined();
+  });
+
+  it('labelPosition=center shows labels at center', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: false,
+            labelPosition: 'center',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.show).toBe(true);
+    expect(label.position).toBe('center');
+  });
+
+  it('colorScheme sets palette on option', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: false,
+            colorScheme: 'warm',
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    expect(getOption().color).toBeDefined();
+  });
+
+  it('showValues=true formats outside labels with values', () => {
+    render(
+      <PieChartWidget
+        {...makeProps({
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            showLegend: false,
+            labelPosition: 'outside',
+            showValues: true,
+          },
+          data: samplePieData,
+        })}
+      />,
+    );
+    const label = getSeries().label as Record<string, unknown>;
+    expect(label.formatter).toBeDefined();
+  });
+
   it('donut=true with no explicit innerRadius uses 40%', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', donut: true },
+          config: { nameField: 'name', valueField: 'value', donut: true, showLegend: false },
           data: samplePieData,
         })}
       />,
@@ -421,7 +587,7 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value' },
+          config: { nameField: 'name', valueField: 'value', showLegend: false },
           data: samplePieData,
         })}
       />,
@@ -433,7 +599,13 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 60 },
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            donut: true,
+            innerRadius: 60,
+            showLegend: false,
+          },
           data: samplePieData,
         })}
       />,
@@ -445,7 +617,12 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', outerRadius: 85 },
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            outerRadius: 85,
+            showLegend: false,
+          },
           data: samplePieData,
         })}
       />,
@@ -522,7 +699,13 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', donut: true, innerRadius: 0 },
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            donut: true,
+            innerRadius: 0,
+            showLegend: false,
+          },
           data: samplePieData,
         })}
       />,
@@ -535,7 +718,12 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', variant: 'donut' },
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            variant: 'donut',
+            showLegend: false,
+          },
           data: samplePieData,
         })}
       />,
@@ -547,7 +735,13 @@ describe('PieChartWidget — per-chart properties', () => {
     render(
       <PieChartWidget
         {...makeProps({
-          config: { nameField: 'name', valueField: 'value', variant: 'donut', innerRadius: 0 },
+          config: {
+            nameField: 'name',
+            valueField: 'value',
+            variant: 'donut',
+            innerRadius: 0,
+            showLegend: false,
+          },
           data: samplePieData,
         })}
       />,
