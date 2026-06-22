@@ -236,6 +236,7 @@ test.describe('Designer chart matrix certification', () => {
     await openDesigner(page);
     await openDesignerPage(page, 'page-gallery');
     await selectDesignerWidget(page, 'chart-pie');
+    await setRadioField(page, 'chart-pie', 'showLegend', 'No');
     await setSelectField(page, 'chart-pie', 'variant', 'donut');
     await setSelectField(page, 'chart-pie', 'labelPosition', 'inside');
     await setNumberField(page, 'chart-pie', 'innerRadius', 45);
@@ -260,6 +261,7 @@ test.describe('Designer chart matrix certification', () => {
     await openDesigner(page);
     await openDesignerPage(page, 'page-gallery');
     await selectDesignerWidget(page, 'chart-pie');
+    await setRadioField(page, 'chart-pie', 'showLegend', 'No');
     await setSelectField(page, 'chart-pie', 'variant', 'donut');
     await setSelectField(page, 'chart-pie', 'labelPosition', 'inside');
     await setNumberField(page, 'chart-pie', 'innerRadius', 45);
@@ -277,6 +279,24 @@ test.describe('Designer chart matrix certification', () => {
           }),
         }),
       );
+    });
+  });
+
+  test('pie chart with legend reserves center and radius', async ({ page }) => {
+    await openDesigner(page);
+    await openDesignerPage(page, 'page-gallery');
+    await selectDesignerWidget(page, 'chart-pie');
+    await setRadioField(page, 'chart-pie', 'showLegend', 'Yes');
+
+    await expectBaseChartOption(await getDesignerPreviewSurface(page, 'chart-pie'), (option) => {
+      expect(getSeriesList(option)[0]).toEqual(
+        expect.objectContaining({
+          type: 'pie',
+          center: ['50%', '58%'],
+          radius: ['0%', '58%'],
+        }),
+      );
+      expect(option.legend).toBeDefined();
     });
   });
 
